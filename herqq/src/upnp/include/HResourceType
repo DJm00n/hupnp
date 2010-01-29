@@ -1,0 +1,6 @@
+#ifndef H_RESOURCE_TYPE_
+#define H_RESOURCE_TYPE_
+
+#include "../src/core/upnp_resourcetype.h"
+
+#endif // H_RESOURCE_TYPE_

@@ -1,0 +1,6 @@
+#ifndef H_UPNP_ACTIONINVOKE_
+#define H_UPNP_ACTIONINVOKE_
+
+#include "../src/core/upnp_actioninvoke.h"
+
+#endif // H_UPNP_ACTIONINVOKE_

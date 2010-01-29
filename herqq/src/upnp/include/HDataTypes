@@ -1,0 +1,6 @@
+#ifndef H_DATATYPES_H_
+#define H_DATATYPES_H_
+
+#include "../src/core/upnp_datatypes.h"
+
+#endif // H_DATATYPES_H_

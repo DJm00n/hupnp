@@ -1,0 +1,6 @@
+#ifndef HUPNPDEVICE_H_
+#define HUPNPDEVICE_H_
+
+#include "../src/core/upnp_device.h"
+
+#endif // HUPNPDEVICE_H_

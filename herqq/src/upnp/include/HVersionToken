@@ -1,0 +1,6 @@
+#ifndef H_MESSAGE_HEADERFIELD_OBJECTS_H_
+#define H_MESSAGE_HEADERFIELD_OBJECTS_H_
+
+#include "../src/core/messaging/message_headerfield_objects.h"
+
+#endif // H_MESSAGE_HEADERFIELD_OBJECTS_H_

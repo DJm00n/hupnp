@@ -1,0 +1,6 @@
+#ifndef H_BASIC_DEVICE_H
+#define H_BASIC_DEVICE_H
+
+#include "../src/core/basic/basic_device.h"
+
+#endif // H_BASIC_DEVICE_H
