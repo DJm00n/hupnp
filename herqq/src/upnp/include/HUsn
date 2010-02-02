@@ -1,0 +1,6 @@
+#ifndef H_USN_
+#define H_USN_
+
+#include "../src/core/messaging/usn.h"
+
+#endif // H_USN_

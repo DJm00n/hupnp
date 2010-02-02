@@ -1,0 +1,6 @@
+#ifndef H_UPNP_ACTIONARGUMENTS_
+#define H_UPNP_ACTIONARGUMENTS_
+
+#include "../src/core/devicemodel/actionarguments.h"
+
+#endif // H_UPNP_ACTIONARGUMENTS_

@@ -1,0 +1,6 @@
+#ifndef H_NOTIFICATION_TYPE_
+#define H_NOTIFICATION_TYPE_
+
+#include "../src/core/messaging/ssdp_messageheader_objects_p.h"
+
+#endif // H_NOTIFICATION_TYPE_

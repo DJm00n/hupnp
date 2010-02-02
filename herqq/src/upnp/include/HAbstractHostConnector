@@ -1,0 +1,6 @@
+#ifndef H_ABSTRACTHOST_CONNECTOR_
+#define H_ABSTRACTHOST_CONNECTOR_
+
+#include "../src/core/upnp_event_connectors.h"
+
+#endif // H_ABSTRACTHOST_CONNECTOR_

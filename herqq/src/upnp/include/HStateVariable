@@ -1,0 +1,7 @@
+#ifndef H_UPNP_STATEVARIABLE_
+#define H_UPNP_STATEVARIABLE_
+
+#include "../src/core/devicemodel/statevariable.h"
+#include "../src/core/upnp_datatypes.h"
+
+#endif // H_UPNP_STATEVARIABLE_

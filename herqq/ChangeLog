@@ -1,0 +1,45 @@
+# HUPnP Changelog
+
+HUPnP 0.2.0 [Feb. 2, 2010]
+- Significant refactoring of the project, file and class structures.
+
+- Fixed several bugs relating to URL handling in HDeviceHost and HControlPoint.
+
+- Changed action invocation on the control point side to use persistent sockets.
+
+- Fixed a bug in HStateVariable, which caused "allowed value ranges" to be parsed improperly.
+
+- Fixed a bug in HDeviceHost, which caused the HDeviceHost to announce wrong cache-control max-age timeouts.
+
+- Fixed a bug in HDeviceHost, which in a certain scenario caused a failure in transmission of an event NOTIFY message.
+
+- Added support for enabling/disabling warning logs that relate to non-standard behaviour discovered
+in other UPnP software.
+
+- Updated documentation.
+
+- Several other improvements not worth mentioning individually.
+
+Special thanks goes to Jochen Becher <jochen_becher at gmx.de> for testing the library and reporting
+of his findings. Some of the above-mentioned bugs were discovered due to his efforts. In addition, he
+suggested the possibility of disabling warnings that relate to non-standard behaviour discovered in
+other UPnP software. Thank you!
+
+HUPnP 0.1.1 [Jan. 26, 2010]
+
+- Added support for chunked encoding.
+
+- Fixed several deficiences relating to action invocation error handling.
+
+- Fixed a bug in HControlPoint where the HTTP Host header field was not always sent in a GET request. 
+  * This was found by Jochen Becher <jochen_becher at gmx.de>. Thanks!
+
+- Fixed a bug in HDeviceHost, which forced description documents to reside in the current directory to be found.
+
+- Removed exception usage from "simple" classes in Ssdp module.
+
+- A few small improvements not worth mentioning individually.
+
+- Updated documentation.
+
+- Created this change log.

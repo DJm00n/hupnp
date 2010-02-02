@@ -1,0 +1,6 @@
+#ifndef H_CONTROLPOINT_CONFIGURATION_H
+#define H_CONTROLPOINT_CONFIGURATION_H
+
+#include "../src/core/devicehosting/controlpoint_configuration.h"
+
+#endif // H_CONTROLPOINT_CONFIGURATION_H

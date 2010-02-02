@@ -1,0 +1,6 @@
+#ifndef H_PRODUCTOKENS_
+#define H_PRODUCTOKENS_
+
+#include "../src/core/messaging/product_tokens.h"
+
+#endif // H_PRODUCTOKENS_

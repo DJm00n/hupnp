@@ -1,0 +1,131 @@
+/*
+ *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *
+ *  Author: Tuomo Penttinen <tp@herqq.org>
+ *
+ *  This file is part of Herqq UPnP (HUPnP) library.
+ *
+ *  Herqq UPnP is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Herqq UPnP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "udn.h"
+
+#include "../../../../core/include/HMiscUtils"
+
+#include <QString>
+#include <QByteArray>
+
+/*!
+ * \defgroup dataelements Data Elements
+ */
+
+namespace Herqq
+{
+
+namespace Upnp
+{
+
+HUdn::HUdn() :
+    m_value()
+{
+}
+
+HUdn::HUdn(const QUuid& value) :
+    m_value(value)
+{
+}
+
+HUdn::HUdn(const HUdn& other) :
+    m_value(other.m_value)
+{
+}
+
+HUdn::HUdn(const QString& value) :
+    m_value(QString(value.simplified()).remove("uuid:", Qt::CaseInsensitive))
+{
+}
+
+HUdn::~HUdn()
+{
+}
+
+/*
+HUdn& HUdn::operator=(const QUuid& value)
+{
+    HUdn copy(value);
+    *this = copy;
+    return *this;
+}
+
+HUdn& HUdn::operator=(const QString& value)
+{
+    HUdn copy(value);
+    *this = copy;
+    return *this;
+}
+*/
+HUdn& HUdn::operator=(const HUdn& other)
+{
+    m_value = other.m_value;
+    return *this;
+}
+
+bool HUdn::isValid() const
+{
+    return !m_value.isNull();
+}
+
+QUuid HUdn::value() const
+{
+    return m_value;
+}
+
+QString HUdn::toString() const
+{
+    if (m_value.isNull())
+    {
+        return QString();
+    }
+
+    return QString("uuid:").append(m_value.toString().remove('{').remove('}'));
+}
+
+QString HUdn::toSimpleUuid() const
+{
+    if (m_value.isNull())
+    {
+        return QString();
+    }
+
+    return m_value.toString().remove('{').remove('}');
+}
+
+bool operator==(const HUdn& udn1, const HUdn& udn2)
+{
+    return udn1.value() == udn2.value();
+}
+
+bool operator!=(const HUdn& udn1, const HUdn& udn2)
+{
+    return !(udn1 == udn2);
+}
+
+quint32 qHash(const HUdn& key)
+{
+    QByteArray data = key.value().toString().toLocal8Bit();
+    return hash(data.constData(), data.size());
+}
+
+}
+}
