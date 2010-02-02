@@ -1,6 +1,0 @@
-#ifndef H_UPNP_SERVICEID_H
-#define H_UPNP_SERVICEID_H
-
-#include "../src/core/upnp_serviceid.h"
-
-#endif // H_UPNP_SERVICEID_H

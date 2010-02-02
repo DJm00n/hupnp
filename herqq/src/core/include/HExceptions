@@ -1,6 +1,0 @@
-#ifndef H_EXCEPTIONS_H
-#define H_EXCEPTIONS_H
-
-#include "./../src/exceptions.h"
-
-#endif // H_EXCEPTIONS_H

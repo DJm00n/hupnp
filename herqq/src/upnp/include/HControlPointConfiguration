@@ -1,6 +1,0 @@
-#ifndef H_CONTROLPOINT_CONFIGURATION_H
-#define H_CONTROLPOINT_CONFIGURATION_H
-
-#include "../src/core/upnp_controlpoint.h"
-
-#endif // H_CONTROLPOINT_CONFIGURATION_H

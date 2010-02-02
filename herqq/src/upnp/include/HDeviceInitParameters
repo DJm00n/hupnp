@@ -1,6 +1,0 @@
-#ifndef H_DEVICE_INIT_PARAMETERS_H_
-#define H_DEVICE_INIT_PARAMETERS_H_
-
-#include "../src/core/upnp_devicehost.h"
-
-#endif // H_DEVICE_INIT_PARAMETERS_H_

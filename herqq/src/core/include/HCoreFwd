@@ -1,6 +1,0 @@
-#ifndef H_CORE_FWD
-#define H_CORE_FWD
-
-#include "./../src/core_fwd.h"
-
-#endif // H_CORE_FWD

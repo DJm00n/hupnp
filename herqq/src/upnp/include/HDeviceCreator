@@ -1,6 +1,0 @@
-#ifndef H_UPNPDEVICE_CREATOR_H_
-#define H_UPNPDEVICE_CREATOR_H_
-
-#include "../src/core/upnp_devicecreator.h"
-
-#endif // H_UPNPDEVICE_H_
