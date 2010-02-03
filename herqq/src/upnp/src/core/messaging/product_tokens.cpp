@@ -33,85 +33,67 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HVersionTokenPrivate
+ * HProductTokenPrivate
  ******************************************************************************/
-class HVersionTokenPrivate
+class HProductTokenPrivate
 {
 public:
 
-    qint32 m_majorVersion;
-    qint32 m_minorVersion;
+    QString m_token;
+    QString m_productVersion;
 
 public:
 
-    HVersionTokenPrivate() :
-        m_majorVersion(0), m_minorVersion(0)
+    HProductTokenPrivate() :
+        m_token(), m_productVersion()
     {
     }
 
-    bool init(const QString& token)
+    HProductTokenPrivate(const QString& token, const QString& productVersion) :
+        m_token(), m_productVersion()
     {
-        if (!token.startsWith("UPnP/"))
+        QString tokenTmp(token.simplified());
+        QString productVersionTmp(productVersion.simplified());
+        if (tokenTmp.isEmpty() || productVersionTmp.isEmpty())
         {
-            return false;
+            return;
         }
 
-        QString tokenTmp = token.section("UPnP/", 1);
-
-        qint32 separatorIndex = tokenTmp.indexOf('.');
-        if (separatorIndex < 0)
-        {
-            return false;
-        }
-
-        bool ok = false;
-        qint32 majTmp = tokenTmp.left(separatorIndex).toInt(&ok);
-        if (!ok)
-        {
-            return false;
-        }
-
-        qint32 minTmp = tokenTmp.mid(separatorIndex+1).toInt(&ok);
-        if (!ok)
-        {
-            return false;
-        }
-
-        m_majorVersion = majTmp;
-        m_minorVersion = minTmp;
-
-        return true;
+        m_token = tokenTmp;
+        m_productVersion = productVersionTmp;
     }
 };
 
 
 /*******************************************************************************
- * HVersionToken
+ * HProductToken
  ******************************************************************************/
-HVersionToken::HVersionToken() :
-    h_ptr(new HVersionTokenPrivate())
+HProductToken::HProductToken() :
+    h_ptr(new HProductTokenPrivate())
 {
 }
 
-HVersionToken::HVersionToken(const QString& token) :
-    h_ptr(new HVersionTokenPrivate())
+HProductToken::HProductToken(const QString& token, const QString& productVersion) :
+    h_ptr(new HProductTokenPrivate(token, productVersion))
 {
     HLOG(H_AT, H_FUN);
 
-    if (!h_ptr->init(token))
+    if (h_ptr->m_token.isEmpty())
     {
-        HLOG_WARN(QObject::tr("Invalid token: %1").arg(token));
+        HLOG_WARN(QObject::tr(
+            "Invalid product token. Token: %1, Product Version: %2").arg(
+                token, productVersion));
     }
 }
 
-HVersionToken::HVersionToken(const HVersionToken& other) :
-    h_ptr(new HVersionTokenPrivate(*other.h_ptr))
+HProductToken::HProductToken(const HProductToken& other) :
+    h_ptr(new HProductTokenPrivate(*other.h_ptr))
 {
 }
 
-HVersionToken& HVersionToken::operator=(const HVersionToken& other)
+HProductToken& HProductToken::operator=(const HProductToken& other)
 {
-    HVersionTokenPrivate* newHptr = new HVersionTokenPrivate(*other.h_ptr);
+    HProductTokenPrivate* newHptr = new HProductTokenPrivate(*other.h_ptr);
 
     delete h_ptr;
     h_ptr = newHptr;
@@ -119,45 +101,98 @@ HVersionToken& HVersionToken::operator=(const HVersionToken& other)
     return *this;
 }
 
-HVersionToken::~HVersionToken()
+HProductToken::~HProductToken()
 {
     delete h_ptr;
 }
 
-bool HVersionToken::isValid() const
+bool HProductToken::isValid() const
 {
-    return h_ptr->m_majorVersion >= 0;
+    return !h_ptr->m_token.isEmpty();
 }
 
-qint32 HVersionToken::majorVersion() const
-{
-    return h_ptr->m_majorVersion;
-}
-
-qint32 HVersionToken::minorVersion() const
-{
-    return h_ptr->m_minorVersion;
-}
-
-QString HVersionToken::toString() const
+QString HProductToken::toString() const
 {
     if (!isValid())
     {
         return QString();
     }
 
-    return QString("UPnP/%1.%2").arg(
-        QString::number(h_ptr->m_majorVersion),
-        QString::number(h_ptr->m_minorVersion));
+    return QString("%1/%2").arg(h_ptr->m_token, h_ptr->m_productVersion);
 }
 
-bool operator==(const HVersionToken& obj1, const HVersionToken& obj2)
+QString HProductToken::token() const
 {
-    return obj1.h_ptr->m_majorVersion == obj2.h_ptr->m_majorVersion &&
-           obj1.h_ptr->m_minorVersion == obj2.h_ptr->m_minorVersion;
+    return h_ptr->m_token;
 }
 
-bool operator!=(const HVersionToken& obj1, const HVersionToken& obj2)
+QString HProductToken::version() const
+{
+    return h_ptr->m_productVersion;
+}
+
+bool HProductToken::isValidUpnpToken(const HProductToken& token)
+{
+    if (token.token() != "UPnP")
+    {
+        return false;
+    }
+
+    QString version = token.version();
+
+    return (version.size() == 3    &&
+           (version[0]     == '1') && 
+            version[1]     == '.'  && 
+           (version[2] == '0' || version[2] == '1'));
+}
+
+qint32 HProductToken::minorVersion(const HProductToken& token)
+{
+    QString tokenVersion = token.version();
+
+    qint32 separatorIndex = tokenVersion.indexOf('.');
+    if (separatorIndex < 0)
+    {
+        return false;
+    }
+
+    bool ok = false;
+
+    qint32 minTmp = tokenVersion.mid(separatorIndex+1).toInt(&ok);
+    if (ok)
+    {
+        return minTmp;
+    }
+
+    return -1;
+}
+
+qint32 HProductToken::majorVersion(const HProductToken& token)
+{
+    QString tokenVersion = token.version();
+
+    qint32 separatorIndex = tokenVersion.indexOf('.');
+    if (separatorIndex < 0)
+    {
+        return false;
+    }
+
+    bool ok = false;
+    qint32 majTmp = tokenVersion.left(separatorIndex).toInt(&ok);
+    if (ok)
+    {
+        return majTmp;
+    }
+
+    return -1;
+}
+
+bool operator==(const HProductToken& obj1, const HProductToken& obj2)
+{
+    return obj1.toString() == obj2.toString();
+}
+
+bool operator!=(const HProductToken& obj1, const HProductToken& obj2)
 {
     return !(obj1 == obj2);
 }
@@ -169,43 +204,73 @@ class HProductTokensPrivate
 {
 public:
 
-    QStringList m_tokens;
-    HVersionToken m_versionToken;
+    QList<HProductToken> m_productTokens;
 
 public:
 
     HProductTokensPrivate() :
-        m_tokens(), m_versionToken()
+        m_productTokens()
     {
     }
 
     HProductTokensPrivate(const QString& tokens) :
-        m_tokens(), m_versionToken()
+        m_productTokens()
     {
         HLOG(H_AT, H_FUN);
 
-        QStringList tmp(tokens.simplified().split(' '));
+        QString tokensTmp(tokens.simplified());
 
-        if (tmp.size() != 3)
+        QList<HProductToken> productTokens;
+
+        QString token, version, buf;
+        qint32 i = tokensTmp.indexOf('/'), j = 0, lastSpace = 0;
+        if (i < 0)
         {
-            // it seems that the token string does not follow the UDA specification
-            // since it is known that some UPnP software uses comma as the delimiter,
-            // check it next:
-            tmp = tokens.simplified().split(',');
-            if (tmp.size() != 3)
-            {
-                return;
-            }
-
-            HLOG_WARN(QObject::tr(
-                "The specified token string uses invalid delimiter [,], but accepting it."));
+            return;
         }
 
-        m_versionToken = tmp[1].simplified();
+        // the first special case "token/version token/version token/version"
+        //                         ^^^^^
+        token = tokensTmp.left(i);
 
-        for(qint32 i = 0; i < tmp.size(); ++i)
+        for(i = i + 1; i < tokensTmp.size(); ++i, ++j)
         {
-            m_tokens.append(tmp[i].simplified());
+            if (tokensTmp[i] == '/')
+            {
+                if (lastSpace <= 0)
+                {
+                    // there must have been at least one space between the previous '/'
+                    // and this one. it is an error otherwise.
+                    return;
+                }
+
+                HProductToken newToken(token, buf.left(lastSpace));
+                productTokens.append(newToken);
+
+                token = buf.mid(lastSpace+1);
+
+                version.clear(); buf.clear(); j = -1;
+                continue;
+            }
+            else if (tokensTmp[i] == ' ')
+            {
+                lastSpace = j;
+            }
+
+            buf.append(tokensTmp[i]);
+        }
+
+        HProductToken newToken(token, buf);
+        productTokens.append(newToken);
+
+        if (productTokens.size() != 3 ||
+           !HProductToken::isValidUpnpToken(productTokens[1]))
+        {
+            HLOG_WARN(QObject::tr("Invalid Product Tokens: %1").arg(tokens));
+        }
+        else
+        {
+            m_productTokens = productTokens;
         }
     }
 };
@@ -246,32 +311,37 @@ HProductTokens::~HProductTokens()
 
 bool HProductTokens::isValid() const
 {
-    return h_ptr->m_tokens.size() > 0;
+    return h_ptr->m_productTokens.size() > 0;
 }
 
-QString HProductTokens::osToken() const
+HProductToken HProductTokens::osToken() const
 {
     if (!isValid())
     {
-        return QString();
+        return HProductToken();
     }
 
-    return h_ptr->m_tokens[0];
+    return h_ptr->m_productTokens[0];
 }
 
-HVersionToken HProductTokens::upnpToken() const
-{
-    return h_ptr->m_versionToken;
-}
-
-QString HProductTokens::productToken() const
+HProductToken HProductTokens::upnpToken() const
 {
     if (!isValid())
     {
-        return QString();
+        return HProductToken();
     }
 
-    return h_ptr->m_tokens[2];
+    return h_ptr->m_productTokens[1];
+}
+
+HProductToken HProductTokens::productToken() const
+{
+    if (!isValid())
+    {
+        return HProductToken();
+    }
+
+    return h_ptr->m_productTokens[2];
 }
 
 QString HProductTokens::toString() const
@@ -281,7 +351,8 @@ QString HProductTokens::toString() const
         return QString();
     }
 
-    return QString("%1 %2 %3").arg(osToken(), upnpToken().toString(), productToken());
+    return QString("%1 %2 %3").arg(
+        osToken().toString(), upnpToken().toString(), productToken().toString());
 }
 
 bool operator==(const HProductTokens& ht1, const HProductTokens& ht2)

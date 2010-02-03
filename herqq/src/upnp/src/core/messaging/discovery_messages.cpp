@@ -140,13 +140,15 @@ HResourceAvailable::HResourceAvailable(
         return;
     }
 
-    if (!serverTokens.upnpToken().isValid() || serverTokens.upnpToken().majorVersion() < 1)
+    if (!serverTokens.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid server tokens"));
+        HLOG_WARN(QObject::tr("Invalid server tokens: %1").arg(
+            serverTokens.toString()));
+
         return;
     }
 
-    if (serverTokens.upnpToken().minorVersion() > 0)
+    if (HProductToken::minorVersion(serverTokens.upnpToken()) > 0)
     {
         if (bootId < 0 || configId < 0)
         {
@@ -251,7 +253,7 @@ QString HResourceAvailable::toString() const
        << "SERVER: "                << serverTokens().toString()   << "\r\n"
        << "USN: "                   << usn().toString()       << "\r\n";
 
-    if (serverTokens().upnpToken().minorVersion() > 0)
+    if (HProductToken::minorVersion(serverTokens().upnpToken()) > 0)
     {
         ts << "BOOTID.UPNP.ORG: "   << bootId()   << "\r\n"
            << "CONFIGID.UPNP.ORG: " << configId() << "\r\n";
@@ -805,13 +807,15 @@ HDiscoveryResponse::HDiscoveryResponse(
         return;
     }
 
-    if (!serverTokens.upnpToken().isValid() || serverTokens.upnpToken().majorVersion() < 1)
+    if (!serverTokens.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid server tokens."));
+        HLOG_WARN(QObject::tr("Invalid server tokens: %1.").arg(
+            serverTokens.toString()));
+
         return;
     }
 
-    if (serverTokens.upnpToken().minorVersion() > 0)
+    if (HProductToken::minorVersion(serverTokens.upnpToken()) > 0)
     {
         if (bootId < 0 || configId < 0)
         {

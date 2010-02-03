@@ -32,25 +32,26 @@ namespace Herqq
 namespace Upnp
 {
 
-class HVersionTokenPrivate;
+class HProductTokenPrivate;
 
 /*!
- * This class represents te \e version \e token part of a \e product \e token.
+ * This class represents a <em>product token</em> as defined in the RFC 2616,
+ * section 3.8.
  *
- * \headerfile product_tokens.h HVersionToken
+ * \headerfile product_tokens.h HProductToken
  *
  * \remark this class provides an assignment operator that is not thread-safe.
  *
  * \ingroup ssdp
  */
-class H_UPNP_CORE_EXPORT HVersionToken
+class H_UPNP_CORE_EXPORT HProductToken
 {
 friend H_UPNP_CORE_EXPORT bool operator==(
-    const HVersionToken& obj1, const HVersionToken& obj2);
+    const HProductToken& obj1, const HProductToken& obj2);
 
 private:
 
-    HVersionTokenPrivate* h_ptr;
+    HProductTokenPrivate* h_ptr;
 
 public:
 
@@ -60,65 +61,85 @@ public:
      *
      * \sa isValid()
      */
-    HVersionToken();
+    HProductToken();
 
     /*!
      * Creates a new object based on the provided token data. If the token data
      * is invalid, the object will be invalid as well.
      *
-     * \param token specifies the token data in the format
-     * \c "UPnP"/majorVersion.minorVersion.
+     * \param token specifies the token part, which is supposed to identify
+     * a product. If this is empty, the created object will be invalid.
+     *
+     * \param productVersion specifies the version part. If this is empty,
+     * the created object will be invalid.
      *
      * \sa isValid()
      */
-    HVersionToken(const QString& token);
+    HProductToken(const QString& token, const QString& productVersion);
 
     /*!
      * Copy constructor.
      */
-    HVersionToken(const HVersionToken& other);
+    HProductToken(const HProductToken&);
 
     /*!
      * Assignment operator.
      */
-    HVersionToken& operator=(const HVersionToken& other);
+    HProductToken& operator=(const HProductToken&);
 
     /*!
      * Destroys the instance.
      */
-    ~HVersionToken();
+    ~HProductToken();
 
     /*!
-     * Returns the major version of the token.
+     * Indicates if the object is valid, i.e both the token and the product
+     * version are defined.
      *
-     * \return the major version of the token when the object is valid.
-     * Otherwise -1 is returned.
-     */
-    qint32 majorVersion() const;
-
-    /*!
-     * Returns the minor version of the token.
+     * \return true in case both the \e token and <em>product version</em> are appropriately
+     * specified.
      *
-     * \return the minor version of the token when the object is valid.
-     * Otherwise -1 is returned.
-     */
-    qint32 minorVersion() const;
-
-    /*!
-     * Indicates if the object represents a valid UPnP token.
-     *
-     * \return true in case the object represents a valid UPnP token.
+     * \sa token(), productVersion()
      */
     bool isValid() const;
 
     /*!
+     * Returns the \e token part.
+     *
+     * \return the \e token part in case the object is valid.
+     * The token part is used to identify the product and an example
+     * of a token is for instance \c "Apache". An empty string is returned in case
+     * the object is invalid.
+     *
+     * \sa isValid()
+     */
+    QString token() const;
+
+    /*!
+     * Returns the \e version part.
+     *
+     * \return the \e version part in case the object is valid. An example of a
+     * version part is \c "1.0". An empty string is returned in case
+     * the object is invalid.
+     *
+     * \sa isValid()
+     */
+    QString version() const;
+
+    /*!
      * Returns a string representation of the object.
      *
-     * The format of the returned string is \c "UPnP"/majorversion.minorversion
+     * The format of the returned string is \c "token"/"version".
      *
      * \return a string representation of the object.
      */
     QString toString() const;
+
+    static bool isValidUpnpToken(const HProductToken&);
+
+    static qint32 minorVersion(const HProductToken&);
+
+    static qint32 majorVersion(const HProductToken&);
 };
 
 /*!
@@ -126,20 +147,20 @@ public:
  *
  * \return \e true in case the object are logically equivalent.
  *
- * \relates HVersionToken
+ * \relates HProductToken
  */
-H_UPNP_CORE_EXPORT bool operator==(const HVersionToken&, const HVersionToken&);
+H_UPNP_CORE_EXPORT bool operator==(const HProductToken&, const HProductToken&);
 
 /*!
  * Compares the two objects for inequality.
  *
  * \return \e true in case the object are not logically equivalent.
  *
- * \relates HVersionToken
+ * \relates HProductToken
  *
  * \ingroup ssdp
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HVersionToken&, const HVersionToken&);
+H_UPNP_CORE_EXPORT bool operator!=(const HProductToken&, const HProductToken&);
 
 class HProductTokensPrivate;
 
@@ -173,7 +194,11 @@ public:
     /*!
      * Creates a new instance based on the provided argument.
      *
-     * \param arg specifies the product tokens.
+     * \param arg specifies the product tokens. In case the specified argument
+     * does not contain three product tokens as specified in the UDA, the created
+     * object will be invalid.
+     *
+     * \sa isValid()
      */
     HProductTokens(const QString& arg);
 
@@ -195,29 +220,35 @@ public:
     HProductTokens& operator=(const HProductTokens&);
 
     /*!
-     * Indicates whether or not the instance is contains a valid set of product
-     * tokens or not.
+     * Indicates whether or not the object represents product tokens as
+     * defined in UDA.
      *
-     * \retval true in case the instance contains a valid set of product tokens.
-     * \retval false otherwise.
+     * \return \e true in case the object represents product tokens as
+     * defined in UDA.
      */
     bool isValid() const;
 
     /*!
-     * Returns the product token that defines Operating System in the form
-     * OS name/OS version
+     * Returns the product token that defines information of an operating system.
      *
-     * \return the product token that defines Operating System in the form
-     * OS name/OS version.
+     * \return the product token that defines information of an operating system.
+     *
+     * \remark The returned object is invalid in case this object is invalid.
      */
-    QString osToken() const;
+    HProductToken osToken() const;
 
     /*!
      * Returns the product token that defines UPnP version.
      *
-     * Returns the product token that defines UPnP version.
+     * \return the product token that defines UPnP version. This token always
+     * follows the format "UPnP"/majorVersion.minorVersion, where \e majorVersion
+     * and \e minorVersion are positive integers. Furthermore, at the moment
+     * the \e majorVersion is \b always 1 and the \e minorVersion is either 0
+     * or 1.
+     *
+     * \remark The returned object is invalid in case this object is invalid.
      */
-    HVersionToken upnpToken() const;
+    HProductToken upnpToken() const;
 
     /*!
      * Returns the product token that defines the actual product in the form
@@ -225,13 +256,16 @@ public:
      *
      * \return the product token that defines the actual product in the form
      * product name/product version.
+     *
+     * \remark The returned object is invalid in case this object is invalid.
      */
-    QString productToken() const;
+    HProductToken productToken() const;
 
     /*!
      * Returns a string representation of the object.
      *
-     * \return a string representation of the object.
+     * \return a string representation of the object. An empty string is returned
+     * in case the object is invalid.
      */
     QString toString() const;
 };

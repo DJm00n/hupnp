@@ -721,7 +721,7 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
     QString tmp =
         readElementValue("presentationURL", deviceElement, &wasDefined);
 
-    if (wasDefined && tmp.isEmpty())
+    if (m_creationParameters.m_strictParsing && wasDefined && tmp.isEmpty())
     {
         throw InvalidDeviceDescription(QObject::tr(
             "Presentation URL has to be defined, if the corresponding element is used."));
