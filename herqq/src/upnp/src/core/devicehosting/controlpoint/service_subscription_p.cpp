@@ -367,11 +367,14 @@ void HServiceSubscribtion::subscribe()
 
     try
     {
+        mi.setReceiveTimeoutForNoData(3000);
+
         NotifyRequest req;
         if (m_http.receive(mi, req) != NotifyRequest::Success)
         {
             HLOG_WARN(QObject::tr(
-                "Failed to read initial notify event from the device."));
+                "Failed to read initial notify event from the device. "
+                "It could be that the device does not honor the HTTP keep-alive."));
         }
         else
         {
@@ -383,7 +386,7 @@ void HServiceSubscribtion::subscribe()
     {
         HLOG_WARN(QObject::tr(
             "Failed to read initial notify event from the device: %1. "
-            "The device does not appear to honor the HTTP keep-alive.").
+            "It could be that the device does not honor the HTTP keep-alive.").
                 arg(ex.reason()));
     }
 }

@@ -202,6 +202,95 @@ bool operator!=(const HProductToken& obj1, const HProductToken& obj2)
  ******************************************************************************/
 class HProductTokensPrivate
 {
+private:
+
+    bool parseCommaDelimited(const QString& tokens)
+    {
+        HLOG(H_AT, H_FUN);
+
+        QStringList tmp(tokens.split(','));
+
+        if (tmp.size() != 3)
+        {
+            return false;
+        }
+
+        for (qint32 i = 0; i < 3; ++i)
+        {
+            qint32 index = tmp[i].indexOf('/');
+            if (index < 0)
+            {
+                m_productTokens.clear();
+                return false;
+            }
+
+            m_productTokens.append(
+                HProductToken(tmp[i].left(index), tmp[i].right(index)));
+        }
+
+        return true;
+    }
+
+    bool parseNormal(const QString& tokens)
+    {
+        HLOG(H_AT, H_FUN);
+
+        QList<HProductToken> productTokens;
+
+        QString token, version, buf;
+        qint32 i = tokens.indexOf('/'), j = 0, lastSpace = 0;
+        if (i < 0)
+        {
+            return false;
+        }
+
+        // the first special case "token/version token/version token/version"
+        //                         ^^^^^
+        token = tokens.left(i);
+
+        for(i = i + 1; i < tokens.size(); ++i, ++j)
+        {
+            if (tokens[i] == '/')
+            {
+                if (lastSpace <= 0)
+                {
+                    // there must have been at least one space between the previous '/'
+                    // and this one. it is an error otherwise.
+                    return false;
+                }
+
+                HProductToken newToken(token, buf.left(lastSpace));
+                productTokens.append(newToken);
+
+                token = buf.mid(lastSpace+1);
+
+                version.clear(); buf.clear(); j = -1;
+                continue;
+            }
+            else if (tokens[i] == ' ')
+            {
+                lastSpace = j;
+            }
+
+            buf.append(tokens[i]);
+        }
+
+        HProductToken newToken(token, buf);
+        productTokens.append(newToken);
+
+        if (productTokens.size() != 3 ||
+           !HProductToken::isValidUpnpToken(productTokens[1]))
+        {
+            return false;
+        }
+        else
+        {
+            m_productTokens = productTokens;
+        }
+
+        return true;
+    }
+
 public:
 
     QList<HProductToken> m_productTokens;
@@ -220,57 +309,22 @@ public:
 
         QString tokensTmp(tokens.simplified());
 
-        QList<HProductToken> productTokens;
-
-        QString token, version, buf;
-        qint32 i = tokensTmp.indexOf('/'), j = 0, lastSpace = 0;
-        if (i < 0)
+        if (!parseNormal(tokensTmp))
         {
-            return;
-        }
+            // it seems that the token string does not follow the UDA specification.
+            // since it is known that some UPnP software uses comma as the delimiter,
+            // check it next:
 
-        // the first special case "token/version token/version token/version"
-        //                         ^^^^^
-        token = tokensTmp.left(i);
-
-        for(i = i + 1; i < tokensTmp.size(); ++i, ++j)
-        {
-            if (tokensTmp[i] == '/')
+            if (parseCommaDelimited(tokensTmp))
             {
-                if (lastSpace <= 0)
-                {
-                    // there must have been at least one space between the previous '/'
-                    // and this one. it is an error otherwise.
-                    return;
-                }
-
-                HProductToken newToken(token, buf.left(lastSpace));
-                productTokens.append(newToken);
-
-                token = buf.mid(lastSpace+1);
-
-                version.clear(); buf.clear(); j = -1;
-                continue;
+                HLOG_WARN_NONSTD(QObject::tr(
+                    "The specified token string [%1] uses invalid delimiter [,],"
+                    " but accepting it.").arg(tokens));
             }
-            else if (tokensTmp[i] == ' ')
+            else
             {
-                lastSpace = j;
+                HLOG_WARN(QObject::tr("Invalid Product Tokens: %1").arg(tokens));
             }
-
-            buf.append(tokensTmp[i]);
-        }
-
-        HProductToken newToken(token, buf);
-        productTokens.append(newToken);
-
-        if (productTokens.size() != 3 ||
-           !HProductToken::isValidUpnpToken(productTokens[1]))
-        {
-            HLOG_WARN(QObject::tr("Invalid Product Tokens: %1").arg(tokens));
-        }
-        else
-        {
-            m_productTokens = productTokens;
         }
     }
 };

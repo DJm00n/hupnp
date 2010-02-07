@@ -22,6 +22,14 @@
 #ifndef CONTROLPOINT_DATARETRIEVER_H_
 #define CONTROLPOINT_DATARETRIEVER_H_
 
+//
+// !! Warning !!
+//
+// This file is not part of public API and it should
+// never be included in client code. The contents of this file may
+// change or the file may be removed without of notice.
+//
+
 #include "../../defs_p.h"
 
 #include <QByteArray>
