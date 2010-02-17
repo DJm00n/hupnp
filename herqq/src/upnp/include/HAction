@@ -1,6 +1,0 @@
-#ifndef H_UPNP_ACTION
-#define H_UPNP_ACTION
-
-#include "../src/core/devicemodel/action.h"
-
-#endif // H_UPNP_ACTION

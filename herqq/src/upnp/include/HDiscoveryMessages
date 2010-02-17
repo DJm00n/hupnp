@@ -1,6 +1,0 @@
-#ifndef H_DISCOVERY_MESSAGES
-#define H_DISCOVERY_MESSAGES
-
-#include "../src/core/messaging/discovery_messages.h"
-
-#endif // H_DISCOVERY_MESSAGES

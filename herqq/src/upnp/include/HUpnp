@@ -1,6 +1,0 @@
-#ifndef HUPNP_GLOBAL_H_
-#define HUPNP_GLOBAL_H_
-
-#include "../src/core/upnp_global.h"
-
-#endif // HUPNP_GLOBAL_H_

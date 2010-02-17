@@ -1,6 +1,0 @@
-#ifndef H_EVENTLISTENER_
-#define H_EVENTLISTENER_
-
-#include "./../src/core/upnp_event_connectors.h"
-
-#endif // H_EVENTLISTENER_

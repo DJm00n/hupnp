@@ -1,6 +1,0 @@
-#ifndef H_RESOURCE_IDENTIFIER_
-#define H_RESOURCE_IDENTIFIER_
-
-#include "../src/core/messaging/resource_identifier.h"
-
-#endif // H_RESOURCE_IDENTIFIER_

@@ -1,6 +1,0 @@
-#ifndef H_UPNP_DEVICEHOST_H_
-#define H_UPNP_DEVICEHOST_H_
-
-#include "../src/core/devicehosting/devicehost/devicehost.h"
-
-#endif // H_UPNP_DEVICEHOST_H_

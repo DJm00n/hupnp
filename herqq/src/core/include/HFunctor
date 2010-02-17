@@ -1,6 +1,0 @@
-#ifndef H_FUNCTOR_
-#define H_FUNCTOR_
-
-#include "./../src/functor.h"
-
-#endif // H_FUNCTOR_

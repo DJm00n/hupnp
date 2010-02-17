@@ -1,6 +1,0 @@
-#ifndef H_GLOBAL_
-#define H_GLOBAL_
-
-#include "./../src/hglobal.h"
-
-#endif // H_GLOBAL_

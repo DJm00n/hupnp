@@ -1,6 +1,0 @@
-#ifndef H_RESOURCE_TYPE_
-#define H_RESOURCE_TYPE_
-
-#include "../src/core/dataelements/resourcetype.h"
-
-#endif // H_RESOURCE_TYPE_

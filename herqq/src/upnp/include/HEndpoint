@@ -1,6 +1,0 @@
-#ifndef H_ENDPOINT_H
-#define H_ENDPOINT_H
-
-#include "./../src/core/messaging/endpoint.h"
-
-#endif // H_ENDPOINT_H
