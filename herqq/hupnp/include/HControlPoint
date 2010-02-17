@@ -1,0 +1,6 @@
+#ifndef H_CONTROLPOINT_
+#define H_CONTROLPOINT_
+
+#include "../src/hupnp_core/devicehosting/controlpoint/hcontrolpoint.h"
+
+#endif // H_CONTROLPOINT_

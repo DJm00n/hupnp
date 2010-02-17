@@ -1,0 +1,6 @@
+#ifndef H_ENDPOINT_
+#define H_ENDPOINT_
+
+#include "../src/hupnp_core/socket/hendpoint.h"
+
+#endif // H_ENDPOINT_

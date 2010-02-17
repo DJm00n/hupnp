@@ -1,0 +1,7 @@
+#ifndef H_UPNP_GLOBAL_
+#define H_UPNP_GLOBAL_
+
+#include "../src/hupnp_core/general/hupnp_fwd.h"
+#include "../src/hupnp_core/general/hupnp_global.h"
+
+#endif // H_UPNP_GLOBAL_

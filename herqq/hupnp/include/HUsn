@@ -1,0 +1,6 @@
+#ifndef H_USN_
+#define H_USN_
+
+#include "../src/hupnp_core/ssdp/husn.h"
+
+#endif // H_USN_

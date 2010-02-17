@@ -1,0 +1,6 @@
+#ifndef H_ACTIONINVOKE_CALLBACK_
+#define H_ACTIONINVOKE_CALLBACK_
+
+#include "../src/hupnp_core/devicemodel/haction.h"
+
+#endif // H_ACTIONINVOKE_CALLBACK_
