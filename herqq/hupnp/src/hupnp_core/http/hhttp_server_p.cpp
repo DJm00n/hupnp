@@ -133,40 +133,33 @@ void HHttpServer::processRequest(qint32 socketDescriptor)
         MessagingInfo mi(client);
         mi.chunkedInfo() = m_chunkedInfo;
 
-        try
-        {
-            body = m_httpHandler.receive(mi, requestHeader);
-            if (!requestHeader.isValid())
-            {
-                m_httpHandler.send(mi, BadRequest);
-                break;
-            }
+        HHttpHandler::ReturnValue rv =
+            m_httpHandler.receive(mi, requestHeader, &body);
 
-            QString host = requestHeader.value("HOST");
-            if (host.isEmpty())
-            {
-                m_httpHandler.send(mi, BadRequest);
-                break;
-            }
-
-            mi.setHostInfo(host);
-            mi.setKeepAlive(HHttpUtils::keepAlive(requestHeader));
-        }
-        catch(HTimeoutException&)
+        if (rv == HHttpHandler::Timeout)
         {
             continue;
         }
-        catch(HSocketException&)
+        else if (rv != HHttpHandler::Success)
         {
-            // no more data / client has disconnected ==> no need to do
-            // (even print) anything.
             break;
         }
-        catch(HException& ex)
+
+        if (!requestHeader.isValid())
         {
-            HLOG_WARN(QObject::tr("Receive failed: %1").arg(ex.reason()));
+            m_httpHandler.send(mi, BadRequest);
             break;
         }
+
+        QString host = requestHeader.value("HOST");
+        if (host.isEmpty())
+        {
+            m_httpHandler.send(mi, BadRequest);
+            break;
+        }
+
+        mi.setHostInfo(host);
+        mi.setKeepAlive(HHttpUtils::keepAlive(requestHeader));
 
         if (m_exiting)
         {
@@ -234,23 +227,27 @@ void HHttpServer::processRequest(qint32 socketDescriptor)
         arg(peer, QString::number(m_threadPool->activeThreadCount())));
 }
 
-void HHttpServer::processGet(
+HHttpHandler::ReturnValue HHttpServer::processGet(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Dispatching unknown GET request."));
     incomingUnknownGetRequest(mi, requestHdr);
+
+    return HHttpHandler::Success;
 }
 
-void HHttpServer::processHead(
+HHttpHandler::ReturnValue HHttpServer::processHead(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Dispatching unknown HEAD request."));
     incomingUnknownHeadRequest(mi, requestHdr);
+
+    return HHttpHandler::Success;
 }
 
-void HHttpServer::processPost(
+HHttpHandler::ReturnValue HHttpServer::processPost(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr, const QByteArray& body)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -260,7 +257,7 @@ void HHttpServer::processPost(
     {
         HLOG_DBG(QObject::tr("Dispatching unknown POST request."));
         incomingUnknownPostRequest(mi, requestHdr, body);
-        return;
+        return HHttpHandler::Success;
     }
 
     QString actionName = soapAction.mid(soapAction.indexOf("#"));
@@ -268,75 +265,103 @@ void HHttpServer::processPost(
     {
         HLOG_DBG(QObject::tr("Dispatching unknown POST request."));
         incomingUnknownPostRequest(mi, requestHdr, body);
-        return;
+        return HHttpHandler::Success;
     }
 
     QtSoapMessage soapMsg;
     if (!soapMsg.setContent(body))
     {
         mi.setKeepAlive(false);
-        m_httpHandler.send(mi, BadRequest);
-
-        return;
+        return m_httpHandler.send(mi, BadRequest);
     }
 
     QString controlUrl = requestHdr.path().simplified();
     if (controlUrl.isEmpty())
     {
         mi.setKeepAlive(false);
-        m_httpHandler.send(mi, BadRequest);
-
-        return;
+        return m_httpHandler.send(mi, BadRequest);
     }
 
     InvokeActionRequest iareq(soapAction, soapMsg, controlUrl);
     HLOG_DBG(QObject::tr("Dispatching control request."));
     incomingControlRequest(mi, iareq);
+
+    return HHttpHandler::Success;
 }
 
-void HHttpServer::processSubscription(
+HHttpHandler::ReturnValue HHttpServer::processSubscription(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     SubscribeRequest sreq;
-    SubscribeRequest::RetVal rv = m_httpHandler.receive(mi, sreq, &requestHdr);
+    SubscribeRequest::RetVal subscrRv;
 
-    if (rv == SubscribeRequest::Success)
+    HHttpHandler::ReturnValue rv =
+        m_httpHandler.receive(mi, sreq, subscrRv, &requestHdr);
+
+    if (rv != HHttpHandler::Success)
+    {
+        return rv;
+    }
+
+    if (subscrRv == SubscribeRequest::Success)
     {
         HLOG_DBG(QObject::tr("Dispatching subscription request."));
         incomingSubscriptionRequest(mi, sreq);
     }
+
+    return HHttpHandler::Success;
 }
 
-void HHttpServer::processUnsubscription(
+HHttpHandler::ReturnValue HHttpServer::processUnsubscription(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     UnsubscribeRequest usreq;
-    UnsubscribeRequest::RetVal rv = m_httpHandler.receive(mi, usreq, &requestHdr);
+    UnsubscribeRequest::RetVal unsubsRv;
 
-    if (rv == UnsubscribeRequest::Success)
+    HHttpHandler::ReturnValue rv =
+        m_httpHandler.receive(mi, usreq, unsubsRv, &requestHdr);
+
+    if (rv != HHttpHandler::Success)
+    {
+        return rv;
+    }
+
+    if (unsubsRv == UnsubscribeRequest::Success)
     {
         HLOG_DBG(QObject::tr("Dispatching unsubscription request."));
         incomingUnsubscriptionRequest(mi, usreq);
     }
+
+    return HHttpHandler::Success;
 }
 
-void HHttpServer::processNotifyMessage(
+HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
     MessagingInfo& mi, const QHttpRequestHeader& request, const QByteArray& body)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     NotifyRequest nreq;
-    NotifyRequest::RetVal rv = m_httpHandler.receive(mi, nreq, &request, &body);
+    NotifyRequest::RetVal notifyRv;
 
-    if (rv == NotifyRequest::Success)
+    HHttpHandler::ReturnValue rv =
+        m_httpHandler.receive(mi, nreq, notifyRv, &request, &body);
+
+    if (rv != HHttpHandler::Success)
+    {
+        return rv;
+    }
+
+    if (notifyRv == NotifyRequest::Success)
     {
         HLOG_DBG(QObject::tr("Dispatching event notification."));
         incomingNotifyMessage(mi, nreq);
     }
+
+    return HHttpHandler::Success;
 }
 
 void HHttpServer::incomingSubscriptionRequest(

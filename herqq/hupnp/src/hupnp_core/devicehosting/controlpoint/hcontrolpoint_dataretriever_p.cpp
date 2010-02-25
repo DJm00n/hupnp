@@ -87,23 +87,24 @@ QByteArray DataRetriever::retrieveData(const QUrl& baseUrl, const QUrl& query)
     MessagingInfo mi(sock, false, 5000);
     mi.setHostInfo(baseUrl);
 
-    try
-    {
-        QByteArray body = m_http.msgIO(mi, requestHdr, responseHdr);
-        if (!body.size())
-        {
-            throw HOperationFailedException(
-                QObject::tr("Received no data for request: [%1]").arg(request));
-        }
+    QByteArray body;
+    HHttpHandler::ReturnValue rv =
+        m_http.msgIO(mi, requestHdr, responseHdr, &body);
 
-        return body;
-    }
-    catch(HException& ex)
+    if (rv)
     {
         throw HOperationFailedException(QObject::tr(
             "Failed to retrieve data from: [%1] due to: [%2]").arg(
-                request, ex.reason()));
+                request, mi.lastErrorDescription()));
     }
+
+    if (!body.size())
+    {
+        throw HOperationFailedException(
+            QObject::tr("Did not receive any data for request: [%1]").arg(request));
+    }
+
+    return body;
 }
 
 QDomDocument DataRetriever::retrieveServiceDescription(

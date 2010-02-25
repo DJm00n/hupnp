@@ -81,6 +81,8 @@ private:
 
     QString m_hostInfo;
 
+    QString m_lastErrorDescription;
+
 public:
 
      //
@@ -138,6 +140,16 @@ public:
     inline ChunkedInfo& chunkedInfo()
     {
         return m_chunkedInfo;
+    }
+
+    inline void setLastErrorDescription(const QString& errDescr)
+    {
+        m_lastErrorDescription = errDescr;
+    }
+
+    inline QString lastErrorDescription() const
+    {
+        return m_lastErrorDescription;
     }
 };
 

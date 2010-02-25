@@ -287,7 +287,15 @@ void HServiceSubscribtion::subscribe()
 
     MessagingInfo mi(sock, true);
     mi.setHostInfo(eventUrl);
-    SubscribeResponse response = m_http.msgIO(mi, req);
+
+    SubscribeResponse response;
+    HHttpHandler::ReturnValue rv = m_http.msgIO(mi, req, response);
+
+    if (rv != HHttpHandler::Success)
+    {
+        throw HOperationFailedException(
+            QObject::tr("Event subscription failed."));
+    }
 
     if (!response.isValid())
     {
@@ -328,29 +336,30 @@ void HServiceSubscribtion::subscribe()
             QObject::tr("Shutting down. Canceling subscription attempt."));
     }
 
-    try
-    {
-        mi.setReceiveTimeoutForNoData(3000);
+    mi.setReceiveTimeoutForNoData(3000);
 
-        NotifyRequest req;
-        if (m_http.receive(mi, req) != NotifyRequest::Success)
-        {
-            HLOG_WARN(QObject::tr(
-                "Failed to read initial notify event from the device. "
-                "It could be that the device does not honor the HTTP keep-alive."));
-        }
-        else
-        {
-            mi.setKeepAlive(false);
-            onNotify(mi, req);
-        }
-    }
-    catch(HException& ex)
+    NotifyRequest notifyReq;
+    NotifyRequest::RetVal notifyRv;
+    if (m_http.receive(mi, notifyReq, notifyRv) != HHttpHandler::Success ||
+        notifyRv != NotifyRequest::Success)
     {
         HLOG_WARN(QObject::tr(
-            "Failed to read initial notify event from the device: %1. "
-            "It could be that the device does not honor the HTTP keep-alive.").
-                arg(ex.reason()));
+            "Failed to read initial notify event from the device. "
+            "It could be that the device does not honor the HTTP keep-alive."));
+    }
+    else
+    {
+        mi.setKeepAlive(false);
+        try
+        {
+            onNotify(mi, notifyReq);
+        }
+        catch(HException& ex)
+        {
+            HLOG_WARN(QObject::tr(
+                "Failed to process initial notify event from the device: %1. ").
+                    arg(ex.reason()));
+        }
     }
 }
 
@@ -499,7 +508,16 @@ void HServiceSubscribtion::renewSubscription()
     mi.setHostInfo(eventUrl);
 
     SubscribeRequest req(eventUrl, m_sid, HTimeout(1800));
-    SubscribeResponse response = m_http.msgIO(mi, req);
+    SubscribeResponse response;
+
+    HHttpHandler::ReturnValue rv = m_http.msgIO(mi, req, response);
+
+    if (rv != HHttpHandler::Success)
+    {
+        throw HOperationFailedException(
+            QObject::tr("Re-subscribtion [sid %1] failed.").arg(
+                m_sid.toString()));
+    }
 
     if (!response.isValid())
     {
@@ -555,32 +573,31 @@ void HServiceSubscribtion::unsubscribe(bool exiting)
             "Failed to cancel event subscription: couldn't connect to the target device"));
     }
 
-    try
+    QUrl eventUrl = appendUrls(baseUrl, m_service->m_service->eventSubUrl());
+
+    HLOG_DBG(QObject::tr("Attempting to cancel event subscription from [%1]").arg(
+        eventUrl.toString()));
+
+    MessagingInfo mi(sock, false, m_exiting ? 10000 : 1000);
+    mi.setHostInfo(eventUrl);
+
+    UnsubscribeRequest req(eventUrl, m_sid);
+    HHttpHandler::ReturnValue rv = m_http.msgIO(mi, req);
+
+    if (rv)
     {
-        QUrl eventUrl = appendUrls(baseUrl, m_service->m_service->eventSubUrl());
+        HLOG_DBG(QObject::tr(
+            "Encountered an error during subscription cancellation: %1").arg(
+                mi.lastErrorDescription()));
 
-        HLOG_DBG(QObject::tr("Attempting to cancel event subscription from [%1]").arg(
-            eventUrl.toString()));
-
-        MessagingInfo mi(sock, false, m_exiting ? 10000 : 1000);
-        mi.setHostInfo(eventUrl);
-
-        UnsubscribeRequest req(eventUrl, m_sid);
-        m_http.msgIO(mi, req);
-
-        HLOG_DBG(QObject::tr("Subscription to [%1] canceled").arg(
-            eventUrl.toString()));
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(QObject::tr("Encountered an error during subscription cancellation: %1").arg(
-            ex.reason()));
-
-        // if the unsubscription failed, there's nothing much to do, but to log
+        // if the unsubscription "failed", there's nothing much to do, but to log
         // the error and perhaps to retry. Then again, UPnP has expiration mechanism
         // for events and thus even if the device failed to process the request, eventually
         // the subscription will expire.
     }
+
+    HLOG_DBG(QObject::tr("Subscription to [%1] canceled").arg(
+        eventUrl.toString()));
 
     resetSubscription();
 }

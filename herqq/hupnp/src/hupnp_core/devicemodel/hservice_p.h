@@ -111,14 +111,13 @@ public: // attributes
 
     QMutex m_updateMutex;
 
-    const QByteArray m_loggingIdentifier;
+    QByteArray m_loggingIdentifier;
 
     bool m_stateVariablesAreImmutable;
 
 public: // methods
 
-    HServicePrivate(
-        const QString& loggingIdentifier = "");
+    HServicePrivate();
 
     virtual ~HServicePrivate();
 

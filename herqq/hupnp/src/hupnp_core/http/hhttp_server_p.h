@@ -108,21 +108,21 @@ protected:
 
 private:
 
-    void processNotifyMessage(
+    HHttpHandler::ReturnValue processNotifyMessage(
         MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body);
 
     void processRequest(qint32 socketDescriptor);
 
-    void processGet (MessagingInfo&, const QHttpRequestHeader&);
-    void processHead(MessagingInfo&, const QHttpRequestHeader&);
+    HHttpHandler::ReturnValue processGet (MessagingInfo&, const QHttpRequestHeader&);
+    HHttpHandler::ReturnValue processHead(MessagingInfo&, const QHttpRequestHeader&);
 
-    void processPost(
+    HHttpHandler::ReturnValue processPost(
         MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body);
 
-    void processSubscription(
+    HHttpHandler::ReturnValue processSubscription(
         MessagingInfo&, const QHttpRequestHeader&);
 
-    void processUnsubscription(
+    HHttpHandler::ReturnValue processUnsubscription(
         MessagingInfo&, const QHttpRequestHeader&);
 
 protected:

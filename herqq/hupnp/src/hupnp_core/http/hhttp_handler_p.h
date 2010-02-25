@@ -60,6 +60,21 @@ class H_UPNP_CORE_EXPORT HHttpHandler
 H_DISABLE_COPY(HHttpHandler)
 friend class HHttpServer;
 
+public:
+
+    enum ReturnValue
+    {
+        Success = 0,
+        InvalidData = 1,
+        InvalidHeader = 2,
+        ShuttingDown = 3,
+        Timeout = 4,
+        PeerDisconnected = 5,
+        GenericSocketError = 6,
+        SocketClosed = 7,
+        Undefined = 0x0f000000
+    };
+
 private:
 
     class Counter
@@ -89,15 +104,15 @@ private:
 
 private:
 
-    QByteArray readChunkedRequest(MessagingInfo&);
-    QByteArray readRequestData   (MessagingInfo&, qint64 contentLength);
+    ReturnValue readChunkedRequest(MessagingInfo&, QByteArray*);
+    ReturnValue readRequestData   (MessagingInfo&, QByteArray*, qint64 contentLength);
 
     // return value is the body of the message, if any
     template<typename Header>
-    QByteArray receive(MessagingInfo&, Header&);
+    ReturnValue receive(MessagingInfo&, Header&, QByteArray* = 0);
 
-    void sendBlob(MessagingInfo&, const QByteArray&);
-    void sendChunked(MessagingInfo&, const QByteArray&);
+    ReturnValue sendBlob(MessagingInfo&, const QByteArray&);
+    ReturnValue sendChunked(MessagingInfo&, const QByteArray&);
 
 public:
 
@@ -106,54 +121,59 @@ public:
 
     void shutdown(bool wait = false);
 
-    void send(MessagingInfo&, StatusCode);
-    void send(MessagingInfo&, const QByteArray& data, StatusCode,
-        ContentType = Undefined);
+    ReturnValue send(MessagingInfo&, StatusCode);
+    ReturnValue send(MessagingInfo&, const QByteArray& data, StatusCode,
+         ContentType = Herqq::Upnp::Undefined);
 
     // the byte array specifies the entire message, including the header.
-    void send(MessagingInfo&, const QByteArray&);
+    ReturnValue send(MessagingInfo&, const QByteArray&);
 
-    void send(MessagingInfo&, const SubscribeRequest&);
-    void send(MessagingInfo&, const UnsubscribeRequest&);
-    void send(MessagingInfo&, const SubscribeResponse&);
-    void send(MessagingInfo&, const NotifyRequest&);
+    ReturnValue send(MessagingInfo&, const SubscribeRequest&);
+    ReturnValue send(MessagingInfo&, const UnsubscribeRequest&);
+    ReturnValue send(MessagingInfo&, const SubscribeResponse&);
+    ReturnValue send(MessagingInfo&, const NotifyRequest&);
 
-    void sendActionFailed(
+    ReturnValue sendActionFailed(
         MessagingInfo&, qint32 actionErrCode, const QString& msg="");
 
-    NotifyRequest::RetVal receive(
+    ReturnValue receive(
         MessagingInfo&,
         NotifyRequest&,
+        NotifyRequest::RetVal&,
         const QHttpRequestHeader* rcvdHdr=0,
         const QByteArray* body=0);
 
-    SubscribeRequest::RetVal receive(
+    ReturnValue receive(
         MessagingInfo&,
         SubscribeRequest&,
+        SubscribeRequest::RetVal&,
         const QHttpRequestHeader* rcvdHdr=0);
 
-    UnsubscribeRequest::RetVal receive(
+    ReturnValue receive(
         MessagingInfo&,
         UnsubscribeRequest&,
+        UnsubscribeRequest::RetVal&,
         const QHttpRequestHeader* rcvdHdr=0);
 
-    void receive(MessagingInfo&, SubscribeResponse&);
+    ReturnValue receive(MessagingInfo&, SubscribeResponse&);
 
-    SubscribeResponse msgIO(MessagingInfo&, const SubscribeRequest&);
+    ReturnValue msgIO(MessagingInfo&, const SubscribeRequest&, SubscribeResponse&);
 
-    void msgIO(MessagingInfo&, const UnsubscribeRequest&);
-    void msgIO(MessagingInfo&, const NotifyRequest&);
+    ReturnValue msgIO(MessagingInfo&, const UnsubscribeRequest&);
+    ReturnValue msgIO(MessagingInfo&, const NotifyRequest&);
 
-    QtSoapMessage msgIO(
-        MessagingInfo&, QHttpRequestHeader&, const QtSoapMessage&);
+    // last parameter is the response message
+    ReturnValue msgIO(
+        MessagingInfo&, QHttpRequestHeader&, const QtSoapMessage&, QtSoapMessage&);
 
-    // return value is the body of the message, if any
-    QByteArray msgIO(MessagingInfo&, QHttpRequestHeader&, QHttpResponseHeader&);
+    // last parameter is the body of the message, if any
+    ReturnValue msgIO(
+        MessagingInfo&, QHttpRequestHeader&, QHttpResponseHeader&, QByteArray* = 0);
 
-    // return value is the body of the message, if any
-    QByteArray msgIO(
+    // last parameter is the body of the message, if any
+    ReturnValue msgIO(
         MessagingInfo&, QHttpRequestHeader&, const QByteArray& requestBody,
-        QHttpResponseHeader&);
+        QHttpResponseHeader&, QByteArray* = 0);
 };
 
 }

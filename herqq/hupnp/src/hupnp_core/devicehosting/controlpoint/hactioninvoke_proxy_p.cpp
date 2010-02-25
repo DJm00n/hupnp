@@ -168,17 +168,8 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
         return;
     }
 
-    try
+    if (response.isFault())
     {
-        if (response.isFault())
-        {
-            invocationDone(HAction::UndefinedFailure());
-            return;
-        }
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(ex.reason());
         invocationDone(HAction::UndefinedFailure());
         return;
     }

@@ -28,7 +28,6 @@
 #include "./../devicehosting/messages/hevent_messages_p.h"
 
 #include "./../../utils/hlogger_p.h"
-#include "./../../utils/hexceptions_p.h"
 
 #include <QTcpSocket>
 #include <QHostAddress>
@@ -90,11 +89,12 @@ void HHttpHandler::shutdown(bool wait)
     }
 }
 
-QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
+HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
+    MessagingInfo& mi, QByteArray* data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QByteArray retVal;
+    Q_ASSERT(data);
 
     QTime stopWatch; stopWatch.start();
     for(; stopWatch.elapsed() < 15000; )
@@ -147,8 +147,10 @@ QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
         if (linesRead != 1)
         {
             // No size line. It should be available at this point.
-            throw HSocketException(
+            mi.setLastErrorDescription(
                 QObject::tr("No chunk-size line in the message body."));
+
+            return InvalidData;
         }
 
         qint32 endOfSize = buf.indexOf(';');
@@ -163,9 +165,11 @@ QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
         qint32 chunkSize = sizeLine.toInt(&ok, 16);
         if (!ok || chunkSize < 0)
         {
-            throw HSocketException(
+            mi.setLastErrorDescription(
                 QObject::tr("Invalid chunk-size line: %1.").arg(
-                    QString::fromUtf8(sizeLine)));
+                      QString::fromUtf8(sizeLine)));
+
+            return InvalidData;
         }
 
         if (chunkSize == 0)
@@ -185,22 +189,29 @@ QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
 
             if (m_shuttingDown && (!dataAvailable || stopWatch.elapsed() > 500))
             {
-                throw HShutdownInProgressException(
-                    QObject::tr("Shutting down. Aborting HTTP message body read."));
+                mi.setLastErrorDescription(QObject::tr(
+                    "Shutting down. Aborting HTTP message body read."));
+
+                return ShuttingDown;
             }
             else if (!dataAvailable &&
                      mi.socket().state() != QTcpSocket::ConnectedState &&
                      mi.socket().state() != QTcpSocket::ClosingState)
             {
-                throw HSocketException(
-                    QObject::tr("Peer has disconnected. Could not read HTTP message body."));
+                mi.setLastErrorDescription(QObject::tr(
+                    "Peer has disconnected. Could not read HTTP message body."));
+
+                return PeerDisconnected;
             }
             else if (stopWatch.elapsed() >= mi.receiveTimeoutForNoData() &&
                      mi.receiveTimeoutForNoData() >= 0)
             {
-                throw HTimeoutException(
-                    QObject::tr("Timeout [%1] has elapsed. Could not read chunked HTTP message body.").arg(
+                mi.setLastErrorDescription(QObject::tr(
+                    "Timeout [%1] has elapsed. Could not read chunked "
+                    "HTTP message body.").arg(
                         QString::number(mi.receiveTimeoutForNoData())));
+
+                return Timeout;
             }
             else if (!dataAvailable)
             {
@@ -212,8 +223,10 @@ QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
 
             if (read < 0)
             {
-                throw HSocketException(
-                    QObject::tr("Failed to read chunk: %1").arg(mi.socket().errorString()));
+                mi.setLastErrorDescription(QObject::tr(
+                    "Failed to read chunk: %1").arg(mi.socket().errorString()));
+
+                return GenericSocketError;
             }
             else if (read == 0)
             {
@@ -225,7 +238,7 @@ QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
         }
 
         // append the chunk to the return value and
-        retVal.append(buf);
+        data->append(buf);
 
         char c;
         mi.socket().getChar(&c);
@@ -235,15 +248,21 @@ QByteArray HHttpHandler::readChunkedRequest(MessagingInfo& mi)
         stopWatch.restart();
     }
 
-    return retVal;
+    return Success;
 }
 
-QByteArray HHttpHandler::readRequestData(
-    MessagingInfo& mi, qint64 contentLength)
+HHttpHandler::ReturnValue HHttpHandler::readRequestData(
+    MessagingInfo& mi, QByteArray* requestData, qint64 contentLength)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QByteArray requestData;
+    if (contentLength <= 0)
+    {
+        return Success;
+    }
+
+    Q_ASSERT(requestData);
+
     qint64 bytesRead = 0;
     QByteArray buf; buf.resize(4096);
 
@@ -255,22 +274,28 @@ QByteArray HHttpHandler::readRequestData(
 
         if (m_shuttingDown && (!dataAvailable || stopWatch.elapsed() > 500))
         {
-            throw HShutdownInProgressException(
-                QObject::tr("Shutting down. Aborting HTTP message body read."));
+            mi.setLastErrorDescription(QObject::tr(
+                "Shutting down. Aborting HTTP message body read."));
+
+            return ShuttingDown;
         }
         else if (!dataAvailable &&
                  mi.socket().state() != QTcpSocket::ConnectedState &&
                  mi.socket().state() != QTcpSocket::ClosingState)
         {
-            throw HSocketException(
-                QObject::tr("Peer has disconnected. Could not read HTTP message body."));
+            mi.setLastErrorDescription(QObject::tr(
+                "Peer has disconnected. Could not read HTTP message body."));
+
+            return PeerDisconnected;
         }
         else if (stopWatch.elapsed() >= mi.receiveTimeoutForNoData() &&
                  mi.receiveTimeoutForNoData() >= 0)
         {
-            throw HTimeoutException(
-                QObject::tr("Timeout [%1] has elapsed. Could not read HTTP message body.").arg(
+            mi.setLastErrorDescription(QObject::tr(
+                "Timeout [%1] has elapsed. Could not read HTTP message body.").arg(
                     QString::number(mi.receiveTimeoutForNoData())));
+
+            return Timeout;
         }
         else if (!dataAvailable)
         {
@@ -280,18 +305,21 @@ QByteArray HHttpHandler::readRequestData(
         do
         {
             qint64 retVal = mi.socket().read(
-                buf.data(), qMin(static_cast<qint64>(buf.size()), contentLength - bytesRead));
+                buf.data(),
+                qMin(static_cast<qint64>(buf.size()), contentLength - bytesRead));
 
             if (retVal < 0)
             {
-                throw HSocketException(
+                mi.setLastErrorDescription(
                     QObject::tr("Could not read HTTP message body: .").arg(
                         mi.socket().errorString()));
+
+                return GenericSocketError;
             }
             else if (retVal > 0)
             {
                 bytesRead += retVal;
-                requestData.append(QByteArray(buf.data(), retVal));
+                requestData->append(QByteArray(buf.data(), retVal));
             }
             else
             {
@@ -306,13 +334,15 @@ QByteArray HHttpHandler::readRequestData(
         }
     }
 
-    return requestData;
+    return Success;
 }
 
 template<typename Header>
-QByteArray HHttpHandler::receive(MessagingInfo& mi, Header& hdr)
+HHttpHandler::ReturnValue HHttpHandler::receive(
+    MessagingInfo& mi, Header& hdr, QByteArray* body)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     Counter cnt(m_callsInProgress);
 
     QByteArray headerData;
@@ -324,22 +354,28 @@ QByteArray HHttpHandler::receive(MessagingInfo& mi, Header& hdr)
 
         if (m_shuttingDown && (!dataAvailable || stopWatch.elapsed() > 500))
         {
-            throw HShutdownInProgressException(
-                QObject::tr("Shutting down. Aborting HTTP message header read."));
+            mi.setLastErrorDescription(QObject::tr(
+                "Shutting down. Aborting HTTP message header read."));
+
+            return ShuttingDown;
         }
         else if (!dataAvailable &&
                  mi.socket().state() != QTcpSocket::ConnectedState &&
                  mi.socket().state() != QTcpSocket::ClosingState)
         {
-            throw HSocketException(
-                QObject::tr("Peer has disconnected. Could not read HTTP message header."));
+            mi.setLastErrorDescription(QObject::tr(
+                "Peer has disconnected. Could not read HTTP message header."));
+
+            return PeerDisconnected;
         }
         else if (stopWatch.elapsed() >= mi.receiveTimeoutForNoData() &&
                  mi.receiveTimeoutForNoData() >= 0)
         {
-            throw HTimeoutException(
-                QObject::tr("Timeout [%1] has elapsed. Could not read HTTP message header.").arg(
+            mi.setLastErrorDescription(QObject::tr(
+                "Timeout [%1] has elapsed. Could not read HTTP message header.").arg(
                     QString::number(mi.receiveTimeoutForNoData())));
+
+            return Timeout;
         }
         else if (!dataAvailable)
         {
@@ -388,40 +424,40 @@ QByteArray HHttpHandler::receive(MessagingInfo& mi, Header& hdr)
     hdr = Header(QString::fromUtf8(headerData));
     if (!hdr.isValid())
     {
-        return QByteArray();
+        return InvalidHeader;
     }
 
-    QByteArray body;
     bool chunked = hdr.value("TRANSFER-ENCODING") == "chunked";
     if (chunked)
     {
         if (hdr.hasContentLength())
         {
             hdr = Header();
-            return QByteArray();
+            return InvalidHeader;
         }
 
-        body = readChunkedRequest(mi);
+        readChunkedRequest(mi, body);
     }
     else
     {
         if (hdr.hasContentLength())
         {
             quint32 clength = hdr.contentLength();
-            body = readRequestData(mi, clength);
+            readRequestData(mi, body, clength);
         }
         else
         {
-            body = mi.socket().readAll();
+            Q_ASSERT(body);
+            *body = mi.socket().readAll();
         }
     }
 
     mi.setKeepAlive(HHttpUtils::keepAlive(hdr));
 
-    return body;
+    return Success;
 }
 
-void HHttpHandler::sendBlob(MessagingInfo& mi, const QByteArray& data)
+HHttpHandler::ReturnValue HHttpHandler::sendBlob(MessagingInfo& mi, const QByteArray& data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(!data.isEmpty());
@@ -435,9 +471,11 @@ void HHttpHandler::sendBlob(MessagingInfo& mi, const QByteArray& data)
     {
         if (mi.socket().state() != QTcpSocket::ConnectedState)
         {
-            throw HSocketException(
-                QObject::tr("Failed to send data to %1. Connection closed.").arg(
+            mi.setLastErrorDescription(QObject::tr(
+                "Failed to send data to %1. Connection closed.").arg(
                     peer.toString()));
+
+            return SocketClosed;
         }
 
         bytesWritten = mi.socket().write(data.data() + index, data.size() - index);
@@ -446,16 +484,22 @@ void HHttpHandler::sendBlob(MessagingInfo& mi, const QByteArray& data)
         {
             if (!mi.socket().isValid() || errorThreshold > 100)
             {
-                throw HSocketException(QObject::tr("Failed to send data to %1.").arg(
-                    peer.toString()));
+                mi.setLastErrorDescription(
+                    QObject::tr("Failed to send data to %1.").arg(
+                        peer.toString()));
+
+                return GenericSocketError;
             }
 
             ++errorThreshold;
         }
         else if (bytesWritten < 0)
         {
-            throw HSocketException(QObject::tr("Failed to send data to %1.").arg(
-                peer.toString()));
+            mi.setLastErrorDescription(
+                QObject::tr("Failed to send data to %1.").arg(
+                    peer.toString()));
+
+            return GenericSocketError;
         }
 
         index += bytesWritten;
@@ -470,9 +514,12 @@ void HHttpHandler::sendBlob(MessagingInfo& mi, const QByteArray& data)
     {
         mi.socket().disconnectFromHost();
     }*/
+
+    return Success;
 }
 
-void HHttpHandler::sendChunked(MessagingInfo& mi, const QByteArray& data)
+HHttpHandler::ReturnValue HHttpHandler::sendChunked(
+    MessagingInfo& mi, const QByteArray& data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(!data.isEmpty());
@@ -495,9 +542,11 @@ void HHttpHandler::sendChunked(MessagingInfo& mi, const QByteArray& data)
     {
         if (mi.socket().state() != QTcpSocket::ConnectedState)
         {
-            throw HSocketException(
-                QObject::tr("Failed to send data to %1. Connection closed.").arg(
+            mi.setLastErrorDescription(QObject::tr(
+                "Failed to send data to %1. Connection closed.").arg(
                     peer.toString()));
+
+            return SocketClosed;
         }
 
         qint32 dataToSendSize =
@@ -512,8 +561,10 @@ void HHttpHandler::sendChunked(MessagingInfo& mi, const QByteArray& data)
         bytesWritten = mi.socket().write(sizeLine);
         if (bytesWritten != sizeLine.size())
         {
-            throw HSocketException(
-                QObject::tr("Failed to send data to %1.").arg(peer.toString()));
+            mi.setLastErrorDescription(QObject::tr(
+                "Failed to send data to %1.").arg(peer.toString()));
+
+            return GenericSocketError;
         }
 
         while(errorThreshold < 100)
@@ -526,16 +577,22 @@ void HHttpHandler::sendChunked(MessagingInfo& mi, const QByteArray& data)
             {
                 if (!mi.socket().isValid() || errorThreshold > 100)
                 {
-                    throw HSocketException(QObject::tr("Failed to send data to %1.").arg(
-                        peer.toString()));
+                    mi.setLastErrorDescription(
+                        QObject::tr("Failed to send data to %1.").arg(
+                            peer.toString()));
+
+                    return GenericSocketError;
                 }
 
                 ++errorThreshold;
             }
             else if (bytesWritten < 0)
             {
-                throw HSocketException(QObject::tr("Failed to send data to %1.").arg(
-                    peer.toString()));
+                mi.setLastErrorDescription(
+                    QObject::tr("Failed to send data to %1.").arg(
+                        peer.toString()));
+
+                return GenericSocketError;
             }
             else
             {
@@ -550,8 +607,10 @@ void HHttpHandler::sendChunked(MessagingInfo& mi, const QByteArray& data)
         bytesWritten = mi.socket().write(crlf, 2);
         if (bytesWritten != 2)
         {
-            throw HSocketException(
+            mi.setLastErrorDescription(
                 QObject::tr("Failed to send data to %1.").arg(peer.toString()));
+
+            return GenericSocketError;
         }
 
         mi.socket().flush();
@@ -570,9 +629,12 @@ void HHttpHandler::sendChunked(MessagingInfo& mi, const QByteArray& data)
     {
         mi.socket().disconnectFromHost();
     }*/
+
+    return Success;
 }
 
-void HHttpHandler::send(MessagingInfo& mi, const QByteArray& data)
+HHttpHandler::ReturnValue HHttpHandler::send(
+    MessagingInfo& mi, const QByteArray& data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -582,66 +644,64 @@ void HHttpHandler::send(MessagingInfo& mi, const QByteArray& data)
     if (mi.chunkedInfo().m_maxChunkSize > 0 &&
         data.size() - indexOfData > mi.chunkedInfo().m_maxChunkSize)
     {
-        sendChunked(mi, data);
+        return sendChunked(mi, data);
     }
-    else
-    {
-        sendBlob(mi, data);
-    }
+
+    return sendBlob(mi, data);
 }
 
-void HHttpHandler::send(MessagingInfo& mi, StatusCode sc)
+HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, StatusCode sc)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    send(mi, HHttpMessageCreator::createResponse(sc, mi));
+    return send(mi, HHttpMessageCreator::createResponse(sc, mi));
 }
 
-void HHttpHandler::send(
+HHttpHandler::ReturnValue HHttpHandler::send(
     MessagingInfo& mi, const QByteArray& data, StatusCode sc, ContentType ct)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    send(mi, HHttpMessageCreator::createResponse(sc, mi, data, ct));
+    return send(mi, HHttpMessageCreator::createResponse(sc, mi, data, ct));
 }
 
-void HHttpHandler::send(MessagingInfo& mi, const SubscribeRequest& request)
+HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const SubscribeRequest& request)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(request.isValid());
 
     QByteArray data = HHttpMessageCreator::create(request, mi);
-    send(mi, data);
+    return send(mi, data);
 }
 
-void HHttpHandler::send(
+HHttpHandler::ReturnValue HHttpHandler::send(
     MessagingInfo& mi, const SubscribeResponse& response)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(response.isValid());
 
     QByteArray data = HHttpMessageCreator::create(response, mi);
-    send(mi, data);
+    return send(mi, data);
 }
 
-void HHttpHandler::send(MessagingInfo& mi, const UnsubscribeRequest& req)
+HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const UnsubscribeRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(req.isValid());
 
     QByteArray data = HHttpMessageCreator::create(req, mi);
-    send(mi, data);
+    return send(mi, data);
 }
 
-void HHttpHandler::send(MessagingInfo& mi, const NotifyRequest& req)
+HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const NotifyRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(req.isValid());
 
     QByteArray data = HHttpMessageCreator::create(req, mi);
-    send(mi, data);
+    return send(mi, data);
 }
 
-NotifyRequest::RetVal HHttpHandler::receive(
-    MessagingInfo& mi, NotifyRequest& req,
+HHttpHandler::ReturnValue HHttpHandler::receive(
+    MessagingInfo& mi, NotifyRequest& req, NotifyRequest::RetVal& retVal,
     const QHttpRequestHeader* reqHdr, const QByteArray* body)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -651,7 +711,11 @@ NotifyRequest::RetVal HHttpHandler::receive(
 
     if (!reqHdr && !body)
     {
-        bodyContent = receive(mi, requestHeader);
+        ReturnValue rv = receive(mi, requestHeader, &bodyContent);
+        if (rv != Success)
+        {
+            return rv;
+        }
     }
     else
     {
@@ -662,10 +726,7 @@ NotifyRequest::RetVal HHttpHandler::receive(
         bodyContent   = *body;
     }
 
-    NotifyRequest nreq;
-
-    NotifyRequest::RetVal retVal =
-        HHttpMessageCreator::create(requestHeader, bodyContent, nreq);
+    retVal = HHttpMessageCreator::create(requestHeader, bodyContent, req);
 
     switch(retVal)
     {
@@ -674,46 +735,45 @@ NotifyRequest::RetVal HHttpHandler::receive(
 
     case NotifyRequest::PreConditionFailed:
         mi.setKeepAlive(false);
-        send(mi, PreconditionFailed);
-        break;
+        return send(mi, PreconditionFailed);
 
     case NotifyRequest::InvalidContents:
     case NotifyRequest::InvalidSequenceNr:
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
-        break;
+        return send(mi, BadRequest);
 
     default:
         Q_ASSERT(false);
 
         retVal = NotifyRequest::BadRequest;
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
+        return send(mi, BadRequest);
     }
 
-    req = nreq;
-    return retVal;
+    return Success;
 }
 
-SubscribeRequest::RetVal
-    HHttpHandler::receive(
-        MessagingInfo& mi, SubscribeRequest& req, const QHttpRequestHeader* reqHdr)
+HHttpHandler::ReturnValue HHttpHandler::receive(
+    MessagingInfo& mi, SubscribeRequest& req, SubscribeRequest::RetVal& retVal,
+    const QHttpRequestHeader* reqHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QHttpRequestHeader requestHeader;
     if (!reqHdr)
     {
-        receive(mi, requestHeader);
+        ReturnValue rv = receive(mi, requestHeader);
+        if (rv != Success)
+        {
+            return rv;
+        }
     }
     else
     {
         requestHeader = *reqHdr;
     }
 
-    SubscribeRequest sreq;
-    SubscribeRequest::RetVal retVal =
-        HHttpMessageCreator::create(requestHeader, sreq);
+    retVal = HHttpMessageCreator::create(requestHeader, req);
 
     switch(retVal)
     {
@@ -722,49 +782,48 @@ SubscribeRequest::RetVal
 
     case SubscribeRequest::PreConditionFailed:
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
-        break;
+        return send(mi, BadRequest);
 
     case SubscribeRequest::IncompatibleHeaders:
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
-        break;
+        return send(mi, BadRequest);
 
     case SubscribeRequest::BadRequest:
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
-        break;
+        return send(mi, BadRequest);
 
     default:
         Q_ASSERT(false);
 
         retVal = SubscribeRequest::BadRequest;
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
+        return send(mi, BadRequest);
     }
 
-    req = sreq;
-    return retVal;
+    return Success;
 }
 
-UnsubscribeRequest::RetVal HHttpHandler::receive(
-    MessagingInfo& mi, UnsubscribeRequest& req, const QHttpRequestHeader* reqHdr)
+HHttpHandler::ReturnValue HHttpHandler::receive(
+    MessagingInfo& mi, UnsubscribeRequest& req,
+    UnsubscribeRequest::RetVal& retVal, const QHttpRequestHeader* reqHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QHttpRequestHeader requestHeader;
     if (!reqHdr)
     {
-        receive(mi, requestHeader);
+        ReturnValue rv = receive(mi, requestHeader);
+        if (rv != Success)
+        {
+            return rv;
+        }
     }
     else
     {
         requestHeader = *reqHdr;
     }
 
-    UnsubscribeRequest ureq;
-    UnsubscribeRequest::RetVal retVal =
-        HHttpMessageCreator::create(requestHeader, ureq);
+    retVal = HHttpMessageCreator::create(requestHeader, req);
 
     switch(retVal)
     {
@@ -773,142 +832,182 @@ UnsubscribeRequest::RetVal HHttpHandler::receive(
 
     case UnsubscribeRequest::IncompatibleHeaders:
         mi.setKeepAlive(false);
-        send(mi, IncompatibleHeaderFields);
+        return send(mi, IncompatibleHeaderFields);
 
     case UnsubscribeRequest::PreConditionFailed:
         mi.setKeepAlive(false);
-        send(mi, PreconditionFailed);
-        break;
+        return send(mi, PreconditionFailed);
 
     default:
         Q_ASSERT(false);
 
         retVal = UnsubscribeRequest::BadRequest;
         mi.setKeepAlive(false);
-        send(mi, BadRequest);
+        return send(mi, BadRequest);
     }
 
-    req = ureq;
-    return retVal;
+    return Success;
 }
 
-void HHttpHandler::receive(MessagingInfo& mi, SubscribeResponse& resp)
+HHttpHandler::ReturnValue HHttpHandler::receive(
+    MessagingInfo& mi, SubscribeResponse& resp)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QHttpResponseHeader respHeader;
-    receive(mi, respHeader);
+    ReturnValue rv = receive(mi, respHeader);
+    if (rv != Success)
+    {
+        return rv;
+    }
 
     SubscribeResponse tmpResp;
     if (HHttpMessageCreator::create(respHeader, tmpResp))
     {
         resp = tmpResp;
     }
+
+    return Success;
 }
 
-SubscribeResponse HHttpHandler::msgIO(
-    MessagingInfo& mi, const SubscribeRequest& request)
+HHttpHandler::ReturnValue HHttpHandler::msgIO(
+    MessagingInfo& mi, const SubscribeRequest& request,
+    SubscribeResponse& response)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    send(mi, HHttpMessageCreator::create(request, mi));
 
-    SubscribeResponse response;
-    receive(mi, response);
+    ReturnValue rv = send(mi, HHttpMessageCreator::create(request, mi));
+    if (rv != Success)
+    {
+        return rv;
+    }
 
-    return response;
+    return receive(mi, response);
 }
 
-QByteArray HHttpHandler::msgIO(
+HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, QHttpRequestHeader& requestHdr,
-    const QByteArray& reqBody, QHttpResponseHeader& responseHdr)
+    const QByteArray& reqBody, QHttpResponseHeader& responseHdr,
+    QByteArray* respBody)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QByteArray data = HHttpMessageCreator::setupData(requestHdr, reqBody, mi);
-    send(mi, data);
+    ReturnValue rv = send(mi, data);
+    if (rv != Success)
+    {
+        return rv;
+    }
 
-    return receive(mi, responseHdr);
+    return receive(mi, responseHdr, respBody);
 }
 
-QByteArray HHttpHandler::msgIO(
+HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, QHttpRequestHeader& requestHdr,
-    QHttpResponseHeader& responseHdr)
+    QHttpResponseHeader& responseHdr, QByteArray* respBody)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    return msgIO(mi, requestHdr, QByteArray(), responseHdr);
+    return msgIO(mi, requestHdr, QByteArray(), responseHdr, respBody);
 }
 
-void HHttpHandler::msgIO(
+HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, const UnsubscribeRequest& request)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(request.isValid());
 
-    send(mi, HHttpMessageCreator::create(request, mi));
-
-    QHttpResponseHeader responseHdr;
-    receive(mi, responseHdr);
-
-    if (responseHdr.isValid() && responseHdr.statusCode() == 200)
+    ReturnValue rv = send(mi, HHttpMessageCreator::create(request, mi));
+    if (rv != Success)
     {
-        return;
+        return rv;
     }
 
-    throw HOperationFailedException(
-        QObject::tr("Unsubscribe failed: %1.").arg(responseHdr.reasonPhrase()));
+    QHttpResponseHeader responseHdr;
+    rv = receive(mi, responseHdr);
+    if (rv != Success)
+    {
+        return rv;
+    }
+
+    if (!responseHdr.isValid() || responseHdr.statusCode() != 200)
+    {
+        mi.setLastErrorDescription(
+            QObject::tr("Unsubscribe failed: %1.").arg(responseHdr.reasonPhrase()));
+    }
+
+    return Success;
 }
 
-void HHttpHandler::msgIO(MessagingInfo& mi, const NotifyRequest& request)
+HHttpHandler::ReturnValue HHttpHandler::msgIO(
+    MessagingInfo& mi, const NotifyRequest& request)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    send(mi, request);
-
-    QHttpResponseHeader responseHdr;
-    receive(mi, responseHdr);
-
-    if (responseHdr.isValid() && responseHdr.statusCode() == 200)
+    ReturnValue rv = send(mi, request);
+    if (rv != Success)
     {
-        return;
+        return rv;
     }
 
-    throw HOperationFailedException(
-        QObject::tr("Notify failed: %1.").arg(responseHdr.reasonPhrase()));
+    QHttpResponseHeader responseHdr;
+    rv = receive(mi, responseHdr);
+    if (rv != Success)
+    {
+        return rv;
+    }
+
+    if (!responseHdr.isValid() || responseHdr.statusCode() != 200)
+    {
+        mi.setLastErrorDescription(
+            QObject::tr("Notify failed: %1.").arg(responseHdr.reasonPhrase()));
+    }
+
+    return Success;
 }
 
-QtSoapMessage HHttpHandler::msgIO(
+HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, QHttpRequestHeader& reqHdr,
-    const QtSoapMessage& soapMsg)
+    const QtSoapMessage& soapMsg, QtSoapMessage& response)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QHttpResponseHeader responseHdr;
 
-    QByteArray respBody =
-        msgIO(mi, reqHdr, soapMsg.toXmlString().toUtf8(), responseHdr);
+    QByteArray respBody;
+
+    ReturnValue rv =
+        msgIO(mi, reqHdr, soapMsg.toXmlString().toUtf8(), responseHdr, &respBody);
+
+    if (rv != Success)
+    {
+        return rv;
+    }
 
     if (!respBody.size())
     {
-        throw HSocketException(
-            QObject::tr("No response to the sent SOAP message from host @ %1").arg(
+        mi.setLastErrorDescription(QObject::tr(
+            "No response to the sent SOAP message from host @ %1").arg(
                 mi.socket().peerName()));
+
+        return InvalidData;
     }
 
     QDomDocument dd;
     if (!dd.setContent(respBody, true))
     {
-        throw HOperationFailedException(
-            QObject::tr("Invalid SOAP response from host @ %1").arg(mi.socket().peerName()));
+        mi.setLastErrorDescription(QObject::tr(
+            "Invalid SOAP response from host @ %1").arg(mi.socket().peerName()));
+
+        return InvalidData;
     }
 
-    QtSoapMessage soapResponse;
-    soapResponse.setContent(dd);
+    response.setContent(dd);
 
-    return soapResponse;
+    return Success;
 }
 
-void HHttpHandler::sendActionFailed(
+HHttpHandler::ReturnValue HHttpHandler::sendActionFailed(
     MessagingInfo& mi, qint32 actionErrCode, const QString& description)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -916,7 +1015,7 @@ void HHttpHandler::sendActionFailed(
     QByteArray data =
         HHttpMessageCreator::createResponse(mi, actionErrCode, description);
 
-    send(mi, data);
+    return send(mi, data);
 }
 
 }

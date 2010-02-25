@@ -40,8 +40,9 @@ namespace Upnp
 /*******************************************************************************
  * HServiceController
  ******************************************************************************/
-HServiceController::HServiceController(HService* service) :
-    QObject(service->h_ptr->m_parentDevice), m_service(service)
+HServiceController::HServiceController(
+    HService* service) :
+        QObject(service->h_ptr->m_parentDevice), m_service(service)
 {
     Q_ASSERT(m_service);
     m_service->setParent(this);
@@ -49,45 +50,44 @@ HServiceController::HServiceController(HService* service) :
 
 HServiceController::~HServiceController()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_service->h_ptr->m_loggingIdentifier);
 }
 
 bool HServiceController::updateVariables(
     const QList<QPair<QString, QString> >& variables, bool sendEvent)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_service->h_ptr->m_loggingIdentifier);
 
     return m_service->h_ptr->updateVariables(variables, sendEvent);
 }
 
 /*******************************************************************************
- *HServicePrivate
+ * HServicePrivate
  ******************************************************************************/
-HServicePrivate::HServicePrivate(
-    const QString& loggingIdentifier) :
-        m_serviceId        (),
-        m_serviceType      (),
-        m_scpdUrl          (),
-        m_controlUrl       (),
-        m_eventSubUrl      (),
-        m_serviceDescriptor(),
-        m_actions          (),
-        m_actionsAsMap     (),
-        m_stateVariables   (),
-        q_ptr              (0),
-        m_eventsEnabled    (true),
-        m_parentDevice     (0),
-        m_evented          (false),
-        m_updateMutex      (),
-        m_loggingIdentifier(loggingIdentifier.toLocal8Bit()),
-        m_stateVariablesAreImmutable(false)
+HServicePrivate::HServicePrivate() :
+    m_serviceId        (),
+    m_serviceType      (),
+    m_scpdUrl          (),
+    m_controlUrl       (),
+    m_eventSubUrl      (),
+    m_serviceDescriptor(),
+    m_actions          (),
+    m_actionsAsMap     (),
+    m_stateVariables   (),
+    q_ptr              (0),
+    m_eventsEnabled    (true),
+    m_parentDevice     (0),
+    m_evented          (false),
+    m_updateMutex      (),
+    m_loggingIdentifier(),
+    m_stateVariablesAreImmutable(false)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 HServicePrivate::~HServicePrivate()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     qDeleteAll(m_actions);
     qDeleteAll(m_stateVariables);
@@ -95,7 +95,7 @@ HServicePrivate::~HServicePrivate()
 
 bool HServicePrivate::addStateVariable(HStateVariableController* sv)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(sv);
     Q_ASSERT(!m_stateVariables.contains(sv->m_stateVariable->name()));
@@ -114,7 +114,7 @@ bool HServicePrivate::addStateVariable(HStateVariableController* sv)
 bool HServicePrivate::updateVariable(
     const QString& stateVarName, const QVariant& value)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QMutexLocker lock(&m_updateMutex);
 
@@ -191,14 +191,14 @@ HService::HService(HServicePrivate& dd) :
 
 HService::~HService()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     delete h_ptr;
 }
 
 bool HService::setStateVariableValue(
     const QString& stateVarName, const QVariant& value)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (h_ptr->m_stateVariablesAreImmutable)
     {
@@ -213,7 +213,7 @@ bool HService::setStateVariableValue(
 
 bool HService::setStateVariableValues(const QHash<QString, QVariant>& values)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (h_ptr->m_stateVariablesAreImmutable)
     {
@@ -275,14 +275,12 @@ QList<HAction*> HService::actions() const
 
 HAction* HService::actionByName(const QString& name) const
 {
-    HLOG(H_AT, H_FUN);
-
     return h_ptr->m_actionsAsMap.value(name);
 }
 
 QList<HStateVariable*> HService::stateVariables() const
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     QList<HStateVariable*> retVal;
 
@@ -299,7 +297,7 @@ QList<HStateVariable*> HService::stateVariables() const
 
 HStateVariable* HService::stateVariableByName(const QString& name) const
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     HStateVariableController* sv = h_ptr->m_stateVariables.value(name);
     return sv ? sv->m_stateVariable : 0;

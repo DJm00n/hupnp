@@ -85,6 +85,10 @@ void HObjectCreator::initService(
     service->h_ptr->m_serviceId =
         readElementValue("serviceId", serviceDefinition, &wasDefined);
 
+    service->h_ptr->m_loggingIdentifier =
+        m_creationParameters.m_loggingIdentifier.append(
+            service->h_ptr->m_serviceId.toString()).append(": ");
+
     if (!wasDefined)
     {
         throw HParseException(QObject::tr(

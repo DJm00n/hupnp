@@ -139,6 +139,11 @@ void HHttpAsyncOperation::state2_readHeader()
     {
         quint32 clength = m_headerRead.contentLength();
         m_dataToRead = clength;
+        if (m_dataToRead == 0)
+        {
+            m_state = 4;
+            emit done(m_uuid);
+        }
     }
 
     m_state = 3;
