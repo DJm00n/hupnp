@@ -80,7 +80,7 @@ public:
     //
     // reads byte by byte to the target bytearray until \r\n\r\n is found,
     // in which case true is returned
-    static bool readHttpHeader(QTcpSocket&, QByteArray& target);
+    static bool readLines(QTcpSocket&, QByteArray& target, qint32 lineCount = 2);
 };
 
 }

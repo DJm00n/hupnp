@@ -115,7 +115,14 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
         qint32 linesRead = 0;
         while(linesRead < 1)
         {
-            Q_ASSERT(mi.socket().getChar(&readChar));
+            if (!mi.socket().getChar(&readChar))
+            {
+                // Could not read size line. It should be available at this point.
+                mi.setLastErrorDescription(
+                    QObject::tr("Could not read chunk-size line."));
+
+                return InvalidData;
+            }
 
             buf.push_back(readChar);
 
@@ -140,7 +147,7 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
             }
             else
             {
-                Q_ASSERT(false);
+                break;
             }
         }
 
@@ -248,7 +255,7 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
         stopWatch.restart();
     }
 
-    return Success;
+    return stopWatch.elapsed() < 15000 ? Success : Timeout;
 }
 
 HHttpHandler::ReturnValue HHttpHandler::readRequestData(

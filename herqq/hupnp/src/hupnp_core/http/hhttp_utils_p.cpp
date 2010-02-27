@@ -49,12 +49,13 @@ QString HHttpUtils::rfc1123DateFormat()
     return "ddd, dd MMM yyyy HH:mm:ss";
 }
 
-bool HHttpUtils::readHttpHeader(QTcpSocket& socket, QByteArray& target)
+bool HHttpUtils::readLines(
+    QTcpSocket& socket, QByteArray& target, qint32 lineCount)
 {
     char readChar = 0;
     qint32 linesRead = 0;
 
-    while(linesRead < 2 && socket.getChar(&readChar))
+    while(linesRead < lineCount && socket.getChar(&readChar))
     {
         target.push_back(readChar);
 
@@ -79,7 +80,7 @@ bool HHttpUtils::readHttpHeader(QTcpSocket& socket, QByteArray& target)
         }
     }
 
-    return linesRead >= 2;
+    return linesRead >= lineCount;
 }
 
 }

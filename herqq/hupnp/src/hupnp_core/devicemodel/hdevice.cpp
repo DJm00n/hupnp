@@ -419,7 +419,7 @@
  *   HServiceMapT retVal;
  *
  *   retVal[HResourceType("urn:schemas-upnp-org:service:SwitchPower:1")] =
- *       new MySwitchPower();
+ *       new MySwitchPowerService();
  *
  *   return retVal;
  * }

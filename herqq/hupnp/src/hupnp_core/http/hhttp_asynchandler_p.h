@@ -40,7 +40,7 @@
 #include <QUuid>
 #include <QObject>
 #include <QByteArray>
-#include <QAtomicInt>
+#include <QAbstractSocket>
 #include <QHttpRequestHeader>
 #include <QHttpResponseHeader>
 
@@ -66,33 +66,68 @@ friend class HHttpAsyncHandler;
 
 private:
 
-    MessagingInfo* m_mi;
-    QByteArray m_dataToSend;
-    qint64 m_dataSend;
+    enum InternalState
+    {
+        Internal_Failed,
+        Internal_NotStarted,
+        Internal_WritingBlob,
+        Internal_WritingChunkedSizeLine,
+        Internal_WritingChunk,
+        Internal_ReadingHeader,
+        Internal_ReadingData,
+        Internal_ReadingChunkSizeLine,
+        Internal_ReadingChunk,
+        Internal_FinishedSuccessfully
+    };
 
-    QAtomicInt m_state;
+    MessagingInfo* m_mi;
+
+    QByteArray m_dataToSend;
+    // the data which will be sent to the target socket
+
+    qint64 m_dataSend;
+    // used only with chunked encoding when a chunk cannot be sent in full and
+    // the operation needs to be continued later
+
+    qint64 m_dataSent;
+    // the amount of data that has been successfully sent
+
+    InternalState m_state;
+    // the current state of this "state machine"
 
     QHttpResponseHeader m_headerRead;
+    // the http reader read as response from the target socket
 
     QByteArray m_dataRead;
+    // the response data that is currently read from the target socket
+
     qint64 m_dataToRead;
+    // the amount of data that should be available (once the operation is
+    // successfully completed)
 
     QUuid m_uuid;
+    // id for the operation
 
     const QByteArray m_loggingIdentifier;
 
-    void readRequestData();
-
 private:
 
+    void sendChunked();
+
+    void readBlob();
+    bool readChunkedSizeLine();
+    bool readChunk();
+    void readHeader();
+    void readData();
+
     bool run();
-    void state2_readHeader();
-    void state3_readData();
+    void done_(InternalState state);
 
 private Q_SLOTS:
 
     void bytesWritten(qint64);
     void readyRead();
+    void error(QAbstractSocket::SocketError);
 
 public:
 
@@ -115,7 +150,10 @@ public:
 
     State state() const;
 
+    // the data of the response
     inline QByteArray dataRead() const { return m_dataRead; }
+
+    // the header of the response
     inline QHttpResponseHeader headerRead() const { return m_headerRead; }
 
 Q_SIGNALS:
