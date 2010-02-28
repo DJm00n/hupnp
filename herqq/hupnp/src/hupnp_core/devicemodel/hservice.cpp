@@ -20,8 +20,10 @@
  */
 
 #include "hservice.h"
-#include "hdevice.h"
 #include "hservice_p.h"
+
+#include "hdevice.h"
+#include "haction_p.h"
 
 #include "./../../utils/hlogger_p.h"
 #include "./../general/hupnp_global_p.h"
@@ -59,6 +61,12 @@ bool HServiceController::updateVariables(
     HLOG2(H_AT, H_FUN, m_service->h_ptr->m_loggingIdentifier);
 
     return m_service->h_ptr->updateVariables(variables, sendEvent);
+}
+
+HActionController* HServiceController::actionByName(const QString& name)
+{
+    HLOG2(H_AT, H_FUN, m_service->h_ptr->m_loggingIdentifier);
+    return m_service->h_ptr->m_actionsAsMap.value(name);
 }
 
 /*******************************************************************************
@@ -195,44 +203,6 @@ HService::~HService()
     delete h_ptr;
 }
 
-bool HService::setStateVariableValue(
-    const QString& stateVarName, const QVariant& value)
-{
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    if (h_ptr->m_stateVariablesAreImmutable)
-    {
-        HLOG_WARN(QObject::tr(
-            "Cannot change the value of a state variable that is hosted in a control point"));
-
-        return false;
-    }
-
-    return h_ptr->updateVariable(stateVarName, value);
-}
-
-bool HService::setStateVariableValues(const QHash<QString, QVariant>& values)
-{
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    if (h_ptr->m_stateVariablesAreImmutable)
-    {
-        HLOG_WARN(QObject::tr(
-            "Cannot change the value of a state variable that is hosted in a control point"));
-
-        return false;
-    }
-
-    QList<QPair<QString, QString> > valuesAsList;
-    QHash<QString, QVariant>::const_iterator ci = values.constBegin();
-    for(; ci != values.constEnd(); ++ci)
-    {
-        valuesAsList.append(qMakePair(ci.key(), ci.value().toString()));
-    }
-
-    return h_ptr->updateVariables(valuesAsList, true);
-}
-
 HDevice* HService::parentDevice() const
 {
     return h_ptr->m_parentDevice;
@@ -270,12 +240,23 @@ QString HService::serviceDescription() const
 
 QList<HAction*> HService::actions() const
 {
-    return h_ptr->m_actions;
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    QList<HAction*> retVal;
+    for(qint32 i = 0; i < h_ptr->m_actions.size(); ++i)
+    {
+        retVal.append(h_ptr->m_actions[i]->m_action);
+    }
+
+    return retVal;
 }
 
 HAction* HService::actionByName(const QString& name) const
 {
-    return h_ptr->m_actionsAsMap.value(name);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    HActionController* retVal = h_ptr->m_actionsAsMap.value(name);
+    return retVal ? retVal->m_action : 0;
 }
 
 QList<HStateVariable*> HService::stateVariables() const

@@ -205,10 +205,12 @@
  * \section usage Usage
  *
  * The device model is <em>location independent</em>, which in essence means that the
- * device model is \b always used the same way. That is, if you have a pointer to
+ * device model is almost always used the same way. That is, if you have a pointer to
  * any of the components of the device model, you use it the same way regardless
  * of whether you got the pointer directly or indirectly from a
- * Herqq::Upnp::HDeviceHost or a Herqq::Upnp::HControlPoint.
+ * Herqq::Upnp::HDeviceHost or a Herqq::Upnp::HControlPoint. There is one exception
+ * to the rule and it will be discussed in the section concerning the state
+ * variables.
  *
  * Basic use is about
  * interacting with already created objects that comprise the device model.
@@ -227,6 +229,33 @@
  * However, if you wish to implement and host your own UPnP device, things get
  * more involved. See \ref builddevice_tutorial to get you started on building your
  * own UPnP devices.
+ *
+ * \subsection statevariables About State Variables
+ *
+ * UPnP Device Architecture does not specify a mechanism for changing the value
+ * of a state variable from a control point. Certainly the value of a state variable
+ * may be changeable, but that and the method how it is done
+ * depends of the service type in which the state variable is defined.
+ *
+ * As described previously, HUPnP uses the same device model everywhere.
+ * That is, there are no specific device classes for UPnP devices found by
+ * \e control \e points and device classes hosted by \e device \e hosts and the same goes for
+ * UPnP services, actions and state variables. There are only \c HDevice,
+ * \c HService, \c HAction and \c HStateVariable. Perhaps the most significant benefit
+ * of this is that it provides <em>uniform API</em> regardless of the type of use.
+ * In turn, uniform API calls for simplicity and re-usability, since there is only
+ * one class structure to be learned and used on both server and client side programming.
+ *
+ * However, the lack of a standardized method for manipulating the values of
+ * state variables means that device host and control point programming cannot
+ * use an exactly symmetrical API. This is because on device host side, you have
+ * to have \e read-write access to the state variables, whereas on control point side
+ * you have to have \e read-only access to the state variables. In HUPnP,
+ * this is abstracted to  Herqq::Upnp::HWritableStateVariable and
+ * Herqq::Upnp::HReadableStateVariable classes.
+ * On device host side the dynamic type of every Herqq::Upnp::HStateVariable
+ * is \c HWritableStateVariable
+ * and on control point side the type is \c HReadableStateVariable.
  *
  * \sa devicehosting
  */

@@ -42,6 +42,8 @@ class HObjectCreator;
 class HStateVariableEvent;
 class HStateVariablePrivate;
 class HStateVariableController;
+class HWritableStateVariable;
+class HReadableStateVariable;
 
 /*!
  * Class that represents a UPnP state variable.
@@ -62,7 +64,7 @@ class HStateVariableController;
  *
  * \ingroup devicemodel
  *
- * \sa HService
+ * \sa HReadableStateVariable, HWritableStateVariable, HService
  *
  * \remark the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.
@@ -72,9 +74,8 @@ class H_UPNP_CORE_EXPORT HStateVariable :
 {
 Q_OBJECT
 H_DISABLE_COPY(HStateVariable)
+H_DECLARE_PRIVATE(HStateVariable)
 friend class HObjectCreator;
-friend class HStateVariableEvent;
-friend class HActionArgumentPrivate;
 friend class HStateVariableController;
 
 public:
@@ -107,79 +108,38 @@ public:
         UnicastAndMulticast = 2
     };
 
-private:
+protected:
 
     HStateVariablePrivate* h_ptr;
 
     //
     // \internal
     //
-    // Constructs a new instance.
+    HStateVariable(HService* parent);
+    HStateVariable(HStateVariablePrivate& dd, HService* parent);
+
     //
-    // \param defaultValue specifies the default value, if any. If no default value
-    // is specified, this has to be set to QVariant::Invalid.
+    // \internal
     //
-    // \throws Herqq::HIllegalArgumentException in case the name argument is invalid.
-    // \throws Herqq::HIllegalArgumentException in case the provided default value
-    // does not correspond to the specified data type.
-    //
-    HStateVariable(
-        HService* parent,
+    void init(
         const QString& name, HUpnpDataTypes::DataType datatype,
         const QVariant& defaultValue, EventingType eventingType = NoEvents);
 
     //
     // \internal
     //
-    // Constructs a new state variable instance with data type "string" implied.
-    //
-    // \param defaultValue specifies the default value, if any. If no default value
-    // is specified, this has to be set to QVariant::Invalid.
-    //
-    // \throws Herqq::HIllegalArgumentException in case the name argument is invalid.
-    //
-    HStateVariable (
-        HService* parent,
+    void init(
         const QString& name, const QVariant& defaultValue,
         const QStringList& allowedValueList, EventingType eventingType = NoEvents);
 
     //
     // \internal
     //
-    // Constructs a new instance.
-    //
-    // \param defaultValue specifies the default value, if any. If no default value
-    // is specified, this has to be set to QVariant::Invalid.
-    //
-    // \throws Herqq::HIllegalArgumentException in case the name argument is invalid.
-    // \throws Herqq::HIllegalArgumentException in case there are data type mismatches
-    // amongst the specified datatype and the provided value arguments.
-    //
-    HStateVariable (
-        HService* parent,
+    void init(
         const QString& name, HUpnpDataTypes::DataType datatype,
         const QVariant& defaultValue, const QVariant& minimumValue,
         const QVariant& maximumValue, const QVariant& stepValue,
         EventingType eventingType = NoEvents);
-
-    //
-    // \internal
-    //
-    // Indicates whether or not the value is valid in terms of this particular
-    // state variable.
-    //
-    // \param value specifies the value to be checked.
-    // \param convertedValue specifies the exact value that would be used if
-    // the specified value is considered valid. Since two different variant types can contain
-    // the same value, it is sometimes useful to know the variant type that is
-    // used to hold the value as well.
-    //
-    // \retval true in case the specified value is valid to this state variable.
-    // In other words, setValue() will succeed when called with this argument.
-    //
-    // \retval false otherwise.
-    //
-    bool isValidValue(const QVariant& value, QVariant* convertedValue = 0) const;
 
     //
     // \internal
@@ -212,7 +172,7 @@ public:
      * An \c %HStateVariable is always destroyed by the containing HService when it
      * is being deleted. You should never destroy an \c %HStateVariable.
      */
-    ~HStateVariable();
+    virtual ~HStateVariable() = 0;
 
     /*!
      * Returns the HService that contains this state variable.
@@ -322,6 +282,43 @@ public:
      * \sa minimumValue(), maximumValue(), allowedValueList()
      */
     bool isConstrained() const;
+
+    /*!
+     * Indicates whether or not the value is valid in terms of this particular
+     * state variable.
+     *
+     * \param value specifies the value to be checked.
+     * \param convertedValue specifies the exact value that would be used if
+     * the specified value is considered valid. Since two different variant types can contain
+     * the same value, it is sometimes useful to know the variant type that is
+     * used to hold the value as well.
+     *
+     * \retval true in case the specified value is valid to this state variable.
+     * In other words, setValue() will succeed when called with this argument.
+     *
+     * \retval false otherwise.
+     */
+    bool isValidValue(const QVariant& value, QVariant* convertedValue = 0) const;
+
+    /*!
+     * Attempts to cast the instance to HWritableStateVariable.
+     *
+     * This is a helper method for performing a dynamic cast.
+     *
+     * \return this instance as HWritableStateVariable when the dynamic type
+     * of the instance is HWritableStateVariable. Otherwise zero is returned.
+     */
+    HWritableStateVariable* toWritable();
+
+    /*!
+     * Attempts to cast the instance to HReadableStateVariable.
+     *
+     * This is a helper method for performing a dynamic cast.
+     *
+     * \return this instance as HReadableStateVariable when the dynamic type
+     * of the instance is HReadableStateVariable. Otherwise zero is returned.
+     */
+    HReadableStateVariable* toReadable();
 
 Q_SIGNALS:
 

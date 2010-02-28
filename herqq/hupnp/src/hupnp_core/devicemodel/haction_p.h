@@ -108,10 +108,8 @@ public:
 // These features are required so that the HService
 // can appropriately manage the HAction instances they own.
 //
-class HActionController :
-    public QObject
+class HActionController
 {
-Q_OBJECT
 H_DISABLE_COPY(HActionController)
 
 public:
@@ -120,6 +118,10 @@ public:
 
     HActionController(HAction* action);
     virtual ~HActionController();
+
+    qint32 invoke(
+        const Herqq::Upnp::HActionInputArguments&,
+        Herqq::Upnp::HActionOutputArguments*);
 };
 
 //
@@ -141,7 +143,7 @@ private:
     QUuid invoke(const HActionInputArguments& inArgs);
     QUuid invoke(const HActionInputArguments&, const HActionInvokeCallback&);
 
-private:
+public:
 
     HAction* q_ptr;
     QString m_name;

@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_SERVICE_H_
-#define HUPNP_SERVICE_H_
+#ifndef HSERVICE_H_
+#define HSERVICE_H_
 
 #include "hactioninvoke.h"
 #include "./../general/hdefs_p.h"
@@ -162,7 +162,8 @@ private:
      *
      * Every descendant has to override this.
      *
-     * This method is called once when the device is being initialized by the managing device host.
+     * This method is called once when the device is being initialized by the
+     * managing device host.
      *
      * \return the actions that this \c %HService exposes.
      *
@@ -188,41 +189,6 @@ protected:
     // Creates a new instance and re-uses the h-ptr.
     //
     HService(HServicePrivate& dd);
-
-    /*!
-     * Attempts to change the value of the specified state variable.
-     *
-     * \param stateVarName specifies the state variable to be changed.
-     * \param value specifies the new value.
-     *
-     * \retval true in case the specified state variable was successfully modified.
-     * \retval false in case the state variable wasn't modified.
-     *
-     * \attention the state of a state variable cannot be modified directly
-     * from a control point. If a call to this method is made from a \c %HService
-     * that is hosted in a control point, this method returns false. This is because
-     * the UPnP Device Architecture does not support such a procedure.
-     */
-    bool setStateVariableValue(
-        const QString& stateVarName, const QVariant& value);
-
-    /*!
-     * Attempts to change the values of the specified state variables.
-     *
-     * \param values specifies a map, in which keys identify the state variables
-     * by name and corresponding values represent the new state variable values.
-     *
-     * \retval true in case all the specified state variables were successfully modified.
-     *
-     * \retval false otherwise. In this case, none of the state variables were
-     * changed.
-     *
-     * \attention the state of a state variable cannot be modified directly
-     * from a control point. If a call to this method is made from a \c %HService
-     * that is hosted in a control point, this method returns false. This is because
-     * the UPnP Device Architecture does not support such a procedure.
-     */
-    bool setStateVariableValues(const QHash<QString, QVariant>& values);
 
 public:
 
@@ -363,4 +329,4 @@ Q_SIGNALS:
 }
 }
 
-#endif /* HUPNP_SERVICE_H_ */
+#endif /* HSERVICE_H_ */

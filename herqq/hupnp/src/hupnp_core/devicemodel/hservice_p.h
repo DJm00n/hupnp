@@ -78,6 +78,8 @@ public:
 
     bool updateVariables(
         const QList<QPair<QString, QString> >& variables, bool sendEvent);
+
+    HActionController* actionByName(const QString& name);
 };
 
 //
@@ -97,8 +99,8 @@ public: // attributes
     QUrl            m_eventSubUrl;
     QDomDocument    m_serviceDescriptor;
 
-    QList<HAction*> m_actions;
-    QHash<QString, HAction*> m_actionsAsMap;
+    QList<HActionController*> m_actions;
+    QHash<QString, HActionController*> m_actionsAsMap;
 
     QHash<QString, HStateVariableController*> m_stateVariables;
 
@@ -111,9 +113,7 @@ public: // attributes
 
     QMutex m_updateMutex;
 
-    QByteArray m_loggingIdentifier;
-
-    bool m_stateVariablesAreImmutable;
+    QByteArray m_loggingIdentifier;    
 
 public: // methods
 

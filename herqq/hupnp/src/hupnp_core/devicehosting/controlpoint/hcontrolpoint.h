@@ -22,9 +22,9 @@
 #ifndef HCONTROL_POINT_H_
 #define HCONTROL_POINT_H_
 
+#include "./../habstracthost.h"
 #include "./../../general/hdefs_p.h"
 #include "./../../general/hupnp_fwd.h"
-#include "./../habstracthost.h"
 
 namespace Herqq
 {
@@ -90,7 +90,7 @@ class HControlPointConfiguration;
  * #include <HDeviceInfo>
  *
  * MyClass::MyClass(QObject* parent) :
- *     QObject(parent), m_controlPoint(new Herqq::Upnp::HControlPoint(this))
+ *     QObject(parent), m_controlPoint(new Herqq::Upnp::HControlPoint(0, this))
  * {
  *     connect(
  *         m_controlPoint,
@@ -104,7 +104,7 @@ class HControlPointConfiguration;
  *         this,
  *         SLOT(rootDeviceRemoved(Herqq::Upnp::HDeviceInfo)));
  *
- *     if (m_controlPoint->init(deviceConf) != Herqq::Upnp::HControlPoint::Success)
+ *     if (m_controlPoint->init() != Herqq::Upnp::HControlPoint::Success)
  *     {
  *         // the initialization failed, perhaps you should do something?
  *         return;
@@ -210,7 +210,8 @@ public:
     }
 
     /*!
-     *
+     * Return value indicating error in networking. For instance, perhaps the
+     * HTTP server or SSDP could not be initialized.
      */
     static qint32 CommunicationsError()
     {
@@ -223,7 +224,7 @@ public:
      */
     static qint32 AlreadyInitialized()
     {
-        return 1;
+        return 2;
     }
 
 public:

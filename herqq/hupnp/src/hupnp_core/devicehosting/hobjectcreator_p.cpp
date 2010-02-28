@@ -34,6 +34,8 @@
 #include "./../devicemodel/haction_p.h"
 #include "./../devicemodel/hservice_p.h"
 #include "./../devicemodel/hactionarguments.h"
+#include "./../devicemodel/hwritable_statevariable.h"
+#include "./../devicemodel/hreadable_statevariable.h"
 
 #include "./../../utils/hlogger_p.h"
 
@@ -252,10 +254,11 @@ void HObjectCreator::parseServiceDescription(HService* service)
 
     while(!actionElement.isNull())
     {
-        HAction* action = parseAction(service, actionElement, actions);
+        HActionController* action =
+            parseAction(service, actionElement, actions);
 
         service->h_ptr->m_actions.push_back(action);
-        service->h_ptr->m_actionsAsMap[action->name()] = action;
+        service->h_ptr->m_actionsAsMap[action->m_action->name()] = action;
 
         actionElement = actionElement.nextSiblingElement("action");
     }
@@ -306,6 +309,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     QString defaultValue =
          readElementValue("defaultValue", stateVariableElement, &wasDefined);
 
+    HStateVariable* stateVar = 0;
     try
     {
         if (dataType.compare(HUpnpDataTypes::string_str()) == 0)
@@ -329,11 +333,13 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                 }
             }
 
-            return new HStateVariableController(
-                new HStateVariable(
-                    parentService,
-                    name, wasDefined ? defaultValue : QVariant(),
-                    allowedValues, evType));
+            stateVar = m_creationParameters.m_stateVariablesAreImmutable ?
+                (HStateVariable*) new HReadableStateVariable(parentService) :
+                (HStateVariable*) new HWritableStateVariable(parentService);
+
+            stateVar->init(
+                name, wasDefined ? defaultValue : QVariant(),
+                allowedValues, evType);
         }
 
         HUpnpDataTypes::DataType dataTypeEnumValue =
@@ -376,25 +382,29 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                    }
                }
 
-               return new HStateVariableController(
-                   new HStateVariable(
-                       parentService,
-                       name, dataTypeEnumValue,
-                       wasDefined ?
-                           convertToRightVariantType(defaultValue, dataTypeEnumValue) :
-                           QVariant(),
-                       minimumStr, maximumStr, stepStr, evType));
+               stateVar = m_creationParameters.m_stateVariablesAreImmutable ?
+                   (HStateVariable*) new HReadableStateVariable(parentService) :
+                   (HStateVariable*) new HWritableStateVariable(parentService);
+
+               stateVar->init(
+                   name, dataTypeEnumValue,
+                   wasDefined ?
+                       convertToRightVariantType(defaultValue, dataTypeEnumValue) :
+                       QVariant(),
+                   minimumStr, maximumStr, stepStr, evType);
             }
         }
 
-        return new HStateVariableController(
-            new HStateVariable(
-                parentService,
-                name, dataTypeEnumValue,
-                wasDefined ?
-                     convertToRightVariantType(defaultValue, dataTypeEnumValue) :
-                     QVariant(),
-                 evType));
+        stateVar = m_creationParameters.m_stateVariablesAreImmutable ?
+           (HStateVariable*) new HReadableStateVariable(parentService) :
+           (HStateVariable*) new HWritableStateVariable(parentService);
+
+        stateVar->init(
+            name, dataTypeEnumValue,
+            wasDefined ?
+                 convertToRightVariantType(defaultValue, dataTypeEnumValue) :
+                 QVariant(),
+             evType);
 
     }
     catch(HException& ex)
@@ -403,9 +413,11 @@ HStateVariableController* HObjectCreator::parseStateVariable(
             QObject::tr("Failed to parse stateVariable [%1]: %2").arg(
                 name, ex.reason()));
     }
+
+    return new HStateVariableController(stateVar);
 }
 
-HAction* HObjectCreator::parseAction(
+HActionController* HObjectCreator::parseAction(
     HService* parentService, const QDomElement& actionElement,
     const HService::HActionMapT& definedActions)
 {
@@ -531,7 +543,7 @@ HAction* HObjectCreator::parseAction(
                 name, ex.reason()));
     }
 
-    return action.take();
+    return new HActionController(action.take());
 }
 
 namespace

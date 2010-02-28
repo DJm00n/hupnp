@@ -22,6 +22,8 @@
 #include "hstatevariable.h"
 #include "hstatevariable_p.h"
 #include "hservice.h"
+#include "hwritable_statevariable.h"
+#include "hreadable_statevariable.h"
 
 #include "./../general/hupnp_global_p.h"
 #include "./../datatypes/hdatatype_mappings_p.h"
@@ -170,7 +172,7 @@ HStateVariablePrivate::HStateVariablePrivate() :
     m_allowedValueList(),
     m_allowedValueRange(),
     m_value(),
-    m_valueMutex(),
+    m_valueMutex(QMutex::Recursive),
     m_parentService(0)
 {
 }
@@ -345,17 +347,29 @@ bool HStateVariablePrivate::setValue(const QVariant& value)
 /*******************************************************************************
  * HStateVariable
  *******************************************************************************/
-HStateVariable::HStateVariable(
-    HService* parent,
-    const QString& name, HUpnpDataTypes::DataType datatype,
-    const QVariant& defaultValue, EventingType eventingType) :
-        QObject(parent),
-            h_ptr(new HStateVariablePrivate())
+HStateVariable::HStateVariable(HService* parent) :
+    QObject(parent),
+        h_ptr(new HStateVariablePrivate())
 {
     HLOG(H_AT, H_FUN);
-
     Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
     h_ptr->m_parentService = parent;
+}
+
+HStateVariable::HStateVariable(HStateVariablePrivate& dd, HService* parent) :
+    QObject(parent),
+        h_ptr(&dd)
+{
+    HLOG(H_AT, H_FUN);
+    Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
+    h_ptr->m_parentService = parent;
+}
+
+void HStateVariable::init(
+    const QString& name, HUpnpDataTypes::DataType datatype,
+    const QVariant& defaultValue, EventingType eventingType)
+{
+    HLOG(H_AT, H_FUN);
 
     h_ptr->setName        (name);
     h_ptr->setDataType    (datatype);
@@ -366,17 +380,11 @@ HStateVariable::HStateVariable(
     h_ptr->setEventingType(eventingType);
 }
 
-HStateVariable::HStateVariable(
-    HService* parent,
+void HStateVariable::init(
     const QString& name, const QVariant& defaultValue,
-    const QStringList& allowedValueList, EventingType eventingType) :
-        QObject(parent),
-            h_ptr(new HStateVariablePrivate())
+    const QStringList& allowedValueList, EventingType eventingType)
 {
     HLOG(H_AT, H_FUN);
-
-    Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
-    h_ptr->m_parentService = parent;
 
     h_ptr->setName            (name);
     h_ptr->setDataType        (HUpnpDataTypes::string);
@@ -389,19 +397,13 @@ HStateVariable::HStateVariable(
     h_ptr->setEventingType    (eventingType);
 }
 
-HStateVariable::HStateVariable(
-    HService* parent,
+void HStateVariable::init(
     const QString& name, HUpnpDataTypes::DataType datatype,
     const QVariant& defaultValue, const QVariant& minimumValue,
     const QVariant& maximumValue, const QVariant& stepValue,
-    EventingType eventingType) :
-        QObject(parent),
-            h_ptr(new HStateVariablePrivate())
+    EventingType eventingType)
 {
     HLOG(H_AT, H_FUN);
-
-    Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
-    h_ptr->m_parentService = parent;
 
     h_ptr->setName(name);
     h_ptr->setDataType(datatype);
@@ -505,6 +507,18 @@ bool HStateVariable::isConstrained() const
 {
     return !h_ptr->m_allowedValueList.isEmpty() ||
            !h_ptr->m_allowedValueRange.isNull();
+}
+
+HWritableStateVariable* HStateVariable::toWritable()
+{
+    HLOG(H_AT, H_FUN);
+    return dynamic_cast<HWritableStateVariable*>(this);
+}
+
+HReadableStateVariable* HStateVariable::toReadable()
+{
+    HLOG(H_AT, H_FUN);
+    return dynamic_cast<HReadableStateVariable*>(this);
 }
 
 bool HStateVariable::setValue(const QVariant& newValue)

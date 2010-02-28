@@ -25,8 +25,10 @@
 #include "./../../../utils/hlogger_p.h"
 #include "./../../general/hupnp_global_p.h"
 #include "./../messages/hcontrol_messages_p.h"
-#include "./../../devicemodel/hactionarguments.h"
 #include "./../../datatypes/hdatatype_mappings_p.h"
+
+#include "./../../devicemodel/haction_p.h"
+#include "./../../devicemodel/hactionarguments.h"
 
 #include <QHttpRequestHeader>
 
@@ -301,7 +303,7 @@ void DeviceHostHttpServer::incomingControlRequest(
 
     try
     {
-        HAction* action = service->m_service->actionByName(method.name().name());
+        HActionController* action = service->actionByName(method.name().name());
         if (!action)
         {
             HLOG_WARN(QObject::tr("The service has no action named [%1].").arg(
@@ -314,7 +316,7 @@ void DeviceHostHttpServer::incomingControlRequest(
             return;
         }
 
-        HActionInputArguments iargs = action->inputArguments();
+        HActionInputArguments iargs = action->m_action->inputArguments();
         QList<QString> names = iargs.names();
         foreach(QString key, names)
         {
@@ -340,7 +342,7 @@ void DeviceHostHttpServer::incomingControlRequest(
             }
         }
 
-        HActionOutputArguments outArgs = action->outputArguments();
+        HActionOutputArguments outArgs = action->m_action->outputArguments();
 
         qint32 retVal = action->invoke(iargs, &outArgs);
         if (retVal != HAction::Success())
@@ -352,7 +354,7 @@ void DeviceHostHttpServer::incomingControlRequest(
 
         QtSoapMessage soapResponse;
         soapResponse.setMethod(QtSoapQName(
-            QString("%1%2").arg(action->name(), "Response"),
+            QString("%1%2").arg(action->m_action->name(), "Response"),
             service->m_service->serviceType().toString()));
 
         foreach(HActionOutputArgument* oarg, outArgs)

@@ -124,7 +124,7 @@ private:
     // accessing it through the network.
     // 2) If you plan on using any device hosted by a HAbstractHost (base class
     // of HDeviceHost), it is a good practice to ensure that those devices
-    // _cannot_ be deleted while you may using them.
+    // _cannot_ be deleted while you may be using them.
 
 protected:
 

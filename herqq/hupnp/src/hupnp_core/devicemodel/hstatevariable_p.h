@@ -111,7 +111,7 @@ public:
 public:
 
     HStateVariablePrivate ();
-    ~HStateVariablePrivate();
+    virtual ~HStateVariablePrivate();
 
     void setName             (const QString&);
     void setDataType         (HUpnpDataTypes::DataType);

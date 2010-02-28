@@ -88,8 +88,8 @@ public:
 
     HObjectCreationParameters();
 
-    QDomDocument  m_deviceDescription;
-    QList<QUrl>   m_deviceLocations;
+    QDomDocument   m_deviceDescription;
+    QList<QUrl>    m_deviceLocations;
     HDeviceCreator m_deviceCreator;
 
     ActionInvokeCreator m_actionInvokeCreator;
@@ -142,7 +142,7 @@ private:
     HDeviceInfo* parseDeviceInfo(const QDomElement& deviceElement);
     void parseServiceDescription(HService* service);
 
-    HAction* parseAction(
+    HActionController* parseAction(
         HService* parentService,
         const QDomElement& actionElement,
         const HService::HActionMapT& definedActions);

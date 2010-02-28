@@ -30,6 +30,7 @@
 #include <HStateVariable>
 #include <HActionInputArguments>
 #include <HActionOutputArguments>
+#include <HWritableStateVariable>
 #include <HDeviceHostConfiguration>
 
 #include <QtDebug>
@@ -92,17 +93,29 @@ qint32 HTestService::registerAction(
     // all registered listeners.
 
     bool ok = false;
-    HStateVariable* sv = stateVariableByName("RegisteredClientCount");
+    HWritableStateVariable* sv =
+        stateVariableByName("RegisteredClientCount")->toWritable();
+
     Q_ASSERT(sv);
     // fetch the state variable we want to modify
+
+    HStateVariableLocker svLocker(sv);
+    // lock the state variable to ensure
+    // that the value of the state variable is not modified by another thread
+    // while we are incrementing it
 
     quint32 count = sv->value().toUInt(&ok);
     Q_ASSERT(ok);
     // check its current value
 
-    ok = setStateVariableValue("RegisteredClientCount", ++count);
+    ok = sv->setValue(++count);
     Q_ASSERT(ok);
     // and increment it
+
+    svLocker.unlock();
+    // explicitly unlock the state variable. this is not necessary, but it is a
+    // good practice to use, since it ensures that no matter what happens during
+    // the event processing, the lock we don't need anymore isn't held.
 
     emit actionInvoked(
         "Register",

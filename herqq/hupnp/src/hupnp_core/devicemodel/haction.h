@@ -173,16 +173,6 @@ private:
     //
     // \internal
     //
-    // Creates an instance.
-    //
-    // \param dd specifies the pointer for implementation details.
-    // \param name specifies the name of the action.
-    //
-    HAction(HActionPrivate& dd, const QString& name, HService* parent);
-
-    //
-    // \internal
-    //
     // Initializes the instance with the specified name.
     // \param name specifies the name of the action.
     //

@@ -175,7 +175,6 @@ void ServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
         HLOG_DBG(QString(
             "Notification [seq: %1] successfully sent to subscriber [%2] @ [%3]").arg(
                 QString::number(m_seq-1), m_sid.toString(), m_location.toString()));
-
     }
 
     operation->deleteLater();

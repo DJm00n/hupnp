@@ -112,6 +112,15 @@ HActionController::HActionController(HAction* action) :
 
 HActionController::~HActionController()
 {
+    delete m_action;
+}
+
+qint32 HActionController::invoke(
+    const Herqq::Upnp::HActionInputArguments& iargs,
+    Herqq::Upnp::HActionOutputArguments* oargs)
+{
+    HLOG(H_AT, H_FUN);
+    return m_action->h_ptr->m_actionInvoke(iargs, oargs);
 }
 
 /*******************************************************************************
@@ -297,24 +306,6 @@ bool HActionPrivate::setOutputArgs(
 /*******************************************************************************
  * HAction
  ******************************************************************************/
-HAction::HAction(
-    HActionPrivate& dd, const QString& name, HService* parent) :
-        QObject(parent),
-            h_ptr(&dd)
-{
-    HLOG(H_AT, H_FUN);
-
-    Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
-    h_ptr->m_parentService = parent;
-
-    if (!h_ptr->setName(name))
-    {
-        throw HIllegalArgumentException("name");
-    }
-
-    h_ptr->q_ptr = this;
-}
-
 HAction::HAction(const QString& name, HService* parent) :
     QObject(parent),
         h_ptr(new HActionPrivate())
