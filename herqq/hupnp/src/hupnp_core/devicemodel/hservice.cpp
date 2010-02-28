@@ -87,8 +87,7 @@ HServicePrivate::HServicePrivate() :
     m_parentDevice     (0),
     m_evented          (false),
     m_updateMutex      (),
-    m_loggingIdentifier(),
-    m_stateVariablesAreImmutable(false)
+    m_loggingIdentifier()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
