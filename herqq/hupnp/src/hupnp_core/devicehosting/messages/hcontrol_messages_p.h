@@ -61,9 +61,9 @@ public:
 
     virtual ~InvokeActionRequest();
 
-    QString soapAction   () const;
-    QtSoapMessage soapMsg() const;
-    QUrl serviceUrl      () const;
+    QString soapAction() const;
+    const QtSoapMessage* soapMsg() const;
+    QUrl serviceUrl() const;
 };
 
 }

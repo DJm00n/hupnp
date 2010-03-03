@@ -24,8 +24,6 @@
 #include "./../dataelements/hudn.h"
 #include "./../dataelements/hresourcetype.h"
 
-#include "./../../utils/hlogger_p.h"
-
 #include <QUuid>
 #include <QString>
 #include <QStringList>

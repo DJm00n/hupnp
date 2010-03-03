@@ -64,9 +64,9 @@ HActionInvokeProxyConnection::HActionInvokeProxyConnection(
             m_invokeWaitMutex(),
             m_invokeWait(),
             m_invocationMutex(),
-            m_invocationInProgress(0)
+            m_invocationInProgress(0),
+            m_messagingInfo(*m_sock, true, 30000)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(m_service);
 
     verifyName(m_actionName);
@@ -95,11 +95,12 @@ HActionInvokeProxyConnection::HActionInvokeProxyConnection(
         this, SLOT(msgIoComplete(HHttpAsyncOperation*)));
 
     Q_ASSERT(ok);
+
+    m_messagingInfo.setAutoDelete(false);
 }
 
 HActionInvokeProxyConnection::~HActionInvokeProxyConnection()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 void HActionInvokeProxyConnection::error(
@@ -130,8 +131,6 @@ void HActionInvokeProxyConnection::error(
 
 bool HActionInvokeProxyConnection::connectToHost()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     Q_ASSERT(m_sock.data());
 
     QTcpSocket::SocketState state = m_sock->state();
@@ -157,8 +156,6 @@ bool HActionInvokeProxyConnection::connectToHost()
 
 void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     op->deleteLater();
 
     QtSoapMessage response;
@@ -191,12 +188,12 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
         return;
     }
 
-    HActionOutputArguments::const_iterator ci =
+    HActionArguments::const_iterator ci =
         m_invocationInProgress->m_outArgs->constBegin();
 
     for(; ci != m_invocationInProgress->m_outArgs->constEnd(); ++ci)
     {
-        HActionOutputArgument* oarg = (*ci);
+        const HActionArgument* oarg = (*ci);
 
         const QtSoapType& arg = root[oarg->name()];
         if (!arg.isValid())
@@ -215,8 +212,6 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
 
 void HActionInvokeProxyConnection::invocationDone(qint32 rc)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QMutexLocker lock(&m_invokeWaitMutex);
     *m_invocationInProgress->m_rc  = rc;
     m_invocationInProgress->m_done = true;
@@ -226,19 +221,17 @@ void HActionInvokeProxyConnection::invocationDone(qint32 rc)
 
 void HActionInvokeProxyConnection::send()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     // 1) create the remote method call request
     QtSoapMessage soapMsg;
     soapMsg.setMethod(
         QtSoapQName(m_actionName, m_service->serviceType().toString()));
 
-    HActionInputArguments::const_iterator ci =
+    HActionArguments::const_iterator ci =
         m_invocationInProgress->m_inArgs.constBegin();
 
     for(; ci != m_invocationInProgress->m_inArgs.constEnd(); ++ci)
     {
-        const HActionInputArgument* const iarg = (*ci);
+        const HActionArgument* const iarg = (*ci);
         if (!m_inArgs.contains(iarg->name()))
         {
             invocationDone(HAction::InvalidArgs());
@@ -264,10 +257,11 @@ void HActionInvokeProxyConnection::send()
     soapActionHdrField.append("#").append(m_actionName).append("\"");
     actionInvokeRequest.setValue("SOAPACTION", soapActionHdrField);
 
-    MessagingInfo* mi = new MessagingInfo(*m_sock, true, 30000);
-    mi->setHostInfo(baseUrl);
+    m_messagingInfo.setHostInfo(baseUrl);
 
-    HHttpAsyncOperation* op = m_http->msgIo(mi, actionInvokeRequest, soapMsg);
+    HHttpAsyncOperation* op =
+        m_http->msgIo(&m_messagingInfo, actionInvokeRequest, soapMsg);
+
     if (!op)
     {
         invocationDone(HAction::ActionFailed());
@@ -276,8 +270,6 @@ void HActionInvokeProxyConnection::send()
 
 void HActionInvokeProxyConnection::invoke_slot(Invocation* invocation)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (m_locations.isEmpty())
     {
         // store the device locations only upon action invocation, and only
@@ -296,10 +288,8 @@ void HActionInvokeProxyConnection::invoke_slot(Invocation* invocation)
 }
 
 qint32 HActionInvokeProxyConnection::invoke(
-    const HActionInputArguments& inArgs, HActionOutputArguments* outArgs)
+    const HActionArguments& inArgs, HActionArguments* outArgs)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QMutexLocker lock(&m_invocationMutex);
     QMutexLocker lock2(&m_invokeWaitMutex);
 
@@ -330,8 +320,8 @@ HActionInvokeProxy::HActionInvokeProxy(
 }
 
 int HActionInvokeProxy::operator()(
-    const HActionInputArguments& inArgs,
-    HActionOutputArguments* outArgs)
+    const HActionArguments& inArgs,
+    HActionArguments* outArgs)
 {
     return m_connection->invoke(inArgs, outArgs);
 }

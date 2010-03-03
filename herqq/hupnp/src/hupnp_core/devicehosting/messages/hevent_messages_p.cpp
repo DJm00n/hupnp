@@ -270,7 +270,6 @@ SubscribeResponse::SubscribeResponse(
         m_sid(sid), m_timeout(timeout), m_server(server),
         m_responseGenerated(responseGenerated)
 {
-    HLOG(H_AT, H_FUN);
     if (m_sid.isNull())
     {
         *this = SubscribeResponse();
@@ -512,37 +511,6 @@ NotifyRequest::RetVal NotifyRequest::setContents(
 HNt NotifyRequest::nt() const
 {
     return HNt(HNt::Type_UpnpEvent, HNt::SubType_UpnpPropChange);
-}
-
-bool NotifyRequest::isValid() const
-{
-    return !m_sid.isNull();
-    // if this is defined then everything else is defined as well
-}
-
-HSid NotifyRequest::sid() const
-{
-    return m_sid;
-}
-
-quint32 NotifyRequest::seq() const
-{
-    return m_seq;
-}
-
-QUrl NotifyRequest::callback() const
-{
-    return m_callback;
-}
-
-QList<QPair<QString, QString> > NotifyRequest::variables() const
-{
-    return m_dataAsVariables;
-}
-
-QByteArray NotifyRequest::data() const
-{
-    return m_data;
 }
 
 }

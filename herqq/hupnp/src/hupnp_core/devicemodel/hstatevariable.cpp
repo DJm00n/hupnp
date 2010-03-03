@@ -497,8 +497,6 @@ bool HStateVariable::isValidValue(
 
 QVariant HStateVariable::value() const
 {
-    HLOG(H_AT, H_FUN);
-
     QMutexLocker lock(&h_ptr->m_valueMutex);
     return h_ptr->m_value;
 }
@@ -511,13 +509,11 @@ bool HStateVariable::isConstrained() const
 
 HWritableStateVariable* HStateVariable::toWritable()
 {
-    HLOG(H_AT, H_FUN);
     return dynamic_cast<HWritableStateVariable*>(this);
 }
 
 HReadableStateVariable* HStateVariable::toReadable()
 {
-    HLOG(H_AT, H_FUN);
     return dynamic_cast<HReadableStateVariable*>(this);
 }
 

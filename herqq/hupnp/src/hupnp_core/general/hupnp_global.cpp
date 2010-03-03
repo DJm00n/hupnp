@@ -98,8 +98,6 @@ QString toString(const QDomElement& e)
 
 void verifySpecVersion(const QDomElement& rootElement)
 {
-    HLOG(H_AT, H_FUN);
-
     QDomElement specVersionElement = rootElement.firstChildElement("specVersion");
     if (specVersionElement.isNull())
     {
@@ -128,8 +126,6 @@ void verifySpecVersion(const QDomElement& rootElement)
 
 qint32 readConfigId(const QDomElement& rootElement)
 {
-    HLOG(H_AT, H_FUN);
-
     bool ok = false;
 
     QString cid    = readElementValue("configId", rootElement);
@@ -177,8 +173,6 @@ QString verifyName(const QString& name)
 
 HProductTokens herqqProductTokens()
 {
-    HLOG(H_AT, H_FUN);
-
 #if defined(Q_OS_WIN)
     QString server = "MicrosoftWindows/";
     switch(QSysInfo::WindowsVersion)
@@ -212,59 +206,8 @@ HProductTokens herqqProductTokens()
     return HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.3.0").arg(server));
 }
 
-QString peerAsStr(const QTcpSocket& sock)
-{
-    HLOG(H_AT, H_FUN);
-
-    return QString("%1:%2").arg(
-        sock.peerAddress().toString(), QString::number(sock.peerPort()));
-}
-
-QString extractBaseUrl(const QString& url)
-{
-    HLOG(H_AT, H_FUN);
-
-    if (url.endsWith('/'))
-    {
-        return url;
-    }
-    else if (!url.contains('/'))
-    {
-        return "";
-    }
-
-    QString base = url.section('/', 0, -2, QString::SectionIncludeTrailingSep);
-
-    return base;
-}
-
-QUrl extractBaseUrl(const QUrl& url)
-{
-    HLOG(H_AT, H_FUN);
-
-    QString urlAsStr = url.toString();
-    return extractBaseUrl(urlAsStr);
-}
-
-QUrl appendUrls(const QUrl& baseUrl, const QUrl& relativeUrl)
-{
-    HLOG(H_AT, H_FUN);
-
-    QString relativePath(extractRequestPart(relativeUrl));
-    QString basePath(baseUrl.toString());
-
-    if (!basePath.endsWith('/')) { basePath.append('/'); }
-    if (relativePath.startsWith('/')) { relativePath.remove(0, 1); }
-
-    basePath.append(relativePath);
-
-    return basePath;
-}
-
 QString urlsAsStr(const QList<QUrl>& urls)
 {
-    HLOG(H_AT, H_FUN);
-
     QString retVal;
 
     for(qint32 i = 0; i < urls.size(); ++i)
@@ -276,13 +219,17 @@ QString urlsAsStr(const QList<QUrl>& urls)
     return retVal;
 }
 
-QString extractRequestPart(const QUrl& arg)
+QUrl appendUrls(const QUrl& baseUrl, const QUrl& relativeUrl)
 {
-    HLOG(H_AT, H_FUN);
+    QString relativePath(extractRequestPart(relativeUrl));
+    QString basePath(baseUrl.toString());
 
-    return arg.toString(
-        QUrl::RemoveAuthority | QUrl::RemovePassword | QUrl::RemoveUserInfo |
-        QUrl::RemoveScheme | QUrl::RemovePort | QUrl::StripTrailingSlash);
+    if (!basePath.endsWith('/')) { basePath.append('/'); }
+    if (relativePath.startsWith('/')) { relativePath.remove(0, 1); }
+
+    basePath.append(relativePath);
+
+    return basePath;
 }
 
 }

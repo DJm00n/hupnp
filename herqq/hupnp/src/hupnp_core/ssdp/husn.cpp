@@ -20,9 +20,6 @@
  */
 
 #include "husn.h"
-#include "hresource_identifier.h"
-#include "./../dataelements/hudn.h"
-#include "./../../utils/hlogger_p.h"
 
 #include <QString>
 
@@ -33,134 +30,65 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HUsnPrivate
- ******************************************************************************/
-class HUsnPrivate
-{
-public: // attributes
-
-    HUdn m_udn;
-    HResourceIdentifier m_resource;
-
-public: // methods
-
-    HUsnPrivate() :
-        m_udn(), m_resource()
-    {
-    }
-
-    HUsnPrivate(const QString& arg) :
-        m_udn(), m_resource()
-    {
-        qint32 i = arg.indexOf("::");
-        if (i < 0)
-        {
-            HUdn tmpUdn(arg);
-            if (tmpUdn.isValid())
-            {
-                m_udn      = tmpUdn;
-                m_resource = m_udn;
-            }
-
-            return;
-        }
-
-        HUdn udn = HUdn(arg.left(i));
-
-        HResourceIdentifier nt(arg.mid(i+2));
-
-        // if there is a "::", then both components should be valid
-        if (!udn.isValid() || nt.type() == HResourceIdentifier::Undefined)
-        {
-            return;
-        }
-
-        m_udn      = udn;
-        m_resource = nt;
-    }
-
-    HUsnPrivate(const HUdn& udn) :
-        m_udn(), m_resource()
-    {
-        if (udn.isValid())
-        {
-            m_udn      = udn;
-            m_resource = HResourceIdentifier(udn);
-        }
-    }
-
-    HUsnPrivate(const HUdn& udn, const HResourceIdentifier& res) :
-        m_udn(), m_resource()
-    {
-        if (udn.isValid())
-        {
-            m_udn = udn;
-            m_resource = res;
-        }
-    }
-};
-
-/*******************************************************************************
  * HUsn
  ******************************************************************************/
 HUsn::HUsn() :
-    h_ptr(new HUsnPrivate())
+    m_udn(), m_resource()
 {
 }
 
 HUsn::HUsn(const QString& arg) :
-    h_ptr(new HUsnPrivate(arg))
+    m_udn(), m_resource()
 {
+    qint32 i = arg.indexOf("::");
+    if (i < 0)
+    {
+        HUdn tmpUdn(arg);
+        if (tmpUdn.isValid())
+        {
+            m_udn      = tmpUdn;
+            m_resource = m_udn;
+        }
+
+        return;
+    }
+
+    HUdn udn = HUdn(arg.left(i));
+
+    HResourceIdentifier nt(arg.mid(i+2));
+
+    // if there is a "::", then both components should be valid
+    if (!udn.isValid() || nt.type() == HResourceIdentifier::Undefined)
+    {
+        return;
+    }
+
+    m_udn      = udn;
+    m_resource = nt;
 }
 
 HUsn::HUsn(const HUdn& udn) :
-    h_ptr(new HUsnPrivate(udn))
+    m_udn(), m_resource()
 {
+    if (udn.isValid())
+    {
+        m_udn      = udn;
+        m_resource = HResourceIdentifier(udn);
+    }
 }
 
-HUsn::HUsn(const HUdn& udn, const HResourceIdentifier& nt) :
-    h_ptr(new HUsnPrivate(udn, nt))
+HUsn::HUsn(const HUdn& udn, const HResourceIdentifier& res) :
+    m_udn(), m_resource()
 {
-}
-
-HUsn::HUsn(const HUsn& other) :
-    h_ptr(new HUsnPrivate(*other.h_ptr))
-{
+    if (udn.isValid())
+    {
+        m_udn = udn;
+        m_resource = res;
+    }
 }
 
 HUsn::~HUsn()
 {
-    delete h_ptr;
-}
-
-HUsn& HUsn::operator=(const HUsn& other)
-{
-    HUsnPrivate* newHptr = new HUsnPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
-    return *this;
-}
-
-void HUsn::setResource(const HResourceIdentifier& resource)
-{
-    h_ptr->m_resource = resource;
-}
-
-HUdn HUsn::udn() const
-{
-    return h_ptr->m_udn;
-}
-
-HResourceIdentifier HUsn::resource() const
-{
-    return h_ptr->m_resource;
-}
-
-bool HUsn::isValid() const
-{
-    return h_ptr->m_udn.isValid();
 }
 
 QString HUsn::toString() const
@@ -170,13 +98,13 @@ QString HUsn::toString() const
         return QString();
     }
 
-    if (h_ptr->m_resource.type() == HResourceIdentifier::SpecificDevice ||
-        h_ptr->m_resource.type() == HResourceIdentifier::Undefined)
+    if (m_resource.type() == HResourceIdentifier::SpecificDevice ||
+        m_resource.type() == HResourceIdentifier::Undefined)
     {
-        return h_ptr->m_udn.toString();
+        return m_udn.toString();
     }
 
-    return QString("%1::%2").arg(h_ptr->m_udn.toString(), h_ptr->m_resource.toString());
+    return QString("%1::%2").arg(m_udn.toString(), m_resource.toString());
 }
 
 bool operator==(const HUsn& usn1, const HUsn& usn2)

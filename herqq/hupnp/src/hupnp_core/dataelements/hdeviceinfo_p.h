@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UPNP_DEVICEINFO_P_H_
-#define UPNP_DEVICEINFO_P_H_
+#ifndef HDEVICEINFO_P_H_
+#define HDEVICEINFO_P_H_
 
 //
 // !! Warning !!
@@ -270,4 +270,4 @@ public: // methods
 }
 }
 
-#endif /* UPNP_DEVICEINFO_P_H_ */
+#endif /* HDEVICEINFO_P_H_ */

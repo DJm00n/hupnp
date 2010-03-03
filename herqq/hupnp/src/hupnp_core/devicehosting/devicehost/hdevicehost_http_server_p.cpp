@@ -21,14 +21,16 @@
 
 #include "hdevicehost_http_server_p.h"
 
-#include "./../../dataelements/hudn.h"
-#include "./../../../utils/hlogger_p.h"
-#include "./../../general/hupnp_global_p.h"
 #include "./../messages/hcontrol_messages_p.h"
+
+#include "./../../dataelements/hudn.h"
+#include "./../../general/hupnp_global_p.h"
 #include "./../../datatypes/hdatatype_mappings_p.h"
 
 #include "./../../devicemodel/haction_p.h"
 #include "./../../devicemodel/hactionarguments.h"
+
+#include "./../../../utils/hlogger_p.h"
 
 #include <QHttpRequestHeader>
 
@@ -44,7 +46,7 @@ namespace
 //
 // these functions are device host specific
 //
-QUuid extractUdn(const QUrl& arg)
+inline QUuid extractUdn(const QUrl& arg)
 {
     QString path = extractRequestPart(arg);
 
@@ -57,7 +59,7 @@ QUuid extractUdn(const QUrl& arg)
     return udn;
 }
 
-QString extractRequestExludingUdn(const QUrl& arg)
+inline QString extractRequestExludingUdn(const QUrl& arg)
 {
     QString pathToSearch = extractRequestPart(arg).section(
         '/', 2, -1, QString::SectionIncludeLeadingSep);
@@ -75,7 +77,7 @@ DeviceHostHttpServer::DeviceHostHttpServer(
         HHttpServer(loggingId, parent),
             m_deviceStorage(ds), m_eventNotifier(en)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     bool ok = connect(
         this,
@@ -96,13 +98,13 @@ DeviceHostHttpServer::DeviceHostHttpServer(
 
 DeviceHostHttpServer::~DeviceHostHttpServer()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 void DeviceHostHttpServer::processSubscription_slot(
     const SubscribeRequest* req, HService* service, HSid* sid)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(req);
     Q_ASSERT(sid);
 
@@ -136,7 +138,7 @@ void DeviceHostHttpServer::processSubscription_slot(
 void DeviceHostHttpServer::removeSubscriber_slot(
     const UnsubscribeRequest* req, bool* ok)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(req);
     Q_ASSERT(ok);
@@ -289,9 +291,9 @@ void DeviceHostHttpServer::incomingControlRequest(
         return;
     }
 
-    QtSoapMessage soapMsg = invokeActionRequest.soapMsg();
+    const QtSoapMessage* soapMsg = invokeActionRequest.soapMsg();
 
-    const QtSoapType& method = soapMsg.method();
+    const QtSoapType& method = soapMsg->method();
     if (!method.isValid())
     {
         HLOG_WARN(QObject::tr("Invalid control method."));
@@ -304,6 +306,7 @@ void DeviceHostHttpServer::incomingControlRequest(
     try
     {
         HActionController* action = service->actionByName(method.name().name());
+
         if (!action)
         {
             HLOG_WARN(QObject::tr("The service has no action named [%1].").arg(
@@ -311,39 +314,39 @@ void DeviceHostHttpServer::incomingControlRequest(
 
             mi.setKeepAlive(false);
             m_httpHandler.sendActionFailed(
-                mi, HAction::InvalidArgs(), soapMsg.toXmlString());
+                mi, HAction::InvalidArgs(), soapMsg->toXmlString());
             // TODO
             return;
         }
 
-        HActionInputArguments iargs = action->m_action->inputArguments();
-        QList<QString> names = iargs.names();
-        foreach(QString key, names)
+        HActionArguments iargs = action->m_action->inputArguments();
+        HActionArguments::iterator it = iargs.begin();
+        for(; it != iargs.end(); ++it)
         {
-            const QtSoapType& arg = method[key];
+            HActionArgument* iarg = (*it);
+
+            const QtSoapType& arg = method[iarg->name()];
             if (!arg.isValid())
             {
                 mi.setKeepAlive(false);
                 m_httpHandler.sendActionFailed(
-                    mi, HAction::InvalidArgs(), soapMsg.toXmlString());
+                    mi, HAction::InvalidArgs(), soapMsg->toXmlString());
                 // TODO
                 return;
             }
 
-            HActionInputArgument* iarg = iargs[key];
             if (!iarg->setValue(
                 convertToRightVariantType(arg.value().toString(), iarg->dataType())))
             {
                 mi.setKeepAlive(false);
                 m_httpHandler.sendActionFailed(
-                    mi, HAction::InvalidArgs(), soapMsg.toXmlString());
+                    mi, HAction::InvalidArgs(), soapMsg->toXmlString());
                 // TODO
                 return;
             }
         }
 
-        HActionOutputArguments outArgs = action->m_action->outputArguments();
-
+        HActionArguments outArgs = action->m_action->outputArguments();
         qint32 retVal = action->invoke(iargs, &outArgs);
         if (retVal != HAction::Success())
         {
@@ -357,7 +360,7 @@ void DeviceHostHttpServer::incomingControlRequest(
             QString("%1%2").arg(action->m_action->name(), "Response"),
             service->m_service->serviceType().toString()));
 
-        foreach(HActionOutputArgument* oarg, outArgs)
+        foreach(const HActionArgument* oarg, outArgs)
         {
             QtSoapType* soapArg =
                 new SoapType(oarg->name(), oarg->dataType(), oarg->value());

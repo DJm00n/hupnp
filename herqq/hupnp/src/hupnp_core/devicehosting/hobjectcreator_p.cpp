@@ -431,84 +431,95 @@ HActionController* HObjectCreator::parseAction(
     QDomElement argumentListElement  =
         actionElement.firstChildElement("argumentList");
 
-    QList<HActionInputArgument> inputArguments;
-    QList<HActionOutputArgument> outputArguments;
     bool hasRetvalArgument = false;
-
-    if (!argumentListElement.isNull())
+    QVector<HActionArgument*> inputArguments;
+    QVector<HActionArgument*> outputArguments;
+    try
     {
-        QDomElement argumentElement =
-            argumentListElement.firstChildElement("argument");
-
-        bool firstOutArgFound = false;
-
-        while(!argumentElement.isNull())
+        if (!argumentListElement.isNull())
         {
-            QString name   =
-                readElementValue("name", argumentElement);
+            QDomElement argumentElement =
+                argumentListElement.firstChildElement("argument");
 
-            QString dirStr =
-                readElementValue("direction", argumentElement);
+            bool firstOutArgFound = false;
 
-            bool retValWasDefined = false;
-            readElementValue("retval", argumentElement, &retValWasDefined);
-
-            QString relatedStateVar =
-                readElementValue("relatedStateVariable", argumentElement);
-
-            if (!parentService->h_ptr->m_stateVariables.contains(relatedStateVar))
+            while(!argumentElement.isNull())
             {
-                QString err(QObject::tr("No state variable named "));
-                err.append(relatedStateVar);
+                QString name   =
+                    readElementValue("name", argumentElement);
 
-                throw HParseException(err);
-            }
+                QString dirStr =
+                    readElementValue("direction", argumentElement);
 
-            if (dirStr.compare("out", Qt::CaseInsensitive) == 0)
-            {
-                if (retValWasDefined)
+                bool retValWasDefined = false;
+                readElementValue("retval", argumentElement, &retValWasDefined);
+
+                QString relatedStateVar =
+                    readElementValue("relatedStateVariable", argumentElement);
+
+                if (!parentService->h_ptr->m_stateVariables.contains(relatedStateVar))
+                {
+                    QString err(QObject::tr("No state variable named "));
+                    err.append(relatedStateVar);
+
+                    throw HParseException(err);
+                }
+
+                if (dirStr.compare("out", Qt::CaseInsensitive) == 0)
+                {
+                    if (retValWasDefined)
+                    {
+                        if (firstOutArgFound)
+                        {
+                            throw HParseException(QObject::tr(
+                                "[retval] must be the first [out] argument."));
+                        }
+
+                        hasRetvalArgument = true;
+                    }
+
+                    firstOutArgFound = true;
+
+                    HActionArgument* arg = new HActionArgument();
+                    arg->init(
+                        name,
+                        parentService->h_ptr->m_stateVariables[relatedStateVar]->m_stateVariable);
+
+                    outputArguments.push_back(arg);
+                }
+                else if (dirStr.compare("in", Qt::CaseInsensitive) == 0)
                 {
                     if (firstOutArgFound)
                     {
                         throw HParseException(QObject::tr(
-                            "[retval] must be the first [out] argument."));
+                            "Invalid argument order. Input arguments must all come "
+                            "before output arguments."));
                     }
 
-                    hasRetvalArgument = true;
+                    HActionArgument* arg = new HActionArgument();
+                    arg->init(
+                        name,
+                        parentService->h_ptr->m_stateVariables[relatedStateVar]->m_stateVariable);
+
+                    inputArguments.push_back(arg);
                 }
-
-                firstOutArgFound = true;
-
-                HActionOutputArgument arg(name,
-                    parentService->h_ptr->m_stateVariables[relatedStateVar]->m_stateVariable);
-
-                outputArguments.push_back(arg);
-            }
-            else if (dirStr.compare("in", Qt::CaseInsensitive) == 0)
-            {
-                if (firstOutArgFound)
+                else
                 {
-                    throw HParseException(QObject::tr(
-                        "Invalid argument order. Input arguments must all come "
-                        "before output arguments."));
+                    throw HParseException(QObject::tr("Invalid [direction] value."));
                 }
 
-                HActionInputArgument arg(name,
-                    parentService->h_ptr->m_stateVariables[relatedStateVar]->m_stateVariable);
-
-                inputArguments.push_back(arg);
+                argumentElement = argumentElement.nextSiblingElement("argument");
             }
-            else
-            {
-                throw HParseException(QObject::tr("Invalid [direction] value."));
-            }
-
-            argumentElement = argumentElement.nextSiblingElement("argument");
         }
     }
+    catch(HException&)
+    {
+        qDeleteAll(inputArguments);
+        qDeleteAll(outputArguments);
+    }
 
-    HActionInputArguments inArgs(inputArguments);
-    HActionOutputArguments outArgs(outputArguments);
+    HActionArguments inArgs(inputArguments);
+    HActionArguments outArgs(outputArguments);
 
     try
     {

@@ -61,15 +61,11 @@ HDeviceConfiguration::HDeviceConfiguration(
 
 HDeviceConfiguration::~HDeviceConfiguration()
 {
-    HLOG(H_AT, H_FUN);
-
     delete h_ptr;
 }
 
 HDeviceConfiguration* HDeviceConfiguration::clone() const
 {
-    HLOG(H_AT, H_FUN);
-
     HDeviceConfiguration* clone =
         new HDeviceConfiguration(
             *new HDeviceConfigurationPrivate(*h_ptr));
@@ -85,8 +81,6 @@ QString HDeviceConfiguration::pathToDeviceDescription() const
 bool HDeviceConfiguration::setPathToDeviceDescription(
     const QString& pathToDeviceDescriptor)
 {
-    HLOG(H_AT, H_FUN);
-
     if (!QFile::exists(pathToDeviceDescriptor))
     {
         return false;
@@ -158,7 +152,6 @@ HDeviceHostConfiguration::HDeviceHostConfiguration(
     const HDeviceConfiguration& arg) :
         h_ptr(new HDeviceHostConfigurationPrivate())
 {
-    HLOG(H_AT, H_FUN);
     add(arg);
 }
 
@@ -166,7 +159,6 @@ HDeviceHostConfiguration::HDeviceHostConfiguration(
     const HDeviceHostConfiguration& other) :
         h_ptr(new HDeviceHostConfigurationPrivate())
 {
-    HLOG(H_AT, H_FUN);
     foreach(HDeviceConfiguration* arg, other.h_ptr->m_collection)
     {
         add(*arg);
@@ -176,7 +168,6 @@ HDeviceHostConfiguration::HDeviceHostConfiguration(
 HDeviceHostConfiguration& HDeviceHostConfiguration::operator=(
     const HDeviceHostConfiguration& other)
 {
-    HLOG(H_AT, H_FUN);
     qDeleteAll(h_ptr->m_collection);
     h_ptr->m_collection.clear();
 
@@ -190,16 +181,12 @@ HDeviceHostConfiguration& HDeviceHostConfiguration::operator=(
 
 HDeviceHostConfiguration::~HDeviceHostConfiguration()
 {
-    HLOG(H_AT, H_FUN);
-
     qDeleteAll(h_ptr->m_collection);
     delete h_ptr;
 }
 
 bool HDeviceHostConfiguration::add(const HDeviceConfiguration& arg)
 {
-    HLOG(H_AT, H_FUN);
-
     if (arg.isValid())
     {
         h_ptr->m_collection.push_back(arg.clone());

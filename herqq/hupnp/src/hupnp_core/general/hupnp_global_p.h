@@ -30,11 +30,12 @@
 // change or the file may be removed without of notice.
 //
 
-class QUrl;
-class QString;
-class QTcpSocket;
 class QDomElement;
-class QHostAddress;
+
+#include <QUrl>
+#include <QString>
+#include <QTcpSocket>
+#include <QHostAddress>
 
 namespace Herqq
 {
@@ -78,16 +79,6 @@ QString verifyName(const QString& name);
 HProductTokens herqqProductTokens();
 
 //
-//
-//
-QString peerAsStr(const QTcpSocket& sock);
-
-//
-//
-//
-QUrl extractBaseUrl(const QUrl& url);
-
-//
 // Returns the provided URLs as a string following format "#N URL\n",
 // where N = 0..., and URL is the N'th URL in the list.
 //
@@ -96,17 +87,53 @@ QString urlsAsStr(const QList<QUrl>&);
 //
 //
 //
-QString extractBaseUrl(const QString& url);
+inline QString peerAsStr(const QTcpSocket& sock)
+{
+    return QString("%1:%2").arg(
+        sock.peerAddress().toString(), QString::number(sock.peerPort()));
+}
+
+//
+//
+//
+inline QString extractBaseUrl(const QString& url)
+{
+    if (url.endsWith('/'))
+    {
+        return url;
+    }
+    else if (!url.contains('/'))
+    {
+        return "";
+    }
+
+    QString base = url.section('/', 0, -2, QString::SectionIncludeTrailingSep);
+    return base;
+}
+
+//
+//
+//
+inline QUrl extractBaseUrl(const QUrl& url)
+{
+    QString urlAsStr = url.toString();
+    return extractBaseUrl(urlAsStr);
+}
+
+//
+// Returns the part + query + fragment (== request in entirety) sections of the url
+//
+inline QString extractRequestPart(const QUrl& arg)
+{
+    return arg.toString(
+        QUrl::RemoveAuthority | QUrl::RemovePassword | QUrl::RemoveUserInfo |
+        QUrl::RemoveScheme | QUrl::RemovePort | QUrl::StripTrailingSlash);
+}
 
 //
 //
 //
 QUrl appendUrls(const QUrl& baseUrl, const QUrl& relativeUrl);
-
-//
-// Returns the part + query + fragment (== request in entirety) sections of the url
-//
-QString extractRequestPart(const QUrl&);
 
 }
 }

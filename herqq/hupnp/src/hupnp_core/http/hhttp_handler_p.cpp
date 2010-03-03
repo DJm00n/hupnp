@@ -62,12 +62,10 @@ public:
 HHttpHandler::HHttpHandler(const QByteArray& loggingIdentifier) :
     m_loggingIdentifier(loggingIdentifier), m_shuttingDown(0), m_callsInProgress(0)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 HHttpHandler::~HHttpHandler()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     shutdown(true);
 }
 
@@ -92,8 +90,6 @@ void HHttpHandler::shutdown(bool wait)
 HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
     MessagingInfo& mi, QByteArray* data)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     Q_ASSERT(data);
 
     QTime stopWatch; stopWatch.start();
@@ -261,8 +257,6 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
 HHttpHandler::ReturnValue HHttpHandler::readRequestData(
     MessagingInfo& mi, QByteArray* requestData, qint64 contentLength)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (contentLength <= 0)
     {
         return Success;
@@ -348,8 +342,6 @@ template<typename Header>
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, Header& hdr, QByteArray* body)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     Counter cnt(m_callsInProgress);
 
     QByteArray headerData;
@@ -464,9 +456,9 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
     return Success;
 }
 
-HHttpHandler::ReturnValue HHttpHandler::sendBlob(MessagingInfo& mi, const QByteArray& data)
+HHttpHandler::ReturnValue HHttpHandler::sendBlob(
+    MessagingInfo& mi, const QByteArray& data)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(!data.isEmpty());
     Counter cnt(m_callsInProgress);
 
@@ -528,7 +520,6 @@ HHttpHandler::ReturnValue HHttpHandler::sendBlob(MessagingInfo& mi, const QByteA
 HHttpHandler::ReturnValue HHttpHandler::sendChunked(
     MessagingInfo& mi, const QByteArray& data)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(!data.isEmpty());
     Q_ASSERT(mi.chunkedInfo().m_maxChunkSize > 0);
 
@@ -540,7 +531,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
 
     // send the http header first
     qint32 endOfHdr = data.indexOf("\r\n\r\n") + 4;
-    send(mi, data.left(endOfHdr));
+    sendBlob(mi, data.left(endOfHdr));
 
     // then start sending the data in chunks
     qint64 bytesWritten   = 0;
@@ -643,8 +634,6 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
 HHttpHandler::ReturnValue HHttpHandler::send(
     MessagingInfo& mi, const QByteArray& data)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     qint32 indexOfData = data.indexOf("\r\n\r\n");
     Q_ASSERT(indexOfData > 0);
 
@@ -659,20 +648,17 @@ HHttpHandler::ReturnValue HHttpHandler::send(
 
 HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, StatusCode sc)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     return send(mi, HHttpMessageCreator::createResponse(sc, mi));
 }
 
 HHttpHandler::ReturnValue HHttpHandler::send(
     MessagingInfo& mi, const QByteArray& data, StatusCode sc, ContentType ct)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     return send(mi, HHttpMessageCreator::createResponse(sc, mi, data, ct));
 }
 
 HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const SubscribeRequest& request)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(request.isValid());
 
     QByteArray data = HHttpMessageCreator::create(request, mi);
@@ -691,7 +677,6 @@ HHttpHandler::ReturnValue HHttpHandler::send(
 
 HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const UnsubscribeRequest& req)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(req.isValid());
 
     QByteArray data = HHttpMessageCreator::create(req, mi);
@@ -700,7 +685,6 @@ HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const Unsubscrib
 
 HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const NotifyRequest& req)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(req.isValid());
 
     QByteArray data = HHttpMessageCreator::create(req, mi);
@@ -711,8 +695,6 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, NotifyRequest& req, NotifyRequest::RetVal& retVal,
     const QHttpRequestHeader* reqHdr, const QByteArray* body)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QByteArray bodyContent;
     QHttpRequestHeader requestHeader;
 
@@ -764,8 +746,6 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, SubscribeRequest& req, SubscribeRequest::RetVal& retVal,
     const QHttpRequestHeader* reqHdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QHttpRequestHeader requestHeader;
     if (!reqHdr)
     {
@@ -814,8 +794,6 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, UnsubscribeRequest& req,
     UnsubscribeRequest::RetVal& retVal, const QHttpRequestHeader* reqHdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QHttpRequestHeader requestHeader;
     if (!reqHdr)
     {
@@ -859,8 +837,6 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, SubscribeResponse& resp)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QHttpResponseHeader respHeader;
     ReturnValue rv = receive(mi, respHeader);
     if (rv != Success)
@@ -881,8 +857,6 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, const SubscribeRequest& request,
     SubscribeResponse& response)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     ReturnValue rv = send(mi, HHttpMessageCreator::create(request, mi));
     if (rv != Success)
     {
@@ -897,8 +871,6 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     const QByteArray& reqBody, QHttpResponseHeader& responseHdr,
     QByteArray* respBody)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QByteArray data = HHttpMessageCreator::setupData(requestHdr, reqBody, mi);
     ReturnValue rv = send(mi, data);
     if (rv != Success)
@@ -913,15 +885,12 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, QHttpRequestHeader& requestHdr,
     QHttpResponseHeader& responseHdr, QByteArray* respBody)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     return msgIO(mi, requestHdr, QByteArray(), responseHdr, respBody);
 }
 
 HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, const UnsubscribeRequest& request)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     Q_ASSERT(request.isValid());
 
     ReturnValue rv = send(mi, HHttpMessageCreator::create(request, mi));
@@ -949,8 +918,6 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, const NotifyRequest& request)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     ReturnValue rv = send(mi, request);
     if (rv != Success)
     {
@@ -977,8 +944,6 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, QHttpRequestHeader& reqHdr,
     const QtSoapMessage& soapMsg, QtSoapMessage& response)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QHttpResponseHeader responseHdr;
 
     QByteArray respBody;
@@ -1017,8 +982,6 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 HHttpHandler::ReturnValue HHttpHandler::sendActionFailed(
     MessagingInfo& mi, qint32 actionErrCode, const QString& description)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QByteArray data =
         HHttpMessageCreator::createResponse(mi, actionErrCode, description);
 

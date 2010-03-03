@@ -20,8 +20,6 @@
  */
 
 #include "hresourcetype.h"
-
-#include "./../../utils/hlogger_p.h"
 #include "./../../utils/hmisc_utils_p.h"
 
 #include <QByteArray>
@@ -40,8 +38,6 @@ HResourceType::HResourceType() :
 HResourceType::HResourceType(const QString& resourceTypeAsStr) :
     m_resourceElements()
 {
-    HLOG(H_AT, H_FUN);
-
     QStringList tmp = resourceTypeAsStr.simplified().split(":");
     if (tmp.size() != 5)
     {

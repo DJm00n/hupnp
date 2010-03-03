@@ -94,16 +94,6 @@ QString HNt::subTypeToString() const
     return m_subTypeValue.second;
 }
 
-HNt::Type HNt::type() const
-{
-    return m_typeValue.first;
-}
-
-HNt::SubType HNt::subType() const
-{
-    return m_subTypeValue.first;
-}
-
 QString HNt::toString(Type type)
 {
     switch(type)

@@ -65,8 +65,12 @@ bool HServiceController::updateVariables(
 
 HActionController* HServiceController::actionByName(const QString& name)
 {
-    HLOG2(H_AT, H_FUN, m_service->h_ptr->m_loggingIdentifier);
     return m_service->h_ptr->m_actionsAsMap.value(name);
+}
+
+QList<HActionController*> HServiceController::actions() const
+{
+    return m_service->h_ptr->m_actions;
 }
 
 /*******************************************************************************
@@ -89,7 +93,6 @@ HServicePrivate::HServicePrivate() :
     m_updateMutex      (),
     m_loggingIdentifier()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 HServicePrivate::~HServicePrivate()
@@ -239,8 +242,6 @@ QString HService::serviceDescription() const
 
 QList<HAction*> HService::actions() const
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     QList<HAction*> retVal;
     for(qint32 i = 0; i < h_ptr->m_actions.size(); ++i)
     {
@@ -252,16 +253,12 @@ QList<HAction*> HService::actions() const
 
 HAction* HService::actionByName(const QString& name) const
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     HActionController* retVal = h_ptr->m_actionsAsMap.value(name);
     return retVal ? retVal->m_action : 0;
 }
 
 QList<HStateVariable*> HService::stateVariables() const
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     QList<HStateVariable*> retVal;
 
     QHash<QString, HStateVariableController*>::const_iterator ci =
@@ -277,8 +274,6 @@ QList<HStateVariable*> HService::stateVariables() const
 
 HStateVariable* HService::stateVariableByName(const QString& name) const
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     HStateVariableController* sv = h_ptr->m_stateVariables.value(name);
     return sv ? sv->m_stateVariable : 0;
 }

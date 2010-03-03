@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_ACTION_P_H_
-#define HUPNP_ACTION_P_H_
+#ifndef HACTION_P_H_
+#define HACTION_P_H_
 
 //
 // !! Warning !!
@@ -72,17 +72,17 @@ friend class HActionPrivate;
     public:
 
         HActionPrivate* m_action;
-        HActionInputArguments m_iargs;
+        HActionArguments m_iargs;
         QUuid m_invokeId;
         QWaitCondition m_waitCond;
-        HActionOutputArguments m_outArgs;
+        HActionArguments m_outArgs;
         qint32 m_rc;
 
         QAtomicInt m_hasListener;
 
     public:
 
-        Invocation(HActionPrivate*, const HActionInputArguments&, const QUuid&);
+        Invocation(HActionPrivate*, const HActionArguments&, const QUuid&);
         virtual void run();
 
         inline bool isCompleted() { return m_rc != 0x0fffffff; }
@@ -98,7 +98,7 @@ public:
     HSharedActionInvoker(QThreadPool*);
     ~HSharedActionInvoker();
 
-    Invocation* runAction(HActionPrivate*, const HActionInputArguments&);
+    Invocation* runAction(HActionPrivate*, const HActionArguments&);
 };
 
 //
@@ -120,8 +120,8 @@ public:
     virtual ~HActionController();
 
     qint32 invoke(
-        const Herqq::Upnp::HActionInputArguments&,
-        Herqq::Upnp::HActionOutputArguments*);
+        const Herqq::Upnp::HActionArguments&,
+        Herqq::Upnp::HActionArguments*);
 };
 
 //
@@ -138,17 +138,17 @@ private:
     void onActionInvocationComplete(const QUuid& invokeId, qint32 rc);
 
     HAction::InvocationWaitReturnValue waitForInvocation(
-        const QUuid& invokeId, qint32* rc, qint32 timeout, HActionOutputArguments*);
+        const QUuid& invokeId, qint32* rc, qint32 timeout, HActionArguments*);
 
-    QUuid invoke(const HActionInputArguments& inArgs);
-    QUuid invoke(const HActionInputArguments&, const HActionInvokeCallback&);
+    QUuid invoke(const HActionArguments& inArgs);
+    QUuid invoke(const HActionArguments&, const HActionInvokeCallback&);
 
 public:
 
     HAction* q_ptr;
     QString m_name;
-    QScopedPointer<HActionInputArguments>  m_inputArguments;
-    QScopedPointer<HActionOutputArguments> m_outputArguments;
+    QScopedPointer<HActionArguments> m_inputArguments;
+    QScopedPointer<HActionArguments> m_outputArguments;
     bool m_hasRetValArg;
 
     HService* m_parentService;
@@ -167,9 +167,9 @@ public:
     ~HActionPrivate();
 
     bool setName      (const QString& name);
-    bool setInputArgs (const HActionInputArguments& inputArguments);
+    bool setInputArgs (const HActionArguments& inputArguments);
     bool setOutputArgs(
-        const HActionOutputArguments& outputArguments, bool hasRetValArg);
+        const HActionArguments& outputArguments, bool hasRetValArg);
 
     bool setActionInvoke(const HActionInvoke& ai);
     bool setSharedInvoker(HSharedActionInvoker*);
@@ -178,4 +178,4 @@ public:
 }
 }
 
-#endif /* HUPNP_ACTION_P_H_ */
+#endif /* HACTION_P_H_ */

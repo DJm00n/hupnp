@@ -37,7 +37,6 @@ namespace Upnp
 HProductToken::HProductToken() :
     m_token(), m_productVersion()
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HProductToken::HProductToken(const QString& token, const QString& productVersion) :
@@ -62,19 +61,15 @@ HProductToken::HProductToken(const QString& token, const QString& productVersion
 
 HProductToken::~HProductToken()
 {
-    HLOG(H_AT, H_FUN);
 }
 
 bool HProductToken::isValid() const
 {
-    HLOG(H_AT, H_FUN);
     return !m_token.isEmpty();
 }
 
 QString HProductToken::toString() const
 {
-    HLOG(H_AT, H_FUN);
-
     if (!isValid())
     {
         return QString();
@@ -85,19 +80,16 @@ QString HProductToken::toString() const
 
 QString HProductToken::token() const
 {
-    HLOG(H_AT, H_FUN);
     return m_token;
 }
 
 QString HProductToken::version() const
 {
-    HLOG(H_AT, H_FUN);
     return m_productVersion;
 }
 
 bool HProductToken::isValidUpnpToken(const HProductToken& token)
 {
-    HLOG(H_AT, H_FUN);
     if (token.token() != "UPnP")
     {
         return false;
@@ -113,7 +105,6 @@ bool HProductToken::isValidUpnpToken(const HProductToken& token)
 
 qint32 HProductToken::minorVersion(const HProductToken& token)
 {
-    HLOG(H_AT, H_FUN);
     QString tokenVersion = token.version();
 
     qint32 separatorIndex = tokenVersion.indexOf('.');
@@ -135,7 +126,6 @@ qint32 HProductToken::minorVersion(const HProductToken& token)
 
 qint32 HProductToken::majorVersion(const HProductToken& token)
 {
-    HLOG(H_AT, H_FUN);
     QString tokenVersion = token.version();
 
     qint32 separatorIndex = tokenVersion.indexOf('.');
@@ -156,13 +146,11 @@ qint32 HProductToken::majorVersion(const HProductToken& token)
 
 bool operator==(const HProductToken& obj1, const HProductToken& obj2)
 {
-    HLOG(H_AT, H_FUN);
     return obj1.toString() == obj2.toString();
 }
 
 bool operator!=(const HProductToken& obj1, const HProductToken& obj2)
 {
-    HLOG(H_AT, H_FUN);
     return !(obj1 == obj2);
 }
 
@@ -175,8 +163,6 @@ private:
 
     bool parseCommaDelimited(const QString& tokens)
     {
-        HLOG(H_AT, H_FUN);
-
         QStringList tmp(tokens.split(','));
 
         if (tmp.size() != 3)
@@ -202,8 +188,6 @@ private:
 
     bool parseNormal(const QString& tokens)
     {
-        HLOG(H_AT, H_FUN);
-
         QList<HProductToken> productTokens;
 
         QString token, version, buf;
@@ -269,7 +253,6 @@ public:
     HProductTokensPrivate() :
         m_productTokens()
     {
-        HLOG(H_AT, H_FUN);
     }
 
     HProductTokensPrivate(const QString& tokens) :
@@ -306,24 +289,20 @@ public:
 HProductTokens::HProductTokens() :
     h_ptr(new HProductTokensPrivate())
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HProductTokens::HProductTokens(const QString& tokens) :
     h_ptr(new HProductTokensPrivate(tokens))
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HProductTokens::HProductTokens(const HProductTokens& other) :
     h_ptr(new HProductTokensPrivate(*other.h_ptr))
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HProductTokens& HProductTokens::operator=(const HProductTokens& other)
 {
-    HLOG(H_AT, H_FUN);
     HProductTokensPrivate* newHptr = new HProductTokensPrivate(*other.h_ptr);
 
     delete h_ptr;
@@ -334,19 +313,16 @@ HProductTokens& HProductTokens::operator=(const HProductTokens& other)
 
 HProductTokens::~HProductTokens()
 {
-    HLOG(H_AT, H_FUN);
     delete h_ptr;
 }
 
 bool HProductTokens::isValid() const
 {
-    HLOG(H_AT, H_FUN);
     return h_ptr->m_productTokens.size() > 0;
 }
 
 HProductToken HProductTokens::osToken() const
 {
-    HLOG(H_AT, H_FUN);
     if (!isValid())
     {
         return HProductToken();
@@ -357,7 +333,6 @@ HProductToken HProductTokens::osToken() const
 
 HProductToken HProductTokens::upnpToken() const
 {
-    HLOG(H_AT, H_FUN);
     if (!isValid())
     {
         return HProductToken();
@@ -368,7 +343,6 @@ HProductToken HProductTokens::upnpToken() const
 
 HProductToken HProductTokens::productToken() const
 {
-    HLOG(H_AT, H_FUN);
     if (!isValid())
     {
         return HProductToken();
@@ -379,7 +353,6 @@ HProductToken HProductTokens::productToken() const
 
 QString HProductTokens::toString() const
 {
-    HLOG(H_AT, H_FUN);
     if (!isValid())
     {
         return QString();
@@ -391,13 +364,11 @@ QString HProductTokens::toString() const
 
 bool operator==(const HProductTokens& ht1, const HProductTokens& ht2)
 {
-    HLOG(H_AT, H_FUN);
     return ht1.toString() == ht2.toString();
 }
 
 bool operator!=(const HProductTokens& ht1, const HProductTokens& ht2)
 {
-    HLOG(H_AT, H_FUN);
     return !(ht1 == ht2);
 }
 

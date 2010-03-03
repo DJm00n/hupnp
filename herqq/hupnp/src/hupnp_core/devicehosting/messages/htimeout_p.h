@@ -58,9 +58,17 @@ public:
     HTimeout& operator=(qint32 value);
     HTimeout& operator=(const QString& value);
 
-    qint32 value    () const;
+    inline qint32 value() const
+    {
+        return m_value;
+    }
+
     QString toString() const;
-    bool isInfinite () const;
+
+    inline bool isInfinite() const
+    {
+        return m_value == -1;
+    }
 };
 
 bool operator==(const HTimeout& obj1, const HTimeout& obj2);

@@ -125,6 +125,8 @@ QImage DeviceHostDataRetriever::retrieveIcon(
 QDomDocument DeviceHostDataRetriever::retrieveDeviceDescription(
     const QString& filePath)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly))
     {

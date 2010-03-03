@@ -48,9 +48,9 @@ QString InvokeActionRequest::soapAction() const
     return m_soapAction;
 }
 
-QtSoapMessage InvokeActionRequest::soapMsg() const
+const QtSoapMessage* InvokeActionRequest::soapMsg() const
 {
-    return m_soapMsg;
+    return &m_soapMsg;
 }
 
 QUrl InvokeActionRequest::serviceUrl() const

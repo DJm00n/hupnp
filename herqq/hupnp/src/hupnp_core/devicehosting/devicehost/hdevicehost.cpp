@@ -67,19 +67,19 @@ HDeviceHostPrivate::HDeviceHostPrivate() :
             m_eventNotifier      (0),
             m_presenceAnnouncer  (0)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     srand(time(0));
 }
 
 HDeviceHostPrivate::~HDeviceHostPrivate()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 void HDeviceHostPrivate::announcementTimedout(HDeviceController* rootDevice)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QList<ResourceAvailableAnnouncement> announcements;
 
@@ -153,7 +153,7 @@ void HDeviceHostPrivate::createRootDevices()
 
 void HDeviceHostPrivate::connectSelfToServiceSignals(HDevice* device)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QList<HService*> services = device->services();
     foreach(HService* service, services)
@@ -176,7 +176,7 @@ void HDeviceHostPrivate::connectSelfToServiceSignals(HDevice* device)
 
 void HDeviceHostPrivate::startNotifiers()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QList<HDeviceController*> rootDevices =
         m_deviceStorage->rootDeviceControllers();
@@ -195,7 +195,7 @@ void HDeviceHostPrivate::startNotifiers()
 
 void HDeviceHostPrivate::stopNotifiers()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QList<HDeviceController*> rootDevices =
         m_deviceStorage->rootDeviceControllers();
@@ -208,7 +208,7 @@ void HDeviceHostPrivate::stopNotifiers()
 
 void HDeviceHostPrivate::doClear()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(thread() == QThread::currentThread());
 

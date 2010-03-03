@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SSDP_H_
-#define SSDP_H_
+#ifndef HSSDP_H_
+#define HSSDP_H_
 
 #include "./../general/hdefs_p.h"
 #include "./../general/hupnp_fwd.h"
@@ -336,4 +336,4 @@ Q_SIGNALS:
 }
 }
 
-#endif /* SSDP_H_ */
+#endif /* HSSDP_H_ */

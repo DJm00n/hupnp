@@ -22,7 +22,9 @@
 #ifndef HUSN_H_
 #define HUSN_H_
 
+#include "hresource_identifier.h"
 #include "./../general/hdefs_p.h"
+#include "./../dataelements/hudn.h"
 
 namespace Herqq
 {
@@ -30,33 +32,30 @@ namespace Herqq
 namespace Upnp
 {
 
-class HUdn;
-class HUsnPrivate;
-class HResourceIdentifier;
-
 /*!
  * A class used to depict a Unique Service Name (USN), which is a composite identifier
  * for an SSDP advertisement.
  *
  * \headerfile husn.h HUsn
  *
- * \remark this class provides an assignment operator that is not thread-safe.
- *
  * \ingroup ssdp
+ *
+ * \remark this class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HUsn
 {
 
 private:
 
-    HUsnPrivate* h_ptr;
+    HUdn m_udn;
+    HResourceIdentifier m_resource;
 
 public:
 
     /*!
      * Creates a new, empty instance.
      */
-    HUsn ();
+    HUsn();
 
     /*!
      * Creates a new USN based on the provided argument. The created USN is valid
@@ -89,18 +88,6 @@ public:
     HUsn(const HUdn& udn, const HResourceIdentifier& resource);
 
     /*!
-     * Creates a copy of the other object.
-     */
-    HUsn(const HUsn&);
-
-    /*!
-     * Assigns the contents of the other to this.
-     *
-     * \return a reference to this object.
-     */
-    HUsn& operator=(const HUsn&);
-
-    /*!
      * Destroys the instance.
      */
     ~HUsn();
@@ -112,7 +99,10 @@ public:
      *
      * \sa resource()
      */
-    void setResource(const HResourceIdentifier& resource);
+    inline void setResource(const HResourceIdentifier& resource)
+    {
+        m_resource = resource;
+    }
 
     /*!
      * Returns the UDN component of the USN.
@@ -121,7 +111,10 @@ public:
      *
      * \return the UDN component of the USN.
      */
-    HUdn udn() const;
+    inline HUdn udn() const
+    {
+        return m_udn;
+    }
 
     /*!
      * Returns the resource component of the USN.
@@ -130,7 +123,10 @@ public:
      *
      * \sa setResource()
      */
-    HResourceIdentifier resource() const;
+    inline HResourceIdentifier resource() const
+    {
+        return m_resource;
+    }
 
     /*!
      * Indicates whether or not the object is a valid USN.
@@ -140,7 +136,10 @@ public:
      *
      * \return \e true in case the object is a valid USN.
      */
-    bool isValid() const;
+    inline bool isValid() const
+    {
+        return m_udn.isValid();
+    }
 
     /*!
      * Returns a string representation of the object.

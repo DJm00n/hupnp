@@ -81,19 +81,9 @@ HSid& HSid::operator=(const QUuid& other)
     return *this;
 }
 
-QUuid HSid::value() const
-{
-    return m_value;
-}
-
 QString HSid::toString() const
 {
     return QString("uuid:%1").arg(m_value.toString().remove('{').remove('}'));
-}
-
-bool HSid::isNull() const
-{
-    return m_value.isNull();
 }
 
 bool operator==(const HSid& sid1, const HSid& sid2)

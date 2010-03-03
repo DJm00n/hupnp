@@ -57,7 +57,7 @@ namespace Upnp
  * HSharedActionInvoker::Invocation
 ********************************************************************************/
 HSharedActionInvoker::Invocation::Invocation(
-    Herqq::Upnp::HActionPrivate* action, const HActionInputArguments& iArgs,
+    Herqq::Upnp::HActionPrivate* action, const HActionArguments& iArgs,
     const QUuid& invokeId) :
         m_action(action), m_iargs(iArgs), m_invokeId(invokeId), m_waitCond(),
         m_outArgs(*m_action->m_outputArguments), m_rc(0x0fffffff),
@@ -68,8 +68,6 @@ HSharedActionInvoker::Invocation::Invocation(
 
 void HSharedActionInvoker::Invocation::run()
 {
-    HLOG(H_AT, H_FUN);
-
     qint32 rc = m_action->m_actionInvoke(m_iargs, &m_outArgs);
     m_action->onActionInvocationComplete(m_invokeId, rc);
 }
@@ -84,14 +82,11 @@ HSharedActionInvoker::HSharedActionInvoker(QThreadPool* tp) :
 
 HSharedActionInvoker::~HSharedActionInvoker()
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HSharedActionInvoker::Invocation* HSharedActionInvoker::runAction(
-    HActionPrivate* action, const HActionInputArguments& iArgs)
+    HActionPrivate* action, const HActionArguments& iArgs)
 {
-    HLOG(H_AT, H_FUN);
-
     Invocation* invocation = new Invocation(action, iArgs, QUuid::createUuid());
 
     invocation->setAutoDelete(false);
@@ -116,10 +111,9 @@ HActionController::~HActionController()
 }
 
 qint32 HActionController::invoke(
-    const Herqq::Upnp::HActionInputArguments& iargs,
-    Herqq::Upnp::HActionOutputArguments* oargs)
+    const Herqq::Upnp::HActionArguments& iargs,
+    Herqq::Upnp::HActionArguments* oargs)
 {
-    HLOG(H_AT, H_FUN);
     return m_action->h_ptr->m_actionInvoke(iargs, oargs);
 }
 
@@ -135,13 +129,10 @@ HActionPrivate::HActionPrivate() :
 
 HActionPrivate::~HActionPrivate()
 {
-    HLOG(H_AT, H_FUN);
 }
 
 void HActionPrivate::onActionInvocationComplete(const QUuid& id, qint32 rc)
 {
-    HLOG(H_AT, H_FUN);
-
     QMutexLocker lock(&m_invocationsMutex);
     QPair<InvocationPtrT, HActionInvokeCallback> invocation =
         m_invocations.value(id);
@@ -166,10 +157,8 @@ void HActionPrivate::onActionInvocationComplete(const QUuid& id, qint32 rc)
 
 HAction::InvocationWaitReturnValue HActionPrivate::waitForInvocation(
     const QUuid& invokeId, qint32* rc, qint32 timeout,
-    HActionOutputArguments* oArgs)
+    HActionArguments* oArgs)
 {
-    HLOG(H_AT, H_FUN);
-
     Q_ASSERT(oArgs);
 
     QMutexLocker lock(&m_invocationsMutex);
@@ -211,10 +200,8 @@ HAction::InvocationWaitReturnValue HActionPrivate::waitForInvocation(
     return HAction::WaitSuccess;
 }
 
-QUuid HActionPrivate::invoke(const HActionInputArguments& inArgs)
+QUuid HActionPrivate::invoke(const HActionArguments& inArgs)
 {
-    HLOG(H_AT, H_FUN);
-
     QMutexLocker lock(&m_invocationsMutex);
 
     HSharedActionInvoker::Invocation* invocation =
@@ -228,10 +215,8 @@ QUuid HActionPrivate::invoke(const HActionInputArguments& inArgs)
 }
 
 QUuid HActionPrivate::invoke(
-    const HActionInputArguments& inArgs, const HActionInvokeCallback& cb)
+    const HActionArguments& inArgs, const HActionInvokeCallback& cb)
 {
-    HLOG(H_AT, H_FUN);
-
     QMutexLocker lock(&m_invocationsMutex);
 
     HSharedActionInvoker::Invocation* invocation =
@@ -245,8 +230,6 @@ QUuid HActionPrivate::invoke(
 
 bool HActionPrivate::setActionInvoke(const HActionInvoke& actionInvoke)
 {
-    HLOG(H_AT, H_FUN);
-
     if (!actionInvoke)
     {
         return false;
@@ -259,8 +242,6 @@ bool HActionPrivate::setActionInvoke(const HActionInvoke& actionInvoke)
 
 bool HActionPrivate::setSharedInvoker(HSharedActionInvoker* sharedInvoker)
 {
-    HLOG(H_AT, H_FUN);
-
     if (!sharedInvoker)
     {
         return false;
@@ -273,26 +254,20 @@ bool HActionPrivate::setSharedInvoker(HSharedActionInvoker* sharedInvoker)
 
 bool HActionPrivate::setName(const QString& name)
 {
-    HLOG(H_AT, H_FUN);
-
     m_name = verifyName(name);
     return true;
 }
 
-bool HActionPrivate::setInputArgs(const HActionInputArguments& inputArguments)
+bool HActionPrivate::setInputArgs(const HActionArguments& inputArguments)
 {
-    HLOG(H_AT, H_FUN);
-
-    m_inputArguments.reset(new HActionInputArguments(inputArguments));
+    m_inputArguments.reset(new HActionArguments(inputArguments));
     return true;
 }
 
 bool HActionPrivate::setOutputArgs(
-    const HActionOutputArguments& outputArguments, bool hasRetValArg)
+    const HActionArguments& outputArguments, bool hasRetValArg)
 {
-    HLOG(H_AT, H_FUN);
-
-    m_outputArguments.reset(new HActionOutputArguments(outputArguments));
+    m_outputArguments.reset(new HActionArguments(outputArguments));
 
     if (!m_outputArguments->size() && hasRetValArg)
     {
@@ -339,12 +314,12 @@ QString HAction::name() const
     return h_ptr->m_name;
 }
 
-HActionInputArguments HAction::inputArguments() const
+HActionArguments HAction::inputArguments() const
 {
     return *h_ptr->m_inputArguments;
 }
 
-HActionOutputArguments HAction::outputArguments() const
+HActionArguments HAction::outputArguments() const
 {
     return *h_ptr->m_outputArguments;
 }
@@ -355,32 +330,28 @@ QString HAction::returnArgumentName() const
 }
 
 QUuid HAction::beginInvoke(
-    const HActionInputArguments& inArgs)
+    const HActionArguments& inArgs)
 {
-    HLOG(H_AT, H_FUN);
     return h_ptr->invoke(inArgs);
 }
 
 QUuid HAction::beginInvoke(
-    const HActionInputArguments& inArgs,
+    const HActionArguments& inArgs,
     const HActionInvokeCallback& completionCallback)
 {
-    HLOG(H_AT, H_FUN);
     return h_ptr->invoke(inArgs, completionCallback);
 }
 
 HAction::InvocationWaitReturnValue HAction::waitForInvoke(
-    QUuid invokeId, qint32* rc, HActionOutputArguments* outArgs, qint32 timeout)
+    QUuid invokeId, qint32* rc, HActionArguments* outArgs, qint32 timeout)
 {
     Q_ASSERT_X(rc, H_AT, "A valid pointer to return code variable has to be provided");
     return h_ptr->waitForInvocation(invokeId, rc, timeout, outArgs);
 }
 
 qint32 HAction::invoke(
-    const HActionInputArguments& inArgs, HActionOutputArguments* outArgs)
+    const HActionArguments& inArgs, HActionArguments* outArgs)
 {
-    HLOG(H_AT, H_FUN);
-
     qint32 rc = 0;
 
     QUuid id = beginInvoke(inArgs);

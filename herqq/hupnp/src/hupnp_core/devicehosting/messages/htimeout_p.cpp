@@ -75,20 +75,10 @@ HTimeout& HTimeout::operator=(const QString& value)
     return *this;
 }
 
-qint32 HTimeout::value() const
-{
-    return m_value;
-}
-
 QString HTimeout::toString() const
 {
     return QString("Second-%1").arg(
         m_value < 0 ? "infinite" : QString::number(m_value));
-}
-
-bool HTimeout::isInfinite () const
-{
-    return m_value == -1;
 }
 
 bool operator==(const HTimeout& obj1, const HTimeout& obj2)

@@ -30,7 +30,7 @@
 #include <HDeviceInfo>
 #include <HResourceType>
 #include <HStateVariable>
-#include <HActionInputArguments>
+#include <HActionArguments>
 
 #include <QUrl>
 #include <QStringList>

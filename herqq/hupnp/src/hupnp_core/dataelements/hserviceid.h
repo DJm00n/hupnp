@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UPNP_SERVICEID_H_
-#define UPNP_SERVICEID_H_
+#ifndef HSERVICEID_H_
+#define HSERVICEID_H_
 
 #include "./../general/hdefs_p.h"
 
@@ -194,4 +194,4 @@ H_UPNP_CORE_EXPORT bool operator!=(const HServiceId&, const HServiceId&);
 }
 }
 
-#endif /* UPNP_SERVICEID_H_ */
+#endif /* HSERVICEID_H_ */

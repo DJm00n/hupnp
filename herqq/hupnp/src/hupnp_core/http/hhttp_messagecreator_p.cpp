@@ -245,8 +245,6 @@ QByteArray HHttpMessageCreator::setupData(
     MessagingInfo& mi, qint32 statusCode, const QString& reasonPhrase,
     const QString& body, ContentType ct)
 {
-    HLOG(H_AT, H_FUN);
-
     QHttpResponseHeader responseHdr(statusCode, reasonPhrase);
     return setupData(responseHdr, body.toUtf8(), mi, ct);
 }
@@ -254,8 +252,6 @@ QByteArray HHttpMessageCreator::setupData(
 QByteArray HHttpMessageCreator::createResponse(
     MessagingInfo& mi, qint32 actionErrCode, const QString& description)
 {
-    HLOG(H_AT, H_FUN);
-
     QtSoapMessage::FaultCode soapFault;
     qint32 httpStatusCode; QString httpReasonPhrase;
 
@@ -278,7 +274,6 @@ QByteArray HHttpMessageCreator::createResponse(
 QByteArray HHttpMessageCreator::create(
     const NotifyRequest& req, MessagingInfo& mi)
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT(req.isValid());
 
     QHttpRequestHeader reqHdr;
@@ -300,7 +295,6 @@ QByteArray HHttpMessageCreator::create(
 QByteArray HHttpMessageCreator::create(
     const SubscribeRequest& req, MessagingInfo& mi)
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT(req.isValid());
 
     QHttpRequestHeader requestHdr(
@@ -321,7 +315,6 @@ QByteArray HHttpMessageCreator::create(
 QByteArray HHttpMessageCreator::create(
     const UnsubscribeRequest& req, MessagingInfo& mi)
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT(req.isValid());
 
     QHttpRequestHeader requestHdr(
@@ -337,7 +330,6 @@ QByteArray HHttpMessageCreator::create(
 QByteArray HHttpMessageCreator::create(
     const SubscribeResponse& response, MessagingInfo& mi)
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT(response.isValid());
 
     QHttpResponseHeader responseHdr(200, "OK");

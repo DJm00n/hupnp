@@ -91,9 +91,10 @@ void ControlPointHttpServer::incomingNotifyMessage(
         return;
     }
 
+    QString serviceCallbackId = req.callback().path().remove('/');
+
     QMutexLocker lock(&m_owner->m_serviceSubscribtionsMutex);
 
-    QString serviceCallbackId = req.callback().path().remove('/');
     QSharedPointer<HServiceSubscribtion> subscription =
         m_owner->m_serviceSubscribtions.value(serviceCallbackId);
 

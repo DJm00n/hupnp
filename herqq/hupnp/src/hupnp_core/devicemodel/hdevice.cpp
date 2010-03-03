@@ -505,16 +505,16 @@
  *     virtual ~MySwitchPowerService();
  *
  *     qint32 setTarget(
- *         const Herqq::Upnp::HActionInputArguments& inArgs,
- *         Herqq::Upnp::HActionOutputArguments* outArgs);
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs);
  *
  *     qint32 getTarget(
- *         const Herqq::Upnp::HActionInputArguments& inArgs,
- *         Herqq::Upnp::HActionOutputArguments* outArgs);
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs);
  *
  *     qint32 getStatus(
- *         const Herqq::Upnp::HActionInputArguments& inArgs,
- *         Herqq::Upnp::HActionOutputArguments* outArgs);
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs);
  * };
  *
  * \endcode
@@ -528,8 +528,8 @@
  * #include "mybinarylight.h"
  *
  * #include <HStateVariable>
- * #include <HActionInputArguments>
- * #include <HActionOutputArguments>
+ * #include <HActionArguments>
+ * #include <HActionArguments>
  *
  * using namespace Herqq::Upnp;
  *
@@ -542,10 +542,10 @@
  * }
  *
  * qint32 MySwitchPowerService::setTarget(
- *     const HActionInputArguments& inArgs,
- *     HActionOutputArguments* outArgs)
+ *     const HActionArguments& inArgs,
+ *     HActionArguments* outArgs)
  * {
- *     const HActionInputArgument* iarg = inArgs["newTargetValue"];
+ *     const HActionArgument* iarg = inArgs["newTargetValue"];
  *     if (!iarg)
  *     {
  *         return HAction::InvalidArgs();
@@ -569,8 +569,8 @@
  * }
  *
  * qint32 MySwitchPowerService::getTarget(
- *     const HActionInputArguments& inArgs,
- *     HActionOutputArguments* outArgs)
+ *     const HActionArguments& inArgs,
+ *     HActionArguments* outArgs)
  * {
  *     bool b = stateVariableByName("Target")->value().toBool();
  *     (*outArgs)["RetTargetValue"]->setValue(b);
@@ -579,8 +579,8 @@
  * }
  *
  * qint32 MySwitchPowerService::getStatus(
- *     const HActionInputArguments& inArgs,
- *     HActionOutputArguments* outArgs)
+ *     const HActionArguments& inArgs,
+ *     HActionArguments* outArgs)
  * {
  *     bool b = stateVariableByName("Status")->value().toBool();
  *     (*outArgs)["ResultStatus"]->setValue(b);
@@ -665,8 +665,6 @@ HDeviceController::HDeviceController(
             m_deviceStatus(new HDeviceStatus()),
             m_device(device, &QObject::deleteLater)
 {
-    HLOG(H_AT, H_FUN);
-
     m_statusNotifier->setInterval(deviceTimeoutInSecs * 1000);
     bool ok = connect(
         m_statusNotifier.data(), SIGNAL(timeout()), this, SLOT(timeout_()));
@@ -888,7 +886,6 @@ namespace
 bool shouldAdd(
     const HDevice* device, const QUrl& location)
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT(!device->parentDevice());
 
     QList<QUrl> locations = device->locations();
@@ -929,8 +926,6 @@ void HDeviceController::addLocation(const QUrl& location)
 
 void HDeviceController::addLocations(const QList<QUrl>& locations)
 {
-    HLOG(H_AT, H_FUN);
-
     QMutexLocker lock(&m_device->h_ptr->m_locationsMutex);
     QList<QUrl>::const_iterator ci = locations.constBegin();
     for(; ci != locations.constEnd(); ++ci)
@@ -982,28 +977,21 @@ HDevice::~HDevice()
 
 const HDevice* HDevice::parentDevice() const
 {
-    HLOG(H_AT, H_FUN);
-
     return !isDisposed() && h_ptr->m_parent ? h_ptr->m_parent->m_device.data() : 0;
 }
 
 QString HDevice::deviceDescription() const
 {
-    HLOG(H_AT, H_FUN);
-
     return h_ptr->m_deviceDescription.toString();
 }
 
 HDeviceInfo HDevice::deviceInfo() const
 {
-    HLOG(H_AT, H_FUN);
     return *h_ptr->m_upnpDeviceInfo;
 }
 
 HDevicePtrListT HDevice::embeddedDevices() const
 {
-    HLOG(H_AT, H_FUN);
-
     if (isDisposed())
     {
         return HDevicePtrListT();
@@ -1020,8 +1008,6 @@ HDevicePtrListT HDevice::embeddedDevices() const
 
 HServicePtrListT HDevice::services() const
 {
-    HLOG(H_AT, H_FUN);
-
     if (isDisposed())
     {
         return HServicePtrListT();
@@ -1038,8 +1024,6 @@ HServicePtrListT HDevice::services() const
 
 HService* HDevice::serviceById(const HServiceId& serviceId) const
 {
-    HLOG(H_AT, H_FUN);
-
     if (isDisposed())
     {
         return 0;

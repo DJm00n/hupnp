@@ -156,8 +156,6 @@ HSsdpPrivate::~HSsdpPrivate()
 
 qint32 HSsdpPrivate::parseCacheControl(const QString& str)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     bool ok = false;
 
     QString cacheControl = str.simplified();
@@ -181,8 +179,6 @@ qint32 HSsdpPrivate::parseCacheControl(const QString& str)
 
 void HSsdpPrivate::checkHost(const QString& host)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QStringList slist = host.split(':');
     if (slist.size() < 1 || slist[0].simplified() != "239.255.255.250")
     {
@@ -193,8 +189,6 @@ void HSsdpPrivate::checkHost(const QString& host)
 
 HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(const QHttpResponseHeader& hdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QString   cacheControl  = hdr.value("CACHE-CONTROL");
     QDateTime date          = QDateTime::fromString(hdr.value("DATE"));
     QUrl      location      = hdr.value("LOCATION");
@@ -247,8 +241,6 @@ HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(const QHttpResponseHeade
 
 HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(const QHttpRequestHeader& hdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QString host = hdr.value("HOST");
     QString man  = hdr.value("MAN").simplified();
 
@@ -275,8 +267,6 @@ HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(const QHttpRequestHeader& 
 
 HResourceAvailable HSsdpPrivate::parseDeviceAvailable(const QHttpRequestHeader& hdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QString host          = hdr.value("HOST");
     QString server        = hdr.value("SERVER");
     QString nt            = hdr.value("NT");
@@ -316,8 +306,6 @@ HResourceAvailable HSsdpPrivate::parseDeviceAvailable(const QHttpRequestHeader& 
 
 HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(const QHttpRequestHeader& hdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QString host        = hdr.value("HOST");
     QString nt          = hdr.value("NT");
     QString usn         = hdr.value("USN");
@@ -344,8 +332,6 @@ HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(const QHttpRequestHead
 
 HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QString host          = hdr.value("HOST");
     QUrl    location      = hdr.value("LOCATION");
     QString nt            = hdr.value("NT");
@@ -601,7 +587,6 @@ HSsdp::HSsdp(QObject* parent) :
     QObject(parent),
         h_ptr (new HSsdpPrivate())
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HSsdp::~HSsdp()
@@ -623,7 +608,7 @@ HSsdp::~HSsdp()
 
 bool HSsdp::bind()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (h_ptr->m_unicastSocket.state() == QUdpSocket::BoundState)
     {
@@ -654,7 +639,7 @@ end:
 
 bool HSsdp::bind(const QHostAddress& unicastAddress)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (h_ptr->m_unicastSocket.state() == QUdpSocket::BoundState)
     {

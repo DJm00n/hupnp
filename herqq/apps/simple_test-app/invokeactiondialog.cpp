@@ -30,8 +30,8 @@
 #include <HDevice>
 #include <HService>
 #include <HStateVariable>
-#include <HActionInputArguments>
-#include <HActionOutputArguments>
+#include <HActionArguments>
+#include <HActionArguments>
 
 #include <QUuid>
 #include <QMessageBox>
@@ -69,14 +69,14 @@ InvokeActionDialog::InvokeActionDialog(
 void InvokeActionDialog::invokeComplete(const QUuid& invokeId)
 {
     qint32 rc = 0;
-    HActionOutputArguments outArgs;
+    HActionArguments outArgs;
     m_action->waitForInvoke(invokeId, &rc, &outArgs);
 
     if (rc == HAction::Success())
     {
         for(qint32 i = 0; i < outArgs.size(); ++i)
         {
-            const HActionOutputArgument* outputArg = outArgs[i];
+            const HActionArgument* outputArg = outArgs[i];
             m_ui->outputArguments->item(i, 2)->setText(
                 outputArg->value().toString());
         }
@@ -96,13 +96,13 @@ void InvokeActionDialog::invokeComplete(const QUuid& invokeId)
 
 void InvokeActionDialog::setupArgumentWidgets()
 {
-    HActionInputArguments inputArgs = m_action->inputArguments();
+    HActionArguments inputArgs = m_action->inputArguments();
 
     m_ui->inputArguments->setRowCount(inputArgs.size());
 
     for(qint32 i = 0; i < inputArgs.size(); ++i)
     {
-        HActionInputArgument* inputArg = inputArgs[i];
+        HActionArgument* inputArg = inputArgs[i];
         HStateVariable* stateVar = inputArg->relatedStateVariable();
 
         QTableWidgetItem* item =
@@ -124,13 +124,13 @@ void InvokeActionDialog::setupArgumentWidgets()
         //m_ui->inputArguments->resizeColumnsToContents();
     }
 
-    HActionOutputArguments outputArgs = m_action->outputArguments();
+    HActionArguments outputArgs = m_action->outputArguments();
 
     m_ui->outputArguments->setRowCount(outputArgs.size());
 
     for(qint32 i = 0; i < outputArgs.size(); ++i)
     {
-        HActionOutputArgument* outputArg = outputArgs[i];
+        HActionArgument* outputArg = outputArgs[i];
         HStateVariable* stateVar = outputArg->relatedStateVariable();
 
         QTableWidgetItem* item =
@@ -298,11 +298,11 @@ void InvokeActionDialog::changeEvent(QEvent *e)
 
 void InvokeActionDialog::on_invokeButton_clicked()
 {
-    HActionInputArguments inputArgs = m_action->inputArguments();
+    HActionArguments inputArgs = m_action->inputArguments();
 
     for(qint32 i = 0; i < inputArgs.size(); ++i)
     {
-        HActionInputArgument* inputArg = inputArgs[i];
+        HActionArgument* inputArg = inputArgs[i];
 
         IDataHolder* dataHolder = m_inputWidgets[inputArg->name()];
 

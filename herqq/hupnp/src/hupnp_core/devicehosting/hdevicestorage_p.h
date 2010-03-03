@@ -63,7 +63,10 @@ H_DISABLE_COPY(DeviceStorage)
 private:
 
     const QByteArray m_loggingIdentifier;
+    // prefix for log messages
+
     QList<HDeviceController*> m_rootDevices;
+    // the device trees stored by this instance
 
 private:
 
@@ -84,7 +87,7 @@ public: // instance methods
     HDeviceController* searchDeviceByUdn(const HUdn& udn) const;
 
     QList<HDeviceController*> searchDevicesByDeviceType(
-        const HResourceType& deviceType, bool exactMatch = true)const;
+        const HResourceType& deviceType, bool exactMatch = true) const;
 
     QList<HServiceController*> searchServicesByServiceType(
         const HResourceType& serviceType, bool exactMatch = true) const;
@@ -107,8 +110,6 @@ public: // instance methods
 
     bool searchValidLocation(
         const HDevice* device, const HEndpoint& interface, QUrl* location);
-
-
 };
 
 }

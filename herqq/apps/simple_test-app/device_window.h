@@ -61,16 +61,16 @@ public:
     // in which case exposing its UPnP actions as methods of the service
     // like in the following case ease the use of the class.
     qint32 echoAction(
-        const Herqq::Upnp::HActionInputArguments& inArgs,
-        Herqq::Upnp::HActionOutputArguments* outArgs = 0);
+        const Herqq::Upnp::HActionArguments& inArgs,
+        Herqq::Upnp::HActionArguments* outArgs = 0);
 
     qint32 registerAction(
-        const Herqq::Upnp::HActionInputArguments& inArgs,
-        Herqq::Upnp::HActionOutputArguments* outArgs = 0);
+        const Herqq::Upnp::HActionArguments& inArgs,
+        Herqq::Upnp::HActionArguments* outArgs = 0);
 
     qint32 chargenAction(
-        const Herqq::Upnp::HActionInputArguments& inArgs,
-        Herqq::Upnp::HActionOutputArguments* outArgs = 0);
+        const Herqq::Upnp::HActionArguments& inArgs,
+        Herqq::Upnp::HActionArguments* outArgs = 0);
 
 Q_SIGNALS:
 

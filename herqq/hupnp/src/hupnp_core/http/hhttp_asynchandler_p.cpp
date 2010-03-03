@@ -23,7 +23,6 @@
 #include "hhttp_messagecreator_p.h"
 #include "hhttp_utils_p.h"
 
-#include "./../../utils/hlogger_p.h"
 #include "./../general/hupnp_global_p.h"
 
 #include <QTcpSocket>
@@ -44,8 +43,6 @@ HHttpAsyncOperation::HHttpAsyncOperation(
             m_dataRead(), m_dataToRead(0), m_uuid(QUuid::createUuid()),
             m_loggingIdentifier(loggingIdentifier)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     bool ok = connect(&m_mi->socket(), SIGNAL(bytesWritten(qint64)),
         this, SLOT(bytesWritten(qint64)));
 
@@ -64,14 +61,14 @@ HHttpAsyncOperation::HHttpAsyncOperation(
 
 HHttpAsyncOperation::~HHttpAsyncOperation()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    delete m_mi;
+    if (m_mi->autoDelete())
+    {
+        delete m_mi;
+    }
 }
 
 void HHttpAsyncOperation::sendChunked()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     static const char crlf[] = {"\r\n"};
 
     // then start sending the data in chunks
@@ -162,8 +159,6 @@ void HHttpAsyncOperation::sendChunked()
 
 void HHttpAsyncOperation::readBlob()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QByteArray buf; buf.resize(m_dataToRead+1);
     do
     {
@@ -195,8 +190,6 @@ void HHttpAsyncOperation::readBlob()
 
 bool HHttpAsyncOperation::readChunkedSizeLine()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (m_mi->socket().bytesAvailable() <= 0)
     {
         return false;
@@ -247,8 +240,6 @@ bool HHttpAsyncOperation::readChunkedSizeLine()
 
 bool HHttpAsyncOperation::readChunk()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QByteArray tmp;
     tmp.resize(m_dataToRead);
 
@@ -292,8 +283,6 @@ bool HHttpAsyncOperation::readChunk()
 
 void HHttpAsyncOperation::readHeader()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (!HHttpUtils::readLines(m_mi->socket(), m_dataRead, 2))
     {
         done_(Internal_Failed);
@@ -325,8 +314,6 @@ void HHttpAsyncOperation::readHeader()
 
 void HHttpAsyncOperation::readData()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (!m_mi->socket().bytesAvailable())
     {
         return;
@@ -363,8 +350,6 @@ void HHttpAsyncOperation::readData()
 
 bool HHttpAsyncOperation::run()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     qint32 indexOfData = m_dataToSend.indexOf("\r\n\r\n");
     Q_ASSERT(indexOfData > 0);
 
@@ -408,8 +393,6 @@ bool HHttpAsyncOperation::run()
 
 void HHttpAsyncOperation::done_(InternalState state)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     m_mi->socket().disconnect(this);
 
     m_state = state;
@@ -418,8 +401,6 @@ void HHttpAsyncOperation::done_(InternalState state)
 
 void HHttpAsyncOperation::bytesWritten(qint64)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (m_state == Internal_WritingBlob)
     {
         if (m_dataSent < m_dataToSend.size())
@@ -455,8 +436,6 @@ void HHttpAsyncOperation::bytesWritten(qint64)
 
 void HHttpAsyncOperation::readyRead()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (m_state == Internal_ReadingHeader)
     {
         readHeader();
@@ -494,8 +473,6 @@ void HHttpAsyncOperation::readyRead()
 
 void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     if (m_state != Internal_FinishedSuccessfully &&
         err == QAbstractSocket::RemoteHostClosedError)
     {
@@ -514,8 +491,6 @@ void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
 
 HHttpAsyncOperation::State HHttpAsyncOperation::state() const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     switch(m_state)
     {
     case Internal_Failed:
@@ -552,18 +527,14 @@ HHttpAsyncHandler::HHttpAsyncHandler(
         QObject(parent),
             m_loggingIdentifier(loggingIdentifier), m_operations()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 HHttpAsyncHandler::~HHttpAsyncHandler()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 void HHttpAsyncHandler::done(const QUuid& uuid)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     HHttpAsyncOperation* ao = m_operations.value(uuid);
     Q_ASSERT(ao);
     Q_ASSERT(ao->state() != HHttpAsyncOperation::NotStarted);
@@ -576,8 +547,6 @@ void HHttpAsyncHandler::done(const QUuid& uuid)
 HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
     MessagingInfo* mi, const QByteArray& req)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     Q_ASSERT(mi);
     Q_ASSERT(!req.isEmpty());
 
@@ -602,8 +571,6 @@ HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
 HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
     MessagingInfo* mi, QHttpRequestHeader& reqHdr, const QtSoapMessage& soapMsg)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QByteArray dataToSend =
         HHttpMessageCreator::setupData(
             reqHdr, soapMsg.toXmlString().toUtf8(), *mi, TextXml);

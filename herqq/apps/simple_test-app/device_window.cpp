@@ -28,8 +28,8 @@
 #include <HServiceId>
 #include <HDeviceHost>
 #include <HStateVariable>
-#include <HActionInputArguments>
-#include <HActionOutputArguments>
+#include <HActionArguments>
+#include <HActionArguments>
 #include <HWritableStateVariable>
 #include <HDeviceHostConfiguration>
 
@@ -66,8 +66,8 @@ HService::HActionMapT HTestService::createActions()
 }
 
 qint32 HTestService::echoAction(
-    const HActionInputArguments& inArgs,
-    HActionOutputArguments* outArgs)
+    const HActionArguments& inArgs,
+    HActionArguments* outArgs)
 {
     // Simple implementation of the echo service:
     // merely echos the received message back to the invoker.
@@ -85,8 +85,8 @@ qint32 HTestService::echoAction(
 }
 
 qint32 HTestService::registerAction(
-    const HActionInputArguments& /*inArgs*/,
-    HActionOutputArguments* /*outArgs*/)
+    const HActionArguments& /*inArgs*/,
+    HActionArguments* /*outArgs*/)
 {
     // Simple implementation of the Register service:
     // modifies an evented state variable, which causes events to be sent to
@@ -128,8 +128,8 @@ qint32 HTestService::registerAction(
 }
 
 qint32 HTestService::chargenAction(
-    const HActionInputArguments& inArgs,
-    HActionOutputArguments* outArgs)
+    const HActionArguments& inArgs,
+    HActionArguments* outArgs)
 {
     qint32 charCount = inArgs["Count"]->value().toInt();
     (*outArgs)["Characters"]->setValue(QString(charCount, 'z'));

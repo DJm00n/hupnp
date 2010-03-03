@@ -80,6 +80,8 @@ public:
         const QList<QPair<QString, QString> >& variables, bool sendEvent);
 
     HActionController* actionByName(const QString& name);
+
+    QList<HActionController*> actions() const;
 };
 
 //

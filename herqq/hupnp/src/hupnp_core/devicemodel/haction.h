@@ -46,7 +46,7 @@ namespace Upnp
  *
  * <tt>
  *
- * bool function(const QUuid&, qint32, const HActionOutputArguments&);
+ * bool function(const QUuid&, qint32, const HActionArguments&);
  *
  * </tt>
  *
@@ -72,7 +72,7 @@ namespace Upnp
  *
  * namespace
  * {
- * bool freefun(const QUuid&, qint32, const HActionOutputArguments&)
+ * bool freefun(const QUuid&, qint32, const HActionArguments&)
  * {
  *     return true;
  * }
@@ -80,14 +80,14 @@ namespace Upnp
  * class MyFunctor
  * {
  * public:
- *     bool operator()(const QUuid&, qint32, const HActionOutputArguments&)
+ *     bool operator()(const QUuid&, qint32, const HActionArguments&)
  *     {
  *         return true;
  *     }
  * };
  * }
  *
- * bool MyClass::memfun(const QUuid&, qint32, const HActionOutputArguments&)
+ * bool MyClass::memfun(const QUuid&, qint32, const HActionArguments&)
  * {
  *     return true;
  * }
@@ -287,10 +287,10 @@ public:
      *
      * \code
      *
-     * Herqq::Upnp::HActionInputArguments inArgs = action->inputArguments();
+     * Herqq::Upnp::HActionArguments inArgs = action->inputArguments();
      * inArgs["DesiredArgumentName"]->setValue("ValueThatHappensToBeStringInThisExample");
      *
-     * Herqq::Upnp::HActionOutputArguments outArgs;
+     * Herqq::Upnp::HActionArguments outArgs;
      * qint32 retVal = action->invoke(inArgs, &outArgs);
      *
      * \endcode
@@ -301,7 +301,7 @@ public:
      *
      * \sa outputArguments(), invoke(), beginInvoke()
      */
-    HActionInputArguments inputArguments() const;
+    HActionArguments inputArguments() const;
 
     /*!
      * Returns a copy of the output arguments of the action.
@@ -315,7 +315,7 @@ public:
      *
      * \sa inputArguments(), invoke(), beginInvoke(), waitForInvoke()
      */
-    HActionOutputArguments outputArguments() const;
+    HActionArguments outputArguments() const;
 
     /*!
      * Returns the name of the output argument that is marked as the
@@ -359,7 +359,7 @@ public:
      *
      * \sa waitForInvoke(), invoke(), inputArguments()
      */
-    QUuid beginInvoke(const HActionInputArguments& inArgs);
+    QUuid beginInvoke(const HActionArguments& inArgs);
 
     /*!
      * Schedules the action to be invoked.
@@ -412,7 +412,7 @@ public:
      * \sa waitForInvoke(), invoke(), inputArguments()
      */
     QUuid beginInvoke(
-        const HActionInputArguments& inArgs,
+        const HActionArguments& inArgs,
         const HActionInvokeCallback& completionCallback);
 
     /*!
@@ -474,7 +474,7 @@ public:
      * with the return value of this method, which only indicates if the wait
      * was successful.
      *
-     * \param outArgs specifies a pointer to a HActionOutputArguments
+     * \param outArgs specifies a pointer to a HActionArguments
      * object that the user has created, or null, in case the output arguments
      * aren't wanted. In case the wait was successfully completed
      * and a valid pointer to object was provided by the user,
@@ -493,7 +493,7 @@ public:
     InvocationWaitReturnValue waitForInvoke(
         QUuid invocationId,
         qint32* returnCode,
-        HActionOutputArguments* outArgs = 0,
+        HActionArguments* outArgs = 0,
         qint32 timeout = -1);
 
     /*!
@@ -505,10 +505,10 @@ public:
      *
      * \code
      *
-     * Herqq::Upnp::HActionInputArguments inArgs = action->inputArguments();
+     * Herqq::Upnp::HActionArguments inArgs = action->inputArguments();
      * inArgs["EchoInArgument"]->setValue("Ping");
      *
-     * Herqq::Upnp::HActionOutputArguments outArgs;
+     * Herqq::Upnp::HActionArguments outArgs;
      *
      * qint32 retVal = action->invoke(inArgs, &outArgs);
      * if (retVal == Herqq::Upnp::HAction::Success())
@@ -534,8 +534,8 @@ public:
      * \sa beginInvoke(), waitForInvoke(), inputArguments(), outputArguments()
      */
     qint32 invoke(
-        const HActionInputArguments& inArgs,
-        HActionOutputArguments* outArgs = 0);
+        const HActionArguments& inArgs,
+        HActionArguments* outArgs = 0);
 
     /*!
      * Returns a string representation of the specified error code.

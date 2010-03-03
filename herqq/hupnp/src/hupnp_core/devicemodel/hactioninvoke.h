@@ -37,8 +37,8 @@ namespace Herqq
 namespace Upnp
 {
 
-class HActionInputArguments;
-class HActionOutputArguments;
+class HActionArguments;
+class HActionArguments;
 
 /*!
  * This is a type definition for a <em>callable entity</em> that is used
@@ -49,8 +49,8 @@ class HActionOutputArguments;
  *
  * <tt>
  *
- * qint32 function(const Herqq::Upnp::HActionInputArguments& inArgs,
- *                 Herqq::Upnp::HActionOutputArguments* outArgs = 0);
+ * qint32 function(const Herqq::Upnp::HActionArguments& inArgs,
+ *                 Herqq::Upnp::HActionArguments* outArgs = 0);
  *
  * </tt>
  *
@@ -60,16 +60,16 @@ class HActionOutputArguments;
  * \code
  *
  * #include <HActionInvoke>
- * #include <HActionInputArguments>
- * #include <HActionOutputArguments>
+ * #include <HActionArguments>
+ * #include <HActionArguments>
  *
  * #include "myclass.h" // your code that contains declaration for MyClass
  *
  * namespace
  * {
  * qint32 freefun(
- *      const Herqq::Upnp::HActionInputArguments& inArgs,
- *      Herqq::Upnp::HActionOutputArguments* outArgs)
+ *      const Herqq::Upnp::HActionArguments& inArgs,
+ *      Herqq::Upnp::HActionArguments* outArgs)
  * {
  *     return 0;
  * }
@@ -78,8 +78,8 @@ class HActionOutputArguments;
  * {
  * public:
  *     qint32 operator()(
- *         const Herqq::Upnp::HActionInputArguments& inArgs,
- *         Herqq::Upnp::HActionOutputArguments* outArgs)
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs)
  *     {
  *         return 0;
  *     }
@@ -87,8 +87,8 @@ class HActionOutputArguments;
  * }
  *
  * qint32 MyClass::memfun(
- *      const Herqq::Upnp::HActionInputArguments& inArgs,
- *      Herqq::Upnp::HActionOutputArguments* outArgs = 0)
+ *      const Herqq::Upnp::HActionArguments& inArgs,
+ *      Herqq::Upnp::HActionArguments* outArgs = 0)
  * {
  * }
  *
@@ -112,8 +112,8 @@ class HActionOutputArguments;
  * \ingroup devicemodel
  */
 typedef Functor<int, H_TYPELIST_2(
-    const Herqq::Upnp::HActionInputArguments&,
-    Herqq::Upnp::HActionOutputArguments*)> HActionInvoke;
+    const Herqq::Upnp::HActionArguments&,
+    Herqq::Upnp::HActionArguments*)> HActionInvoke;
 
 }
 }

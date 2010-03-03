@@ -47,23 +47,20 @@ MessagingInfo::MessagingInfo(
     QTcpSocket& sock, qint32 receiveTimeoutForNoData) :
         m_sock(sock), m_keepAlive(false),
         m_receiveTimeoutForNoData(receiveTimeoutForNoData),
-        m_chunkedInfo()
+        m_chunkedInfo(), m_autoDelete(true)
 {
 }
 
 MessagingInfo::MessagingInfo(
     QTcpSocket& sock, bool keepAlive, qint32 receiveTimeoutForNoData) :
         m_sock(sock), m_keepAlive(keepAlive),
-        m_receiveTimeoutForNoData(receiveTimeoutForNoData)
+        m_receiveTimeoutForNoData(receiveTimeoutForNoData), m_autoDelete(true)
 {
 }
 
 void MessagingInfo::setHostInfo(const QUrl& hostInfo)
 {
     QString tmp(hostInfo.host());
-
-    QHostAddress test(tmp);
-    Q_ASSERT(!test.isNull()); Q_UNUSED(test)
 
     if (hostInfo.port(0) > 0)
     {

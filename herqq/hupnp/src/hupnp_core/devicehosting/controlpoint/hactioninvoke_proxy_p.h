@@ -59,13 +59,13 @@ H_DISABLE_COPY(Invocation)
 public:
 
     qint32* m_rc;
-    const HActionInputArguments& m_inArgs;
-    HActionOutputArguments* m_outArgs;
+    const HActionArguments& m_inArgs;
+    HActionArguments* m_outArgs;
     volatile bool m_done;
 
     Invocation(
-        qint32* rc, const HActionInputArguments& inArgs,
-        HActionOutputArguments* outArgs) :
+        qint32* rc, const HActionArguments& inArgs,
+        HActionArguments* outArgs) :
             m_rc(rc), m_inArgs(inArgs), m_outArgs(outArgs), m_done(false)
     {
     }
@@ -89,10 +89,10 @@ private:
     QString m_actionName;
     // the name of the *real* action we are trying to invoke (at the device side)
 
-    HActionInputArguments  m_inArgs;
+    HActionArguments  m_inArgs;
     // used to validate the user-provided arguments going to the real action
 
-    HActionOutputArguments m_outArgs;
+    HActionArguments m_outArgs;
     // used to validate the arguments coming from the real action.
 
     QScopedPointer<QTcpSocket> m_sock;
@@ -114,6 +114,8 @@ private:
 
     QMutex m_invocationMutex;
     Invocation* m_invocationInProgress;
+
+    MessagingInfo m_messagingInfo;
 
 private:
 
@@ -141,8 +143,8 @@ public:
     virtual ~HActionInvokeProxyConnection();
 
     qint32 invoke(
-        const HActionInputArguments& inArgs,
-        HActionOutputArguments* outArgs);
+        const HActionArguments& inArgs,
+        HActionArguments* outArgs);
 };
 
 //
@@ -160,8 +162,8 @@ public:
     HActionInvokeProxy(const QByteArray& loggingIdentifier, HAction* action);
 
     int operator()(
-        const HActionInputArguments& inArgs,
-        HActionOutputArguments* outArgs);
+        const HActionArguments& inArgs,
+        HActionArguments* outArgs);
 };
 
 }

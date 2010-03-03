@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UPNP_DEVICEINFO_H_
-#define UPNP_DEVICEINFO_H_
+#ifndef HDEVICEINFO_H_
+#define HDEVICEINFO_H_
 
 #include "./../general/hdefs_p.h"
 #include "./../general/hupnp_fwd.h"
@@ -67,7 +67,7 @@ public:
 
     /*!
      * Constructs a new instance from the specified parameters that the UDA
-     * specification mandates for a device. These are arguments found in the
+     * specification mandates for a device. These are the arguments found in the
      * device description file and they are all mandatory for a valid UPnP device.
      *
      * \param deviceType specifies the device type.
@@ -84,6 +84,9 @@ public:
      * \param udn specifies the unique device name. This is a universally
      * unique identifier for the device, regardless if the device is root
      * or embedded. The specified UDN has to be valid.
+     *
+     * \param err specifies a pointer to a \c QString that will contain
+     * an error description in case the construction failed. This is optional.
      *
      * \remark in case any of the provided arguments does not meet the
      * specified requirements, the created object is \e invalid.
@@ -137,6 +140,9 @@ public:
      *
      * \param presentationUrl specifies the URL for HTML-based user interface
      * for controlling and/or viewing device status.
+     *
+     * \param err specifies a pointer to a \c QString that will contain
+     * an error description in case the construction failed. This is optional.
      *
      * \remark in case any of the provided arguments does not meet the
      * specified requirements, the created object is \e invalid.
@@ -406,4 +412,4 @@ H_UPNP_CORE_EXPORT bool operator!=(const HDeviceInfo&, const HDeviceInfo&);
 }
 }
 
-#endif /* UPNP_DEVICEINFO_H_ */
+#endif /* HDEVICEINFO_H_ */

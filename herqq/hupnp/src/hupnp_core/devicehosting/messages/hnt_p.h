@@ -78,10 +78,18 @@ public:
     HNt& operator=(const QString& nt);
 
     QString typeToString() const;
-    Type    type        () const;
+
+    inline Type type() const
+    {
+        return m_typeValue.first;
+    }
 
     QString subTypeToString() const;
-    SubType subType        () const;
+
+    inline SubType subType() const
+    {
+        return m_subTypeValue.first;
+    }
 
     static QString toString(Type type);
     static QString toString(SubType subType);

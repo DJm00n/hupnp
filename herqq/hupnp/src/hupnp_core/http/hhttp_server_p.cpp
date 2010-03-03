@@ -54,12 +54,10 @@ namespace Upnp
 HHttpServer::Task::Task(HHttpServer* owner, qint32 socketDescriptor) :
     m_owner(owner), m_socketDescriptor(socketDescriptor)
 {
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 }
 
 void HHttpServer::Task::run()
 {
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     m_owner->processRequest(m_socketDescriptor);
 }
 
@@ -69,7 +67,6 @@ void HHttpServer::Task::run()
 HHttpServer::Server::Server(HHttpServer* owner) :
     QTcpServer(owner), m_owner(owner)
 {
-    HLOG(H_AT, H_FUN);
 }
 
 void HHttpServer::Server::incomingConnection(qint32 socketDescriptor)
@@ -93,7 +90,6 @@ HHttpServer::HHttpServer(
             m_httpHandler(m_loggingIdentifier),
             m_chunkedInfo()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     m_threadPool->setParent(this);
     m_threadPool->setMaxThreadCount(25);
 }
@@ -367,7 +363,7 @@ HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
 void HHttpServer::incomingSubscriptionRequest(
     MessagingInfo& mi, const SubscribeRequest&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -376,7 +372,7 @@ void HHttpServer::incomingSubscriptionRequest(
 void HHttpServer::incomingUnsubscriptionRequest(
     MessagingInfo& mi, const UnsubscribeRequest&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -385,7 +381,7 @@ void HHttpServer::incomingUnsubscriptionRequest(
 void HHttpServer::incomingControlRequest(
     MessagingInfo& mi, const InvokeActionRequest&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -394,7 +390,7 @@ void HHttpServer::incomingControlRequest(
 void HHttpServer::incomingNotifyMessage(
     MessagingInfo& mi, const NotifyRequest&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -403,7 +399,7 @@ void HHttpServer::incomingNotifyMessage(
 void HHttpServer::incomingUnknownHeadRequest(
     MessagingInfo& mi, const QHttpRequestHeader&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -412,7 +408,7 @@ void HHttpServer::incomingUnknownHeadRequest(
 void HHttpServer::incomingUnknownGetRequest(
     MessagingInfo& mi, const QHttpRequestHeader&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -421,7 +417,7 @@ void HHttpServer::incomingUnknownGetRequest(
 void HHttpServer::incomingUnknownPostRequest(
     MessagingInfo& mi, const QHttpRequestHeader&, const QByteArray&)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
@@ -429,8 +425,6 @@ void HHttpServer::incomingUnknownPostRequest(
 
 QUrl HHttpServer::rootUrl() const
 {
-    HLOG(H_AT, H_FUN);
-
     Q_ASSERT(!m_server.serverAddress().isNull());
     Q_ASSERT(m_server.serverPort() > 0);
 
@@ -481,7 +475,7 @@ bool HHttpServer::listen()
 
 bool HHttpServer::listen(const QHostAddress& ha, quint16 port)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT_X(
         thread() == QThread::currentThread(), H_AT,

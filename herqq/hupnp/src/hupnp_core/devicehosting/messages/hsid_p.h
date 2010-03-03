@@ -62,9 +62,17 @@ public:
     HSid& operator=(const QUuid& other);
     HSid& operator=(const QString& other);
 
-    QUuid   value   () const;
+    inline QUuid value() const
+    {
+        return m_value;
+    }
+
     QString toString() const;
-    bool    isNull  () const;
+
+    inline bool isNull()const
+    {
+        return m_value.isNull();
+    }
 };
 
 bool operator==(const HSid& sid1, const HSid& sid2);

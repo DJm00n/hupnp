@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SSDP_P_H_
-#define SSDP_P_H_
+#ifndef HSSDP_P_H_
+#define HSSDP_P_H_
 
 //
 // !! Warning !!
@@ -78,10 +78,10 @@ public: // attributes
     Herqq::Upnp::HMulticastSocket m_multicastSocket;
     // for listening multicast messages
 
-    QUdpSocket       m_unicastSocket;
+    QUdpSocket m_unicastSocket;
     // for sending datagrams and listening messages directed to this instance
 
-    HSsdp*           q_ptr;
+    HSsdp* q_ptr;
 
 public: // methods
 
@@ -107,4 +107,4 @@ public: // methods
 }
 }
 
-#endif /* SSDP_P_H_ */
+#endif /* HSSDP_P_H_ */

@@ -62,7 +62,7 @@ public:
     enum DataType
     {
         /*!
-         * Undefined, illegal data type. This is used only in error situations.
+         * Undefined, illegal data type.
          */
         Undefined = 0,
 
@@ -616,7 +616,10 @@ public:
      * \retval true if the specified data type is numeric.
      * \retval false in case the data type is not numeric or it is undefined.
      */
-    static bool isNumeric(DataType datatype);
+    inline static bool isNumeric(DataType datatype)
+    {
+        return datatype >= ui1 && datatype <= fp;
+    }
 
     /*!
      * Indicates whether or not the specified data type is an integer.
@@ -626,17 +629,33 @@ public:
      * \retval true if the specified data type is an integer.
      * \retval false in case the data type is not an integer or it is undefined.
      */
-    static bool isInteger(DataType datatype);
+    inline static bool isInteger(DataType datatype)
+    {
+        return datatype >= ui1 && datatype <= integer;
+    }
 
     /*!
      * Indicates whether or not the specified data type is a rational number.
      *
-     * \param datatype specifies the data type to be checked.
+     * \param arg specifies the data type to be checked.
      *
      * \retval true if the specified data type is a rational number.
      * \retval false in case the data type is not rational or it is undefined.
      */
-    static bool isRational(DataType datatype);
+    inline static bool isRational(DataType arg)
+    {
+        switch(arg)
+        {
+            case r4:
+            case r8:
+            case number:
+            case fp:
+            case fixed_14_4:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     /*!
      * Returns the UDA defined string representation of the specified data type.

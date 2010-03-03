@@ -19,13 +19,14 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_ACTIONARGUMENTS_P_H_
-#define HUPNP_ACTIONARGUMENTS_P_H_
+#ifndef H_ACTIONARGUMENTS_P_H_
+#define H_ACTIONARGUMENTS_P_H_
 
+#include "hactionarguments.h"
 #include "./../datatypes/hupnp_datatypes.h"
-#include "hstatevariable.h"
 
 #include <QUrl>
+#include <QVector>
 #include <QString>
 #include <QVariant>
 
@@ -46,264 +47,86 @@ namespace Upnp
 //
 //
 //
-class HActionArgumentPrivate
-{
-private:
-
-    QString         m_name;
-    HStateVariable* m_stateVariable;
-    QVariant        m_value;
-
-public:
-
-    HActionArgumentPrivate();
-    HActionArgumentPrivate(const QString& name, HStateVariable* stateVariable);
-
-    inline QString name() const
-    {
-        return m_name;
-    }
-
-    inline HStateVariable* relatedStateVariable() const
-    {
-        return m_stateVariable;
-    }
-
-    inline HUpnpDataTypes::DataType dataType() const
-    {
-        if (m_stateVariable)
-        {
-            return m_stateVariable->dataType();
-        }
-        else
-        {
-            return HUpnpDataTypes::Undefined;
-        }
-    }
-
-    inline QVariant value() const
-    {
-        return m_value;
-    }
-
-    inline bool setValue(const QVariant& value)
-    {
-        QVariant convertedValue;
-        if (isValid() && relatedStateVariable()->isValidValue(value, &convertedValue))
-        {
-            m_value = convertedValue;
-            return true;
-        }
-
-        return false;
-    }
-
-    inline bool isValid() const
-    {
-        return !m_name.isEmpty();
-    }
-
-    inline bool operator!() const
-    {
-        return !isValid();
-    }
-
-    inline QString toString() const
-    {
-        return QString("%1: %2").arg(
-            name(),
-            dataType() == HUpnpDataTypes::uri ? value().toUrl().toString() :
-            value().toString());
-    }
-
-    inline bool isValidValue(const QVariant& value)
-    {
-        return isValid() && relatedStateVariable()->isValidValue(value);
-    }
-};
-
-//
-//
-//
-template<class T>
 class HActionArgumentsPrivate
 {
-public:
+public: // attributes
 
-    QList<T*> m_argumentsOrdered;
+    QVector<HActionArgument*> m_argumentsOrdered;
     // UDA 1.1 mandates that action arguments are always transmitted in the order
     // they were specified in the service description.
 
-    QHash<QString, T*> m_arguments;
-    // For the user's convenience
+    QHash<QString, HActionArgument*> m_arguments;
+    // QHash has a very low memory footprint and it provides us a constant-time
+    // lookup using argument names regardless of the number of arguments. then again,
+    // if the number of arguments is usually (nearly always?) very low, this
+    // provides little to no benefit.
 
-public:
+public: // functions
 
-    HActionArgumentsPrivate()
+    inline HActionArgumentsPrivate()
     {
     }
 
-    explicit HActionArgumentsPrivate(const QList<T>& args)
+    inline explicit HActionArgumentsPrivate(const QVector<HActionArgument*>& args)
     {
-        typename QList<T>::const_iterator ci = args.constBegin();
+        QVector<HActionArgument*>::const_iterator ci = args.constBegin();
 
         for (; ci != args.constEnd(); ++ci)
         {
-            T* arg = new T(*ci);
-            m_argumentsOrdered.push_back(arg);
-            m_arguments[arg->name()] = arg;
+            m_argumentsOrdered.push_back(*ci);
+            m_arguments[(*ci)->name()] = *ci;
         }
     }
 
-    explicit HActionArgumentsPrivate(const QHash<QString, T>& args)
+    inline explicit HActionArgumentsPrivate(const QHash<QString, HActionArgument*>& args)
     {
-        typename QHash<QString, T>::const_iterator ci = args.constBegin();
+        QHash<QString, HActionArgument*>::const_iterator ci = args.constBegin();
 
         for(; ci != args.end(); ++ci)
         {
-            T* arg = new T(ci.value());
-            m_argumentsOrdered.push_back(arg);
-            m_arguments[arg->name()] = arg;
+            m_argumentsOrdered.push_back(*ci);
+            m_arguments[(*ci)->name()] = *ci;
         }
     }
 
-public:
-
-    typedef typename QList<T*>::const_iterator const_iterator;
-    typedef typename QList<T*>::iterator iterator;
-
-    ~HActionArgumentsPrivate()
+    inline ~HActionArgumentsPrivate()
     {
         qDeleteAll(m_argumentsOrdered);
     }
 
-    HActionArgumentsPrivate(const HActionArgumentsPrivate<T>& other)
+    inline HActionArgumentsPrivate(const HActionArgumentsPrivate& other)
     {
-        typename HActionArgumentsPrivate<T>::const_iterator ci = other.constBegin();
-        for (; ci != other.constEnd(); ++ci)
+        QVector<HActionArgument*>::const_iterator ci =
+            other.m_argumentsOrdered.constBegin();
+
+        for (; ci != other.m_argumentsOrdered.constEnd(); ++ci)
         {
-            T* arg = new T(**ci);
+            HActionArgument* arg = new HActionArgument(**ci);
             m_argumentsOrdered.push_back(arg);
             m_arguments[arg->name()] = arg;
         }
     }
 
-    HActionArgumentsPrivate<T>& operator=(const HActionArgumentsPrivate<T>& other)
+    inline HActionArgumentsPrivate& operator=(const HActionArgumentsPrivate& other)
     {
         qDeleteAll(m_argumentsOrdered);
         m_arguments.clear(); m_argumentsOrdered.clear();
 
-        typename HActionArgumentsPrivate<T>::const_iterator ci = other.constBegin();
-        for (; ci != other.constEnd(); ++ci)
+        QVector<HActionArgument*>::const_iterator ci =
+            other.m_argumentsOrdered.constBegin();
+
+        for (; ci != other.m_argumentsOrdered.constEnd(); ++ci)
         {
-            T* arg = new T(**ci);
+            HActionArgument* arg = new HActionArgument(**ci);
             m_argumentsOrdered.push_back(arg);
             m_arguments[arg->name()] = arg;
         }
 
         return *this;
     }
-
-    inline bool contains(const QString& argumentName) const
-    {
-        return m_arguments.contains(argumentName);
-    }
-
-    inline const T* get(qint32 index) const
-    {
-        return m_argumentsOrdered.at(index);
-    }
-
-    inline T* get(qint32 index)
-    {
-        return m_argumentsOrdered.at(index);
-    }
-
-    inline const T* get(const QString& argumentName) const
-    {
-        return m_arguments.value(argumentName);
-    }
-
-    inline T* get(const QString& argumentName)
-    {
-        return m_arguments.value(argumentName);
-    }
-
-    inline typename HActionArgumentsPrivate<T>::const_iterator constBegin() const
-    {
-        return m_argumentsOrdered.constBegin();
-    }
-
-    inline typename HActionArgumentsPrivate<T>::const_iterator constEnd() const
-    {
-        return m_argumentsOrdered.constEnd();
-    }
-
-    inline typename HActionArgumentsPrivate<T>::iterator begin()
-    {
-        return m_argumentsOrdered.begin();
-    }
-
-    inline typename HActionArgumentsPrivate<T>::iterator end()
-    {
-        return m_argumentsOrdered.end();
-    }
-
-    inline typename HActionArgumentsPrivate<T>::const_iterator begin() const
-    {
-        return m_argumentsOrdered.begin();
-    }
-
-    inline typename HActionArgumentsPrivate<T>::const_iterator end() const
-    {
-        return m_argumentsOrdered.end();
-    }
-
-    inline qint32 size() const
-    {
-        return m_argumentsOrdered.size();
-    }
-
-    inline T* operator[](qint32 index)
-    {
-        return m_argumentsOrdered.at(index);
-    }
-
-    inline const T* operator[](qint32 index) const
-    {
-        return m_argumentsOrdered.at(index);
-    }
-
-    inline T* operator[](const QString& argName)
-    {
-        return contains(argName) ? m_arguments[argName] : 0;
-    }
-
-    inline const T* operator[](const QString& argName) const
-    {
-        return contains(argName) ? m_arguments[argName] : 0;
-    }
-
-    QList<QString> names() const
-    {
-        return m_arguments.keys();
-    }
-
-    QString toString() const
-    {
-        QString retVal;
-
-        typename HActionArgumentsPrivate<T>::const_iterator ci = constBegin();
-        for (; ci != constEnd(); ++ci)
-        {
-            retVal.append((*ci)->toString()).append("\n");
-        }
-
-        return retVal;
-    }
 };
 
 }
 }
 
-#endif /* HUPNP_ACTIONARGUMENTS_P_H_ */
+#endif /* H_ACTIONARGUMENTS_P_H_ */

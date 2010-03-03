@@ -235,7 +235,7 @@ HAbstractHostPrivate::HAbstractHostPrivate(
         m_initializationStatus(0),
         m_sharedActionInvokers()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     m_deviceStorage.reset(new DeviceStorage(m_loggingIdentifier));
 
@@ -245,7 +245,7 @@ HAbstractHostPrivate::HAbstractHostPrivate(
 
 HAbstractHostPrivate::~HAbstractHostPrivate()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(m_threadPool);
 
     // cannot go deleting root devices while threads that may be using them
@@ -274,7 +274,7 @@ void HAbstractHostPrivate::removeRootDevice(HDeviceController* root)
 
 void HAbstractHostPrivate::clear()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(m_threadPool);
 
     doClear();
@@ -294,20 +294,18 @@ void HAbstractHostPrivate::clear()
 HAbstractHost::HAbstractHost(HAbstractHostPrivate& dd, QObject* parent) :
     QObject(parent), h_ptr(&dd)
 {
-   HLOG(H_AT, H_FUN);
    h_ptr->setParent(this);
    h_ptr->q_ptr = this;
 }
 
 HAbstractHost::~HAbstractHost()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     delete h_ptr;
 }
 
 bool HAbstractHost::isStarted() const
 {
-    HLOG(H_AT, H_FUN);
     return h_ptr->state() == HAbstractHostPrivate::Initialized;
 }
 

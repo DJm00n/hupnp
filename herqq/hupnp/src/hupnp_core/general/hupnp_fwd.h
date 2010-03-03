@@ -52,12 +52,11 @@ class HAbstractHost;
 class HResourceType;
 class HObjectCreator;
 class HStateVariable;
+class HActionArgument;
+class HActionArguments;
 class HStateVariableEvent;
 class HDeviceConfiguration;
-class HActionInputArgument;
-class HActionOutputArgument;
-class HActionInputArguments;
-class HActionOutputArguments;
+class HActionArgument;
 class HDeviceHostConfiguration;
 class HControlPointConfiguration;
 

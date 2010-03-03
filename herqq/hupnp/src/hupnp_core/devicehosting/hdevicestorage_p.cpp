@@ -22,9 +22,12 @@
 #include "hdevicestorage_p.h"
 
 #include "./../dataelements/hudn.h"
-#include "./../../utils/hlogger_p.h"
-#include "./../general/hupnp_global_p.h"
 #include "./../dataelements/hdeviceinfo.h"
+
+#include "./../general/hupnp_global_p.h"
+#include "./../../utils/hlogger_p.h"
+
+#include "./../devicemodel/haction_p.h"
 
 #include <QUuid>
 #include <QHostAddress>
@@ -50,12 +53,12 @@ private:
 public:
 
     MatchFunctor(const T& t) : m_t(t){}
-    bool operator()(HDeviceController* device)
+    inline bool operator()(HDeviceController* device) const
     {
         return m_t(device);
     }
 
-    bool operator()(HServiceController* service)
+    inline bool operator()(HServiceController* service) const
     {
         return m_t(service);
     }
@@ -83,7 +86,7 @@ private:
 public:
 
     ScpdUrlTester(const QUrl& url) : m_url(url){}
-    bool operator()(HServiceController* service)
+    inline bool operator()(HServiceController* service) const
     {
         Q_ASSERT(service);
         //return service->m_service->scpdUrl() == m_url;
@@ -102,7 +105,7 @@ private:
 public:
 
     ControlUrlTester(const QUrl& url) : m_url(url){}
-    bool operator()(HServiceController* service)
+    inline bool operator()(HServiceController* service) const
     {
         Q_ASSERT(service);
         //return service->m_service->controlUrl() == m_url;
@@ -121,7 +124,7 @@ private:
 public:
 
     EventUrlTester(const QUrl& url) : m_url(url){}
-    bool operator()(HServiceController* service)
+    inline bool operator()(HServiceController* service) const
     {
         Q_ASSERT(service);
         //return service->m_service->eventSubUrl() == m_url;
@@ -141,7 +144,7 @@ private:
 public:
 
     UdnTester(const HUdn& udn) : m_udn(udn){}
-    bool operator()(HDeviceController* device)
+    inline bool operator()(HDeviceController* device) const
     {
         Q_ASSERT(device);
         return device->m_device->deviceInfo().udn() == m_udn;
@@ -164,7 +167,7 @@ public:
     {
     }
 
-    bool test(const HResourceType& resType)
+    bool test(const HResourceType& resType) const
     {
         // either an exact match is searched, or the searched device type's version
         // is smaller or equals to the version number of the stored type.
@@ -175,29 +178,25 @@ public:
             m_resourceType.version() <= resType.version();
     }
 
-    bool operator()(HDeviceController* device)
+    bool operator()(HDeviceController* device) const
     {
         Q_ASSERT(device);
         return test(device->m_device->deviceInfo().deviceType());
     }
 
-    bool operator()(HServiceController* service)
+    bool operator()(HServiceController* service) const
     {
         Q_ASSERT(service);
         return test(service->m_service->serviceType());
     }
 };
 
-//
-//
-//
 template<typename T>
 void seekDevices(
-    HDeviceController* device, MatchFunctor<T> mf,
+    HDeviceController* device, const MatchFunctor<T>& mf,
     QList<HDeviceController*>& foundDevices,
     bool rootOnly = false)
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT(device);
 
     if (rootOnly && device->parentDevice())
@@ -221,12 +220,10 @@ void seekDevices(
 //
 //
 template<typename T>
-void seekDevices2(
-    QList<HDeviceController*> devices, MatchFunctor<T> mf,
+void seekDevices(
+    const QList<HDeviceController*>& devices, const MatchFunctor<T>& mf,
     QList<HDeviceController*>& foundDevices, bool rootOnly)
 {
-    HLOG(H_AT, H_FUN);
-
     foreach(HDeviceController* device, devices)
     {
         seekDevices(device, mf, foundDevices, rootOnly);
@@ -238,10 +235,8 @@ void seekDevices2(
 //
 template<typename T>
 HServiceController* seekService(
-    QList<HDeviceController*> devices, MatchFunctor<T> mf)
+    const QList<HDeviceController*>& devices, const MatchFunctor<T>& mf)
 {
-    HLOG(H_AT, H_FUN);
-
     foreach(HDeviceController* device, devices)
     {
         QList<HServiceController*> services = device->services();
@@ -265,14 +260,15 @@ HServiceController* seekService(
     return 0;
 }
 
+//
+//
+//
 template<typename T>
 void seekServices(
-    QList<HDeviceController*> devices, MatchFunctor<T> mf,
+    const QList<HDeviceController*>& devices, const MatchFunctor<T>& mf,
     QList<HServiceController*>& foundServices,
     bool rootDevicesOnly)
 {
-    HLOG(H_AT, H_FUN);
-
     foreach(HDeviceController* device, devices)
     {
         if (rootDevicesOnly && device->m_device->parentDevice())
@@ -297,11 +293,47 @@ void seekServices(
         seekServices(device->embeddedDevices(), mf, foundServices, rootDevicesOnly);
     }
 }
+
+template<typename T>
+void traverse(
+    const QList<HDeviceController*>& devices, T& mf)
+{
+    foreach(HDeviceController* device, devices)
+    {
+        mf(device);
+
+        QList<HServiceController*> services = device->services();
+        foreach(HServiceController* service, services)
+        {
+            mf(service);
+
+            QList<HActionController*> actions = service->actions();
+            foreach(HActionController* action, actions)
+            {
+                mf(action);
+            }
+
+            /*QList<HStateVariableController*> stateVariables =
+                service->stateVariables();
+
+            foreach(HStateVariableController* stateVariable, stateVariables)
+            {
+                mf(stateVariable);
+            }*/
+        }
+
+        traverse(device->embeddedDevices(), mf);
+    }
+}
 }
 
-DeviceStorage::DeviceStorage(const QByteArray& loggingIdentifier) :
-    m_loggingIdentifier(loggingIdentifier), m_rootDevices(),
-    m_rootDevicesMutex(QMutex::Recursive)
+/*******************************************************************************
+ * DeviceStorage
+ ******************************************************************************/
+DeviceStorage::DeviceStorage(
+    const QByteArray& loggingIdentifier) :
+        m_loggingIdentifier(loggingIdentifier), m_rootDevices(),
+        m_rootDevicesMutex(QMutex::Recursive)
 {
 }
 
@@ -312,19 +344,18 @@ DeviceStorage::~DeviceStorage()
 
 void DeviceStorage::clear()
 {
-    QMutexLocker lock(&m_rootDevicesMutex);
+    QMutexLocker locker(&m_rootDevicesMutex);
+
     qDeleteAll(m_rootDevices);
     m_rootDevices.clear();
 }
 
 HDeviceController* DeviceStorage::searchDeviceByUdn(const HUdn& udn) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QMutexLocker lock(&m_rootDevicesMutex);
 
     QList<HDeviceController*> devices;
-    seekDevices2(m_rootDevices, MatchFunctor<UdnTester>(udn), devices, true);
+    seekDevices(m_rootDevices, MatchFunctor<UdnTester>(udn), devices, true);
 
     return devices.size() > 0 ? devices[0] : 0;
 }
@@ -359,15 +390,13 @@ bool DeviceStorage::searchValidLocation(
 QList<HDeviceController*> DeviceStorage::searchDevicesByDeviceType(
     const HResourceType& deviceType, bool exactMatch) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    QMutexLocker tmp(&m_rootDevicesMutex);
+    QMutexLocker locker(&m_rootDevicesMutex);
 
     QList<HDeviceController*> retVal;
 
     if (exactMatch)
     {
-        seekDevices2(
+        seekDevices(
             m_rootDevices,
             MatchFunctor<ResourceTypeTester<true> >(deviceType),
             retVal,
@@ -375,7 +404,7 @@ QList<HDeviceController*> DeviceStorage::searchDevicesByDeviceType(
     }
     else
     {
-        seekDevices2(
+        seekDevices(
             m_rootDevices,
             MatchFunctor<ResourceTypeTester<false> >(deviceType),
             retVal,
@@ -388,8 +417,6 @@ QList<HDeviceController*> DeviceStorage::searchDevicesByDeviceType(
 QList<HServiceController*> DeviceStorage::searchServicesByServiceType(
     const HResourceType& serviceType, bool exactMatch) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QMutexLocker lock(&m_rootDevicesMutex);
 
     QList<HServiceController*> retVal;
@@ -419,14 +446,14 @@ void DeviceStorage::checkDeviceTreeForUdnConflicts(
 {
    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-   if (searchDeviceByUdn(device->m_device->deviceInfo().udn()))
+    if (searchDeviceByUdn(device->m_device->deviceInfo().udn()))
     {
         throw HOperationFailedException(
             QObject::tr("Cannot host multiple devices with the same UDN [%1]").arg(
                 device->m_device->deviceInfo().udn().toSimpleUuid()));
     }
 
-   QList<HDeviceController*> devices = device->embeddedDevices();
+    QList<HDeviceController*> devices = device->embeddedDevices();
     foreach(HDeviceController* embeddeDevice, devices)
     {
         checkDeviceTreeForUdnConflicts(embeddeDevice);
@@ -441,12 +468,10 @@ void DeviceStorage::addRootDevice(HDeviceController* root)
     Q_ASSERT(root->m_device);
     Q_ASSERT(!root->m_device->parentDevice());
 
-    QMutexLocker lock(&m_rootDevicesMutex);
+    QMutexLocker locker(&m_rootDevicesMutex);
 
     checkDeviceTreeForUdnConflicts(root);
     m_rootDevices.push_back(root);
-
-    lock.unlock();
 
     HLOG_DBG(QObject::tr("New root device [%1] added. Current device count is %2").arg(
         root->m_device->deviceInfo().friendlyName(), QString::number(m_rootDevices.size())));
@@ -458,7 +483,7 @@ void DeviceStorage::removeRootDevice(HDeviceController* root)
     Q_ASSERT(root);
     Q_ASSERT(!root->m_device->parentDevice());
 
-    QMutexLocker lock(&m_rootDevicesMutex);
+    QMutexLocker locker(&m_rootDevicesMutex);
 
     bool ok = m_rootDevices.removeOne(root);
     Q_ASSERT(ok); Q_UNUSED(ok)
@@ -471,8 +496,6 @@ void DeviceStorage::removeRootDevice(HDeviceController* root)
     // The objects will be deleted when the reference counts of their wrapping
     // smart pointers drop to zero.
 
-    lock.unlock();
-
     HLOG_DBG(QObject::tr("Root device [%1] removed. Current device count is %2").arg(
         devInfo.friendlyName(), QString::number(m_rootDevices.size())));
 }
@@ -480,7 +503,6 @@ void DeviceStorage::removeRootDevice(HDeviceController* root)
 QPair<QUrl, QImage> DeviceStorage::seekIcon(
     HDeviceController* device, const QString& iconUrl)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(device);
 
     QList<QPair<QUrl, QImage> > icons =
@@ -510,8 +532,6 @@ QPair<QUrl, QImage> DeviceStorage::seekIcon(
 HServiceController* DeviceStorage::searchServiceByScpdUrl(
     HDeviceController* device, const QUrl& scpdUrl) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QList<HDeviceController*> tmp; tmp.push_back(device);
     return seekService(tmp, MatchFunctor<ScpdUrlTester>(scpdUrl));
 }
@@ -519,8 +539,6 @@ HServiceController* DeviceStorage::searchServiceByScpdUrl(
 HServiceController* DeviceStorage::searchServiceByControlUrl(
     HDeviceController* device, const QUrl& controlUrl) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     QList<HDeviceController*> tmp; tmp.push_back(device);
     return seekService(tmp, MatchFunctor<ControlUrlTester>(controlUrl));
 }
@@ -528,14 +546,12 @@ HServiceController* DeviceStorage::searchServiceByControlUrl(
 HServiceController* DeviceStorage::searchServiceByEventUrl(
     HDeviceController* device, const QUrl& eventUrl) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     QList<HDeviceController*> tmp; tmp.push_back(device);
     return seekService(tmp, MatchFunctor<EventUrlTester>(eventUrl));
 }
 
 HRootDevicePtrListT DeviceStorage::rootDevices() const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     QMutexLocker lock(&m_rootDevicesMutex);
 
     HRootDevicePtrListT retVal;
@@ -550,9 +566,7 @@ HRootDevicePtrListT DeviceStorage::rootDevices() const
 
 QList<HDeviceController*> DeviceStorage::rootDeviceControllers() const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     QMutexLocker lock(&m_rootDevicesMutex);
-
     return m_rootDevices;
 }
 

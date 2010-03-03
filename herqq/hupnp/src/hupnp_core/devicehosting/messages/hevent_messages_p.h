@@ -172,7 +172,7 @@ public:
 
     bool isValid()const;
 
-    HSid sid () const;
+    HSid sid() const;
     QUrl eventUrl() const;
 };
 
@@ -217,15 +217,19 @@ public:
         const QString& nt, const QString& nts, const QString& sid,
         const QString& seq, const QString& contents);
 
-    bool isValid () const;
-    QUrl callback() const;
+    inline bool isValid () const
+    {
+        return !m_sid.isNull();
+        // if this is defined then everything else is defined as well
+    }
 
-    HNt        nt  () const;
-    QString    nts () const;
-    HSid       sid () const;
-    quint32    seq () const;
-    QByteArray data() const;
-    Variables variables() const;
+    inline QUrl callback() const { return m_callback; }
+
+    HNt nt() const;
+    inline HSid       sid      () const { return m_sid            ; }
+    inline quint32    seq      () const { return m_seq            ; }
+    inline QByteArray data     () const { return m_data           ; }
+    inline Variables  variables() const { return m_dataAsVariables; }
 };
 
 }

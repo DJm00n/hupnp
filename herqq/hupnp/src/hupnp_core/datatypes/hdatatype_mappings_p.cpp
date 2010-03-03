@@ -21,6 +21,7 @@
 
 #include "hdatatype_mappings_p.h"
 
+#include <QUrl>
 #include <QString>
 
 namespace Herqq

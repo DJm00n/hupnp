@@ -137,31 +137,6 @@ HUpnpDataTypes::DataType HUpnpDataTypes::dataType(const QString& dataTypeAsStr)
     return Undefined;
 }
 
-bool HUpnpDataTypes::isRational(DataType dataType)
-{
-    switch(dataType)
-    {
-        case r4:
-        case r8:
-        case number:
-        case fp:
-        case fixed_14_4:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool HUpnpDataTypes::isNumeric(DataType datatype)
-{
-    return datatype >= ui1 && datatype <= fp;
-}
-
-bool HUpnpDataTypes::isInteger(DataType datatype)
-{
-    return datatype >= ui1 && datatype <= integer;
-}
-
 QString HUpnpDataTypes::toString(DataType dataType)
 {
     switch(dataType)

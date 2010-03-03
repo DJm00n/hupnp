@@ -83,6 +83,8 @@ private:
 
     QString m_lastErrorDescription;
 
+    volatile bool m_autoDelete;
+
 public:
 
      //
@@ -102,6 +104,16 @@ public:
     MessagingInfo(
         QTcpSocket& sock, bool keepAlive,
         qint32 receiveTimeoutForNoData = defaultReceiveTimeoutForNoData());
+
+    inline void setAutoDelete(bool b)
+    {
+        m_autoDelete = b;
+    }
+
+    inline bool autoDelete() const
+    {
+        return m_autoDelete;
+    }
 
     inline QTcpSocket& socket() const
     {

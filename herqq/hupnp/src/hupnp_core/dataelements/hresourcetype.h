@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RESOURCE_TYPE_H_
-#define RESOURCE_TYPE_H_
+#ifndef HRESOURCE_TYPE_H_
+#define HRESOURCE_TYPE_H_
 
 #include "./../general/hdefs_p.h"
 
@@ -254,4 +254,4 @@ H_UPNP_CORE_EXPORT quint32 qHash(const HResourceType& key);
 }
 }
 
-#endif /* RESOURCE_TYPE_H_ */
+#endif /* HRESOURCE_TYPE_H_ */
