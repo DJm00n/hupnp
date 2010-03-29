@@ -82,7 +82,7 @@ ControlPointWindow::~ControlPointWindow()
 
 void ControlPointWindow::connectToEvents(HDevice* device)
 {
-    HServicePtrListT services = device->services();
+    HServicePtrList services = device->services();
     for (qint32 i = 0; i < services.size(); ++i)
     {
         QList<HStateVariable*> stateVars = services[i]->stateVariables();

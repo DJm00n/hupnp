@@ -49,9 +49,9 @@ HTestService::~HTestService()
 {
 }
 
-HService::HActionMapT HTestService::createActions()
+HService::HActionMap HTestService::createActions()
 {
-    HActionMapT retVal;
+    HActionMap retVal;
 
     //
     // This is where it is defined what are to be called when the actions
@@ -157,9 +157,9 @@ HTestDevice::~HTestDevice()
 {
 }
 
-HDevice::HServiceMapT HTestDevice::createServices()
+HDevice::HServiceMap HTestDevice::createServices()
 {
-    HDevice::HServiceMapT retVal;
+    HDevice::HServiceMap retVal;
 
     retVal[HResourceType("urn:herqq-org:service:HTestService:1")] =
         new HTestService();

@@ -47,7 +47,7 @@ Q_DISABLE_COPY(HTestService)
 
 private:
 
-    virtual Herqq::Upnp::HService::HActionMapT createActions();
+    virtual Herqq::Upnp::HService::HActionMap createActions();
 
 public:
 
@@ -88,7 +88,7 @@ Q_DISABLE_COPY(HTestDevice)
 
 private:
 
-    virtual Herqq::Upnp::HDevice::HServiceMapT createServices();
+    virtual Herqq::Upnp::HDevice::HServiceMap createServices();
 
 public:
 
