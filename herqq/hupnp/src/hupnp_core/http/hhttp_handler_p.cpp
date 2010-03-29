@@ -114,8 +114,7 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
             if (!mi.socket().getChar(&readChar))
             {
                 // Could not read size line. It should be available at this point.
-                mi.setLastErrorDescription(
-                    QObject::tr("Could not read chunk-size line."));
+                mi.setLastErrorDescription("Could not read chunk-size line.");
 
                 return InvalidData;
             }
@@ -150,8 +149,7 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
         if (linesRead != 1)
         {
             // No size line. It should be available at this point.
-            mi.setLastErrorDescription(
-                QObject::tr("No chunk-size line in the message body."));
+            mi.setLastErrorDescription("No chunk-size line in the message body.");
 
             return InvalidData;
         }
@@ -169,7 +167,7 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
         if (!ok || chunkSize < 0)
         {
             mi.setLastErrorDescription(
-                QObject::tr("Invalid chunk-size line: %1.").arg(
+                QString("Invalid chunk-size line: %1.").arg(
                       QString::fromUtf8(sizeLine)));
 
             return InvalidData;
@@ -192,8 +190,8 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
 
             if (m_shuttingDown && (!dataAvailable || stopWatch.elapsed() > 500))
             {
-                mi.setLastErrorDescription(QObject::tr(
-                    "Shutting down. Aborting HTTP message body read."));
+                mi.setLastErrorDescription(
+                    "Shutting down. Aborting HTTP message body read.");
 
                 return ShuttingDown;
             }
@@ -201,15 +199,15 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
                      mi.socket().state() != QTcpSocket::ConnectedState &&
                      mi.socket().state() != QTcpSocket::ClosingState)
             {
-                mi.setLastErrorDescription(QObject::tr(
-                    "Peer has disconnected. Could not read HTTP message body."));
+                mi.setLastErrorDescription(
+                    "Peer has disconnected. Could not read HTTP message body.");
 
                 return PeerDisconnected;
             }
             else if (stopWatch.elapsed() >= mi.receiveTimeoutForNoData() &&
                      mi.receiveTimeoutForNoData() >= 0)
             {
-                mi.setLastErrorDescription(QObject::tr(
+                mi.setLastErrorDescription(QString(
                     "Timeout [%1] has elapsed. Could not read chunked "
                     "HTTP message body.").arg(
                         QString::number(mi.receiveTimeoutForNoData())));
@@ -226,7 +224,7 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
 
             if (read < 0)
             {
-                mi.setLastErrorDescription(QObject::tr(
+                mi.setLastErrorDescription(QString(
                     "Failed to read chunk: %1").arg(mi.socket().errorString()));
 
                 return GenericSocketError;
@@ -275,8 +273,8 @@ HHttpHandler::ReturnValue HHttpHandler::readRequestData(
 
         if (m_shuttingDown && (!dataAvailable || stopWatch.elapsed() > 500))
         {
-            mi.setLastErrorDescription(QObject::tr(
-                "Shutting down. Aborting HTTP message body read."));
+            mi.setLastErrorDescription(
+                "Shutting down. Aborting HTTP message body read.");
 
             return ShuttingDown;
         }
@@ -284,15 +282,15 @@ HHttpHandler::ReturnValue HHttpHandler::readRequestData(
                  mi.socket().state() != QTcpSocket::ConnectedState &&
                  mi.socket().state() != QTcpSocket::ClosingState)
         {
-            mi.setLastErrorDescription(QObject::tr(
-                "Peer has disconnected. Could not read HTTP message body."));
+            mi.setLastErrorDescription(
+                "Peer has disconnected. Could not read HTTP message body.");
 
             return PeerDisconnected;
         }
         else if (stopWatch.elapsed() >= mi.receiveTimeoutForNoData() &&
                  mi.receiveTimeoutForNoData() >= 0)
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Timeout [%1] has elapsed. Could not read HTTP message body.").arg(
                     QString::number(mi.receiveTimeoutForNoData())));
 
@@ -312,7 +310,7 @@ HHttpHandler::ReturnValue HHttpHandler::readRequestData(
             if (retVal < 0)
             {
                 mi.setLastErrorDescription(
-                    QObject::tr("Could not read HTTP message body: .").arg(
+                    QString("Could not read HTTP message body: .").arg(
                         mi.socket().errorString()));
 
                 return GenericSocketError;
@@ -353,7 +351,7 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
 
         if (m_shuttingDown && (!dataAvailable || stopWatch.elapsed() > 500))
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Shutting down. Aborting HTTP message header read."));
 
             return ShuttingDown;
@@ -362,7 +360,7 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
                  mi.socket().state() != QTcpSocket::ConnectedState &&
                  mi.socket().state() != QTcpSocket::ClosingState)
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Peer has disconnected. Could not read HTTP message header."));
 
             return PeerDisconnected;
@@ -370,7 +368,7 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
         else if (stopWatch.elapsed() >= mi.receiveTimeoutForNoData() &&
                  mi.receiveTimeoutForNoData() >= 0)
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Timeout [%1] has elapsed. Could not read HTTP message header.").arg(
                     QString::number(mi.receiveTimeoutForNoData())));
 
@@ -426,28 +424,30 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
         return InvalidHeader;
     }
 
-    bool chunked = hdr.value("TRANSFER-ENCODING") == "chunked";
-    if (chunked)
+    if (body)
     {
-        if (hdr.hasContentLength())
+        bool chunked = hdr.value("TRANSFER-ENCODING") == "chunked";
+        if (chunked)
         {
-            hdr = Header();
-            return InvalidHeader;
-        }
+            if (hdr.hasContentLength())
+            {
+                hdr = Header();
+                return InvalidHeader;
+            }
 
-        readChunkedRequest(mi, body);
-    }
-    else
-    {
-        if (hdr.hasContentLength())
-        {
-            quint32 clength = hdr.contentLength();
-            readRequestData(mi, body, clength);
+            readChunkedRequest(mi, body);
         }
         else
         {
-            Q_ASSERT(body);
-            *body = mi.socket().readAll();
+            if (hdr.hasContentLength())
+            {
+                quint32 clength = hdr.contentLength();
+                readRequestData(mi, body, clength);
+            }
+            else
+            {
+                *body = mi.socket().readAll();
+            }
         }
     }
 
@@ -470,7 +470,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendBlob(
     {
         if (mi.socket().state() != QTcpSocket::ConnectedState)
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Failed to send data to %1. Connection closed.").arg(
                     peer.toString()));
 
@@ -484,7 +484,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendBlob(
             if (!mi.socket().isValid() || errorThreshold > 100)
             {
                 mi.setLastErrorDescription(
-                    QObject::tr("Failed to send data to %1.").arg(
+                    QString("Failed to send data to %1.").arg(
                         peer.toString()));
 
                 return GenericSocketError;
@@ -495,7 +495,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendBlob(
         else if (bytesWritten < 0)
         {
             mi.setLastErrorDescription(
-                QObject::tr("Failed to send data to %1.").arg(
+                QString("Failed to send data to %1.").arg(
                     peer.toString()));
 
             return GenericSocketError;
@@ -540,7 +540,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
     {
         if (mi.socket().state() != QTcpSocket::ConnectedState)
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Failed to send data to %1. Connection closed.").arg(
                     peer.toString()));
 
@@ -559,7 +559,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
         bytesWritten = mi.socket().write(sizeLine);
         if (bytesWritten != sizeLine.size())
         {
-            mi.setLastErrorDescription(QObject::tr(
+            mi.setLastErrorDescription(QString(
                 "Failed to send data to %1.").arg(peer.toString()));
 
             return GenericSocketError;
@@ -576,7 +576,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
                 if (!mi.socket().isValid() || errorThreshold > 100)
                 {
                     mi.setLastErrorDescription(
-                        QObject::tr("Failed to send data to %1.").arg(
+                        QString("Failed to send data to %1.").arg(
                             peer.toString()));
 
                     return GenericSocketError;
@@ -587,7 +587,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
             else if (bytesWritten < 0)
             {
                 mi.setLastErrorDescription(
-                    QObject::tr("Failed to send data to %1.").arg(
+                    QString("Failed to send data to %1.").arg(
                         peer.toString()));
 
                 return GenericSocketError;
@@ -606,7 +606,7 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
         if (bytesWritten != 2)
         {
             mi.setLastErrorDescription(
-                QObject::tr("Failed to send data to %1.").arg(peer.toString()));
+                QString("Failed to send data to %1.").arg(peer.toString()));
 
             return GenericSocketError;
         }
@@ -909,7 +909,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     if (!responseHdr.isValid() || responseHdr.statusCode() != 200)
     {
         mi.setLastErrorDescription(
-            QObject::tr("Unsubscribe failed: %1.").arg(responseHdr.reasonPhrase()));
+            QString("Unsubscribe failed: %1.").arg(responseHdr.reasonPhrase()));
     }
 
     return Success;
@@ -934,7 +934,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     if (!responseHdr.isValid() || responseHdr.statusCode() != 200)
     {
         mi.setLastErrorDescription(
-            QObject::tr("Notify failed: %1.").arg(responseHdr.reasonPhrase()));
+            QString("Notify failed: %1.").arg(responseHdr.reasonPhrase()));
     }
 
     return Success;
@@ -958,7 +958,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 
     if (!respBody.size())
     {
-        mi.setLastErrorDescription(QObject::tr(
+        mi.setLastErrorDescription(QString(
             "No response to the sent SOAP message from host @ %1").arg(
                 mi.socket().peerName()));
 
@@ -968,7 +968,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
     QDomDocument dd;
     if (!dd.setContent(respBody, true))
     {
-        mi.setLastErrorDescription(QObject::tr(
+        mi.setLastErrorDescription(QString(
             "Invalid SOAP response from host @ %1").arg(mi.socket().peerName()));
 
         return InvalidData;

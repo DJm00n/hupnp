@@ -65,13 +65,13 @@ QDomDocument DeviceHostDataRetriever::retrieveServiceDescription(
 
     QFile file(fullScpdPath);
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Attempting to open service description from [%1]").arg(fullScpdPath));
 
     if (!file.open(QIODevice::ReadOnly))
     {
         throw HOperationFailedException(
-            QObject::tr("Could not open the service description file [%1].").arg(
+            QString("Could not open the service description file [%1].").arg(
                 fullScpdPath));
     }
 
@@ -80,7 +80,7 @@ QDomDocument DeviceHostDataRetriever::retrieveServiceDescription(
     if (!dd.setContent(&file, false, &errMsg, &errLine))
     {
         throw InvalidServiceDescription(
-            QObject::tr("Could not parse the service description file [%1]: %2 @ line %3").
+            QString("Could not parse the service description file [%1]: %2 @ line %3").
             arg(fullScpdPath, errMsg, QString::number(errLine)));
     }
 
@@ -107,7 +107,7 @@ QImage DeviceHostDataRetriever::retrieveIcon(
     // UDA mandates that the paths inside a device description are treated relative
     // to the device description location.
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Attempting to open a file [%1] that should contain an icon").arg(
             fullIconPath));
 
@@ -116,7 +116,7 @@ QImage DeviceHostDataRetriever::retrieveIcon(
     if (icon.isNull())
     {
         throw InvalidDeviceDescription(
-            QObject::tr("Could not open the icon file [%1]").arg(fullIconPath));
+            QString("Could not open the icon file [%1]").arg(fullIconPath));
     }
 
     return icon;
@@ -131,7 +131,7 @@ QDomDocument DeviceHostDataRetriever::retrieveDeviceDescription(
     if (!file.open(QIODevice::ReadOnly))
     {
         throw HOperationFailedException(
-            QObject::tr("Could not open the device description file: [%1].").arg(
+            QString("Could not open the device description file: [%1].").arg(
                 filePath));
     }
 
@@ -140,7 +140,7 @@ QDomDocument DeviceHostDataRetriever::retrieveDeviceDescription(
     if (!dd.setContent(&file, false, &errMsg, &errLine))
     {
         throw InvalidDeviceDescription(
-            QObject::tr("Could not parse the device description file: [%1] @ line %2").
+            QString("Could not parse the device description file: [%1] @ line %2").
             arg(errMsg, QString::number(errLine)));
     }
 

@@ -32,6 +32,7 @@
 
 #include "hevent_subscriber_p.h"
 
+#include "./../../http/hhttp_p.h"
 #include "./../../general/hdefs_p.h"
 #include "./../messages/hevent_messages_p.h"
 
@@ -88,12 +89,11 @@ public:
 
     void shutdown();
 
-    ServiceEventSubscriberPtrT addSubscriber(
-        HService* service, const SubscribeRequest& sreq);
+    StatusCode addSubscriber(HService*, const SubscribeRequest&, HSid*);
 
-    bool removeSubscriber(const UnsubscribeRequest& usreq);
-    ServiceEventSubscriberPtrT renewSubscription(const SubscribeRequest& sreq);
-    ServiceEventSubscriberPtrT remoteClient(const HSid& sid) const;
+    bool removeSubscriber(const UnsubscribeRequest&);
+    StatusCode renewSubscription(const SubscribeRequest&, HSid*);
+    ServiceEventSubscriberPtrT remoteClient(const HSid&) const;
 
     void initialNotify(ServiceEventSubscriberPtrT, MessagingInfo& mi);
 };

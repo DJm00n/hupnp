@@ -82,7 +82,7 @@ public: // instance methods
     void clear();
 
     void addRootDevice   (HDeviceController* root);
-    void removeRootDevice(HDeviceController* root);
+    bool removeRootDevice(HDeviceController* root);
 
     HDeviceController* searchDeviceByUdn(const HUdn& udn) const;
 
@@ -95,13 +95,22 @@ public: // instance methods
     HServiceController* searchServiceByScpdUrl(
         HDeviceController* device, const QUrl& scpdUrl) const;
 
+    HServiceController* searchServiceByScpdUrl(
+        const QUrl& scpdUrl) const;
+
     HServiceController* searchServiceByControlUrl(
         HDeviceController* device, const QUrl& controlUrl) const;
+
+    HServiceController* searchServiceByControlUrl(
+        const QUrl& controlUrl) const;
 
     HServiceController* searchServiceByEventUrl(
         HDeviceController* device, const QUrl& eventUrl) const;
 
-    HRootDevicePtrListT rootDevices() const;
+    HServiceController* searchServiceByEventUrl(
+        const QUrl& eventUrl) const;
+
+    HDevicePtrList rootDevices() const;
 
     QList<HDeviceController*> rootDeviceControllers() const;
 

@@ -35,9 +35,9 @@ HDefaultService::~HDefaultService()
 {
 }
 
-HService::HActionMapT HDefaultService::createActions()
+HService::HActionMap HDefaultService::createActions()
 {
-    return HActionMapT();
+    return HActionMap();
 }
 
 HDefaultDevice::HDefaultDevice()
@@ -48,9 +48,9 @@ HDefaultDevice::~HDefaultDevice()
 {
 }
 
-HDevice::HServiceMapT HDefaultDevice::createServices()
+HDevice::HServiceMap HDefaultDevice::createServices()
 {
-    return HServiceMapT();
+    return HServiceMap();
 }
 
 }

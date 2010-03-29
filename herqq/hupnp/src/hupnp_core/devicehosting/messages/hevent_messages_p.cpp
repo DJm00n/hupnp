@@ -65,12 +65,12 @@ SubscribeRequest::SubscribeRequest(
 
     if (!isValidEventUrl(eventUrl))
     {
-        HLOG_WARN(QObject::tr("Invalid eventURL: [%1]").arg(eventUrl.toString()));
+        HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
         return;
     }
     else if (sid.isNull())
     {
-        HLOG_WARN(QObject::tr("Null SID"));
+        HLOG_WARN("Null SID");
         return;
     }
 
@@ -87,12 +87,12 @@ SubscribeRequest::SubscribeRequest(
     HLOG(H_AT, H_FUN);
     if (!isValidEventUrl(eventUrl))
     {
-        HLOG_WARN(QObject::tr("Invalid eventURL: [%1]").arg(eventUrl.toString()));
+        HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
         return;
     }
     else if (!isValidCallback(callback))
     {
-        HLOG_WARN(QObject::tr("Invalid callback: [%1]").arg(callback.toString()));
+        HLOG_WARN(QString("Invalid callback: [%1]").arg(callback.toString()));
         return;
     }
 
@@ -111,7 +111,7 @@ SubscribeRequest::SubscribeRequest(
     HLOG(H_AT, H_FUN);
     if (!isValidEventUrl(eventUrl))
     {
-        HLOG_WARN(QObject::tr("Invalid eventURL: [%1]").arg(eventUrl.toString()));
+        HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
         return;
     }
 
@@ -168,7 +168,7 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
     // these have to be properly defined no matter what
     if (!isValidEventUrl(eventUrl))
     {
-        HLOG_WARN(QObject::tr("Invalid eventURL: [%1]").arg(eventUrl.toString()));
+        HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
         return BadRequest;
     }
 
@@ -219,41 +219,6 @@ HNt SubscribeRequest::nt() const
 QList<QUrl> SubscribeRequest::callbacks() const
 {
     return m_callbacks;
-}
-
-HTimeout SubscribeRequest::timeout() const
-{
-    return m_timeout;
-}
-
-HSid SubscribeRequest::sid() const
-{
-    return m_sid;
-}
-
-QUrl SubscribeRequest::eventUrl() const
-{
-    return m_eventUrl;
-}
-
-bool SubscribeRequest::isRenewal() const
-{
-    return !m_sid.isNull();
-}
-
-HProductTokens SubscribeRequest::userAgent() const
-{
-    return m_userAgent;
-}
-
-bool SubscribeRequest::hasUserAgent() const
-{
-    return m_userAgent.isValid();
-}
-
-bool SubscribeRequest::isValid() const
-{
-    return !m_callbacks.isEmpty() || !m_sid.isNull();
 }
 
 /*******************************************************************************

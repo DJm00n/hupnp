@@ -59,7 +59,8 @@ private:
     QByteArray m_loggingIdentifier;
     HHttpHandler& m_http;
 
-    QByteArray retrieveData(const QUrl& baseUrl, const QUrl& query);
+    QByteArray retrieveData(
+        const QUrl& baseUrl, const QUrl& query, bool processAbsoluteUrl);
 
 public:
 

@@ -103,15 +103,14 @@ HActionInvokeProxyConnection::~HActionInvokeProxyConnection()
 {
 }
 
-void HActionInvokeProxyConnection::error(
-    QAbstractSocket::SocketError serr)
+void HActionInvokeProxyConnection::error(QAbstractSocket::SocketError serr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     if (serr == QAbstractSocket::ConnectionRefusedError ||
         serr ==  QAbstractSocket::HostNotFoundError)
     {
-        HLOG_WARN(QObject::tr("Couldn't connect to the device [%1] @ [%2].").arg(
+        HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
         m_service->parentDevice()->deviceInfo().udn().toSimpleUuid(),
         m_locations[m_iNextLocationToTry].toString()));
 
@@ -247,7 +246,7 @@ void HActionInvokeProxyConnection::send()
     // 2) send it and attempt to get a response
     QUrl baseUrl = m_locations[m_iNextLocationToTry];
 
-    QUrl controlUrl = appendUrls(baseUrl.path(), m_service->controlUrl());
+    QUrl controlUrl = resolveUri(baseUrl.path(), m_service->controlUrl());
 
     QHttpRequestHeader actionInvokeRequest("POST", controlUrl.toString());
     actionInvokeRequest.setContentType("text/xml; charset=\"utf-8\"");

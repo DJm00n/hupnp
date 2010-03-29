@@ -56,14 +56,7 @@ InvokeActionDialog::InvokeActionDialog(
         action, SIGNAL(invokeComplete(QUuid)),
         this, SLOT(invokeComplete(QUuid)));
 
-    Q_ASSERT(ok);
-
-    HDevice* device = action->parentService()->parentDevice();
-
-    ok = connect(
-        device, SIGNAL(disposed()), this, SLOT(contentSourceDisposed()));
-
-    Q_ASSERT(ok);
+    Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
 void InvokeActionDialog::invokeComplete(const QUuid& invokeId)
@@ -152,9 +145,13 @@ void InvokeActionDialog::setupArgumentWidgets()
     }
 }
 
-void InvokeActionDialog::contentSourceDisposed()
+void InvokeActionDialog::contentSourceRemoved(HDevice* device)
 {
-    done(0);
+    Q_ASSERT(device);
+    if (device == m_action->parentService()->parentDevice()->rootDevice())
+    {
+        done(0);
+    }
 }
 
 namespace

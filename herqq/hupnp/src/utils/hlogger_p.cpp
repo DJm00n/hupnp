@@ -42,7 +42,7 @@ HLogger::HLogger(const char* at, const char* methodName, const char* logPrefix) 
     if (traceLevel() == All)
     {
         QString stmt = (m_logPrefix ? QString(m_logPrefix) : QString()).append(
-            QObject::tr("Entering %1 @ %2").arg(m_methodName, at));
+            QString("Entering %1 @ %2").arg(m_methodName, at));
 
         qDebug() << stmt;
     }
@@ -53,7 +53,7 @@ HLogger::~HLogger()
     if (traceLevel() == All)
     {
         QString stmt = (m_logPrefix ? QString(m_logPrefix) : QString()).append(
-            QObject::tr("Exiting %1").arg(m_methodName));
+            QString("Exiting %1").arg(m_methodName));
 
         qDebug() << stmt;
     }

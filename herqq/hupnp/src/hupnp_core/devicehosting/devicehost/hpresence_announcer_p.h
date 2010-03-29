@@ -223,16 +223,16 @@ public:
             announcements.push_back(AnnouncementType(device, usn, location));
 
             // service advertisements
-            QList<HServiceController*> services = device->services();
-            foreach(HServiceController* service, services)
+            const QList<HServiceController*>* services = device->services();
+            foreach(HServiceController* service, *services)
             {
                 usn.setResource(service->m_service->serviceType().toString());
                 announcements.push_back(AnnouncementType(device, usn, location));
             }
         }
 
-        QList<HDeviceController*> devices = device->embeddedDevices();
-        foreach(HDeviceController* embeddedDevice, devices)
+        const QList<HDeviceController*>* devices = device->embeddedDevices();
+        foreach(HDeviceController* embeddedDevice, *devices)
         {
             createAnnouncementMessagesForEmbeddedDevice(embeddedDevice, announcements);
         }

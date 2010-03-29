@@ -61,14 +61,14 @@ private:
 private Q_SLOTS:
 
     void processSubscription_slot(
-        const SubscribeRequest*, HService*, HSid*);
+        const SubscribeRequest*, HService*, HSid*, StatusCode*);
 
     void removeSubscriber_slot(const UnsubscribeRequest*, bool*);
 
 Q_SIGNALS:
 
     void processSubscription_sig(
-        const SubscribeRequest*, HService*, HSid*);
+        const SubscribeRequest*, HService*, HSid*, StatusCode*);
 
     void removeSubscriber_sig(const UnsubscribeRequest*, bool*);
 

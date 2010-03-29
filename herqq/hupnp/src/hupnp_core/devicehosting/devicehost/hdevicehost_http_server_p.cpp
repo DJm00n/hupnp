@@ -42,10 +42,6 @@ namespace Upnp
 
 namespace
 {
-
-//
-// these functions are device host specific
-//
 inline QUuid extractUdn(const QUrl& arg)
 {
     QString path = extractRequestPart(arg);
@@ -81,12 +77,14 @@ DeviceHostHttpServer::DeviceHostHttpServer(
 
     bool ok = connect(
         this,
-        SIGNAL(processSubscription_sig(const SubscribeRequest*, HService*, HSid*)),
+        SIGNAL(processSubscription_sig(
+            const SubscribeRequest*, HService*, HSid*, StatusCode*)),
         this,
-        SLOT(processSubscription_slot(const SubscribeRequest*, HService*, HSid*)),
+        SLOT(processSubscription_slot(
+            const SubscribeRequest*, HService*, HSid*, StatusCode*)),
         Qt::BlockingQueuedConnection);
 
-    Q_ASSERT(ok);
+    Q_ASSERT(ok); Q_UNUSED(ok)
 
     ok = connect(
         this, SIGNAL(removeSubscriber_sig(const UnsubscribeRequest*, bool*)),
@@ -102,11 +100,12 @@ DeviceHostHttpServer::~DeviceHostHttpServer()
 }
 
 void DeviceHostHttpServer::processSubscription_slot(
-    const SubscribeRequest* req, HService* service, HSid* sid)
+    const SubscribeRequest* req, HService* service, HSid* sid, StatusCode* sc)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(req);
     Q_ASSERT(sid);
+    Q_ASSERT(sc);
 
     // The UDA v1.1 does not specify what to do when a subscription is received
     // to a service that is not evented. A "safe" route was taken here and
@@ -115,23 +114,11 @@ void DeviceHostHttpServer::processSubscription_slot(
 
     if (req->isRenewal())
     {
-        EventNotifier::ServiceEventSubscriberPtrT rc =
-            m_eventNotifier.renewSubscription(*req);
-
-        if (rc)
-        {
-            *sid = rc->sid();
-        }
+        *sc = m_eventNotifier.renewSubscription(*req, sid);
     }
     else
     {
-        EventNotifier::ServiceEventSubscriberPtrT rc =
-            m_eventNotifier.addSubscriber(service, *req);
-
-        if (rc)
-        {
-            *sid = rc->sid();
-        }
+        *sc = m_eventNotifier.addSubscriber(service, *req, sid);
     }
 }
 
@@ -158,28 +145,43 @@ void DeviceHostHttpServer::incomingSubscriptionRequest(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr("Subscription received."));
+    HLOG_DBG("Subscription received.");
+
+    QUuid udn = extractUdn(sreq.eventUrl());
 
     HDeviceController* device =
-        m_deviceStorage.searchDeviceByUdn(extractUdn(sreq.eventUrl()));
+        !udn.isNull() ? m_deviceStorage.searchDeviceByUdn(udn) : 0;
+
+    HServiceController* service = 0;
 
     if (!device)
     {
-        HLOG_WARN(QObject::tr("Ignoring invalid subscription to: [%1].").arg(
-            sreq.eventUrl().toString()));
+        // the request did not have the UDN prefix, which means that either
+        // 1) the request was for a EventUrl that was defined as an absolute URL
+        //    in the device description or
+        // 2) the request is invalid
 
-        mi.setKeepAlive(false);
-        m_httpHandler.send(mi, BadRequest);
-        return;
+        service = m_deviceStorage.searchServiceByEventUrl(sreq.eventUrl());
+        if (!service)
+        {
+            HLOG_WARN(QString(
+                "Ignoring invalid event subscription to: [%1].").arg(
+                    sreq.eventUrl().toString()));
+
+            mi.setKeepAlive(false);
+            m_httpHandler.send(mi, BadRequest);
+            return;
+        }
     }
-
-    HServiceController* service =
-        m_deviceStorage.searchServiceByEventUrl(
+    else if (!service)
+    {
+        service = m_deviceStorage.searchServiceByEventUrl(
             device, extractRequestExludingUdn(sreq.eventUrl()));
+    }
 
     if (!service)
     {
-        HLOG_WARN(QObject::tr("Subscription defined as [%1] is invalid.").arg(
+        HLOG_WARN(QString("Subscription defined as [%1] is invalid.").arg(
             sreq.eventUrl().path()));
 
         mi.setKeepAlive(false);
@@ -193,14 +195,15 @@ void DeviceHostHttpServer::incomingSubscriptionRequest(
     // accompanying setParent() will fail, since Qt cannot send
     // events to the "old" parent, because it lives in a different thread.
     HSid sid;
-    emit processSubscription_sig(&sreq, service->m_service, &sid);
+    StatusCode sc;
+    emit processSubscription_sig(&sreq, service->m_service, &sid, &sc);
     // this is connected using BlockingQueuedConnection
     // to the local slot that does the processing (in the right thread)
 
-    if (sid.isNull())
+    if (sc != Ok)
     {
         mi.setKeepAlive(false);
-        m_httpHandler.send(mi, PreconditionFailed);
+        m_httpHandler.send(mi, sc);
         return;
     }
 
@@ -239,7 +242,7 @@ void DeviceHostHttpServer::incomingUnsubscriptionRequest(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr("Unsubscription received."));
+    HLOG_DBG("Unsubscription received.");
 
     bool ok = false;
     emit removeSubscriber_sig(&usreq, &ok);
@@ -260,30 +263,46 @@ void DeviceHostHttpServer::incomingControlRequest(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr("Control message to [%1] received.").arg(
+    HLOG_DBG(QString("Control message to [%1] received.").arg(
         invokeActionRequest.soapAction()));
 
+    QUuid udn = extractUdn(invokeActionRequest.serviceUrl());
+
     HDeviceController* device =
-        m_deviceStorage.searchDeviceByUdn(
-            extractUdn(invokeActionRequest.serviceUrl()));
+        !udn.isNull() ? m_deviceStorage.searchDeviceByUdn(udn) : 0;
+
+    HServiceController* service = 0;
 
     if (!device)
     {
-        HLOG_WARN(QObject::tr("Ignoring invalid action invocation to: [%1].").arg(
-            invokeActionRequest.serviceUrl().toString()));
+        // the request did not have the UDN prefix, which means that either
+        // 1) the request was for a ControlURL that was defined as an absolute URL
+        //    in the device description or
+        // 2) the request is invalid
 
-        mi.setKeepAlive(false);
-        m_httpHandler.send(mi, BadRequest);
-        return;
+        service = m_deviceStorage.searchServiceByControlUrl(
+            invokeActionRequest.serviceUrl());
+
+        if (!service)
+        {
+            HLOG_WARN(QString(
+                "Ignoring invalid action invocation to: [%1].").arg(
+                    invokeActionRequest.serviceUrl().toString()));
+
+            mi.setKeepAlive(false);
+            m_httpHandler.send(mi, BadRequest);
+            return;
+        }
     }
-
-    HServiceController* service =
-        m_deviceStorage.searchServiceByControlUrl(
+    else if (!service)
+    {
+        service = m_deviceStorage.searchServiceByControlUrl(
             device, extractRequestExludingUdn(invokeActionRequest.serviceUrl()));
+    }
 
     if (!service)
     {
-        HLOG_WARN(QObject::tr("Ignoring invalid action invocation to: [%1].").arg(
+        HLOG_WARN(QString("Ignoring invalid action invocation to: [%1].").arg(
             invokeActionRequest.serviceUrl().toString()));
 
         mi.setKeepAlive(false);
@@ -296,7 +315,7 @@ void DeviceHostHttpServer::incomingControlRequest(
     const QtSoapType& method = soapMsg->method();
     if (!method.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid control method."));
+        HLOG_WARN("Invalid control method.");
 
         mi.setKeepAlive(false);
         m_httpHandler.send(mi, BadRequest);
@@ -309,7 +328,7 @@ void DeviceHostHttpServer::incomingControlRequest(
 
         if (!action)
         {
-            HLOG_WARN(QObject::tr("The service has no action named [%1].").arg(
+            HLOG_WARN(QString("The service has no action named [%1].").arg(
                 method.name().name()));
 
             mi.setKeepAlive(false);
@@ -370,7 +389,7 @@ void DeviceHostHttpServer::incomingControlRequest(
 
         m_httpHandler.send(mi, soapResponse.toXmlString().toUtf8(), Ok);
 
-        HLOG_DBG(QObject::tr("Control message successfully handled."));
+        HLOG_DBG("Control message successfully handled.");
     }
     catch(HException& ex)
     {
@@ -403,19 +422,33 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 
     QString requestPath = requestHdr.path();
 
-    HLOG_DBG(QObject::tr(
-        "HTTP GET request received from [%1] to [%2].").arg(
-            peer , requestPath));
-
-    // every resource a device host serves to outside is always a) tied to
-    // a device and b) prefixed with the device's UDN.
-    // ==> UDN must be valid and a hosted device has to have the specifed UDN.
+    HLOG_DBG(QString(
+        "HTTP GET request received from [%1] to [%2].").arg(peer, requestPath));
 
     QUuid searchedUdn(requestPath.section('/', 1, 1));
     if (searchedUdn.isNull())
     {
-        HLOG_DBG(QObject::tr("Responding NOT_FOUND [%1] to [%2].").arg(
-                requestHdr.path(), peerAsStr(mi.socket())));
+        // the request did not have the UDN prefix, which means that either
+        // 1) the request was for a SCPD that was defined with an absolute URL
+        //    in the device description or
+        // 2) the request is invalid
+
+        HServiceController* service =
+            m_deviceStorage.searchServiceByScpdUrl(requestPath);
+
+        if (service)
+        {
+            HLOG_DBG(QString(
+                "Sending service description to [%1] as requested.").arg(peer));
+
+            m_httpHandler.send(
+                mi, service->m_service->serviceDescription().toUtf8(), Ok);
+
+            return;
+        }
+
+        HLOG_DBG(QString("Responding NOT_FOUND [%1] to [%2].").arg(
+            requestHdr.path(), peerAsStr(mi.socket())));
 
         m_httpHandler.send(mi, NotFound);
         return;
@@ -425,8 +458,8 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 
     if (!device)
     {
-        HLOG_DBG(QObject::tr("Responding NOT_FOUND [%1] to [%2].").arg(
-                requestHdr.path(), peerAsStr(mi.socket())));
+        HLOG_DBG(QString("Responding NOT_FOUND [%1] to [%2].").arg(
+            requestHdr.path(), peerAsStr(mi.socket())));
 
         m_httpHandler.send(mi, NotFound);
         return;
@@ -434,7 +467,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 
     if (requestPath.endsWith(HDevicePrivate::deviceDescriptionPostFix()))
     {
-        HLOG_DBG(QObject::tr(
+        HLOG_DBG(QString(
             "Sending device description to [%1] as requested.").arg(peer));
 
         m_httpHandler.send(
@@ -451,7 +484,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 
     if (service)
     {
-        HLOG_DBG(QObject::tr(
+        HLOG_DBG(QString(
             "Sending service description to [%1] as requested.").arg(peer));
 
         m_httpHandler.send(
@@ -469,23 +502,23 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
         QBuffer buffer(&ba);
         if (!buffer.open(QIODevice::WriteOnly))
         {
-            HLOG_WARN(QObject::tr("Failed to serialize the icon."));
+            HLOG_WARN("Failed to serialize the icon.");
             return;
         }
 
         if (!icon.second.save(&buffer, "png"))
         {
-            HLOG_WARN(QObject::tr("Failed to serialize the icon."));
+            HLOG_WARN("Failed to serialize the icon.");
             return;
         }
 
-        HLOG_DBG(QObject::tr("Sending icon to [%1] as requested.").arg(peer));
+        HLOG_DBG(QString("Sending icon to [%1] as requested.").arg(peer));
 
         m_httpHandler.send(mi, ba, Ok);
         return;
     }
 
-    HLOG_DBG(QObject::tr("Responding NOT_FOUND [%1] to [%2].").arg(
+    HLOG_DBG(QString("Responding NOT_FOUND [%1] to [%2].").arg(
         requestHdr.path(), peerAsStr(mi.socket())));
 
     m_httpHandler.send(mi, NotFound);

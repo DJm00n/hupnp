@@ -43,7 +43,7 @@ ControlPointNavigator::~ControlPointNavigator()
     delete m_rootItem;
 }
 
-void ControlPointNavigator::rootDeviceAdded(HRootDevicePtrT newDevice)
+void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
 {
     DeviceItem* deviceItem = new DeviceItem(newDevice, m_rootItem);
 
@@ -88,12 +88,12 @@ void ControlPointNavigator::rootDeviceAdded(HRootDevicePtrT newDevice)
     endInsertRows();
 }
 
-void ControlPointNavigator::rootDeviceRemoved(const HDeviceInfo& deviceInfo)
+void ControlPointNavigator::rootDeviceOffline(HDevice* device)
 {    
     for(qint32 i = 0; i < m_rootItem->childCount(); ++i)
     {
         DeviceItem* deviceItem = static_cast<DeviceItem*>(m_rootItem->child(i));
-        if (deviceItem->device()->deviceInfo() == deviceInfo)
+        if (deviceItem->device() == device)
         {
             beginRemoveRows(QModelIndex(), i, i);
 

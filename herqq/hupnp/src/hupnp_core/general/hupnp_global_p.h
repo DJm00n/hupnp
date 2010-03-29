@@ -121,6 +121,17 @@ inline QUrl extractBaseUrl(const QUrl& url)
 }
 
 //
+//
+//
+inline QString extractHostPart(const QUrl& arg)
+{
+    return arg.toString(
+        QUrl::RemovePassword | QUrl::RemoveUserInfo |
+        QUrl::StripTrailingSlash | QUrl::RemovePath | QUrl::RemoveQuery |
+        QUrl::RemoveFragment);
+}
+
+//
 // Returns the part + query + fragment (== request in entirety) sections of the url
 //
 inline QString extractRequestPart(const QUrl& arg)
@@ -129,6 +140,11 @@ inline QString extractRequestPart(const QUrl& arg)
         QUrl::RemoveAuthority | QUrl::RemovePassword | QUrl::RemoveUserInfo |
         QUrl::RemoveScheme | QUrl::RemovePort | QUrl::StripTrailingSlash);
 }
+
+//
+//
+//
+QUrl resolveUri(const QUrl& baseUrl, const QUrl& relativeUrl);
 
 //
 //

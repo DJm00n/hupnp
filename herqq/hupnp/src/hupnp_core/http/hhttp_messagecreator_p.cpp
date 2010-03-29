@@ -473,6 +473,11 @@ bool HHttpMessageCreator::create(
 {
     HLOG(H_AT, H_FUN);
 
+    if (!respHdr.isValid() || respHdr.statusCode() != 200)
+    {
+        return false;
+    }
+
     HSid      sid     = HSid(respHdr.value("SID"));
     HTimeout  timeout = HTimeout(respHdr.value("TIMEOUT"));
     QString   server  = respHdr.value("SERVER");

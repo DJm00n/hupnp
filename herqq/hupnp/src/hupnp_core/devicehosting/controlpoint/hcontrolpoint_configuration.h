@@ -94,6 +94,17 @@ public:
     HDeviceCreator deviceCreator() const;
 
     /*!
+     * Indicates whether to automatically subscribe to all events on all services
+     * of a device when a new device is added into the control of an HControlPoint.
+     *
+     * \return \e true in case the HControlPoint instance should subscribe to all
+     * events of all services of a newly added device.
+     *
+     * \sa setSubscribeToEvents()
+     */
+    bool subscribeToEvents() const;
+
+    /*!
      * Sets the callable entity that is used to create HDevice instances.
      *
      * Setting the device creator is useful when you want to create the
@@ -177,6 +188,18 @@ public:
      * at all. This is different with device hosts.
      */
     void setDeviceCreator(HDeviceCreator deviceCreator);
+
+    /*!
+     * Sets whether to automatically subscribe to all events on all services
+     * of a device when a new device is added into the control of an HControlPoint.
+     *
+     * \param subscribeAutomatically when \e true an HControlPoint instance
+     * should by default subscribe to all events of all services of a newly added
+     * device.
+     *
+     * \sa subscribeToEvents()
+     */
+    void setSubscribeToEvents(bool subscribeAutomatically);
 };
 
 }

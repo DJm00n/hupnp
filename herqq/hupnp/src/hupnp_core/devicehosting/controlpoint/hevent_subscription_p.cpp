@@ -22,6 +22,7 @@
 #include "hevent_subscription_p.h"
 
 #include "./../../http/hhttp_server_p.h"
+#include "./../../devicemodel/hdevice.h"
 #include "./../../devicemodel/hservice.h"
 #include "./../../devicemodel/hservice_p.h"
 #include "./../../general/hupnp_global_p.h"
@@ -30,8 +31,7 @@
 #include "./../../../utils/hlogger_p.h"
 #include "./../../../utils/hexceptions_p.h"
 
-#include <QTcpSocket>
-#include <QThreadPool>
+#include <QThread>
 
 namespace Herqq
 {
@@ -40,53 +40,17 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * RenewSubscription definition
- ******************************************************************************/
-RenewSubscription::RenewSubscription(HServiceSubscribtion* owner) :
-    m_owner(owner)
-{
-    Q_ASSERT(m_owner);
-}
-
-void RenewSubscription::run()
-{
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
-
-    QMutexLocker lock(&m_owner->m_subscriptionMutex);
-
-    try
-    {
-        if (m_owner->m_sid.isNull())
-        {
-            m_owner->subscribe();
-        }
-        else
-        {
-            m_owner->renewSubscription();
-            Q_ASSERT(!m_owner->m_sid.isNull());
-        }
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(QObject::tr("Subscription failed: %1").arg(ex.reason()));
-        emit m_owner->startTimer(30000);
-    }
-}
-
-/*******************************************************************************
  * HServiceSubscribtion definition
  ******************************************************************************/
 HServiceSubscribtion::HServiceSubscribtion(
-    const QByteArray& loggingIdentifier,
-    HHttpHandler& http, const QList<QUrl>& deviceLocations,
-    HServiceController* service, const QUrl& serverRootUrl,
-    QThreadPool* threadPool, QObject* parent) :
+    const QByteArray& loggingIdentifier, HServiceController* service,
+    const QUrl& serverRootUrl, QObject* parent) :
         QObject(parent),
             m_loggingIdentifier(loggingIdentifier),
-            m_threadPool       (threadPool),
-            m_subscriptionMutex(QMutex::Recursive),
             m_randomIdentifier (QUuid::createUuid()),
-            m_deviceLocations  (deviceLocations),
+            m_deviceLocations(),
+            m_nextLocationToTry(0),
+            m_eventUrl(),
             m_sid(),
             m_seq(0),
             m_timeout(),
@@ -95,17 +59,20 @@ HServiceSubscribtion::HServiceSubscribtion(
             m_announcementTimedOut(false),
             m_service(service),
             m_serverRootUrl(serverRootUrl),
-            m_lastConnectedLocation(),
-            m_exiting(false),
-            m_http(http)
+            m_http(loggingIdentifier, this),
+            m_socket(),
+            m_currentOpType(Op_None),
+            m_nextOpType(Op_None),
+            m_subscribed(false)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(m_service);
-    Q_ASSERT(m_threadPool);
     Q_ASSERT(!m_serverRootUrl.isEmpty());
     Q_ASSERT_X(m_serverRootUrl.isValid(), H_AT,
              m_serverRootUrl.toString().toLocal8Bit());
+
+    m_deviceLocations = service->m_service->parentDevice()->locations();
 
     Q_ASSERT(m_deviceLocations.size() > 0);
     for(qint32 i = 0; i < m_deviceLocations.size(); ++i)
@@ -127,239 +94,418 @@ HServiceSubscribtion::HServiceSubscribtion(
 
     Q_ASSERT(ok);
 
-    ok = connect(
-        this, SIGNAL(startTimer(int)),
-        &m_subscriptionTimer, SLOT(start(int)));
+    ok = connect(&m_socket, SIGNAL(connected()), this, SLOT(connected()));
 
     Q_ASSERT(ok);
 
     ok = connect(
-        this, SIGNAL(stopTimer()),
-        &m_subscriptionTimer, SLOT(stop()));
+        &m_http, SIGNAL(msgIoComplete(HHttpAsyncOperation*)),
+        this, SLOT(msgIoComplete(HHttpAsyncOperation*)),
+        Qt::DirectConnection);
+
+    Q_ASSERT(ok);
+
+    ok = connect(
+        this, SIGNAL(resubscribeRequired_()),
+        this, SLOT(resubscribe()));
 
     Q_ASSERT(ok);
 }
 
 HServiceSubscribtion::~HServiceSubscribtion()
 {
-    HLOG(H_AT, H_FUN);
-
-    // cannot exit the destructor until it is certain that no thread is running
-    // a RenewSubscription instance, since they hold and use a pointer to this instance
-
-    m_exiting = true;
-
-    QMutexLocker lock(&m_subscriptionMutex);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
 void HServiceSubscribtion::subscriptionTimeout()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     m_subscriptionTimer.stop();
 
-    QMutexLocker lock(&m_subscriptionMutex);
-
-    if (m_exiting)
+    if (m_sid.isNull())
     {
-        return;
+        subscribe();
     }
-
-    m_threadPool->start(new RenewSubscription(this));
+    else
+    {
+        renewSubscription();
+    }
 }
 
 void HServiceSubscribtion::announcementTimeout()
 {
-    HLOG(H_AT, H_FUN);
-
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     m_announcementTimedOut = true;
 }
 
 void HServiceSubscribtion::resetSubscription()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     m_seq = 0;
     m_sid = HSid();
+    m_eventUrl = QUrl();
     m_timeout = HTimeout();
-    m_lastConnectedLocation = QUrl();
+    m_nextLocationToTry = 0;
+    m_currentOpType = Op_None;
+    m_subscribed = false;
+    m_connectErrorCount = 0;
+    m_subscriptionTimer.stop();
+
+    if (m_socket.state() == QAbstractSocket::ConnectedState)
+    {
+        m_socket.disconnectFromHost();
+    }
 }
 
-bool HServiceSubscribtion::connectToDevice(
-    QTcpSocket* sock, QUrl* connectedBaseUrl, bool useLastLocation)
+void HServiceSubscribtion::runNextOp()
 {
-    HLOG(H_AT, H_FUN);
-    Q_ASSERT(sock);
-    Q_ASSERT(connectedBaseUrl);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QTime stopWatch;
-    qint32 waitTime = m_exiting ? 500 : 5000;
+    OperationType curOp = m_currentOpType;
+    m_currentOpType = Op_None;
 
-    if (useLastLocation)
+    switch(curOp)
     {
-        Q_ASSERT(m_lastConnectedLocation.isValid() &&
-                !m_lastConnectedLocation.isEmpty());
+    case Op_None:
+        break;
 
-        sock->connectToHost(
-            m_lastConnectedLocation.host(), m_lastConnectedLocation.port());
+    case Op_Subscribe:
+        subscribe();
+        break;
 
-        stopWatch.start();
-        while(stopWatch.elapsed() < waitTime)
-        {
-            if (sock->waitForConnected(50))
-            {
-                *connectedBaseUrl = extractBaseUrl(m_lastConnectedLocation);
-                return true;
-            }
-        }
+    case Op_Renew:
+        renewSubscription();
+        break;
 
-        return false;
-    }
-
-    foreach(QUrl url, m_deviceLocations)
-    {
-        Q_ASSERT(!url.isEmpty());
-        Q_ASSERT(url.isValid());
-
-        sock->connectToHost(url.host(), url.port());
-
-        stopWatch.start();
-        while(stopWatch.elapsed() < waitTime)
-        {
-            if (sock->waitForConnected(50))
-            {
-                m_lastConnectedLocation = url;
-                *connectedBaseUrl = extractBaseUrl(m_lastConnectedLocation);
-                return true;
-            }
-        }
-    }
-
-    return false;
+    case Op_Unsubscribe:
+        unsubscribe();
+        break;
+    };
 }
 
-HService* HServiceSubscribtion::service() const
+void HServiceSubscribtion::connected()
 {
-    return m_service->m_service;
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    bool ok = disconnect(
+        &m_socket, SIGNAL(error(QAbstractSocket::SocketError)),
+        this, SLOT(error(QAbstractSocket::SocketError)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    m_connectErrorCount = 0;
+    runNextOp();
+}
+
+void HServiceSubscribtion::msgIoComplete(HHttpAsyncOperation* op)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    Q_ASSERT(op);
+
+    switch(m_currentOpType)
+    {
+    case Op_Subscribe:
+        subscribe_done(op);
+        break;
+
+    case Op_Renew:
+        renewSubscription_done(op);
+        break;
+
+    case Op_Unsubscribe:
+        unsubscribe_done(op);
+        break;
+
+    default:
+        Q_ASSERT(false);
+        break;
+    };
+
+    if (m_socket.state() == QTcpSocket::ConnectedState)
+    {
+        m_socket.disconnectFromHost();
+    }
+
+    delete op;
+
+    if (m_nextOpType != Op_None)
+    {
+        m_currentOpType = m_nextOpType;
+        m_nextOpType = Op_None;
+
+        runNextOp();
+    }
+    else
+    {
+        m_currentOpType = Op_None;
+    }
+}
+
+void HServiceSubscribtion::renewSubscription_done(HHttpAsyncOperation* op)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    Q_ASSERT(!m_sid.isNull());
+    Q_ASSERT(m_currentOpType == Op_Renew);
+
+    if (op->state() == HHttpAsyncOperation::Failed)
+    {
+        HLOG_WARN("Event subscription renewal failed.");
+        emit subscriptionFailed(this);
+        return;
+    }
+
+    const QHttpResponseHeader* hdr =
+        static_cast<const QHttpResponseHeader*>(op->headerRead());
+
+    Q_ASSERT(hdr);
+
+    SubscribeResponse response;
+    if (!HHttpMessageCreator::create(*hdr, response))
+    {
+        HLOG_WARN("Received an invalid response to event subscription renewal.");
+        emit subscriptionFailed(this);
+        return;
+    }
+
+    if (response.sid() != m_sid)
+    {
+        // TODO, in this case could re-subscribe
+        HLOG_WARN(QString(
+            "Received an invalid SID [%1] to event subscription [%2] renewal").arg(
+                response.sid().toString(), m_sid.toString()));
+        emit subscriptionFailed(this);
+        return;
+    }
+
+    m_subscribed = true;
+
+    HLOG_DBG(QString("Subscription renewal to [%1] succeeded [sid: %2].").arg(
+        m_eventUrl.toString(), m_sid.toString()));
+
+    m_timeout = response.timeout();
+    if (!m_timeout.isInfinite())
+    {
+        m_subscriptionTimer.start(m_timeout.value() * 1000 / 2);
+    }
+}
+
+void HServiceSubscribtion::renewSubscription()
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    if (m_currentOpType != Op_None || m_sid.isNull())
+    {
+        return;
+    }
+
+    m_announcementTimer.stop();
+
+    m_currentOpType = Op_Renew;
+
+    if (!connectToDevice())
+    {
+        return;
+    }
+
+    HLOG_DBG(QString("Renewing subscription [sid: %1].").arg(
+        m_sid.toString()));
+
+    QUrl eventUrl = resolveUri(
+        extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
+        m_service->m_service->eventSubUrl());
+
+    MessagingInfo* mi = new MessagingInfo(m_socket, false);
+    mi->setHostInfo(eventUrl);
+
+    SubscribeRequest req(eventUrl, m_sid, HTimeout(1800));
+    QByteArray data = HHttpMessageCreator::create(req, *mi);
+
+    if (!m_http.msgIo(mi, data))
+    {
+        HLOG_WARN(QString("Failed to renew subscription [sid %1].").arg(
+            m_sid.toString()));
+        emit subscriptionFailed(this);
+    }
+}
+
+void HServiceSubscribtion::resubscribe()
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    if (m_sid.isNull())
+    {
+        subscribe();
+    }
+    else
+    {
+        unsubscribe();
+    }
+}
+
+void HServiceSubscribtion::error(QAbstractSocket::SocketError /*err*/)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    // this can be called only when connecting to host
+
+    if (++m_connectErrorCount >= m_deviceLocations.size() * 2)
+    {
+        return;
+    }
+
+    if (m_nextLocationToTry >= m_deviceLocations.size() - 1)
+    {
+        m_nextLocationToTry = 0;
+    }
+    else
+    {
+        ++m_nextLocationToTry;
+    }
+
+    connectToDevice();
+}
+
+bool HServiceSubscribtion::connectToDevice(qint32 msecsToWait)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    Q_ASSERT(m_currentOpType != Op_None);
+    Q_ASSERT(thread() == QThread::currentThread());
+
+    if (m_socket.state() == QTcpSocket::ConnectedState)
+    {
+        return true;
+    }
+
+    QUrl lastLoc = m_deviceLocations[m_nextLocationToTry];
+
+    bool ok = connect(
+        &m_socket, SIGNAL(error(QAbstractSocket::SocketError)),
+        this, SLOT(error(QAbstractSocket::SocketError)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    m_socket.connectToHost(lastLoc.host(), lastLoc.port());
+    if (msecsToWait > 0)
+    {
+        m_socket.waitForConnected(msecsToWait);
+    }
+
+    return m_socket.state() == QAbstractSocket::ConnectedState;
+}
+
+void HServiceSubscribtion::subscribe_done(HHttpAsyncOperation* op)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    Q_ASSERT(m_sid.isNull());
+    Q_ASSERT(m_currentOpType == Op_Subscribe);
+
+    if (op->state() == HHttpAsyncOperation::Failed)
+    {
+        HLOG_WARN(QString("Event subscription failed: [%1]").arg(
+            op->messagingInfo()->lastErrorDescription()));
+
+        emit subscriptionFailed(this);
+        return;
+    }
+
+    const QHttpResponseHeader* hdr =
+        static_cast<const QHttpResponseHeader*>(op->headerRead());
+
+    Q_ASSERT(hdr);
+
+    SubscribeResponse response;
+    if (!HHttpMessageCreator::create(*hdr, response))
+    {
+        HLOG_WARN(QString("Failed to subscribe: %1.").arg(hdr->toString()));
+        emit subscriptionFailed(this);
+        return;
+    }
+
+    m_seq = 0;
+    m_sid = response.sid();
+    m_subscribed = true;
+    m_timeout = response.timeout();
+
+    HLOG_DBG(QString("Subscription to [%1] succeeded. Received SID: [%2]").arg(
+        m_eventUrl.toString(), m_sid.toString()));
+
+    if (!m_timeout.isInfinite())
+    {
+        m_subscriptionTimer.start(m_timeout.value() * 1000 / 2);
+    }
+
+    emit subscribed(this);
 }
 
 void HServiceSubscribtion::subscribe()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    emit stopTimer();
-
-    QMutexLocker lock(&m_subscriptionMutex);
-
-    if (m_exiting)
+    switch(m_currentOpType)
     {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling subscription attempt."));
+    case Op_None:
+        if (m_subscribed)
+        {
+            return;
+        }
+        m_currentOpType = Op_Subscribe;
+        break;
+
+    case Op_Renew:
+    case Op_Subscribe:
+        if (m_nextOpType != Op_None)
+        {
+            m_nextOpType = Op_None;
+        }
+        return;
+
+    case Op_Unsubscribe:
+        m_nextOpType = Op_Subscribe;
+        return;
     }
 
-    Q_ASSERT(m_sid.isNull());
-
-    QUrl baseUrl;
-    QTcpSocket sock;
-    if (!connectToDevice(&sock, &baseUrl, false))
+    if (!m_sid.isNull())
     {
-        throw HSocketException(QObject::tr(
-            "Failed to subscribe to events [%1]: couldn't connect to the target device @ :\n%2").
-                arg(sock.errorString(), urlsAsStr(m_deviceLocations)));
+        HLOG_DBG("Ignoring subscription request, since subscription is already active");
+        return;
     }
 
-    QUrl eventUrl = appendUrls(baseUrl, m_service->m_service->eventSubUrl());
-
-    HLOG_DBG(QObject::tr("Attempting to subscribe to [%1]").arg(
-        eventUrl.toString()));
-
-    SubscribeRequest req(
-        eventUrl, herqqProductTokens(),
-        m_serverRootUrl.toString().append("/").append(
-            m_randomIdentifier.toString().remove('{').remove('}')),
-        HTimeout(1800));
-
-    if (m_exiting)
-    {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling subscription attempt."));
-    }
-
-    MessagingInfo mi(sock, true);
-    mi.setHostInfo(eventUrl);
-
-    SubscribeResponse response;
-    HHttpHandler::ReturnValue rv = m_http.msgIO(mi, req, response);
-
-    if (rv != HHttpHandler::Success)
-    {
-        throw HOperationFailedException(
-            QObject::tr("Event subscription failed."));
-    }
-
-    if (!response.isValid())
-    {
-        throw HOperationFailedException(
-            QObject::tr("Invalid response to event subscription."));
-    }
-
-    HLOG_DBG(QObject::tr("Subscription to [%1] succeeded. Received SID: [%2]").arg(
-        eventUrl.toString(), response.sid().toString()));
-
-    m_seq = 0;
-    m_sid = response.sid();
-    m_timeout = response.timeout();
-
-    if (!m_timeout.isInfinite())
-    {
-        emit startTimer(m_timeout.value() * 1000 / 2);
-    }
-
-    if (!mi.keepAlive() || sock.state() != QTcpSocket::ConnectedState)
+    if (!connectToDevice())
     {
         return;
     }
 
-    // the connection is still open and the device did not specify that it will
-    // close the connection. attempt to read the initial notify.
-    //
-    // according to the UDA spec., the device should send the initial
-    // notify event using the same connection, unless the connection shouldn't
-    // be kept alive, which it should, as we didn't specify otherwise. However,
-    // the HTTP keep-alive appears to be something that is either misunderstood
-    // and/or poorly implemented, which is why we can't be (unfortunately)
-    // too strict about it. ==> we don't care if we can't read initial notify.
+    m_eventUrl = resolveUri(
+        extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
+        m_service->m_service->eventSubUrl());
 
-    if (m_exiting)
-    {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling subscription attempt."));
-    }
+    MessagingInfo* mi = new MessagingInfo(m_socket, false);
+    mi->setHostInfo(m_eventUrl);
 
-    mi.setReceiveTimeoutForNoData(3000);
+    SubscribeRequest req(
+        m_eventUrl, herqqProductTokens(),
+        m_serverRootUrl.toString().append("/").append(
+            m_randomIdentifier.toString().remove('{').remove('}')),
+        HTimeout(1800));
 
-    NotifyRequest notifyReq;
-    NotifyRequest::RetVal notifyRv;
-    if (m_http.receive(mi, notifyReq, notifyRv) != HHttpHandler::Success ||
-        notifyRv != NotifyRequest::Success)
+    QByteArray data = HHttpMessageCreator::create(req, *mi);
+
+    HLOG_DBG(QString("Attempting to subscribe to [%1]").arg(
+        m_eventUrl.toString()));
+
+    if (!m_http.msgIo(mi, data))
     {
-        HLOG_WARN(QObject::tr(
-            "Failed to read initial notify event from the device. "
-            "It could be that the device does not honor the HTTP keep-alive."));
-    }
-    else
-    {
-        mi.setKeepAlive(false);
-        try
-        {
-            onNotify(mi, notifyReq);
-        }
-        catch(HException& ex)
-        {
-            HLOG_WARN(QObject::tr(
-                "Failed to process initial notify event from the device: %1. ").
-                    arg(ex.reason()));
-        }
+        HLOG_WARN(QString(
+            "Failed to subscribe to events @ [%1]: %2").arg(
+                urlsAsStr(m_deviceLocations), m_socket.errorString()));
+
+        emit subscriptionFailed(this);
     }
 }
 
@@ -368,30 +514,31 @@ void HServiceSubscribtion::onNotify(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QMutexLocker lock(&m_subscriptionMutex);
-
-    if (m_exiting)
+    if (!isSubscribed())
     {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling notification processing."));
-    }
-
-    HLOG_DBG(QObject::tr("Processing notification [sid: %1, seq: %2].").arg(
-        m_sid.toString(), QString::number(req.seq())));
-
-    if (m_sid != req.sid())
-    {
-        HLOG_WARN(QObject::tr("Invalid SID [%1]").arg(req.sid().toString()));
-
-        mi.setKeepAlive(false);
-        m_http.send(mi, PreconditionFailed);
+        HLOG_WARN("Ignoring notify: subscription inactive.");
         return;
     }
 
-    quint32 seq = req.seq();
+    HLOG_DBG(QString("Processing notification [sid: %1, seq: %2].").arg(
+        m_sid.toString(), QString::number(req.seq())));
+
+    HHttpHandler http(m_loggingIdentifier);
+
+    if (m_sid != req.sid())
+    {
+        HLOG_WARN(QString("Invalid SID [%1]").arg(req.sid().toString()));
+
+        mi.setKeepAlive(false);
+        http.send(mi, PreconditionFailed);
+        return;
+    }
+
+    QMutexLocker locker(&m_seqLock);
+    qint32 seq = req.seq();
     if (seq != m_seq)
     {
-        HLOG_WARN(QObject::tr(
+        HLOG_WARN(QString(
             "Received sequence number is not expected. Expected [%1], got [%2]. "
             "Re-subscribing...").arg(
                 QString::number(m_seq), QString::number(seq)));
@@ -399,207 +546,103 @@ void HServiceSubscribtion::onNotify(
         // in this case the received sequence number does not match to what is
         // expected. UDA instructs to re-subscribe in this scenario.
 
-        resubscribe();
-
-        // no need to dispatch the request to a separate thread to avoid blocking
-        // the control point's "main" thread, since
-        // this method is already executed in a thread pool thread
-
+        emit resubscribeRequired_();
         return;
     }
 
     if (m_service->updateVariables(req.variables(), m_seq > 0))
     {
-        HLOG_DBG(QObject::tr(
+        HLOG_DBG(QString(
             "Notify [sid: %1, seq: %2] OK. State variable(s) were updated.").arg(
                 m_sid.toString(), QString::number(m_seq)));
 
         ++m_seq;
-        m_http.send(mi, Ok);
+        http.send(mi, Ok);
     }
     else
     {
-        HLOG_WARN(QObject::tr("Notify failed. State variable(s) were not updated."));
+        HLOG_WARN(QString("Notify failed. State variable(s) were not updated."));
         mi.setKeepAlive(false);
-        m_http.send(mi, InternalServerError);
+        http.send(mi, InternalServerError);
     }
 }
 
-void HServiceSubscribtion::resubscribe()
+void HServiceSubscribtion::unsubscribe_done(HHttpAsyncOperation* /*op*/)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    QMutexLocker lock(&m_subscriptionMutex);
-
-    if (m_exiting)
-    {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling re-subscription"));
-    }
-
-    try
-    {
-        if (!m_sid.isNull())
-        {
-            unsubscribe(false);
-        }
-
-        if (m_exiting)
-        {
-            throw HShutdownInProgressException(
-                QObject::tr("Shutting down. Canceling subscription attempt."));
-        }
-
-        Q_ASSERT(m_sid.isNull());
-
-        subscribe();
-
-        Q_ASSERT(!m_sid.isNull());
-    }
-    catch(HShutdownInProgressException&)
-    {
-        throw;
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(QObject::tr("Re-subscription failed: %1.").arg(ex.reason()));
-        emit startTimer(30000);
-    }
-}
-
-void HServiceSubscribtion::renewSubscription()
-{
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    emit stopTimer();
-
-    QMutexLocker lock(&m_subscriptionMutex);
-
-    if (m_exiting)
-    {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling subscription renewal [sid %1].").
-                arg(m_sid.toString()));
-    }
 
     Q_ASSERT(!m_sid.isNull());
+    Q_ASSERT(m_currentOpType == Op_Unsubscribe);
 
-    HLOG_DBG(QObject::tr("Renewing subscription [sid: %1].").arg(
-        m_sid.toString()));
+    HLOG_DBG(QString("Subscription to [%1] canceled").arg(
+        m_eventUrl.toString()));
 
-    QUrl baseUrl;
-    QTcpSocket sock;
-    if (!connectToDevice(&sock, &baseUrl, true))
-    {
-        throw HSocketException(QObject::tr(
-            "Failed to renew event subscription [sid %1]: couldn't connect to the target device").arg(
-                m_sid.toString()));
-    }
-
-    QUrl eventUrl = appendUrls(baseUrl, m_service->m_service->eventSubUrl());
-
-    if (m_exiting)
-    {
-        throw HShutdownInProgressException(
-            QObject::tr("Shutting down. Canceling subscription attempt."));
-    }
-
-    MessagingInfo mi(sock, false);
-    mi.setHostInfo(eventUrl);
-
-    SubscribeRequest req(eventUrl, m_sid, HTimeout(1800));
-    SubscribeResponse response;
-
-    HHttpHandler::ReturnValue rv = m_http.msgIO(mi, req, response);
-
-    if (rv != HHttpHandler::Success)
-    {
-        throw HOperationFailedException(
-            QObject::tr("Re-subscribtion [sid %1] failed.").arg(
-                m_sid.toString()));
-    }
-
-    if (!response.isValid())
-    {
-        throw HOperationFailedException(
-            QObject::tr("Invalid response to re-subscribe [sid %1].").arg(
-                m_sid.toString()));
-    }
-
-    if (response.sid() != m_sid)
-    {
-        throw HOperationFailedException(
-            QObject::tr("Invalid SID [%1] received while renewing subscription [%2]").arg(
-                response.sid().toString(), m_sid.toString()));
-    }
-
-    HLOG_DBG(QObject::tr("Renewal to [%1] succeeded [sid: %2].").arg(
-        eventUrl.toString(), m_sid.toString()));
-
-    m_timeout = response.timeout();
-    if (!m_timeout.isInfinite())
-    {
-        emit startTimer(m_timeout.value() * 1000 / 2);
-    }
+    resetSubscription();
+    emit unsubscribed(this);
 }
 
-void HServiceSubscribtion::unsubscribe(bool exiting)
+void HServiceSubscribtion::unsubscribe(qint32 msecsToWait)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    emit stopTimer();
-
-    QMutexLocker lock(&m_subscriptionMutex);
-
-    m_exiting = exiting;
-
-    if (m_sid.isNull())
+    switch(m_currentOpType)
     {
-        resetSubscription();
+    case Op_None:
+        if (!m_subscribed)
+        {
+            return;
+        }
+        m_currentOpType = Op_Unsubscribe;
+        break;
+
+    case Op_Renew:
+    case Op_Subscribe:
+        m_nextOpType = Op_Unsubscribe;
+        return;
+
+    case Op_Unsubscribe:
+        if (m_nextOpType != Op_None)
+        {
+            m_nextOpType = Op_None;
+        }
         return;
     }
 
-    QUrl baseUrl;
-    QTcpSocket sock;
-    if (!connectToDevice(&sock, &baseUrl, true))
-    {
-        // no matter what happens here, after calling the unsubscribe() the object
-        // must enter "fresh" state. there are many scenarios where unsubscription will
-        // fail and there's absolutely no point in trying to make sure that the event
-        // publisher has received the message.
-        resetSubscription();
+    m_subscriptionTimer.stop();
 
-        throw HSocketException(QObject::tr(
-            "Failed to cancel event subscription: couldn't connect to the target device"));
+    if (!connectToDevice(msecsToWait))
+    {
+        return;
     }
 
-    QUrl eventUrl = appendUrls(baseUrl, m_service->m_service->eventSubUrl());
+    m_eventUrl = resolveUri(
+        extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
+        m_service->m_service->eventSubUrl());
 
-    HLOG_DBG(QObject::tr("Attempting to cancel event subscription from [%1]").arg(
-        eventUrl.toString()));
+    HLOG_DBG(QString(
+        "Attempting to cancel event subscription from [%1]").arg(
+            m_eventUrl.toString()));
 
-    MessagingInfo mi(sock, false, m_exiting ? 10000 : 1000);
-    mi.setHostInfo(eventUrl);
+    MessagingInfo* mi = new MessagingInfo(m_socket, false);
+    mi->setHostInfo(m_eventUrl);
 
-    UnsubscribeRequest req(eventUrl, m_sid);
-    HHttpHandler::ReturnValue rv = m_http.msgIO(mi, req);
+    UnsubscribeRequest req(m_eventUrl, m_sid);
+    QByteArray data = HHttpMessageCreator::create(req, *mi);
 
-    if (rv)
+    if (!m_http.msgIo(mi, data))
     {
-        HLOG_DBG(QObject::tr(
+        HLOG_WARN(QString(
             "Encountered an error during subscription cancellation: %1").arg(
-                mi.lastErrorDescription()));
+                mi->lastErrorDescription()));
 
         // if the unsubscription "failed", there's nothing much to do, but to log
         // the error and perhaps to retry. Then again, UPnP has expiration mechanism
         // for events and thus even if the device failed to process the request, eventually
         // the subscription will expire.
+
+        resetSubscription();
+        emit unsubscribed(this);
     }
-
-    HLOG_DBG(QObject::tr("Subscription to [%1] canceled").arg(
-        eventUrl.toString()));
-
-    resetSubscription();
 }
 
 }

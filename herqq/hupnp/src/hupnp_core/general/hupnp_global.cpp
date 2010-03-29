@@ -101,8 +101,8 @@ void verifySpecVersion(const QDomElement& rootElement)
     QDomElement specVersionElement = rootElement.firstChildElement("specVersion");
     if (specVersionElement.isNull())
     {
-        throw HIllegalArgumentException(QObject::tr(
-            "Invalid device description: missing mandatory <specVersion> element"));
+        throw HIllegalArgumentException(
+            "Invalid device description: missing mandatory <specVersion> element");
     }
 
     QString minorVersion = readElementValue("minor", specVersionElement);
@@ -112,15 +112,15 @@ void verifySpecVersion(const QDomElement& rootElement)
     qint32 major = majorVersion.toInt(&ok);
     if (!ok || major != 1)
     {
-        throw HIllegalArgumentException(QObject::tr(
-            "Invalid device description: major element of <specVersion> is not 1"));
+        throw HIllegalArgumentException(
+            "Invalid device description: major element of <specVersion> is not 1");
     }
 
     qint32 minor = minorVersion.toInt(&ok);
     if (!ok || (minor != 1 && minor != 0))
     {
-        throw HIllegalArgumentException(QObject::tr(
-            "Invalid device description: minor element of <specVersion> is not 0 or 1"));
+        throw HIllegalArgumentException(
+            "Invalid device description: minor element of <specVersion> is not 0 or 1");
     }
 }
 
@@ -145,13 +145,13 @@ QString verifyName(const QString& name)
     QString tmp = name;
     if (tmp.isEmpty())
     {
-        throw HIllegalArgumentException(QObject::tr("[name] cannot be empty"));
+        throw HIllegalArgumentException("[name] cannot be empty");
     }
 
     if (!tmp[0].isLetterOrNumber() && tmp[0] != '_')
     {
         throw HIllegalArgumentException(
-            QObject::tr("[name: %1] has invalid first character").arg(tmp));
+            QString("[name: %1] has invalid first character").arg(tmp));
     }
 
     foreach(QChar c, tmp)
@@ -159,13 +159,13 @@ QString verifyName(const QString& name)
         if (!c.isLetterOrNumber() && c != '_' && c != '.')
         {
             throw HIllegalArgumentException(
-                QObject::tr("[name: %1] contains invalid character(s)").arg(tmp));
+                QString("[name: %1] contains invalid character(s)").arg(tmp));
         }
     }
 
     if (tmp.size() > 32)
     {
-        HLOG_WARN(QObject::tr("[name: %1] longer than 32 characters").arg(tmp));
+        HLOG_WARN(QString("[name: %1] longer than 32 characters").arg(tmp));
     }
 
     return tmp;
@@ -203,7 +203,7 @@ HProductTokens herqqProductTokens()
     QString server = "Undefined/-1";
 #endif
 
-    return HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.3.0").arg(server));
+    return HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.5").arg(server));
 }
 
 QString urlsAsStr(const QList<QUrl>& urls)
@@ -219,15 +219,35 @@ QString urlsAsStr(const QList<QUrl>& urls)
     return retVal;
 }
 
-QUrl appendUrls(const QUrl& baseUrl, const QUrl& relativeUrl)
+QUrl resolveUri(const QUrl& baseUrl, const QUrl& other)
 {
-    QString relativePath(extractRequestPart(relativeUrl));
+    QString otherReq(extractRequestPart(other));
+
+    if (otherReq.startsWith('/'))
+    {
+        return QString("%1%2").arg(extractHostPart(baseUrl), otherReq);
+    }
+
     QString basePath(baseUrl.toString());
 
-    if (!basePath.endsWith('/')) { basePath.append('/'); }
-    if (relativePath.startsWith('/')) { relativePath.remove(0, 1); }
+    if (!basePath.endsWith('/'))  { basePath.append('/'); }
+    if (otherReq.startsWith('/')) { otherReq.remove(0, 1); }
 
-    basePath.append(relativePath);
+    basePath.append(otherReq);
+
+    return basePath;
+}
+
+QUrl appendUrls(const QUrl& baseUrl, const QUrl& other)
+{
+    QString otherReq(extractRequestPart(other));
+
+    QString basePath(baseUrl.toString());
+
+    if (!basePath.endsWith('/'))  { basePath.append('/'); }
+    if (otherReq.startsWith('/')) { otherReq.remove(0, 1); }
+
+    basePath.append(otherReq);
 
     return basePath;
 }

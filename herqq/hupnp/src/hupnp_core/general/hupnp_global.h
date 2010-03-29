@@ -43,6 +43,8 @@ enum LogLevel
 {
     /*!
      * No logs are generated.
+     *
+     * \remark by default, HUPnP uses this logging level.
      */
     None = 0,
 
@@ -69,7 +71,7 @@ enum LogLevel
     Warning = 3,
 
     /*!
-     * All, but debug level messages are logged. An informational message is used
+     * All but debug level messages are logged. An informational message is used
      * to log status information of control flow. A good example of an informational
      * message is when a sizable component logs the start of an initialization procedure.
      */
@@ -80,7 +82,7 @@ enum LogLevel
      * enter and exit messages.
      *
      * \remark Enabling this level of logging has notable effect on performance.
-     * This generally should be used only on debugging purposes.
+     * This generally should be used only for debugging purposes.
      */
     Debug = 5,
 

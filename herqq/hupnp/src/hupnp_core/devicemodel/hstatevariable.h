@@ -181,9 +181,9 @@ public:
      *
      * \warning the pointer is guaranteed to point to a valid object as long
      * as the \c %HStateVariable exists, which ultimately is as long as the
-     * containing HRootDevicePtrT exists.
+     * containing root HDevice exists.
      *
-     * \sa HRootDevicePtrT, HDevice
+     * \sa HDevice
      */
     HService* parentService() const;
 
@@ -308,7 +308,7 @@ public:
      * \return this instance as HWritableStateVariable when the dynamic type
      * of the instance is HWritableStateVariable. Otherwise zero is returned.
      */
-    HWritableStateVariable* toWritable();
+    HWritableStateVariable* writable();
 
     /*!
      * Attempts to cast the instance to HReadableStateVariable.
@@ -318,7 +318,7 @@ public:
      * \return this instance as HReadableStateVariable when the dynamic type
      * of the instance is HReadableStateVariable. Otherwise zero is returned.
      */
-    HReadableStateVariable* toReadable();
+    HReadableStateVariable* readable();
 
 Q_SIGNALS:
 

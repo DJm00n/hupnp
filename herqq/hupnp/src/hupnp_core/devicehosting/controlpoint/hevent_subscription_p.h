@@ -32,6 +32,7 @@
 
 #include "./../messages/hsid_p.h"
 #include "./../messages/hevent_messages_p.h"
+#include "./../../http/hhttp_asynchandler_p.h"
 
 #include "./../../general/hdefs_p.h"
 #include "./../../general/hupnp_fwd.h"
@@ -40,11 +41,8 @@
 #include <QList>
 #include <QMutex>
 #include <QTimer>
-#include <QRunnable>
+#include <QTcpSocket>
 #include <QByteArray>
-
-class QTcpSocket;
-class QThreadPool;
 
 namespace Herqq
 {
@@ -52,30 +50,10 @@ namespace Herqq
 namespace Upnp
 {
 
-class HHttpHandler;
-class HServiceSubscribtion;
-
-//
-// This class is used as a thread pool task to renew a subscription or
-// to re-subscribe.
-//
-class RenewSubscription :
-    public QRunnable
-{
-H_DISABLE_COPY(RenewSubscription)
-
-private:
-
-    HServiceSubscribtion* m_owner;
-
-public:
-
-    RenewSubscription(HServiceSubscribtion* owner);
-    virtual void run();
-};
-
 class MessagingInfo;
 class HServiceController;
+class HHttpAsyncOperation;
+class HServiceSubscribtion;
 class HControlPointPrivate;
 
 //
@@ -94,63 +72,121 @@ private:
 
     QByteArray m_loggingIdentifier;
 
-    QThreadPool* m_threadPool;
-
-    QMutex m_subscriptionMutex;
-
-    QUuid  m_randomIdentifier;
+    QUuid m_randomIdentifier;
+    // identifies the service subscription. used in the callback url
 
     QList<QUrl> m_deviceLocations;
-    HSid        m_sid;
-    quint32     m_seq;
-    HTimeout    m_timeout;
-    QTimer      m_subscriptionTimer;
+    // the URLs of the device where the desired service is located
+
+    qint32 m_nextLocationToTry;
+    // index of the device location URL that has been tried / used previously
+    // the URL identified by this index will be used until communication to the
+    // URL fails. At that time the index is incremented if there are more
+    // device locations to try.
+
+    QUrl m_eventUrl;
+    // the URL that is currently used in HTTP messaging
+
+    qint32 m_connectErrorCount;
+
+    HSid m_sid;
+    // the unique identifier of the subscription created by the upnp device
+
+    qint32 m_seq;
+    QMutex m_seqLock;
+    // the sequence number which is incremented upon each notify
+
+    HTimeout m_timeout;
+    // the timeout of the subscription. if no error occurs, the subcription will
+    // be renewed before the specified timeout elapses.
+
+    QTimer m_subscriptionTimer;
+    // used to signal the time when the subscription should be renewed
 
     QTimer        m_announcementTimer;
     volatile bool m_announcementTimedOut;
 
     HServiceController* m_service;
+    // the target service of the subscription
+
     QUrl m_serverRootUrl;
-    QUrl m_lastConnectedLocation;
+    // the URL of the server that relays the notifications to this instance.
+    // this is used in subscription requests to tell the upnp device where the
+    // notifications are to be sent
 
-    volatile bool m_exiting;
+    HHttpAsyncHandler m_http;
+    // the class used to perform HTTP messaging
 
-    HHttpHandler& m_http;
+    enum OperationType
+    {
+        Op_None = 0,
+        Op_Subscribe,
+        Op_Renew,
+        Op_Unsubscribe
+    };
+
+    QTcpSocket m_socket;
+    // socket for the messaging
+
+    OperationType m_currentOpType;
+    OperationType m_nextOpType;
+
+    volatile bool m_subscribed;
+
+    //QScopedPointer<HHttpAsyncOperation> m_currentOp;
 
 private Q_SLOTS:
 
     void subscriptionTimeout();
     void announcementTimeout();
-    void resetSubscription  ();
+
+    void connected();
+    void resubscribe();
+    void msgIoComplete(HHttpAsyncOperation*);
+
+    void renewSubscription();
+    void error(QAbstractSocket::SocketError);
 
 private:
 
-    bool connectToDevice(QTcpSocket* sock, QUrl* connectedBaseUrl, bool useLastLocation);
-    void renewSubscription();
-    void resubscribe();
+    bool connectToDevice(qint32 msecsToWait=0);
+    void subscribe_done(HHttpAsyncOperation*);
+    void renewSubscription_done(HHttpAsyncOperation*);
+    void unsubscribe_done(HHttpAsyncOperation*);
+
+    void runNextOp();
 
 Q_SIGNALS:
 
-    void startTimer(int);
-    void stopTimer();
+    void subscribed(HServiceSubscribtion*);
+    void subscriptionFailed(HServiceSubscribtion*);
+    void unsubscribed(HServiceSubscribtion*);
+
+    void resubscribeRequired_();
+    // private signal
 
 public:
 
     HServiceSubscribtion(
-        const QByteArray& loggingIdentifier, HHttpHandler& http,
-        const QList<QUrl>& deviceLocations, HServiceController* service,
-        const QUrl& serverRootUrl, QThreadPool* threadPool, QObject* parent = 0);
+        const QByteArray& loggingIdentifier,
+        HServiceController* service,
+        const QUrl& serverRootUrl,
+        QObject* parent = 0);
 
     virtual ~HServiceSubscribtion();
 
-    inline QUuid id() const  { return m_randomIdentifier ; }
-    HService* service() const;
+    inline QUuid id() const { return m_randomIdentifier ; }
+    inline HServiceController* service() const { return m_service; }
 
     void subscribe();
-
-    void unsubscribe(bool exiting);
-
+    void unsubscribe(qint32 msecsToWait=0);
+    void resetSubscription();
     void onNotify(MessagingInfo&, const NotifyRequest&);
+
+    inline bool isSubscribed() const
+    {
+        return m_subscribed;
+    }
 };
 
 

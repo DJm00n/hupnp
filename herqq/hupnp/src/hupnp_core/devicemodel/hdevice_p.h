@@ -30,6 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
+#include "hdevice.h"
 #include "./../general/hdefs_p.h"
 #include "./../general/hupnp_fwd.h"
 
@@ -47,12 +48,14 @@ namespace Herqq
 namespace Upnp
 {
 
+class HDeviceController;
+
 //
 //
 //
 class HDeviceStatus
 {
-H_DISABLE_COPY(HDeviceStatus)
+friend class HDeviceController;
 
 private:
 
@@ -60,17 +63,60 @@ private:
     qint32 m_configId;
     qint32 m_searchPort;
 
+    bool m_online;
+
 public:
 
-    HDeviceStatus ();
-    ~HDeviceStatus();
+    inline HDeviceStatus() :
+        m_bootId(0), m_configId(0), m_searchPort(0), m_online(true)
+    {
+    }
 
-    qint32  bootId    () const;
-    qint32  configId  () const;
-    quint32 searchPort() const;
+    inline qint32 bootId() const { return m_bootId; }
+    inline qint32 configId() const { return m_configId; }
+    inline qint32 searchPort() const { return m_searchPort; }
+
+    inline bool online() const { return m_online; }
+    inline void setOnline(bool arg) { m_online = arg; }
 };
 
+class HDeviceInfo;
 class HServiceController;
+
+//
+// Base class for the implementation details of HDevice
+//
+class H_UPNP_CORE_EXPORT HDevicePrivate
+{
+H_DISABLE_COPY(HDevicePrivate)
+
+public: // attributes
+
+    QScopedPointer<HDeviceInfo> m_upnpDeviceInfo;
+    QList<HDeviceController*>   m_embeddedDevices;
+    QList<HServiceController*>  m_services;
+    HDeviceController*          m_parent;
+    // ^^ this is not the "QObject" parent, but rather the parent in the
+    // device tree. In other words, this device controller contains the HDevice
+    // that is our "UPnP device parent".
+
+    HDevice*                    q_ptr;
+    QList<QUrl>                 m_locations;
+    QDomDocument                m_deviceDescription;
+
+    mutable QMutex m_locationsMutex;
+
+public: // methods
+
+    HDevicePrivate();
+    virtual ~HDevicePrivate();
+
+    inline static QString deviceDescriptionPostFix()
+    {
+        static QString retVal = "device_description.xml";
+        return retVal;
+    }
+};
 
 //
 // This is an internal class that provides more powerful interface for interacting
@@ -97,7 +143,7 @@ private Q_SLOTS:
 
 public:
 
-    QSharedPointer<HDevice> m_device;
+    HDevice* m_device;
     qint32 m_configId;
 
 public:
@@ -115,12 +161,38 @@ public:
 
     virtual ~HDeviceController();
 
-    QList<HServiceController*> services() const;
-    QList<HDeviceController*>  embeddedDevices() const;
-    HDeviceController* parentDevice() const;
-    HDeviceController* rootDevice();
-    HDeviceStatus* deviceStatus() const;
-    qint32 deviceTimeoutInSecs() const;
+    inline const QList<HServiceController*>* services() const
+    {
+        return &m_device->h_ptr->m_services;
+    }
+
+    inline const QList<HDeviceController*>* embeddedDevices() const
+    {
+        return &m_device->h_ptr->m_embeddedDevices;
+    }
+
+    inline qint32 deviceTimeoutInSecs() const
+    {
+        return m_statusNotifier->interval() / 1000;
+    }
+
+    inline HDeviceController* parentDevice() const
+    {
+        return m_device->h_ptr->m_parent;
+    }
+
+    inline HDeviceController* rootDevice()
+    {
+        HDeviceController* root = this;
+        while (root->parentDevice()) { root = root->parentDevice(); }
+        return root;
+    }
+
+    inline HDeviceStatus* deviceStatus()
+    {
+        if (!parentDevice()) { return m_deviceStatus.data(); }
+        return rootDevice()->deviceStatus();
+    }
 
     void startStatusNotifier(SearchCriteria searchCriteria);
     void stopStatusNotifier(SearchCriteria searchCriteria);
@@ -129,48 +201,9 @@ public:
     void addLocations(const QList<QUrl>& locations);
     bool isTimedout(SearchCriteria searchCriteria) const;
 
-public Q_SLOTS:
-
-    void dispose();
-
 Q_SIGNALS:
 
     void statusTimeout(HDeviceController* source);
-};
-
-class HDeviceInfo;
-class HServiceController;
-
-//
-// Base class for the implementation details of HDevice
-//
-class H_UPNP_CORE_EXPORT HDevicePrivate
-{
-H_DISABLE_COPY(HDevicePrivate)
-
-public: // attributes
-
-    QScopedPointer<HDeviceInfo> m_upnpDeviceInfo;
-    QList<HDeviceController*>  m_embeddedDevices;
-    QList<HServiceController*> m_services;
-    HDeviceController*         m_parent;
-    HDevice*                   q_ptr;
-    QList<QUrl>                m_locations;
-    QDomDocument               m_deviceDescription;
-    QAtomicInt                 m_disposed;
-
-    mutable QMutex m_locationsMutex;
-
-public: // methods
-
-    HDevicePrivate();
-    virtual ~HDevicePrivate();
-
-    inline static QString deviceDescriptionPostFix()
-    {
-        static QString retVal = "device_description.xml";
-        return retVal;
-    }
 };
 
 }

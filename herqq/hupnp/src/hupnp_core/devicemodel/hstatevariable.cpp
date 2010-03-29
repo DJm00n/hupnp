@@ -78,13 +78,13 @@ HStateVariableEvent::HStateVariableEvent(
 
     if (!eventSource)
     {
-        HLOG_WARN(QObject::tr("Event source is not defined"));
+        HLOG_WARN("Event source is not defined");
         return;
     }
 
     if (!eventSource->isValidValue(newValue))
     {
-        HLOG_WARN(QObject::tr("The specified new value [%1] is invalid").arg(newValue.toString()));
+        HLOG_WARN(QString("The specified new value [%1] is invalid").arg(newValue.toString()));
         return;
     }
 
@@ -208,7 +208,7 @@ QVariant HStateVariablePrivate::checkValue(const QVariant& value)
     if (m_dataType == HUpnpDataTypes::Undefined)
     {
         throw HIllegalArgumentException(
-            QObject::tr("Data type of the state variable [%1] is not defined.").arg(
+            QString("Data type of the state variable [%1] is not defined.").arg(
                 m_name));
     }
 
@@ -224,7 +224,7 @@ QVariant HStateVariablePrivate::checkValue(const QVariant& value)
             if (!valueAsUrl.isValid())
             {
                 throw HIllegalArgumentException(
-                    QObject::tr("Invalid value for a URL type: [%1]").arg(
+                    QString("Invalid value for a URL type: [%1]").arg(
                         value.toString()));
             }
 
@@ -232,7 +232,7 @@ QVariant HStateVariablePrivate::checkValue(const QVariant& value)
         }
         else if (!acceptableValue.convert(m_variantDataType))
         {
-            throw HIllegalArgumentException(QObject::tr("Data type mismatch."));
+            throw HIllegalArgumentException("Data type mismatch.");
         }
     }
 
@@ -241,7 +241,7 @@ QVariant HStateVariablePrivate::checkValue(const QVariant& value)
         if (m_allowedValueList.indexOf(value.toString()) < 0)
         {
             throw HIllegalArgumentException(
-                QObject::tr("Value is not included in the allowed values list."));
+                "Value is not included in the allowed values list.");
         }
     }
     else if (HUpnpDataTypes::isRational(m_dataType) && !m_allowedValueRange.isNull())
@@ -251,7 +251,7 @@ QVariant HStateVariablePrivate::checkValue(const QVariant& value)
             tmp > m_allowedValueRange.maximum().toDouble())
         {
             throw HIllegalArgumentException(
-                QObject::tr("Value is not within the specified allowed values range."));
+                "Value is not within the specified allowed values range.");
         }
     }
     else if (HUpnpDataTypes::isNumeric(m_dataType) && !m_allowedValueRange.isNull())
@@ -261,7 +261,7 @@ QVariant HStateVariablePrivate::checkValue(const QVariant& value)
             tmp > m_allowedValueRange.maximum().toLongLong())
         {
             throw HIllegalArgumentException(
-                QObject::tr("Value is not within the specified allowed values range."));
+                "Value is not within the specified allowed values range.");
         }
     }
 
@@ -296,8 +296,8 @@ void HStateVariablePrivate::setAllowedValueList(
 
     if (m_dataType != HUpnpDataTypes::string)
     {
-        throw HIllegalArgumentException(QObject::tr(
-            "Cannot define allowed values list when data type is not \"string\""));
+        throw HIllegalArgumentException(
+            "Cannot define allowed values list when data type is not \"string\"");
     }
 
     m_allowedValueList = allowedValueList;
@@ -310,13 +310,13 @@ void HStateVariablePrivate::setAllowedValueRange(
 
     if (!HUpnpDataTypes::isNumeric(m_dataType))
     {
-        throw HIllegalArgumentException(QObject::tr(
-            "Cannot define allowed value range when data type is not numeric"));
+        throw HIllegalArgumentException(
+            "Cannot define allowed value range when data type is not numeric");
     }
 
     if (allowedValueRange.minimum().type() != m_variantDataType)
     {
-        throw HIllegalArgumentException(QObject::tr("Data type mismatch."));
+        throw HIllegalArgumentException("Data type mismatch.");
     }
 
     m_allowedValueRange = allowedValueRange;
@@ -507,12 +507,12 @@ bool HStateVariable::isConstrained() const
            !h_ptr->m_allowedValueRange.isNull();
 }
 
-HWritableStateVariable* HStateVariable::toWritable()
+HWritableStateVariable* HStateVariable::writable()
 {
     return dynamic_cast<HWritableStateVariable*>(this);
 }
 
-HReadableStateVariable* HStateVariable::toReadable()
+HReadableStateVariable* HStateVariable::readable()
 {
     return dynamic_cast<HReadableStateVariable*>(this);
 }

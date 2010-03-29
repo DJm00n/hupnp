@@ -22,7 +22,6 @@
 
 #include "dataitem_display.h"
 
-#include <HUdn>
 #include <HDevice>
 #include <HAction>
 #include <HService>
@@ -53,12 +52,12 @@ void DataItemDisplay::NavItemVisitor::visit(ActionItem* item)
     m_owner->m_modelData.clear();
 
     HAction* action = item->action();
-    HDevice* device = action->parentService()->parentDevice();
 
-    bool ok = connect(
-        device, SIGNAL(disposed()), m_owner, SLOT(contentSourceDisposed()));
+    m_owner->m_rootDeviceUdn = action->parentService()->parentDevice()->
+        rootDevice()->deviceInfo().udn();
 
-    Q_ASSERT(ok); Q_UNUSED(ok);
+    m_owner->m_modelData.clear();
+    m_owner->reset();
 
     m_owner->m_modelData.push_back(qMakePair(
         QString("Name"), action->name()));
@@ -84,12 +83,9 @@ void DataItemDisplay::NavItemVisitor::visit(ServiceItem* item)
     m_owner->m_modelData.clear();
 
     HService* service = item->service();
-    HDevice* device = service->parentDevice();
 
-    bool ok = connect(
-        device, SIGNAL(disposed()), m_owner, SLOT(contentSourceDisposed()));
-
-    Q_ASSERT(ok); Q_UNUSED(ok);
+    m_owner->m_rootDeviceUdn = service->parentDevice()->
+        rootDevice()->deviceInfo().udn();
 
     m_owner->m_modelData.push_back(qMakePair(
         QString("Service ID"), service->serviceId().toString()));
@@ -115,14 +111,10 @@ void DataItemDisplay::NavItemVisitor::visit(DeviceItem* item)
 
     m_owner->m_modelData.clear();
 
-    HRootDevicePtrT device = item->device();
-
-    bool ok = connect(
-        device.data(), SIGNAL(disposed()), m_owner, SLOT(contentSourceDisposed()));
-
-    Q_ASSERT(ok); Q_UNUSED(ok);
-
+    HDevice* device = item->device();
     HDeviceInfo deviceInfo = device->deviceInfo();
+
+    m_owner->m_rootDeviceUdn = device->rootDevice()->deviceInfo().udn();
 
     m_owner->m_modelData.push_back(
         qMakePair(QString("Friendly name"), deviceInfo.friendlyName()));
@@ -158,12 +150,9 @@ void DataItemDisplay::NavItemVisitor::visit(StateVariableItem* item)
     m_owner->m_modelData.clear();
 
     HStateVariable* stateVar = item->stateVariable();
-    HDevice* device = stateVar->parentService()->parentDevice();
 
-    bool ok = connect(
-        device, SIGNAL(disposed()), m_owner, SLOT(contentSourceDisposed()));
-
-    Q_ASSERT(ok); Q_UNUSED(ok);
+    m_owner->m_rootDeviceUdn = stateVar->parentService()->parentDevice()->
+        rootDevice()->deviceInfo().udn();
 
     m_owner->m_modelData.push_back(
         qMakePair(QString("Name"), stateVar->name()));
@@ -207,10 +196,13 @@ void DataItemDisplay::setData(ControlPointNavigatorItem* navItem)
     navItem->accept(&visitor);
 }
 
-void DataItemDisplay::contentSourceDisposed()
+void DataItemDisplay::deviceRemoved(const Herqq::Upnp::HUdn& udn)
 {
-    m_modelData.clear();
-    reset();
+    if (udn == m_rootDeviceUdn)
+    {
+        m_modelData.clear();
+        reset();
+    }
 }
 
 Qt::ItemFlags DataItemDisplay::flags(const QModelIndex& /*index*/) const

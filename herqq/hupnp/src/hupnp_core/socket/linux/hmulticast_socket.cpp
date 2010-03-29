@@ -85,7 +85,7 @@ bool HMulticastSocket::joinMulticastGroup(const QHostAddress& address)
     if (address.protocol() != QAbstractSocket::IPv4Protocol)
     {
         // TODO: IPv6 multicast
-        HLOG_WARN(QObject::tr("IPv6 is not supported."));
+        HLOG_WARN("IPv6 is not supported.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -93,14 +93,14 @@ bool HMulticastSocket::joinMulticastGroup(const QHostAddress& address)
     if (proxy().type() != QNetworkProxy::NoProxy)
     {
         // TODO: Proxied multicast
-        HLOG_WARN(QObject::tr("Proxied multicast is not supported."));
+        HLOG_WARN("Proxied multicast is not supported.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
 
     if (socketDescriptor() == -1)
     {
-        HLOG_WARN(QObject::tr("Socket descriptor is invalid."));
+        HLOG_WARN("Socket descriptor is invalid.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -118,7 +118,7 @@ bool HMulticastSocket::joinMulticastGroup(const QHostAddress& address)
             (char *) &mreq,
             sizeof(mreq)) < 0)
     {
-        HLOG_WARN(QObject::tr("Failed to join the specified group."));
+        HLOG_WARN("Failed to join the specified group.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -133,7 +133,7 @@ bool HMulticastSocket::leaveMulticastGroup(const QHostAddress &address)
     if (address.protocol() != QAbstractSocket::IPv4Protocol)
     {
         // TODO: IPv6 multicast
-        HLOG_WARN(QObject::tr("IPv6 is not supported."));
+        HLOG_WARN("IPv6 is not supported.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -141,14 +141,14 @@ bool HMulticastSocket::leaveMulticastGroup(const QHostAddress &address)
     if (proxy().type() != QNetworkProxy::NoProxy)
     {
         // TODO: Proxied multicast
-        HLOG_WARN(QObject::tr("Proxied multicast is not supported."));
+        HLOG_WARN("Proxied multicast is not supported.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
 
     if (socketDescriptor() == -1)
     {
-        HLOG_WARN(QObject::tr("Socket descriptor is invalid."));
+        HLOG_WARN("Socket descriptor is invalid.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -162,7 +162,7 @@ bool HMulticastSocket::leaveMulticastGroup(const QHostAddress &address)
     if (setsockopt(socketDescriptor(), IPPROTO_IP, IP_DROP_MEMBERSHIP,
             (char *) &mreq, sizeof(mreq)) < 0)
     {
-        HLOG_WARN(QObject::tr("Failed to leave the specified group."));
+        HLOG_WARN("Failed to leave the specified group.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -176,7 +176,7 @@ bool HMulticastSocket::setMulticastTtl(quint8 ttl)
 
     if (socketDescriptor() == -1)
     {
-        HLOG_WARN(QObject::tr("Socket descriptor is invalid."));
+        HLOG_WARN("Socket descriptor is invalid.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -184,7 +184,7 @@ bool HMulticastSocket::setMulticastTtl(quint8 ttl)
     if (setsockopt(socketDescriptor(), IPPROTO_IP, IP_MULTICAST_TTL,
             (char *) &ttl, sizeof(ttl)) < 0)
     {
-        HLOG_WARN(QObject::tr("Could not set multicast TTL to the specified value."));
+        HLOG_WARN("Could not set multicast TTL to the specified value.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }

@@ -264,9 +264,9 @@ public:
      *
      * \warning the pointer is guaranteed to point to a valid object as long
      * as the \c %HAction exists, which ultimately is as long as the
-     * containing Herqq::Upnp::HRootDevicePtrT exists.
+     * containing Herqq::Upnp::HDevice exists.
      *
-     * \sa HRootDevicePtrT, HDevice
+     * \sa HDevice
      */
     HService* parentService() const;
 

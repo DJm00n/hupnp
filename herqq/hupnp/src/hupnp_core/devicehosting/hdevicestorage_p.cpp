@@ -209,8 +209,8 @@ void seekDevices(
         foundDevices.push_back(device);
     }
 
-    QList<HDeviceController*> devices = device->embeddedDevices();
-    foreach(HDeviceController* device, devices)
+    const QList<HDeviceController*>* devices = device->embeddedDevices();
+    foreach(HDeviceController* device, *devices)
     {
         seekDevices(device, mf, foundDevices);
     }
@@ -239,8 +239,8 @@ HServiceController* seekService(
 {
     foreach(HDeviceController* device, devices)
     {
-        QList<HServiceController*> services = device->services();
-        foreach(HServiceController* service, services)
+        const QList<HServiceController*>* services = device->services();
+        foreach(HServiceController* service, *services)
         {
             if (mf(service))
             {
@@ -249,7 +249,7 @@ HServiceController* seekService(
         }
 
         HServiceController* service =
-            seekService(device->embeddedDevices(), mf);
+            seekService(*device->embeddedDevices(), mf);
 
         if (service)
         {
@@ -276,8 +276,8 @@ void seekServices(
             continue;
         }
 
-        QList<HServiceController*> services = device->services();
-        foreach(HServiceController* service, services)
+        const QList<HServiceController*>* services = device->services();
+        foreach(HServiceController* service, *services)
         {
             if (mf(service))
             {
@@ -290,7 +290,7 @@ void seekServices(
             continue;
         }
 
-        seekServices(device->embeddedDevices(), mf, foundServices, rootDevicesOnly);
+        seekServices(*device->embeddedDevices(), mf, foundServices, rootDevicesOnly);
     }
 }
 
@@ -302,8 +302,8 @@ void traverse(
     {
         mf(device);
 
-        QList<HServiceController*> services = device->services();
-        foreach(HServiceController* service, services)
+        const QList<HServiceController*>* services = device->services();
+        foreach(HServiceController* service, *services)
         {
             mf(service);
 
@@ -322,7 +322,7 @@ void traverse(
             }*/
         }
 
-        traverse(device->embeddedDevices(), mf);
+        traverse(*device->embeddedDevices(), mf);
     }
 }
 }
@@ -449,12 +449,12 @@ void DeviceStorage::checkDeviceTreeForUdnConflicts(
     if (searchDeviceByUdn(device->m_device->deviceInfo().udn()))
     {
         throw HOperationFailedException(
-            QObject::tr("Cannot host multiple devices with the same UDN [%1]").arg(
+            QString("Cannot host multiple devices with the same UDN [%1]").arg(
                 device->m_device->deviceInfo().udn().toSimpleUuid()));
     }
 
-    QList<HDeviceController*> devices = device->embeddedDevices();
-    foreach(HDeviceController* embeddeDevice, devices)
+    const QList<HDeviceController*>* devices = device->embeddedDevices();
+    foreach(HDeviceController* embeddeDevice, *devices)
     {
         checkDeviceTreeForUdnConflicts(embeddeDevice);
     }
@@ -473,31 +473,36 @@ void DeviceStorage::addRootDevice(HDeviceController* root)
     checkDeviceTreeForUdnConflicts(root);
     m_rootDevices.push_back(root);
 
-    HLOG_DBG(QObject::tr("New root device [%1] added. Current device count is %2").arg(
+    HLOG_DBG(QString("New root device [%1] added. Current device count is %2").arg(
         root->m_device->deviceInfo().friendlyName(), QString::number(m_rootDevices.size())));
 }
 
-void DeviceStorage::removeRootDevice(HDeviceController* root)
+bool DeviceStorage::removeRootDevice(HDeviceController* root)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     Q_ASSERT(root);
     Q_ASSERT(!root->m_device->parentDevice());
 
     QMutexLocker locker(&m_rootDevicesMutex);
 
-    bool ok = m_rootDevices.removeOne(root);
-    Q_ASSERT(ok); Q_UNUSED(ok)
-
     HDeviceInfo devInfo = root->m_device->deviceInfo();
 
-    delete root;
-    // after this the device controller is gone, but the device and service
-    // objects still exist. As mentioned, however, they all are in "disposed" state.
-    // The objects will be deleted when the reference counts of their wrapping
-    // smart pointers drop to zero.
+    bool ok = m_rootDevices.removeOne(root);
+    if (!ok)
+    {
+        HLOG_WARN(QString("Device [%1] was not found.").arg(
+            devInfo.friendlyName()));
 
-    HLOG_DBG(QObject::tr("Root device [%1] removed. Current device count is %2").arg(
+        return false;
+    }
+
+    delete root;
+
+    HLOG_DBG(QString("Root device [%1] removed. Current device count is %2").arg(
         devInfo.friendlyName(), QString::number(m_rootDevices.size())));
+
+    return true;
 }
 
 QPair<QUrl, QImage> DeviceStorage::seekIcon(
@@ -516,8 +521,8 @@ QPair<QUrl, QImage> DeviceStorage::seekIcon(
         }
     }
 
-    QList<HDeviceController*> devices = device->embeddedDevices();
-    foreach(HDeviceController* device, devices)
+    const QList<HDeviceController*>* devices = device->embeddedDevices();
+    foreach(HDeviceController* device, *devices)
     {
         QPair<QUrl, QImage> icon = seekIcon(device, iconUrl);
         if (icon != QPair<QUrl, QImage>())
@@ -536,11 +541,25 @@ HServiceController* DeviceStorage::searchServiceByScpdUrl(
     return seekService(tmp, MatchFunctor<ScpdUrlTester>(scpdUrl));
 }
 
+HServiceController* DeviceStorage::searchServiceByScpdUrl(
+    const QUrl& scpdUrl) const
+{
+    QMutexLocker locker(&m_rootDevicesMutex);
+    return seekService(m_rootDevices, MatchFunctor<ScpdUrlTester>(scpdUrl));
+}
+
 HServiceController* DeviceStorage::searchServiceByControlUrl(
     HDeviceController* device, const QUrl& controlUrl) const
 {
     QList<HDeviceController*> tmp; tmp.push_back(device);
     return seekService(tmp, MatchFunctor<ControlUrlTester>(controlUrl));
+}
+
+HServiceController* DeviceStorage::searchServiceByControlUrl(
+    const QUrl& controlUrl) const
+{
+    QMutexLocker locker(&m_rootDevicesMutex);
+    return seekService(m_rootDevices, MatchFunctor<ControlUrlTester>(controlUrl));
 }
 
 HServiceController* DeviceStorage::searchServiceByEventUrl(
@@ -550,11 +569,18 @@ HServiceController* DeviceStorage::searchServiceByEventUrl(
     return seekService(tmp, MatchFunctor<EventUrlTester>(eventUrl));
 }
 
-HRootDevicePtrListT DeviceStorage::rootDevices() const
+HServiceController* DeviceStorage::searchServiceByEventUrl(
+    const QUrl& eventUrl) const
+{
+    QMutexLocker locker(&m_rootDevicesMutex);
+    return seekService(m_rootDevices, MatchFunctor<EventUrlTester>(eventUrl));
+}
+
+HDevicePtrList DeviceStorage::rootDevices() const
 {
     QMutexLocker lock(&m_rootDevicesMutex);
 
-    HRootDevicePtrListT retVal;
+    HDevicePtrList retVal;
     foreach(HDeviceController* dc, m_rootDevices)
     {
         Q_ASSERT(dc->m_device);

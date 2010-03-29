@@ -61,14 +61,14 @@ private:
 
         if (min > max)
         {
-            throw Herqq::HIllegalArgumentException(QObject::tr(
-                "Minimum value cannot be larger than the maximum."));
+            throw Herqq::HIllegalArgumentException(
+                "Minimum value cannot be larger than the maximum.");
         }
 
         if (max - min < step)
         {
-            throw HIllegalArgumentException(QObject::tr(
-                "Step value cannot be larger than the entire range."));
+            throw HIllegalArgumentException(
+                "Step value cannot be larger than the entire range.");
         }
     }
 
@@ -103,19 +103,19 @@ public:
         retVal.m_maximum = maximum;
         if (!retVal.m_maximum.convert(dataType))
         {
-            throw HIllegalArgumentException(QObject::tr("Invalid maximum value"));
+            throw HIllegalArgumentException("Invalid maximum value");
         }
 
         retVal.m_minimum = minimum;
         if (!retVal.m_minimum.convert(dataType))
         {
-            throw HIllegalArgumentException(QObject::tr("Invalid minimum value"));
+            throw HIllegalArgumentException("Invalid minimum value");
         }
 
         retVal.m_step = step;
         if (!retVal.m_step.convert(dataType))
         {
-            throw HIllegalArgumentException(QObject::tr("Invalid step value"));
+            throw HIllegalArgumentException("Invalid step value");
         }
 
         switch(dataType)

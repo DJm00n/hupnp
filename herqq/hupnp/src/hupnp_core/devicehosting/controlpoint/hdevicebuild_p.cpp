@@ -36,41 +36,6 @@ namespace Upnp
 /*******************************************************************************
  * DeviceBuildTask
  ******************************************************************************/
-void DeviceBuildTask::createEventSubscriptions(
-    HDeviceController* device,
-    QList<QSharedPointer<HServiceSubscribtion> >* subscriptions)
-{
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
-    Q_ASSERT(device);
-    Q_ASSERT(subscriptions);
-
-    QList<HServiceController*> services = device->services();
-    foreach(HServiceController* service, services)
-    {
-        if (service->m_service->isEvented())
-        {
-            HServiceSubscribtion* subscription =
-                new HServiceSubscribtion(
-                    m_owner->m_loggingIdentifier,
-                    *m_owner->m_http,
-                    device->m_device->locations(),
-                    service,
-                    m_owner->m_server->rootUrl(),
-                    m_owner->m_threadPool);
-
-            subscriptions->push_back(
-                QSharedPointer<HServiceSubscribtion>(
-                    subscription, &QObject::deleteLater));
-        }
-    }
-
-    QList<HDeviceController*> devices = device->embeddedDevices();
-    foreach(HDeviceController* embDevice, devices)
-    {
-        createEventSubscriptions(embDevice, subscriptions);
-    }
-}
-
 DeviceBuildTask::~DeviceBuildTask()
 {
    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
@@ -88,41 +53,10 @@ HDeviceController* DeviceBuildTask::createdDevice()
     return m_createdDevice.take();
 }
 
-void DeviceBuildTask::deleteSubscriptions(
-    QList<QSharedPointer<HServiceSubscribtion> >* subscriptions)
-{
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
-
-    if (subscriptions->isEmpty())
-    {
-        return;
-    }
-
-    QMutexLocker lock(&m_owner->m_serviceSubscribtionsMutex);
-
-    QList<QSharedPointer<HServiceSubscribtion> >::iterator it =
-        subscriptions->begin();
-
-    while(it != subscriptions->end())
-    {
-        QSharedPointer<HServiceSubscribtion> sub = (*it);
-
-        if (m_owner->m_serviceSubscribtions.contains(sub->id()))
-        {
-            m_owner->m_serviceSubscribtions.remove(sub->id());
-        }
-
-        it = subscriptions->erase(it);
-    }
-
-    Q_ASSERT(subscriptions->isEmpty());
-}
-
 void DeviceBuildTask::run()
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 
-    QList<QSharedPointer<HServiceSubscribtion> > subscriptions;
     try
     {
         QScopedPointer<HDeviceController> device(
@@ -132,69 +66,17 @@ void DeviceBuildTask::run()
         // embedded device and service advertised in the device and service descriptions
         // otherwise, the creation failed and an exception was thrown
 
-        createEventSubscriptions(device.data(), &subscriptions);
+        device->moveToThread(m_owner->thread());
+        device->m_device->moveToThread(m_owner->thread());
 
-        QMutexLocker lock(&m_owner->m_serviceSubscribtionsMutex);
+        m_completionValue = 0;
+        m_createdDevice.swap(device);
 
-        if (m_owner->state() != HControlPointPrivate::Initialized)
-        {
-            subscriptions.clear();
-
-            m_completionValue = -1;
-            m_errorString = QObject::tr("Shutting down. Aborting device model build.");
-            emit done(m_udn);
-
-            return;
-        }
-
-        for(qint32 i = 0; i < subscriptions.size(); ++i)
-        {
-            subscriptions[i]->moveToThread(m_owner->thread());
-            m_owner->m_serviceSubscribtions.insert(
-                subscriptions[i]->id(), subscriptions[i]);
-        }
-
-        lock.unlock();
-
-        // after the subscriptions are created, attempt to subscribe to every
-        // service the subscriptions are representing.
-        for(qint32 i = 0; i < subscriptions.size(); ++i)
-        {
-            if (m_owner->state() != HControlPointPrivate::Initialized)
-            {
-                break;
-            }
-
-            subscriptions[i]->subscribe();
-        }
-
-        if (m_owner->state() != HControlPointPrivate::Initialized)
-        {
-            deleteSubscriptions(&subscriptions);
-
-            m_completionValue = -1;
-
-            m_errorString =
-                QObject::tr("Shutting down. Aborting device model build.");
-
-            emit done(m_udn);
-        }
-        else
-        {
-            device->moveToThread(m_owner->thread());
-            device->m_device->moveToThread(m_owner->thread());
-
-            m_completionValue = 0;
-            m_createdDevice.swap(device);
-
-            emit done(m_udn);
-        }
+        emit done(m_udn);
     }
     catch(HException& ex)
     {
-        HLOG_WARN(QObject::tr("Couldn't create a device: %1").arg(ex.reason()));
-
-        deleteSubscriptions(&subscriptions);
+        HLOG_WARN(QString("Couldn't create a device: %1").arg(ex.reason()));
 
         m_completionValue = -1;
         m_errorString = ex.reason();

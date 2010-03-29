@@ -100,16 +100,43 @@ public:
 
     ~SubscribeRequest();
 
-    bool isValid() const;
-
-    HNt      nt          () const;
+    HNt nt() const;
     QList<QUrl> callbacks() const;
-    HTimeout timeout     () const;
-    HSid     sid         () const;
-    QUrl     eventUrl    () const;
-    bool     isRenewal   () const;
-    HProductTokens userAgent() const;
-    bool     hasUserAgent() const;
+
+    inline bool isValid() const
+    {
+        return !m_callbacks.isEmpty() || !m_sid.isNull();
+    }
+
+    inline HTimeout timeout() const
+    {
+        return m_timeout;
+    }
+
+    inline HSid sid() const
+    {
+        return m_sid;
+    }
+
+    inline QUrl eventUrl() const
+    {
+        return m_eventUrl;
+    }
+
+    inline bool isRenewal() const
+    {
+        return !m_sid.isNull();
+    }
+
+    inline HProductTokens userAgent() const
+    {
+        return m_userAgent;
+    }
+
+    inline bool hasUserAgent() const
+    {
+        return m_userAgent.isValid();
+    }
 };
 
 //

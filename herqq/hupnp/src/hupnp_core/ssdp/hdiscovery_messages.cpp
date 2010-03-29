@@ -128,20 +128,20 @@ HResourceAvailable::HResourceAvailable(
 
     if (!usn.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid USN."));
+        HLOG_WARN("Invalid USN.");
         return;
     }
 
     if (!location.isValid() || location.isEmpty())
     {
-        HLOG_WARN(QObject::tr("Invalid LOCATION header field: %1.").arg(
+        HLOG_WARN(QString("Invalid LOCATION header field: %1.").arg(
             location.toString()));
         return;
     }
 
     if (!serverTokens.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid server tokens: %1").arg(
+        HLOG_WARN(QString("Invalid server tokens: %1").arg(
             serverTokens.toString()));
 
         return;
@@ -151,7 +151,7 @@ HResourceAvailable::HResourceAvailable(
     {
         if (bootId < 0 || configId < 0)
         {
-            HLOG_WARN(QObject::tr("bootId and configId must both be >= 0."));
+            HLOG_WARN("bootId and configId must both be >= 0.");
             return;
         }
         if (searchPort < 49152 || searchPort > 65535)
@@ -322,14 +322,13 @@ HResourceUnavailable::HResourceUnavailable(
 
     if (!usn.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid USN."));
+        HLOG_WARN("Invalid USN.");
         return;
     }
 
     if ((bootId < 0 && configId >= 0) || (configId < 0 && bootId >= 0))
     {
-        HLOG_WARN(QObject::tr(
-            "If either bootId or configId is specified, they both must be >= 0."));
+        HLOG_WARN("If either bootId or configId is specified, they both must be >= 0.");
         return;
     }
 
@@ -475,13 +474,13 @@ HResourceUpdate::HResourceUpdate(
 
     if (!usn.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid USN."));
+        HLOG_WARN("Invalid USN.");
         return;
     }
 
     if (!location.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid LOCATION header field."));
+        HLOG_WARN("Invalid LOCATION header field.");
         return;
     }
 
@@ -489,9 +488,8 @@ HResourceUpdate::HResourceUpdate(
         (configId   < 0 && (bootId   >= 0 || nextBootId >= 0)) ||
         (nextBootId < 0 && (bootId   >= 0 || configId   >= 0)))
     {
-        HLOG_WARN(
-            QObject::tr("If bootId, configId or nextBootId is specified, " \
-                        "they all must be >= 0."));
+        HLOG_WARN("If bootId, configId or nextBootId is specified, " \
+                  "they all must be >= 0.");
         return;
     }
 
@@ -632,18 +630,18 @@ public: // methods
 
         if (st.type() == HResourceIdentifier::Undefined)
         {
-            HLOG_WARN(QObject::tr("Invalid Search Target."));
+            HLOG_WARN("Invalid Search Target.");
             return false;
         }
 
         if (mx < 1)
         {
-            HLOG_WARN(QObject::tr("MX cannot be smaller than 1."));
+            HLOG_WARN("MX cannot be smaller than 1.");
             return false;
         }
         else if (mx > 5)
         {
-            HLOG_WARN(QObject::tr("MX is larger than 5, setting it to 5."));
+            HLOG_WARN("MX is larger than 5, setting it to 5.");
             mx = 5; // UDA instructs to treat MX values larger than 5 as 5
         }
 
@@ -796,19 +794,19 @@ HDiscoveryResponse::HDiscoveryResponse(
 
     if (!usn.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid USN."));
+        HLOG_WARN("Invalid USN.");
         return;
     }
 
     if (!location.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid resource location."));
+        HLOG_WARN("Invalid resource location.");
         return;
     }
 
     if (!serverTokens.isValid())
     {
-        HLOG_WARN(QObject::tr("Invalid server tokens: %1.").arg(
+        HLOG_WARN(QString("Invalid server tokens: %1.").arg(
             serverTokens.toString()));
 
         return;
@@ -818,7 +816,7 @@ HDiscoveryResponse::HDiscoveryResponse(
     {
         if (bootId < 0 || configId < 0)
         {
-            HLOG_WARN(QObject::tr("bootId and configId must both be positive."));
+            HLOG_WARN("bootId and configId must both be positive.");
             return;
         }
     }

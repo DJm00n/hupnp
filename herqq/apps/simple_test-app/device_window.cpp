@@ -94,7 +94,7 @@ qint32 HTestService::registerAction(
 
     bool ok = false;
     HWritableStateVariable* sv =
-        stateVariableByName("RegisteredClientCount")->toWritable();
+        stateVariableByName("RegisteredClientCount")->writable();
 
     Q_ASSERT(sv);
     // fetch the state variable we want to modify
@@ -209,7 +209,7 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
 
     initParams.setCacheControlMaxAge(30);
 
-    m_deviceHost = new HDeviceHost();
+    m_deviceHost = new HDeviceHost(this);
 
     QString err;
     if (m_deviceHost->init(initParams, &err) != HDeviceHost::Success)
@@ -240,13 +240,6 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
 DeviceWindow::~DeviceWindow()
 {
     delete m_ui;
-
-    //
-    // **THIS IS IMPORTANT**
-    // The HRootDevicePtrT is cleared before deleting the HDeviceHost, as instructed
-    // in the documentation. Otherwise double deletion would occur.
-    m_testDevice.clear();
-
     delete m_deviceHost;
 }
 

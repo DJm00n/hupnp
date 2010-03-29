@@ -130,19 +130,19 @@ class DeviceItem :
 {
 private:
 
-    Herqq::Upnp::HRootDevicePtrT m_device;
+    Herqq::Upnp::HDevice* m_device;
 
 public:
 
     explicit DeviceItem(
-        Herqq::Upnp::HRootDevicePtrT device,
+        Herqq::Upnp::HDevice* device,
         ControlPointNavigatorItem* parent = 0);
 
     virtual ~DeviceItem();
 
     virtual QVariant data (int column) const;
 
-    inline Herqq::Upnp::HRootDevicePtrT device() const { return m_device; }
+    inline Herqq::Upnp::HDevice* device() const { return m_device; }
 
     virtual void accept(ControlPointNavigatorItemVisitor*);
 };

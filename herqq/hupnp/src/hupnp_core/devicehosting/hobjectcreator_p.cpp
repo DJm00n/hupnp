@@ -93,14 +93,14 @@ void HObjectCreator::initService(
 
     if (!wasDefined)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Missing mandatory <serviceId> element: %1").arg(
                 toString(serviceDefinition)));
     }
 
     if (!service->h_ptr->m_serviceId.isValid())
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "The service ID is invalid: %1").arg(toString(serviceDefinition)));
     }
 
@@ -109,28 +109,28 @@ void HObjectCreator::initService(
 
     if (!wasDefined)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Missing mandatory <serviceType> element: %1").arg(
                 toString(serviceDefinition)));
     }
 
     if (!service->h_ptr->m_serviceType.isValid())
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "The service type is invalid: %1").arg(toString(serviceDefinition)));
     }
 
     QUrl tmp = readElementValue("SCPDURL", serviceDefinition, &wasDefined);
     if (!wasDefined)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Missing mandatory <SCPDURL> element: %1").arg(
                 toString(serviceDefinition)));
     }
 
     if (tmp.isEmpty() || !tmp.isValid())
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "The SCPDURL is invalid: %1").arg(toString(serviceDefinition)));
     }
 
@@ -139,14 +139,14 @@ void HObjectCreator::initService(
     tmp = readElementValue("controlURL" , serviceDefinition, &wasDefined);
     if (!wasDefined)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Missing mandatory <controlURL> element: %1").arg(
                 toString(serviceDefinition)));
     }
 
     if (tmp.isEmpty() || !tmp.isValid())
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "The controlURL is invalid: %1").arg(toString(serviceDefinition)));
     }
     service->h_ptr->m_controlUrl = tmp;
@@ -154,14 +154,14 @@ void HObjectCreator::initService(
     tmp = readElementValue("eventSubURL", serviceDefinition, &wasDefined);
     if (!wasDefined)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Missing mandatory <eventSubURL> element: %1").arg(
                 toString(serviceDefinition)));
     }
 
     if (tmp.isEmpty() || !tmp.isValid())
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "The eventSubURL is invalid: %1").arg(toString(serviceDefinition)));
     }
     service->h_ptr->m_eventSubUrl = tmp;
@@ -187,7 +187,7 @@ void HObjectCreator::parseServiceDescription(HService* service)
     if (scpdElement.isNull())
     {
         throw HParseException(
-            QObject::tr("Invalid service description: missing <scpd> element"));
+            QString("Invalid service description: missing <scpd> element"));
     }
 
     verifySpecVersion(scpdElement);
@@ -197,7 +197,7 @@ void HObjectCreator::parseServiceDescription(HService* service)
 
     if (serviceStateTableElement.isNull())
     {
-       throw HParseException(QObject::tr(
+       throw HParseException(QString(
            "Service [%1] is missing mandatory <serviceStateTable> element.").arg(
                 service->serviceId().toString()));
     }
@@ -207,7 +207,7 @@ void HObjectCreator::parseServiceDescription(HService* service)
 
     if (stateVariableElement.isNull())
     {
-       throw HParseException(QObject::tr(
+       throw HParseException(QString(
            "Service [%1] does not have a single <stateVariable>. Each service MUST "
            "have at least 1 state variable").arg(service->serviceId().toString()));
     }
@@ -244,13 +244,13 @@ void HObjectCreator::parseServiceDescription(HService* service)
 
     if (actionElement.isNull())
     {
-       throw HParseException(QObject::tr(
+       throw HParseException(QString(
            "Service [%1] has <actionList> element that has no <action> elements."
            "If your service has no actions, do NOT define <actionList>.").arg(
                service->serviceId().toString()));
     }
 
-    HService::HActionMapT actions = service->createActions();
+    HService::HActionMap actions = service->createActions();
 
     while(!actionElement.isNull())
     {
@@ -277,7 +277,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     }
     else if (strSendEvents.compare("no", Qt::CaseInsensitive) != 0)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Invalid value for [sendEvents] attribute: %1.").arg(
                 toString(stateVariableElement)));
     }
@@ -290,7 +290,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     }
     else if (strMulticast.compare("no", Qt::CaseInsensitive) != 0)
     {
-        throw HParseException(QObject::tr(
+        throw HParseException(QString(
             "Invalid value for [multicast]: %1.").arg(
                 toString(stateVariableElement)));
     }
@@ -309,7 +309,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     QString defaultValue =
          readElementValue("defaultValue", stateVariableElement, &wasDefined);
 
-    HStateVariable* stateVar = 0;
+    QScopedPointer<HStateVariable> stateVar;
     try
     {
         if (dataType.compare(HUpnpDataTypes::string_str()) == 0)
@@ -333,9 +333,9 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                 }
             }
 
-            stateVar = m_creationParameters.m_stateVariablesAreImmutable ?
+            stateVar.reset(m_creationParameters.m_stateVariablesAreImmutable ?
                 (HStateVariable*) new HReadableStateVariable(parentService) :
-                (HStateVariable*) new HWritableStateVariable(parentService);
+                (HStateVariable*) new HWritableStateVariable(parentService));
 
             stateVar->init(
                 name, wasDefined ? defaultValue : QVariant(),
@@ -382,9 +382,9 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                    }
                }
 
-               stateVar = m_creationParameters.m_stateVariablesAreImmutable ?
+               stateVar.reset(m_creationParameters.m_stateVariablesAreImmutable ?
                    (HStateVariable*) new HReadableStateVariable(parentService) :
-                   (HStateVariable*) new HWritableStateVariable(parentService);
+                   (HStateVariable*) new HWritableStateVariable(parentService));
 
                stateVar->init(
                    name, dataTypeEnumValue,
@@ -395,9 +395,9 @@ HStateVariableController* HObjectCreator::parseStateVariable(
             }
         }
 
-        stateVar = m_creationParameters.m_stateVariablesAreImmutable ?
+        stateVar.reset(m_creationParameters.m_stateVariablesAreImmutable ?
            (HStateVariable*) new HReadableStateVariable(parentService) :
-           (HStateVariable*) new HWritableStateVariable(parentService);
+           (HStateVariable*) new HWritableStateVariable(parentService));
 
         stateVar->init(
             name, dataTypeEnumValue,
@@ -410,16 +410,16 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     catch(HException& ex)
     {
         throw HParseException(
-            QObject::tr("Failed to parse stateVariable [%1]: %2").arg(
+            QString("Failed to parse stateVariable [%1]: %2").arg(
                 name, ex.reason()));
     }
 
-    return new HStateVariableController(stateVar);
+    return new HStateVariableController(stateVar.take());
 }
 
 HActionController* HObjectCreator::parseAction(
     HService* parentService, const QDomElement& actionElement,
-    const HService::HActionMapT& definedActions)
+    const HService::HActionMap& definedActions)
 {
     HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
 
@@ -459,7 +459,7 @@ HActionController* HObjectCreator::parseAction(
 
                 if (!parentService->h_ptr->m_stateVariables.contains(relatedStateVar))
                 {
-                    QString err(QObject::tr("No state variable named "));
+                    QString err("No state variable named ");
                     err.append(relatedStateVar);
 
                     throw HParseException(err);
@@ -471,7 +471,7 @@ HActionController* HObjectCreator::parseAction(
                     {
                         if (firstOutArgFound)
                         {
-                            throw HParseException(QObject::tr(
+                            throw HParseException(QString(
                                 "[retval] must be the first [out] argument."));
                         }
 
@@ -491,7 +491,7 @@ HActionController* HObjectCreator::parseAction(
                 {
                     if (firstOutArgFound)
                     {
-                        throw HParseException(QObject::tr(
+                        throw HParseException(QString(
                             "Invalid argument order. Input arguments must all come "
                             "before output arguments."));
                     }
@@ -505,7 +505,7 @@ HActionController* HObjectCreator::parseAction(
                 }
                 else
                 {
-                    throw HParseException(QObject::tr("Invalid [direction] value."));
+                    throw HParseException(QString("Invalid [direction] value."));
                 }
 
                 argumentElement = argumentElement.nextSiblingElement("argument");
@@ -525,12 +525,12 @@ HActionController* HObjectCreator::parseAction(
     {
         if (!action->h_ptr->setInputArgs(inArgs))
         {
-            throw HIllegalArgumentException(QObject::tr("Invalid input arguments"));
+            throw HIllegalArgumentException("Invalid input arguments");
         }
 
         if (!action->h_ptr->setOutputArgs(outArgs, hasRetvalArgument))
         {
-            throw HIllegalArgumentException(QObject::tr("Invalid output arguments"));
+            throw HIllegalArgumentException("Invalid output arguments");
         }
 
         HActionInvoke actionInvoke =
@@ -540,7 +540,7 @@ HActionController* HObjectCreator::parseAction(
 
         if (!action->h_ptr->setActionInvoke(actionInvoke))
         {
-            throw HIllegalArgumentException(QObject::tr("Action invoker is missing"));
+            throw HIllegalArgumentException("Action invoker is missing");
         }
 
         action->h_ptr->setSharedInvoker(
@@ -550,7 +550,7 @@ HActionController* HObjectCreator::parseAction(
     catch(HException& ex)
     {
         throw HParseException(
-            QObject::tr("Failed to initialize action [%1]: %2").arg(
+            QString("Failed to initialize action [%1]: %2").arg(
                 name, ex.reason()));
     }
 
@@ -585,7 +585,7 @@ void validateRootDevice(HDeviceController* device)
 
                 if (iconUrls.contains(iconUrl))
                 {
-                    throw InvalidDeviceDescription(QObject::tr(
+                    throw InvalidDeviceDescription(QString(
                         "Multiple icons have the same URL [%1] within a device tree. "
                         "Icon URLs MUST be unique within a device tree.").arg(
                             iconUrl));
@@ -596,17 +596,17 @@ void validateRootDevice(HDeviceController* device)
                 }
             }
 
-            QList<HServiceController*> services = device->services();
-            for(qint32 i = 0; i < services.size(); ++i)
+            const QList<HServiceController*>* services = device->services();
+            for(qint32 i = 0; i < services->size(); ++i)
             {
-                HServiceController* service = services[i];
+                HServiceController* service = (*services)[i];
 
                 QString eventUrl = service->m_service->eventSubUrl().toString();
                 if (!eventUrl.isEmpty())
                 {
                     if (eventUrls.contains(eventUrl))
                     {
-                        throw InvalidDeviceDescription(QObject::tr(
+                        throw InvalidDeviceDescription(QString(
                             "EventSubUrl [%1] encountered more than once."
                             "EventSubUrls MUST be unique within a device tree.").arg(eventUrl));
                     }
@@ -619,7 +619,7 @@ void validateRootDevice(HDeviceController* device)
                 QString scpdUrl = service->m_service->scpdUrl().toString();
                 if (scpdUrls.contains(scpdUrl))
                 {
-                    throw InvalidDeviceDescription(QObject::tr(
+                    throw InvalidDeviceDescription(QString(
                         "ScpdUrl [%1] encountered more than once."
                         "ScpdUrls MUST be unique within a device tree.").arg(eventUrl));
                 }
@@ -631,7 +631,7 @@ void validateRootDevice(HDeviceController* device)
                 QString controlUrl = service->m_service->controlUrl().toString();
                 if (controlUrls.contains(controlUrl))
                 {
-                    throw InvalidDeviceDescription(QObject::tr(
+                    throw InvalidDeviceDescription(QString(
                         "ControlUrl [%1] encountered more than once. "
                         "ControlUrls MUST be unique within a device tree.").arg(eventUrl));
                 }
@@ -641,10 +641,10 @@ void validateRootDevice(HDeviceController* device)
                 }
             }
 
-            QList<HDeviceController*> devices = device->embeddedDevices();
-            for(qint32 i = 0; i < devices.size(); ++i)
+            const QList<HDeviceController*>* devices = device->embeddedDevices();
+            for(qint32 i = 0; i < devices->size(); ++i)
             {
-                validateDevice(devices[i]);
+                validateDevice((*devices)[i]);
             }
         }
     };
@@ -677,12 +677,12 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
                 if (m_creationParameters.m_strictParsing)
                 {
                     throw HParseException(
-                        QObject::tr("Could not create icon from [%1]").arg(
+                        QString("Could not create icon from [%1]").arg(
                             iconUrl.toString()));
                 }
                 else
                 {
-                    HLOG_WARN(QObject::tr(
+                    HLOG_WARN(QString(
                         "Failed to create an icon [%1] specified in the device description. "
                         "Ignoring, since strict parsing is not enabled.").arg(iconUrl.toString()));
                 }
@@ -702,7 +702,7 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
                 throw;
             }
 
-            HLOG_WARN(QObject::tr(
+            HLOG_WARN(QString(
                 "Failed to create an icon [%1] specified in the device description."
                 "Ignoring, since strict parsing is not enabled.").arg(iconUrl.toString()));
         }
@@ -763,8 +763,8 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
 
     if (m_creationParameters.m_strictParsing && wasDefined && tmp.isEmpty())
     {
-        throw InvalidDeviceDescription(QObject::tr(
-            "Presentation URL has to be defined, if the corresponding element is used."));
+        throw InvalidDeviceDescription(
+            "Presentation URL has to be defined, if the corresponding element is used.");
     }
 
     QUrl presentationUrl(tmp);
@@ -790,7 +790,7 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
     if (!deviceInfo->isValid())
     {
         throw InvalidDeviceDescription(
-            QObject::tr("Invalid device description: %1").arg(err));
+            QString("Invalid device description: %1").arg(err));
     }
 
     return deviceInfo.take();
@@ -804,7 +804,7 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
     Q_ASSERT(device);
     Q_ASSERT(!serviceListElement.isNull());
 
-    HDevice::HServiceMapT services = device->createServices();
+    HDevice::HServiceMap services = device->createServices();
 
     QList<HServiceController*> retVal;
 
@@ -824,13 +824,13 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
             if (!serviceId.isValid())
             {
                 throw InvalidServiceDescription(
-                    QObject::tr("Service ID is invalid: %1.").arg(
+                    QString("Service ID is invalid: %1.").arg(
                         toString(serviceElement)));
             }
             if (!serviceType.isValid())
             {
                 throw InvalidServiceDescription(
-                    QObject::tr("Service Type is invalid: %1.").arg(
+                    QString("Service Type is invalid: %1.").arg(
                         toString(serviceElement)));
             }
 
@@ -844,7 +844,7 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
                 }
                 else
                 {
-                    QString err(QObject::tr(
+                    QString err(QString(
                         "No object created for service of type [%1] with ID %2").arg(
                             serviceType.toString(), serviceId.toString()));
 
@@ -935,7 +935,7 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
         }
         else
         {
-            throw HOperationFailedException(QObject::tr(
+            throw HOperationFailedException(QString(
                 "No object created for UPnP device type [%1], with UDN: [%2]").arg(
                     deviceInfo->deviceType().toString(), deviceInfo->udn().toString()));
         }
@@ -978,7 +978,6 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
             embeddedDevice->setParent(retVal.data());
 
             embeddedDevice->m_device->h_ptr->m_parent = retVal.data();
-            embeddedDevice->m_device->setParent(retVal->m_device.data());
 
             embeddedDevice->m_device->h_ptr->m_deviceDescription =
                 m_creationParameters.m_deviceDescription;
@@ -1006,8 +1005,8 @@ HDeviceController* HObjectCreator::createRootDevice()
 
     if (rootElement.isNull())
     {
-        throw InvalidDeviceDescription(QObject::tr(
-            "Invalid device description: no <root> element defined"));
+        throw InvalidDeviceDescription(
+            "Invalid device description: no <root> element defined");
     }
 
     try
@@ -1022,8 +1021,8 @@ HDeviceController* HObjectCreator::createRootDevice()
     QDomElement rootDeviceElement = rootElement.firstChildElement("device");
     if (rootDeviceElement.isNull())
     {
-        throw InvalidDeviceDescription(QObject::tr(
-            "The specified file does not contain a valid root device definition"));
+        throw InvalidDeviceDescription(
+            "The specified file does not contain a valid root device definition");
     }
 
     HDeviceController* createdDevice = parseDevice(rootDeviceElement);

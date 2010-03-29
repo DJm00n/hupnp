@@ -50,8 +50,8 @@ public:
     explicit ControlPointNavigator(QObject* parent = 0);
     virtual ~ControlPointNavigator();
 
-    void rootDeviceAdded(Herqq::Upnp::HRootDevicePtrT);
-    void rootDeviceRemoved(const Herqq::Upnp::HDeviceInfo&);
+    void rootDeviceOnline(Herqq::Upnp::HDevice*);
+    void rootDeviceOffline(Herqq::Upnp::HDevice*);
 
     virtual QVariant data      (const QModelIndex& index, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex& index) const;

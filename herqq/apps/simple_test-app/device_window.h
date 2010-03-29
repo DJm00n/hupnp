@@ -112,19 +112,12 @@ private:
     Herqq::Upnp::HDeviceHost* m_deviceHost;
     // ^^ This is needed to host the HTestDevice
 
-    Herqq::Upnp::HRootDevicePtrT m_testDevice;
-    // The hosted root HDevice is stored as a member so that there is no way
-    // the root HDevice could be deleted while we may be using it. The use of the
-    // typedef HRootDevicePtrT ensures that.
-    //
-    // In more detail, a root HDevice hosted by a HDeviceHost will not be deleted
+    Herqq::Upnp::HDevice* m_testDevice;
+    // A root HDevice hosted by a HDeviceHost will not be deleted
     // until the device host is shutdown or deleted. The root device is stored
-    // here just for this example to demonstrate that:
-    // 1) You may use the hosted HDevice directly while control points may be
+    // here just for this example to demonstrate that you may use the
+    // hosted HDevice directly while control points may be
     // accessing it through the network.
-    // 2) If you plan on using any device hosted by a HAbstractHost (base class
-    // of HDeviceHost), it is a good practice to ensure that those devices
-    // _cannot_ be deleted while you may be using them.
 
 protected:
 

@@ -52,7 +52,7 @@ private:
 public:
 
     HSid();
-    explicit HSid (const QUuid&  sid);
+    explicit HSid (const QUuid& sid);
     explicit HSid (const QString& sid);
     HSid          (const HSid& other);
 

@@ -32,7 +32,7 @@ namespace Upnp
  * HControlPointConfigurationPrivate
  ******************************************************************************/
 HControlPointConfigurationPrivate::HControlPointConfigurationPrivate() :
-    m_deviceCreator()
+    m_deviceCreator(), m_subscribeToEvents(true)
 {
 }
 
@@ -77,6 +77,16 @@ void HControlPointConfiguration::setDeviceCreator(
     HDeviceCreator deviceCreator)
 {
     h_ptr->m_deviceCreator = deviceCreator;
+}
+
+bool HControlPointConfiguration::subscribeToEvents() const
+{
+    return h_ptr->m_subscribeToEvents;
+}
+
+void HControlPointConfiguration::setSubscribeToEvents(bool arg)
+{
+    h_ptr->m_subscribeToEvents = arg;
 }
 
 }

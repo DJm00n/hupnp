@@ -47,7 +47,8 @@ DataRetriever::DataRetriever(
 {
 }
 
-QByteArray DataRetriever::retrieveData(const QUrl& baseUrl, const QUrl& query)
+QByteArray DataRetriever::retrieveData(
+    const QUrl& baseUrl, const QUrl& query, bool processAbsoluteUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -58,7 +59,11 @@ QByteArray DataRetriever::retrieveData(const QUrl& baseUrl, const QUrl& query)
 
     QString request(baseUrl.path());
 
-    if (!queryPart.isEmpty())
+    if (processAbsoluteUrl && queryPart.startsWith('/'))
+    {
+        request = queryPart;
+    }
+    else if (!queryPart.isEmpty())
     {
         if (!request.endsWith('/'))
         {
@@ -80,7 +85,7 @@ QByteArray DataRetriever::retrieveData(const QUrl& baseUrl, const QUrl& query)
     if (!sock.waitForConnected(5000))
     {
         throw HSocketException(
-            QObject::tr("Could not connect to [%1] in order to retrieve [%2]").arg(
+            QString("Could not connect to [%1] in order to retrieve [%2]").arg(
                 baseUrl.toString(), request));
     }
 
@@ -93,7 +98,7 @@ QByteArray DataRetriever::retrieveData(const QUrl& baseUrl, const QUrl& query)
 
     if (rv)
     {
-        throw HOperationFailedException(QObject::tr(
+        throw HOperationFailedException(QString(
             "Failed to retrieve data from: [%1] due to: [%2]").arg(
                 request, mi.lastErrorDescription()));
     }
@@ -101,7 +106,7 @@ QByteArray DataRetriever::retrieveData(const QUrl& baseUrl, const QUrl& query)
     if (!body.size())
     {
         throw HOperationFailedException(
-            QObject::tr("Did not receive any data for request: [%1]").arg(request));
+            QString("Did not receive any data for request: [%1]").arg(request));
     }
 
     return body;
@@ -112,18 +117,18 @@ QDomDocument DataRetriever::retrieveServiceDescription(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Attempting to fetch a service description for [%1] from: [%2]").arg(
             scpdUrl.toString(), deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, scpdUrl);
+    QByteArray data = retrieveData(deviceLocation, scpdUrl, true);
 
     QDomDocument dd;
     QString errMsg; qint32 errLine = 0;
     if (!dd.setContent(data, false, &errMsg, &errLine))
     {
         throw HParseException(
-            QObject::tr("Could not parse the service description: [%1] @ line [%2]").
+            QString("Could not parse the service description: [%1] @ line [%2]").
             arg(errMsg, QString::number(errLine)));
     }
 
@@ -134,17 +139,17 @@ QImage DataRetriever::retrieveIcon(const QUrl& deviceLocation, const QUrl& iconU
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Attempting to retrieve icon [%1] from: [%2]").arg(
             iconUrl.toString(), deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, iconUrl);
+    QByteArray data = retrieveData(deviceLocation, iconUrl, false);
 
     QImage image;
     if (!image.loadFromData(data))
     {
         throw HParseException(
-            QObject::tr("The retrieved data is not a proper icon"));
+            QString("The retrieved data is not a proper icon"));
     }
 
     return image;
@@ -154,18 +159,18 @@ QDomDocument DataRetriever::retrieveDeviceDescription(QUrl deviceLocation)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Attempting to fetch a device description from: [%1]").arg(
             deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, QUrl());
+    QByteArray data = retrieveData(deviceLocation, QUrl(), false);
 
     QDomDocument dd;
     QString errMsg; qint32 errLine = 0;
     if (!dd.setContent(data, false, &errMsg, &errLine))
     {
         throw InvalidDeviceDescription(
-            QObject::tr("Could not parse the device description file: [%1] @ line [%2]:\n[%3]").
+            QString("Could not parse the device description file: [%1] @ line [%2]:\n[%3]").
             arg(errMsg, QString::number(errLine), QString::fromUtf8(data)));
     }
 

@@ -54,11 +54,10 @@ namespace Upnp
 {
 
 class HUdn;
-class HAbstractHost;
 class HSharedActionInvoker;
 
 //
-// Implementation details of HAbstractHost
+//
 //
 class H_UPNP_CORE_EXPORT HAbstractHostPrivate :
     public QObject
@@ -80,9 +79,6 @@ public: // attributes
 
     QScopedPointer<DeviceStorage> m_deviceStorage;
     // the storage for device model.
-
-    HAbstractHost* q_ptr;
-    //
 
     QThreadPool* m_threadPool;
     //
@@ -136,9 +132,6 @@ public: // methods
 
     HAbstractHostPrivate(const QString& loggingIdentfier = "");
     virtual ~HAbstractHostPrivate();
-
-    void addRootDevice(HDeviceController* root);
-    void removeRootDevice(HDeviceController* root);
 
     void clear();
     // clears the state of the host. purges everything and shuts down every

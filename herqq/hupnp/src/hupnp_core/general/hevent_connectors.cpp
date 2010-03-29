@@ -23,7 +23,7 @@
 
 #include "./../devicemodel/hservice.h"
 #include "./../devicemodel/hstatevariable.h"
-#include "./../devicehosting/habstracthost.h"
+#include "./../devicehosting/controlpoint/hcontrolpoint.h"
 
 namespace Herqq
 {
@@ -35,8 +35,8 @@ class HEventListenerPrivate
 {
 public:
 
-    HEventListener::AbstractHostEventCallback m_rootDeviceAdded;
-    HEventListener::AbstractHostEventCallback m_rootDeviceRemoved;
+    HEventListener::ControlPointEventCallback m_rootDeviceOnline;
+    HEventListener::ControlPointEventCallback m_rootDeviceOffline;
     HEventListener::ServiceEventCallback m_serviceChanged;
     HEventListener::StateVariableEventCallback m_stateVariableValueChanged;
 
@@ -55,19 +55,19 @@ HEventListener::~HEventListener()
     delete h_ptr;
 }
 
-void HEventListener::rootDeviceAdded(const HDeviceInfo& deviceInfo)
+void HEventListener::rootDeviceOnline(HDevice* device)
 {
-    if (h_ptr->m_rootDeviceAdded)
+    if (h_ptr->m_rootDeviceOnline)
     {
-        h_ptr->m_rootDeviceAdded(deviceInfo);
+        h_ptr->m_rootDeviceOnline(device);
     }
 }
 
-void HEventListener::rootDeviceRemoved(const HDeviceInfo& deviceInfo)
+void HEventListener::rootDeviceOffline(HDevice* device)
 {
-    if (h_ptr->m_rootDeviceRemoved)
+    if (h_ptr->m_rootDeviceOffline)
     {
-        h_ptr->m_rootDeviceRemoved(deviceInfo);
+        h_ptr->m_rootDeviceOffline(device);
     }
 }
 
@@ -87,14 +87,14 @@ void HEventListener::valueChanged(const HStateVariableEvent& eventInfo)
     }
 }
 
-void HEventListener::setRootDeviceAddedListener(AbstractHostEventCallback cb)
+void HEventListener::setRootDeviceOnlineListener(ControlPointEventCallback cb)
 {
-    h_ptr->m_rootDeviceAdded = cb;
+    h_ptr->m_rootDeviceOnline = cb;
 }
 
-void HEventListener::setRootDeviceRemovedListener(AbstractHostEventCallback cb)
+void HEventListener::setRootDeviceOfflineListener(ControlPointEventCallback cb)
 {
-    h_ptr->m_rootDeviceRemoved = cb;
+    h_ptr->m_rootDeviceOffline = cb;
 }
 
 void HEventListener::setServiceStateChangedListener(ServiceEventCallback cb)
@@ -114,7 +114,7 @@ class HEventConnectorPrivate
 {
 public:
 
-    QPair<HAbstractHost*, HEventListener*> m_hostConnection;
+    QPair<HControlPoint*, HEventListener*> m_hostConnection;
     QPair<HService*, HEventListener*> m_serviceConnection;
     QPair<HStateVariable*, HEventListener*> m_stateVariableConnection;
     QPair<HAction*, HEventListener*> m_actionConnection;
@@ -133,16 +133,14 @@ HEventConnector::~HEventConnector()
     delete h_ptr;
 }
 
-void HEventConnector::rootDeviceAdded(
-    const Herqq::Upnp::HDeviceInfo& newDeviceInfo)
+void HEventConnector::rootDeviceOnline(Herqq::Upnp::HDevice* newDevice)
 {
-    h_ptr->m_hostConnection.second->rootDeviceAdded(newDeviceInfo);
+    h_ptr->m_hostConnection.second->rootDeviceOnline(newDevice);
 }
 
-void HEventConnector::rootDeviceRemoved (
-    const Herqq::Upnp::HDeviceInfo& deviceInfo)
+void HEventConnector::rootDeviceOffline(Herqq::Upnp::HDevice* device)
 {
-    h_ptr->m_hostConnection.second->rootDeviceRemoved(deviceInfo);
+    h_ptr->m_hostConnection.second->rootDeviceOffline(device);
 }
 
 void HEventConnector::stateChanged(const HService* source)
@@ -155,7 +153,7 @@ void HEventConnector::valueChanged(const HStateVariableEvent& eventInfo)
     h_ptr->m_stateVariableConnection.second->valueChanged(eventInfo);
 }
 
-void HEventConnector::setConnection(HAbstractHost* host, HEventListener* listener)
+void HEventConnector::setConnection(HControlPoint* host, HEventListener* listener)
 {
     Q_ASSERT(host);
     Q_ASSERT(listener);
@@ -165,18 +163,18 @@ void HEventConnector::setConnection(HAbstractHost* host, HEventListener* listene
 
     bool ok = connect(
         h_ptr->m_hostConnection.first,
-        SIGNAL(rootDeviceAdded(Herqq::Upnp::HDeviceInfo)),
+        SIGNAL(rootDeviceOnline(Herqq::Upnp::HDevice*)),
         this,
-        SLOT(rootDeviceAdded(Herqq::Upnp::HDeviceInfo)),
+        SLOT(rootDeviceOnline(Herqq::Upnp::HDevice*)),
         Qt::DirectConnection);
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 
     ok = connect(
         h_ptr->m_hostConnection.first,
-        SIGNAL(rootDeviceRemoved(Herqq::Upnp::HDeviceInfo)),
+        SIGNAL(rootDeviceOffline(Herqq::Upnp::HDevice*)),
         this,
-        SLOT(rootDeviceRemoved(Herqq::Upnp::HDeviceInfo)),
+        SLOT(rootDeviceOffline(Herqq::Upnp::HDevice*)),
         Qt::DirectConnection);
 
     Q_ASSERT(ok);

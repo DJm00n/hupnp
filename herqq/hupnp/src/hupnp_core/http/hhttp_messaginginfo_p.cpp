@@ -82,5 +82,11 @@ QString MessagingInfo::hostInfo() const
     return m_hostInfo;
 }
 
+QString MessagingInfo::lastErrorDescription() const
+{
+    return m_lastErrorDescription.isEmpty() ? m_sock.errorString() :
+           m_lastErrorDescription;
+}
+
 }
 }

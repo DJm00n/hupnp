@@ -35,7 +35,6 @@ namespace Upnp
 {
 
 class HEventConnector;
-
 class HEventListenerPrivate;
 
 /*!
@@ -49,7 +48,7 @@ friend class HEventConnector;
 
 public:
 
-    typedef Functor<void, H_TYPELIST_1(const HDeviceInfo&)> AbstractHostEventCallback;
+    typedef Functor<void, H_TYPELIST_1(HDevice*)> ControlPointEventCallback;
     typedef Functor<void, H_TYPELIST_1(const HService*)> ServiceEventCallback;
     typedef Functor<void, H_TYPELIST_1(const HStateVariableEvent&)> StateVariableEventCallback;
 
@@ -57,16 +56,16 @@ private:
 
     HEventListenerPrivate* h_ptr;
 
-    void rootDeviceAdded(const HDeviceInfo& deviceInfo);
-    void rootDeviceRemoved(const HDeviceInfo& deviceInfo);
+    void rootDeviceOnline(HDevice*);
+    void rootDeviceOffline(HDevice*);
     void stateChanged(const HService* source);
     void valueChanged(const Herqq::Upnp::HStateVariableEvent&);
 
 public:
 
     HEventListener();
-    void setRootDeviceAddedListener(AbstractHostEventCallback);
-    void setRootDeviceRemovedListener(AbstractHostEventCallback);
+    void setRootDeviceOnlineListener(ControlPointEventCallback);
+    void setRootDeviceOfflineListener(ControlPointEventCallback);
     void setServiceStateChangedListener(ServiceEventCallback);
     void setServiceStateChangedListener(StateVariableEventCallback);
 
@@ -91,8 +90,9 @@ private:
 
 private Q_SLOTS:
 
-    void rootDeviceAdded(const Herqq::Upnp::HDeviceInfo&);
-    void rootDeviceRemoved(const Herqq::Upnp::HDeviceInfo&);
+    void rootDeviceOnline(Herqq::Upnp::HDevice*);
+    void rootDeviceOffline(Herqq::Upnp::HDevice*);
+
     void stateChanged(const HService*);
     void valueChanged(const Herqq::Upnp::HStateVariableEvent&);
 
@@ -101,7 +101,7 @@ public:
     HEventConnector();
     virtual ~HEventConnector();
 
-    void setConnection(HAbstractHost*, HEventListener*);
+    void setConnection(HControlPoint*, HEventListener*);
     void setConnection(HService*, HEventListener*);
     void setConnection(HStateVariable*, HEventListener*);
     void setConnection(HAction*, HEventListener*);

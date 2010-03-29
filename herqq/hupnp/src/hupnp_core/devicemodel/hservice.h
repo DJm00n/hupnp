@@ -95,9 +95,9 @@ class HServiceController;
  *
  * #include "myswitchpower.h" // your code
  *
- * Herqq::Upnp::HService::HActionMapT MySwitchPower::createActions()
+ * Herqq::Upnp::HService::HActionMap MySwitchPower::createActions()
  * {
- *     Herqq::Upnp::HService::HActionMapT retVal;
+ *     Herqq::Upnp::HService::HActionMap retVal;
  *
  *     retVal["SetTarget"] =
  *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::setTarget);
@@ -148,12 +148,16 @@ friend class HServiceController;
 public: // typedefs
 
     /*!
-     * Type definition for a map holding HAction names as keys and
-     * callable entities named Herqq::Upnp::HActionInvoke as values.
+     * A type definition for a map holding the UPnP action names (HAction::name())
+     * as keys and callable entities named Herqq::Upnp::HActionInvoke as values.
      *
-     * \sa HActionInvoke, createActions()
+     * This type definition is used as a return value of private HService::createActions()
+     * method to convey information about the UPnP actions the service exports
+     * to HUPnP during the object initialization.
+     *
+     * \sa HAction, HActionInvoke, createActions()
      */
-    typedef QHash<QString, HActionInvoke> HActionMapT;
+    typedef QHash<QString, HActionInvoke> HActionMap;
 
 private:
 
@@ -172,7 +176,7 @@ private:
      * addresses of the created actions and use them safely throughout the lifetime
      * of the containing service object. However, you cannot delete them.
      */
-    virtual HActionMapT createActions() = 0;
+    virtual HActionMap createActions() = 0;
 
 protected:
 
@@ -201,11 +205,9 @@ public:
     virtual ~HService() = 0;
 
     /*!
-     * Returns the parent HDevice that contains this
-     * service instance.
+     * Returns the parent HDevice that contains this service instance.
      *
-     * \return the parent HDevice that contains this
-     * service instance.
+     * \return the parent HDevice that contains this service instance.
      */
     HDevice* parentDevice() const;
 

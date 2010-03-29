@@ -74,15 +74,6 @@ private:
     const QUrl m_location;
     const qint32 m_cacheControlMaxAge;
 
-private:
-
-    void createEventSubscriptions(
-        HDeviceController* device,
-        QList<QSharedPointer<HServiceSubscribtion> >* subscriptions);
-
-    void deleteSubscriptions(
-        QList<QSharedPointer<HServiceSubscribtion> >* subscriptions);
-
 public:
 
     QList<QUrl> m_locations;

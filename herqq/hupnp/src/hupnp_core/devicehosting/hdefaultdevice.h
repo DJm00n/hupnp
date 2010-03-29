@@ -42,7 +42,7 @@ H_DISABLE_COPY(HDefaultService)
 
 private:
 
-    virtual HActionMapT createActions();
+    virtual HActionMap createActions();
 
 public:
 
@@ -60,7 +60,7 @@ H_DISABLE_COPY(HDefaultDevice)
 
 private:
 
-    virtual HServiceMapT createServices();
+    virtual HServiceMap createServices();
 
 public:
 

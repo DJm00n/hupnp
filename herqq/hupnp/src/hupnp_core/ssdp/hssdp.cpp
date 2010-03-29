@@ -164,14 +164,14 @@ qint32 HSsdpPrivate::parseCacheControl(const QString& str)
     if (slist.size() != 2 || slist[0].simplified() != "max-age")
     {
         throw HParseException(
-            QObject::tr("Invalid Cache-Control field value: %1").arg(str));
+            QString("Invalid Cache-Control field value: %1").arg(str));
     }
 
     qint32 maxAge = slist[1].simplified().toInt(&ok);
     if (!ok)
     {
         throw HParseException(
-            QObject::tr("Invalid Cache-Control field value: %1").arg(str));
+            QString("Invalid Cache-Control field value: %1").arg(str));
     }
 
     return maxAge;
@@ -183,7 +183,7 @@ void HSsdpPrivate::checkHost(const QString& host)
     if (slist.size() < 1 || slist[0].simplified() != "239.255.255.250")
     {
         throw HParseException(
-            QObject::tr("HOST header field is invalid: %1").arg(host));
+            QString("HOST header field is invalid: %1").arg(host));
     }
 }
 
@@ -201,13 +201,13 @@ HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(const QHttpResponseHeade
 
     if (!hdr.hasKey("EXT"))
     {
-        throw HParseException(QObject::tr("EXT field is missing: %1").arg(
+        throw HParseException(QString("EXT field is missing: %1").arg(
             hdr.toString()));
     }
     else if (!hdr.value("EXT").isEmpty())
     {
         throw HParseException(
-            QObject::tr("EXT field is not empty, although it should be: %1").
+            QString("EXT field is not empty, although it should be: %1").
                 arg(hdr.toString()));
     }
 
@@ -249,7 +249,7 @@ HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(const QHttpRequestHeader& 
 
     if (!ok)
     {
-        throw HMissingArgumentException(QObject::tr("MX is not specified."));
+        throw HMissingArgumentException(QString("MX is not specified."));
     }
 
     QString st   = hdr.value("ST");
@@ -259,7 +259,7 @@ HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(const QHttpRequestHeader& 
 
     if (man.compare(QString("\"ssdp:discover\""), Qt::CaseInsensitive) != 0)
     {
-        throw HParseException(QObject::tr("MAN header field is invalid."));
+        throw HParseException("MAN header field is invalid.");
     }
 
     return HDiscoveryRequest(mx, st, ua);
@@ -382,7 +382,7 @@ void HSsdpPrivate::send(const QString& data)
 
     if (retVal != buf.size())
     {
-        HLOG_WARN(QObject::tr("Failed to send the packet: %1. Contents:\n%2").arg(
+        HLOG_WARN(QString("Failed to send the packet: %1. Contents:\n%2").arg(
             m_unicastSocket.errorString(), data));
     }
 }
@@ -397,7 +397,7 @@ void HSsdpPrivate::send(const QString& data, const HEndpoint& receiver)
 
     if (retVal != buf.size())
     {
-        HLOG_WARN(QObject::tr("Failed to send the packet to %1: %2. Contents:\n%3").arg(
+        HLOG_WARN(QString("Failed to send the packet to %1: %2. Contents:\n%3").arg(
             receiver.toString(), m_unicastSocket.errorString(), data));
     }
 }
@@ -409,7 +409,7 @@ void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)
     QHttpResponseHeader hdr(msg);
     if (!hdr.isValid())
     {
-        HLOG_WARN(QObject::tr("Ignoring an invalid HTTP response."));
+        HLOG_WARN("Ignoring an invalid HTTP response.");
         return;
     }
 
@@ -427,7 +427,7 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
     QHttpRequestHeader hdr(msg);
     if (!hdr.isValid())
     {
-        HLOG_WARN(QObject::tr("Ignoring an invalid HTTP response."));
+        HLOG_WARN("Ignoring an invalid HTTP response.");
         return;
     }
 
@@ -458,7 +458,7 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
     }
     else
     {
-        HLOG_WARN(QObject::tr(
+        HLOG_WARN(QString(
             "Ignoring an invalid SSDP presence announcement: [%1].").arg(nts));
     }
 }
@@ -471,7 +471,7 @@ void HSsdpPrivate::processSearch(
     QHttpRequestHeader hdr(msg);
     if (!hdr.isValid())
     {
-        HLOG_WARN(QObject::tr("Ignoring an invalid HTTP M-SEARCH request."));
+        HLOG_WARN("Ignoring an invalid HTTP M-SEARCH request.");
         return;
     }
 
@@ -488,47 +488,47 @@ bool HSsdpPrivate::init(const QHostAddress& addressToBind, HSsdp* qptr)
 
     if (!m_multicastSocket.bind(1900))
     {
-        HLOG_WARN(QObject::tr("Failed to bind multicast socket for listening."));
+        HLOG_WARN("Failed to bind multicast socket for listening.");
         return false;
     }
 
     if (!m_multicastSocket.joinMulticastGroup(multicastAddress()))
     {
-        HLOG_WARN(QObject::tr("Could not join %1").arg(
+        HLOG_WARN(QString("Could not join %1").arg(
             multicastAddress().toString()));
 
         return false;
     }
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Using address [%1] for unicast socket").arg(
             addressToBind.toString()));
 
-    HLOG_DBG(QObject::tr("Attempting to bind unicast socket to port 1900"));
+    HLOG_DBG("Attempting to bind unicast socket to port 1900");
 
     // always attempt to bind to the 1900 first
     if (!m_unicastSocket.bind(addressToBind, 1900))
     {
-        HLOG_DBG(QObject::tr("Failed. Searching suitable port."));
+        HLOG_DBG("Failed. Searching suitable port.");
 
         // the range is specified by the UDA 1.1 standard
         for(qint32 i = 49152; i < 65535; ++i)
         {
             if (m_unicastSocket.bind(addressToBind, i))
             {
-                HLOG_DBG(QObject::tr("Binding to [%1].").arg(QString::number(i)));
+                HLOG_DBG(QString("Binding to [%1].").arg(QString::number(i)));
                 break;
             }
         }
     }
     else
     {
-        HLOG_DBG(QObject::tr("Success"));
+        HLOG_DBG("Success");
     }
 
     if (m_unicastSocket.state() != QUdpSocket::BoundState)
     {
-        HLOG_WARN(QObject::tr("Failed to bind unicast UDP socket for listening."));
+        HLOG_WARN("Failed to bind unicast UDP socket for listening.");
         return false;
     }
 
@@ -698,7 +698,7 @@ void HSsdp::unicastMessageReceived()
     qint64 read = h_ptr->m_unicastSocket.readDatagram(buf.data(), buf.size(), &ha, &port);
     if (read < 0)
     {
-        HLOG_WARN(QObject::tr("Read failed: %1").arg(h_ptr->m_unicastSocket.errorString()));
+        HLOG_WARN(QString("Read failed: %1").arg(h_ptr->m_unicastSocket.errorString()));
         return;
     }
 
@@ -721,7 +721,7 @@ void HSsdp::multicastMessageReceived()
     qint64 read = h_ptr->m_multicastSocket.readDatagram(buf.data(), buf.size(), &ha, &port);
     if (read < 0)
     {
-        HLOG_WARN(QObject::tr("Read failed: %1").arg(h_ptr->m_multicastSocket.errorString()));
+        HLOG_WARN(QString("Read failed: %1").arg(h_ptr->m_multicastSocket.errorString()));
         return;
     }
 
@@ -741,7 +741,7 @@ qint32 send(HSsdpPrivate* hptr, Msg msg, qint32 count)
     HLOG2(H_AT, H_FUN, hptr->m_loggingIdentifier);
     if (!msg.isValid())
     {
-        HLOG_WARN(QObject::tr("Will not send an invalid message: %1").arg(msg.toString()));
+        HLOG_WARN(QString("Will not send an invalid message: %1").arg(msg.toString()));
         return -1;
     }
 
@@ -759,7 +759,7 @@ qint32 send(HSsdpPrivate* hptr, Msg msg, const HEndpoint& receiver, qint32 count
     HLOG2(H_AT, H_FUN, hptr->m_loggingIdentifier);
     if (!msg.isValid())
     {
-        HLOG_WARN(QObject::tr("Will not send an invalid message: %1").arg(msg.toString()));
+        HLOG_WARN(QString("Will not send an invalid message: %1").arg(msg.toString()));
         return -1;
     }
 

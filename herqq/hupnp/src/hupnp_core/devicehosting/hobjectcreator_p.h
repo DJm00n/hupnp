@@ -145,7 +145,7 @@ private:
     HActionController* parseAction(
         HService* parentService,
         const QDomElement& actionElement,
-        const HService::HActionMapT& definedActions);
+        const HService::HActionMap& definedActions);
 
     HStateVariableController* parseStateVariable(
         HService* parentService, const QDomElement& stateVariableElement);

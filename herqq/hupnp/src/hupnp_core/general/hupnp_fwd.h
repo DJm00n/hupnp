@@ -41,22 +41,23 @@ namespace Upnp
  */
 
 class HUdn;
+class HUsn;
 class HAction;
 class HDevice;
 class HService;
+class HEndpoint;
 class HServiceId;
 class HDeviceHost;
 class HDeviceInfo;
 class HControlPoint;
-class HAbstractHost;
 class HResourceType;
 class HObjectCreator;
 class HStateVariable;
 class HActionArgument;
 class HActionArguments;
 class HStateVariableEvent;
+class HResourceIdentifier;
 class HDeviceConfiguration;
-class HActionArgument;
 class HDeviceHostConfiguration;
 class HControlPointConfiguration;
 
@@ -67,52 +68,22 @@ class HResourceAvailable;
 class HResourceUnavailable;
 
 /*!
- * Type definition for a root HDevice wrapped inside a reference counting shared
- * pointer.
- *
- * This is an important design concept to notice; a root device is only accessible
- * as a HRootDevicePtrT. The HUPnP API does not expose a root UPnP device
- * in any other way. Because of this, a root HDevice object
- * and objects that are reachable through them are
- * accessible as long as at least one pointer to the root device object is valid.
+ * Type definition for a list of pointers to HDevice instances.
  *
  * \ingroup devicemodel
  *
  * \sa HDevice
  */
-typedef QSharedPointer<HDevice> HRootDevicePtrT;
+typedef QList<HDevice*> HDevicePtrList;
 
 /*!
- * Type definition for a collection of root HDevices managed by reference counting
- * shared pointers.
+ * Type definition for a list of pointers to HService instances.
  *
  * \ingroup devicemodel
  *
- * \sa HRootDevicePtrT
+ * \sa HService
  */
-typedef QList<HRootDevicePtrT> HRootDevicePtrListT;
-
-/*!
- * Type definition for a list of raw pointers to HDevice instances.
- *
- * Whereas root devices are always exposed only through QSharedPointers,
- * embedded devices are always exposed as raw pointers. This enforces a design
- * where the life time of a UPnP device tree is dictated by the life time of
- * the device tree's root device; when a root device is deleted, every object managed by it
- * (the UPnP device tree) is also deleted.
- *
- * \ingroup devicemodel
- *
- * \sa HDevice
- */
-typedef QList<HDevice*> HDevicePtrListT;
-
-/*!
- * Type definition for a list of raw pointers to HService instances.
- *
- * \ingroup devicemodel
- */
-typedef QList<HService*> HServicePtrListT;
+typedef QList<HService*> HServicePtrList;
 
 }
 }

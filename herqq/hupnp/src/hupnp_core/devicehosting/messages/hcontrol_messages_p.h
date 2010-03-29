@@ -53,17 +53,36 @@ private:
 
 public:
 
-    InvokeActionRequest();
+    inline InvokeActionRequest() :
+        m_soapAction(), m_soapMsg(), m_serviceUrl()
+    {
+    }
 
-    InvokeActionRequest(
+    inline InvokeActionRequest(
         const QString& soapAction, const QtSoapMessage& soapMsg,
-        const QUrl& serviceUrl);
+        const QUrl& serviceUrl) :
+            m_soapAction(soapAction), m_soapMsg(soapMsg), m_serviceUrl(serviceUrl)
+    {
+    }
 
-    virtual ~InvokeActionRequest();
+    inline ~InvokeActionRequest()
+    {
+    }
 
-    QString soapAction() const;
-    const QtSoapMessage* soapMsg() const;
-    QUrl serviceUrl() const;
+    inline QString soapAction() const
+    {
+        return m_soapAction;
+    }
+
+    inline const QtSoapMessage* soapMsg() const
+    {
+        return &m_soapMsg;
+    }
+
+    inline QUrl serviceUrl() const
+    {
+        return m_serviceUrl;
+    }
 };
 
 }

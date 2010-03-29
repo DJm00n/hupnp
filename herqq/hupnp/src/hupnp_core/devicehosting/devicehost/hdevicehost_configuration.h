@@ -63,10 +63,18 @@ class H_UPNP_CORE_EXPORT HDeviceConfiguration
 {
 H_DISABLE_COPY(HDeviceConfiguration)
 
-protected:
+private:
 
     HDeviceConfigurationPrivate* h_ptr;
-    explicit HDeviceConfiguration(HDeviceConfigurationPrivate& dd);
+
+    /*!
+     * Creates a clone of the object.
+     *
+     * \remark you should override this in derived classes. Failing
+     * to override this will result in invalid clones being made of derived classes
+     * that introduce new member variables.
+     */
+    virtual HDeviceConfiguration* doClone() const;
 
 public:
 
@@ -85,11 +93,13 @@ public:
      *
      * \return a deep copy of the instance.
      *
-     * \remark you should override this in derived classes. Failing
+     * \remark
+     * \li you should override this in derived classes. Failing
      * to override this will result in invalid clones being made of derived classes
      * that introduce new member variables.
+     * \li the ownership of the returned object is transferred to the caller.
      */
-    virtual HDeviceConfiguration* clone() const;
+    HDeviceConfiguration* clone() const;
 
     /*!
      * Sets the maximum age of presence announcements and discovery responses
@@ -263,9 +273,20 @@ class HDeviceHostConfigurationPrivate;
  */
 class H_UPNP_CORE_EXPORT HDeviceHostConfiguration
 {
+H_DISABLE_COPY(HDeviceHostConfiguration)
+
 private:
 
     HDeviceHostConfigurationPrivate* h_ptr;
+
+    /*!
+     * Creates a clone of the object.
+     *
+     * \remark you should override this in derived classes. Failing
+     * to override this will result in invalid clones being made of derived classes
+     * that introduce new member variables.
+     */
+    virtual HDeviceHostConfiguration* doClone() const;
 
 public:
 
@@ -281,19 +302,22 @@ public:
     HDeviceHostConfiguration(const HDeviceConfiguration&);
 
     /*!
-     * Copy constructor.
-     */
-    HDeviceHostConfiguration(const HDeviceHostConfiguration&);
-
-    /*!
-     * Assignment operator.
-     */
-    HDeviceHostConfiguration& operator=(const HDeviceHostConfiguration&);
-
-    /*!
      * Destroys the instance.
      */
-    ~HDeviceHostConfiguration();
+    virtual ~HDeviceHostConfiguration();
+
+    /*!
+     * Returns a deep copy of the instance.
+     *
+     * \return a deep copy of the instance.
+     *
+     * \remark
+     * \li you should override this in derived classes. Failing
+     * to override this will result in invalid clones being made of derived classes
+     * that introduce new member variables.
+     * \li the ownership of the returned object is transferred to the caller.
+     */
+    HDeviceHostConfiguration* clone() const;
 
     /*!
      * Adds a device configuration.
@@ -301,7 +325,12 @@ public:
      * \param deviceConfiguration specifies the device configuration to be added.
      * The configuration is added only if it is valid (\sa HDeviceConfiguration::isValid()).
      *
-     * \return true in case the configuration was added.
+     * \return \e true in case the configuration was added. A configuration
+     * that is invalid, i.e. HDeviceConfiguration::isValid() returns false will
+     * not be added and \e false is returned.
+     *
+     * \remark a copy of the provided argument is added, not the provided const
+     * reference.
      */
     bool add(const HDeviceConfiguration& deviceConfiguration);
 
@@ -337,7 +366,9 @@ public:
 
     /*!
      * Indicates if the instance contains any device configurations.
-     * \return true in case the instance contains at least one device configuration.
+     *
+     * \return \e true in case the instance contains at least
+     * one device configuration.
      */
     bool isEmpty() const;
 };

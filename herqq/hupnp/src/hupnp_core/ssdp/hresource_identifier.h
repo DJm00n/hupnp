@@ -106,7 +106,7 @@ public:
     /*!
      * Creates a new empty instance. The type is set to HResourceIdentifier::Undefined.
      */
-    HResourceIdentifier ();
+    HResourceIdentifier();
 
     /*!
      * Creates a new instance, if the specified argument is valid.

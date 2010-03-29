@@ -122,7 +122,7 @@ public:
  * void example()
  * {
  *     HWritableStateVariable* sv =
- *         stateVariableByName("MyIntegerVariable")->toWritable();
+ *         stateVariableByName("MyIntegerVariable")->writable();
  *
  *     quint32 count = sv->value().toUInt(&ok);
  *     sv->setValue(++count);
@@ -139,7 +139,7 @@ public:
  * void example()
  * {
  *     HWritableStateVariable* sv =
- *         stateVariableByName("MyIntegerVariable")->toWritable();
+ *         stateVariableByName("MyIntegerVariable")->writable();
  *
  *     HStateVariableLocker svLocker(sv);
  *     // this will guarantee that we have exclusive access to the state variable

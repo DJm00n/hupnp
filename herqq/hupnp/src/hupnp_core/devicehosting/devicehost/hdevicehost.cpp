@@ -32,21 +32,10 @@
 #include "./../../../utils/hlogger_p.h"
 #include "./../../../utils/hsysutils_p.h"
 
-#include <QMetaType>
 #include <QDomDocument>
 #include <QAbstractEventDispatcher>
 
 #include <ctime>
-
-static bool registerMetaTypes()
-{
-    qRegisterMetaType<Herqq::Upnp::HDeviceHostConfiguration>(
-        "Herqq::Upnp::HDeviceHostConfiguration");
-
-    return true;
-}
-
-static bool test = registerMetaTypes();
 
 namespace Herqq
 {
@@ -68,7 +57,6 @@ HDeviceHostPrivate::HDeviceHostPrivate() :
             m_presenceAnnouncer  (0)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     srand(time(0));
 }
 
@@ -95,7 +83,7 @@ void HDeviceHostPrivate::createRootDevices()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QList<HDeviceConfiguration*> diParams = m_initParams.deviceConfigurations();
+    QList<HDeviceConfiguration*> diParams = m_initParams->deviceConfigurations();
 
     foreach(HDeviceConfiguration* deviceInitParams, diParams)
     {
@@ -143,11 +131,11 @@ void HDeviceHostPrivate::createRootDevices()
         HDeviceController* rootDevice = creator.createRootDevice();
 
         Q_ASSERT(rootDevice);
-        addRootDevice(rootDevice);
+        m_deviceStorage->addRootDevice(rootDevice);
 
         rootDevice->setParent(this);
         rootDevice->m_device->setParent(this);
-        connectSelfToServiceSignals(rootDevice->m_device.data());
+        connectSelfToServiceSignals(rootDevice->m_device);
     }
 }
 
@@ -158,7 +146,7 @@ void HDeviceHostPrivate::connectSelfToServiceSignals(HDevice* device)
     QList<HService*> services = device->services();
     foreach(HService* service, services)
     {
-        bool ok = QObject::connect(
+        bool ok = connect(
             service,
             SIGNAL(stateChanged(const Herqq::Upnp::HService*)),
             m_eventNotifier.data(),
@@ -222,6 +210,11 @@ void HDeviceHostPrivate::doClear()
     m_httpServer->close(false);
     m_http->shutdown(false);
 
+    // At this point SSDP and HTTP are closed and no further requests can come in.
+    // However, no objects have been deleted and the derived class can safely access
+    // them if necessary.
+    q_ptr->doQuit();
+
     m_presenceAnnouncer.reset(0);
     m_ssdp.reset(0);
 
@@ -243,7 +236,7 @@ void HDeviceHostPrivate::doClear()
     m_http.reset(0);
     m_httpServer.reset(0);
     m_eventNotifier.reset(0);
-    m_initParams = HDeviceHostConfiguration();
+    m_initParams.reset(0);
     m_activeRequestCount = 0;
 
     setState(Uninitialized);
@@ -253,100 +246,135 @@ void HDeviceHostPrivate::doClear()
  * HDeviceHost
  *******************************************************************************/
 HDeviceHost::HDeviceHost(QObject* parent) :
-    HAbstractHost(*new HDeviceHostPrivate(), parent)
+    QObject(parent), h_ptr(new HDeviceHostPrivate())
 {
-    HLOG(H_AT, H_FUN);
+    h_ptr->setParent(this);
+    h_ptr->q_ptr = this;
 }
 
 HDeviceHost::~HDeviceHost()
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
     quit();
+    delete h_ptr;
+}
+
+HDeviceHost::ReturnCode HDeviceHost::doInit()
+{
+    // default implementation does nothing
+    return Success;
+}
+
+void HDeviceHost::doQuit()
+{
+    // default implementation does nothing
+}
+
+bool HDeviceHost::acceptSubscription(
+    HService* /*targetService*/, const HEndpoint& /*source*/, bool /*renewal*/)
+{
+    return true;
+}
+
+const HDeviceHostConfiguration* HDeviceHost::configuration() const
+{
+    return h_ptr->m_initParams.data();
 }
 
 HDeviceHost::ReturnCode HDeviceHost::init(
     const HDeviceHostConfiguration& initParams, QString* errorString)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    H_D(HDeviceHost);
 
     Q_ASSERT_X(
         thread() == QThread::currentThread(), H_AT,
-        "The device host has to be initialized in the thread in which it is currently located.");
+        "The device host has to be initialized in the thread in which "
+        "it is currently located.");
 
-    if (h->state() == HAbstractHostPrivate::Initialized)
+    if (h_ptr->state() == HAbstractHostPrivate::Initialized)
     {
         return AlreadyInitialized;
     }
 
-    Q_ASSERT(h->state() == HAbstractHostPrivate::Uninitialized);
+    Q_ASSERT(h_ptr->state() == HAbstractHostPrivate::Uninitialized);
 
     if (initParams.isEmpty())
     {
         if (errorString)
         {
-            *errorString = QObject::tr("No UPnP device configuration provided.");
+            *errorString = QString("No UPnP device configuration provided.");
         }
 
         return InvalidConfiguration;
     }
 
     QString error;
-    HDeviceHost::ReturnCode rc = Success;
+    ReturnCode rc = Success;
     try
     {
-        h->setState(HAbstractHostPrivate::Initializing);
+        h_ptr->setState(HAbstractHostPrivate::Initializing);
 
-        HLOG_INFO(QObject::tr("DeviceHost Initializing."));
+        HLOG_INFO("DeviceHost Initializing.");
 
-        h->m_initParams = initParams;
+        h_ptr->m_initParams.reset(initParams.clone());
 
-        h->m_http.reset(new HHttpHandler(h->m_loggingIdentifier));
+        h_ptr->m_http.reset(new HHttpHandler(h_ptr->m_loggingIdentifier));
 
-        h->m_eventNotifier.reset(
-            new EventNotifier(h->m_loggingIdentifier, *h->m_http, this));
+        h_ptr->m_eventNotifier.reset(
+            new EventNotifier(h_ptr->m_loggingIdentifier, *h_ptr->m_http, this));
 
-        h->m_httpServer.reset(
+        h_ptr->m_httpServer.reset(
             new DeviceHostHttpServer(
-                h->m_loggingIdentifier, *h->m_deviceStorage,
-                *h->m_eventNotifier, this));
+                h_ptr->m_loggingIdentifier, *h_ptr->m_deviceStorage,
+                *h_ptr->m_eventNotifier, this));
 
-        if (!h->m_httpServer->listen())
+        if (!h_ptr->m_httpServer->listen())
         {
-            QString err = QObject::tr("Could not start the HTTP server.");
+            QString err = QString("Could not start the HTTP server.");
 
             if (errorString)
             {
                 *errorString = err;
             }
 
-            HLOG_WARN(QObject::tr("DeviceHost initialization failed: [%1]").arg(err));
+            HLOG_WARN(QString("DeviceHost initialization failed: [%1]").arg(err));
             rc = UndefinedFailure;
         }
         else
         {
-            h->createRootDevices();
+            h_ptr->createRootDevices();
 
-            h->m_ssdp.reset(
+            h_ptr->m_ssdp.reset(
                 new DeviceHostSsdpHandler(
-                    h->m_loggingIdentifier, *h->m_deviceStorage, this));
+                    h_ptr->m_loggingIdentifier, *h_ptr->m_deviceStorage, this));
 
-            if (!h->m_ssdp->bind())
+            if (!h_ptr->m_ssdp->bind())
             {
-                throw HSocketException(QObject::tr(
-                    "Failed to initialize SSDP."));
+                throw HSocketException("Failed to initialize SSDP.");
             }
 
-            h->m_presenceAnnouncer.reset(
+            h_ptr->m_presenceAnnouncer.reset(
                 new PresenceAnnouncer(
-                    h->m_ssdp.data(), h->m_initParams.individualAdvertisementCount()));
+                    h_ptr->m_ssdp.data(), h_ptr->m_initParams->individualAdvertisementCount()));
 
-            h->m_presenceAnnouncer->announce<ResourceAvailableAnnouncement>(
-                h->m_deviceStorage->rootDeviceControllers());
+            // allow the derived classes to perform their initialization routines
+            // before the hosted devices are announced to the network and timers
+            // are started. In addition, at this time no HTTP or SSDP requests
+            // are served.
 
-            h->startNotifiers();
+            rc = doInit();
+            // continue only if the derived class succeeded in initializing itself
 
-            h->setState(HAbstractHostPrivate::Initialized);
+            if (rc == Success)
+            {
+                h_ptr->m_presenceAnnouncer->announce<ResourceAvailableAnnouncement>(
+                    h_ptr->m_deviceStorage->rootDeviceControllers());
+
+                h_ptr->startNotifiers();
+
+                h_ptr->setState(HAbstractHostPrivate::Initialized);
+            }
         }
     }
     catch(Herqq::Upnp::InvalidDeviceDescription& ex)
@@ -372,10 +400,10 @@ HDeviceHost::ReturnCode HDeviceHost::init(
 
     if (rc != Success)
     {
-        HLOG_WARN(QObject::tr("DeviceHost initialization failed: [%1]").arg(error));
+        HLOG_WARN(QString("DeviceHost initialization failed: [%1]").arg(error));
 
-        h->setState(HAbstractHostPrivate::Exiting);
-        h->clear();
+        h_ptr->setState(HAbstractHostPrivate::Exiting);
+        h_ptr->clear();
 
         if (errorString)
         {
@@ -385,55 +413,80 @@ HDeviceHost::ReturnCode HDeviceHost::init(
         return rc;
     }
 
-    HLOG_INFO(QObject::tr("DeviceHost initialized."));
+    HLOG_INFO("DeviceHost initialized.");
 
     return rc;
 }
 
-HDeviceHost::ReturnCode HDeviceHost::quit(QString* errorString)
+void HDeviceHost::quit()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    H_D(HDeviceHost);
 
     Q_ASSERT_X(
         thread() == QThread::currentThread(), H_AT,
-        "The device host has to be shutdown in the thread in which it is currently located.");
+        "The device host has to be shutdown in the thread in which it is "
+        "currently located.");
 
-    if (h->state() == HAbstractHostPrivate::Uninitialized)
+    if (h_ptr->state() == HAbstractHostPrivate::Uninitialized)
     {
-        return Success;
+        return;
     }
 
-    Q_ASSERT(h->state() == HAbstractHostPrivate::Initialized);
+    Q_ASSERT(h_ptr->state() == HAbstractHostPrivate::Initialized);
 
-    HLOG_INFO(QObject::tr("DeviceHost shutting down."));
+    HLOG_INFO("Shutting down.");
 
-    h->setState(HAbstractHostPrivate::Exiting);
+    h_ptr->setState(HAbstractHostPrivate::Exiting);
 
-    ReturnCode retVal = Success;
     try
     {
-        h->stopNotifiers();
+        h_ptr->stopNotifiers();
 
-        h->m_presenceAnnouncer->announce<ResourceUnavailableAnnouncement>(
-            h->m_deviceStorage->rootDeviceControllers());
+        h_ptr->m_presenceAnnouncer->announce<ResourceUnavailableAnnouncement>(
+            h_ptr->m_deviceStorage->rootDeviceControllers());
     }
     catch (HException& ex)
     {
         HLOG_WARN(ex.reason());
-        retVal = UndefinedFailure;
-
-        if (errorString)
-        {
-            *errorString = ex.reason();
-        }
     }
 
-    h->clear();
+    h_ptr->clear();
 
-    HLOG_INFO(QObject::tr("DeviceHost shut down."));
+    HLOG_INFO("Shut down.");
+}
 
-    return retVal;
+bool HDeviceHost::isStarted() const
+{
+    return h_ptr->state() == HAbstractHostPrivate::Initialized;
+}
+
+HDevicePtrList HDeviceHost::rootDevices() const
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        HLOG_WARN("The device host is not started");
+        return HDevicePtrList();
+    }
+
+    return h_ptr->m_deviceStorage->rootDevices();
+}
+
+HDevice* HDeviceHost::rootDevice(const HUdn& udn) const
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        HLOG_WARN("The device host is not started");
+        return 0;
+    }
+
+    HDeviceController* dc = h_ptr->m_deviceStorage->searchDeviceByUdn(udn);
+
+    return dc ?
+        h_ptr->m_deviceStorage->searchDeviceByUdn(udn)->m_device : 0;
 }
 
 }

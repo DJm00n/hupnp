@@ -45,21 +45,21 @@ ControlPointWindow::ControlPointWindow(QWidget* parent) :
 
     m_ui->setupUi(this);
 
-    m_controlPoint = new HControlPoint();
+    m_controlPoint = new HControlPoint(0, this);
 
     bool ok = connect(
         m_controlPoint,
-        SIGNAL(rootDeviceAdded(Herqq::Upnp::HDeviceInfo)),
+        SIGNAL(rootDeviceOnline(Herqq::Upnp::HDevice*)),
         this,
-        SLOT(rootDeviceAdded(Herqq::Upnp::HDeviceInfo)));
+        SLOT(rootDeviceOnline(Herqq::Upnp::HDevice*)));
 
     Q_ASSERT(ok);
 
     ok = connect(
         m_controlPoint,
-        SIGNAL(rootDeviceRemoved(Herqq::Upnp::HDeviceInfo)),
+        SIGNAL(rootDeviceOffline(Herqq::Upnp::HDevice*)),
         this,
-        SLOT(rootDeviceRemoved(Herqq::Upnp::HDeviceInfo)));
+        SLOT(rootDeviceOffline(Herqq::Upnp::HDevice*)));
 
     Q_ASSERT(ok);
 
@@ -114,19 +114,17 @@ void ControlPointWindow::stateVariableChanged(
             event.newValue().toString()));
 }
 
-void ControlPointWindow::rootDeviceAdded(const HDeviceInfo& deviceInfo)
+void ControlPointWindow::rootDeviceOnline(HDevice* newDevice)
 {
-    HRootDevicePtrT newDevice =
-        m_controlPoint->rootDevice(deviceInfo.udn().value());
-
-    m_controlpointNavigator->rootDeviceAdded(newDevice);
-
-    connectToEvents(newDevice.data());
+    m_controlpointNavigator->rootDeviceOnline(newDevice);
+    connectToEvents(newDevice);
 }
 
-void ControlPointWindow::rootDeviceRemoved(const HDeviceInfo& deviceInfo)
+void ControlPointWindow::rootDeviceOffline(HDevice* device)
 {
-    m_controlpointNavigator->rootDeviceRemoved(deviceInfo);
+    m_controlpointNavigator->rootDeviceOffline(device);
+    m_dataItemDisplay->deviceRemoved(device->deviceInfo().udn());
+    emit contentSourceRemoved(device);
 }
 
 void ControlPointWindow::changeEvent(QEvent *e)
@@ -173,8 +171,15 @@ void ControlPointWindow::on_navigatorTreeView_doubleClicked(QModelIndex index)
     if (ai)
     {
         InvokeActionDialog* dlg = new InvokeActionDialog(ai->action(), this);
+
         bool ok = connect(dlg, SIGNAL(finished(int)), dlg, SLOT(deleteLater()));
         Q_ASSERT(ok); Q_UNUSED(ok)
+
+        ok = connect(
+            this, SIGNAL(contentSourceRemoved(Herqq::Upnp::HDevice*)),
+            dlg , SLOT(contentSourceRemoved(Herqq::Upnp::HDevice*)));
+        Q_ASSERT(ok);
+
         dlg->show();
     }
 }

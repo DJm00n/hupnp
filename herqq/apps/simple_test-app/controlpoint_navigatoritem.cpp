@@ -153,7 +153,7 @@ void ContainerItem::accept(ControlPointNavigatorItemVisitor* /*visitor*/)
  * DeviceItem
  ******************************************************************************/
 DeviceItem::DeviceItem(
-    HRootDevicePtrT device, ControlPointNavigatorItem* parent) :
+    HDevice* device, ControlPointNavigatorItem* parent) :
         ControlPointNavigatorItem(parent), m_device(device)
 {
     Q_ASSERT(m_device);

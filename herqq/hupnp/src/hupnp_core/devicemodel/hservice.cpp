@@ -148,7 +148,7 @@ bool HServicePrivate::updateVariables(
 
         if (!stateVar)
         {
-            HLOG_WARN(QObject::tr("Cannot update state variable: no state variable [%1]").arg(
+            HLOG_WARN(QString("Cannot update state variable: no state variable [%1]").arg(
                 variables[i].first));
 
             return false;
@@ -158,7 +158,7 @@ bool HServicePrivate::updateVariables(
             convertToRightVariantType(
                 variables[i].second, stateVar->m_stateVariable->dataType())))
         {
-            HLOG_WARN(QObject::tr("Cannot update state variable [%1]. New value is invalid: [%2]").
+            HLOG_WARN(QString("Cannot update state variable [%1]. New value is invalid: [%2]").
                 arg(stateVar->m_stateVariable->name(), variables[i].second));
 
             return false;
@@ -287,7 +287,7 @@ void HService::notifyListeners()
         return;
     }
 
-    HLOG_DBG(QObject::tr("Notifying listeners."));
+    HLOG_DBG("Notifying listeners.");
 
     emit stateChanged(this);
 }

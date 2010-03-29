@@ -106,17 +106,17 @@
  * type definitions under the root namespace \c Herqq. For instance, all the
  * HUPnP core types can be found under the namespace Herqq::Upnp.
  *
- * In several occasions, you do not need to include the full %HUpnp type definitions for your
+ * In several occasions, you do not need to include the full %HUPnP type definitions for your
  * code to work. More specifically, if the compiler doesn't need to see the layout
- * of a %HUpnp type to compile your code, you should only forward-declare such %HUpnp
+ * of a %HUPnP type to compile your code, you should only forward-declare such %HUPnP
  * types. In that case, you can include the
  * <c><HUpnp></c> file, which provides forward-declarations to every public
- * %HUpnp type and function.
+ * %HUPnP type and function.
  *
  * \subsection logging Logging
  *
- * In many situations it is useful to get some log output to clarify what is
- * going on under the hood. This is especially true in case something appears
+ * In many situations it is useful to see some log output to have some idea what is
+ * going on under the hood, especially when something appears
  * to be malfunctioning. You can enable logging in HUPnP by calling the
  * function Herqq::Upnp::SetLoggingLevel() with a desired \e level argument.
  * Include <c><HUpnp></c> to use the Herqq::Upnp::SetLoggingLevel().
@@ -126,11 +126,12 @@
  * Often the best explanation is demonstration.
  * So without further ado, the following links should get you started.
  *
- * \li \ref builddevice_tutorial shows how to build your own UPnP device using the
+ * \li \ref builddevice_tutorial shows how to build your own UPnP device using
  * HUPnP.
- * \li The API documentation of Herqq::Upnp::HDeviceHost shows how to host a Herqq::Upnp::HDevice.
  * \li The API documentation of Herqq::Upnp::HControlPoint shows how to discover and use UPnP devices
  * on the network.
+ * \li The API documentation of Herqq::Upnp::HDeviceHost shows how to host a Herqq::Upnp::HDevice.
+ * This is how you setup a UPnP device to be found and used by UPnP control points.
  *
  * For more detailed information, you can check
  *
@@ -151,56 +152,33 @@
  * The main four components of the UPnP device model are
  * <em>a device</em> (Herqq::Upnp::HDevice), <em>a service</em> (Herqq::Upnp::HService),
  * <em>a state variable</em> (Herqq::Upnp::HStateVariable) <em>and an action</em> (Herqq::Upnp::HAction).
- * These four components form a type of a tree, in which devices and services are contained by devices,
- * and state variables and actions are contained by services.
+ * These four components form a type of a tree, in which devices and services
+ * are contained by devices, and state variables and actions are contained by services.
+ * This is called the <em>device tree</em>. A device tree has a \e root \e device,
+ * which is a UPnP device that has no parent, but may contain other UPnP devices.
+ * These contained devices are called <em>embedded devices</em>.
  *
  * \subsection lifetime_and_ownership The lifetime and ownership of objects
  *
- * The root component is always a device, which is labeled as the <em>root device</em>.
- * In HUPnP, there is a type definition for such a device: Herqq::Upnp::HRootDevicePtrT.
- * Although an \c HDevice, a <em>root device</em> is a special device that owns and controls
- * any <em>embedded device</em> or \em service it contains, recursively.
- * Perhaps the most important outcome of this is that the lifetime of every other
- * object underneath the root device depends of the lifetime of the root device.
+ * Every \c HDevice has the ownership of all of its embedded devices,
+ * services, actions and state variables and the ownership is never released.
+ * This means that every \c HDevice always manages the memory used by the
+ * objects it owns. Hence, the owner of a root \c HDevice ultimately has the ownership
+ * of an entire device tree. This is very important to notice;
+ * the lifetime of every object contained by the root device depends of the
+ * lifetime of the root device. Or in other words, when a root device is deleted, every
+ * embedded device, service, state variable and action underneath it are deleted as well.
+ * Furthermore, every root \c HDevice is always owned by HUPnP and the
+ * ownership is never released. Because of this you should \b never call \c delete
+ * to \b any of the components of the device model. This will result in
+ * \b undefined \b behavior.
  *
- * A Herqq::Upnp::HRootDevicePtrT is a type definition for an Herqq::Upnp::HDevice wrapped
- * in a \c QSharedPointer. This implies that you never have the ownership of a
- * root device. Rather, once you are done with it, you should just discard the
- * pointer. The root device will be deleted once every user of the object
- * has done the same. Note, however, that when the root device is deleted, every
- * device, service, state variable and action underneath it are deleted as well.
- * In essence, it is safe to store and use pointers to these objects as long as you have
- * at least one valid \c HRootDevicePtrT in scope. If that is not the case, you should
- * never access any stored pointer to any of these objects, since it may result
- * in memory access violation.
- *
- * The components of the device model (devices, services, state variables and actions)
- * are always owned by the HUPnP and the ownership is never transferred. You should
- * never delete any of these objects, as it would eventually cause <em>double deletion</em>,
- * which generally means <em>undefined behavior</em>.
- *
- * \subsection devicedisposal Device disposal
- *
- * As stated previously, you never have the ownership of the objects that build the
- * HUPnP Device Model. These objects are created, updated and destroyed by the HUPnP.
- * This eases memory management significantly in many ways. However, since any client
- * at any time can hold a pointer to a root device, HUPnP cannot delete the
- * root device or any of the objects it contains until every client of the root device
- * have dropped their references to it. Regardless, there are situations where the
- * root device should be deleted promptly.
- *
- * For instance, it may be desirable that when
- * a UPnP device is removed from the network, the control points update their
- * internal structures accordingly, usually removing the object structures that
- * represent the device.
- *
- * It is because of situations like these the HUPnP
- * can mark a \c HDevice as \em disposed. A disposed device can be used, it's methods
- * can be called and so on, but it's state will no longer be updated and it's
- * action invocations will fail. Furthermore, when a device enters the disposed state,
- * it will never be usable again. This should be a clear sign for the users to
- * drop their references to the device, which will eventually allow the HUPnP to delete the
- * device tree altogether.
+ * \note There are situations where you may want to instruct HUPnP to \c delete
+ * an \c HDevice. For instance, when a UPnP device is removed from the network
+ * you may want your \c HControlPoint instance to remove the device that is no
+ * longer available. This can be done through the \c HControlPoint interface.
+ * But note, HUPnP never deletes an \c HDevice without an explicit request from
+ * a user.
  *
  * \section usage Usage
  *
@@ -212,25 +190,29 @@
  * to the rule and it will be discussed in the section concerning the state
  * variables.
  *
- * Basic use is about
- * interacting with already created objects that comprise the device model.
- * To get started, you need to initialize a <em>device host</em> and retrieve a
- * list of <em>root devices</em> from it. See \ref devicehosting for more information about the
- * device hosts. Once you have a root device, you can interact with any of its
- * embedded devices, services, state variables and actions until the device gets disposed.
+ * Basic use is about interacting with already created objects that comprise the device model.
+ * To get started you need to initialize either a device host or a control point
+ * and retrieve a list of root devices from it. See \ref devicehosting for more
+ * information about device hosts and control points. Once you have a
+ * root device you can interact with any of its
+ * embedded devices, services, state variables and actions until:
+ * - you explicitly request an \c HDevice be deleted,
+ * - shut down the owner of a device tree, such as \c HControlPoint or \c HDeviceHost
+ *
  * See the corresponding classes for more information concerning their use.
  *
- * \note It is very important to point out that HUPnP keeps the state of the
- * state variables always up-to-date. That is, an \c HControlPoint always
- * subscribes to events the UPnP services expose. When you have a \c HStateVariable
- * indirectly retrieved from an \c HControlPoint, it's state is always synchronized
- * with the UPnP device as long as the UPnP device keeps sending events.
+ * \note By default, \c HControlPoint keeps the state of the
+ * state variables up-to-date. That is, using default configuration
+ * an \c HControlPoint automatically subscribes to events the UPnP services expose.
+ * In such a case the state of a device tree at control point side reflects
+ * the state of the corresponding device tree at device host side as accurately
+ * as the device host keeps sending events.
  *
  * However, if you wish to implement and host your own UPnP device, things get
  * more involved. See \ref builddevice_tutorial to get you started on building your
  * own UPnP devices.
  *
- * \subsection statevariables About State Variables
+ * \section statevariables About State Variables
  *
  * UPnP Device Architecture does not specify a mechanism for changing the value
  * of a state variable from a control point. Certainly the value of a state variable
@@ -248,17 +230,20 @@
  *
  * However, the lack of a standardized method for manipulating the values of
  * state variables means that device host and control point programming cannot
- * use an exactly symmetrical API. This is because on device host side, you have
+ * use an exactly symmetrical API. This is because on device host side you have
  * to have \e read-write access to the state variables, whereas on control point side
- * you have to have \e read-only access to the state variables. In HUPnP,
+ * you have to have \e read-only access to the state variables. In HUPnP
  * this is abstracted to  Herqq::Upnp::HWritableStateVariable and
  * Herqq::Upnp::HReadableStateVariable classes.
  * On device host side the dynamic type of every Herqq::Upnp::HStateVariable
- * is \c HWritableStateVariable
- * and on control point side the type is \c HReadableStateVariable.
+ * is \c HWritableStateVariable and on control point side the type is
+ * \c HReadableStateVariable.
  *
  * \sa devicehosting
  */
+
+
+
 
 /*! \page builddevice_tutorial Tutorial for Building a UPnP Device
  *
@@ -369,26 +354,30 @@
  *
  * \section creatingclasses Creating the necessary HUPnP classes
  *
- * With HUPnP, each description document has to be accompanied by a class.
- * So if we continue with the example, we have to derive a class
+ * HUPnP requires device and service descriptions to be accompanied by corresponding classes.
+ * In our example we have to derive a class
  * from Herqq::Upnp::HDevice for the \b BinaryLight:1 device description and
- * we have to derive a class from the Herqq::Upnp::HService for the
+ * we have to derive a class from Herqq::Upnp::HService for the
  * \b SwitchPower:1 service description.
  *
- * To create a concrete class from Herqq::Upnp::HDevice you have to implement its single abstract method
- * Herqq::Upnp::HServiceMapT Herqq::Upnp::HDevice::createServices(). As the name implies,
- * the purpose of this method is to create objects at run-time that reflect the services defined
- * in the device description. If your device has no services, this method has to
- * return an empty list.
+ * To create a concrete class from Herqq::Upnp::HDevice you have to implement
+ * its single private abstract method Herqq::Upnp::HDevice::createServices().
+ * As the name implies, the purpose of this method is to create objects at run-time that reflect
+ * the services defined in the device description. If your device has no services
+ * this method has to return an empty list.
  *
- * To create a concrete class from Herqq::Upnp::HService, you have to implement its single abstract method
- * Herqq::Upnp::HActionMapT Herqq::Upnp::HService::createActions(). The purpose of the method is to create
- * "callable entities" that reflect the "actions" of the service defined
- * in the service description. If your service has no actions, this method has
- * to return an empty list.
+ * To create a concrete class from Herqq::Upnp::HService you have to implement its single abstract method
+ * Herqq::Upnp::HService::createActions(). The purpose of this method is to create
+ * <em>callable entities</em> that will be called when the corresponding UPnP actions
+ * are invoked. Note, the UPnP actions of a particular UPnP service are defined
+ * in the service's description file and if a service has no actions
+ * this method has to return an empty list. As a side note, these callable entities
+ * are used internally by HUPnP. HUPnP does not expose them directly in the public API.
  *
- * To continue with the example, we have to create two classes and for this example
- * we put their declarations into the same header file:
+ * To continue with the example we have to create two classes, one for the
+ * \b BinaryLight:1 and one for the \b SwitchPowerService:1. For this example
+ * the class declarations are put into the same header file, although in real
+ * code you might want to separate them.
  *
  * <c>mybinarylight.h</c>
  *
@@ -402,11 +391,13 @@
  * {
  * private:
  *
- *     virtual Herqq::Upnp::HServiceMapT createServices();
+ *     virtual Herqq::Upnp::HServiceMap createServices();
+ *     // see the documentation of Herqq::Upnp::HDevice::createServices()
+ *     // for an explanation why this is private
  *
  * public:
  *
- *    explicit MyBinaryLightDevice(QObject* parent = 0);
+ *    MyBinaryLightDevice();
  *    virtual ~MyBinaryLightDevice();
  * };
  *
@@ -415,7 +406,9 @@
  * {
  * private:
  *
- *     virtual Herqq::Upnp::HActionMapT createActions();
+ *     virtual Herqq::Upnp::HActionMap createActions();
+ *     // see the documentation of Herqq::Upnp::HService::createActions()
+ *     // for an explanation why this is private
  *
  * public:
  *
@@ -443,9 +436,9 @@
  * {
  * }
  *
- * HDevice::HServiceMapT MyBinaryLightDevice::createServices()
+ * HDevice::HServiceMap MyBinaryLightDevice::createServices()
  * {
- *   HServiceMapT retVal;
+ *   HServiceMap retVal;
  *
  *   retVal[HResourceType("urn:schemas-upnp-org:service:SwitchPower:1")] =
  *       new MySwitchPowerService();
@@ -461,9 +454,9 @@
  * {
  * }
  *
- * HService::HActionMapT MySwitchPowerService::createActions()
+ * HService::HActionMap MySwitchPowerService::createActions()
  * {
- *   HActionMapT retVal;
+ *   HActionMap retVal;
  *   return retVal;
  * }
  *
@@ -473,14 +466,14 @@
  * noticed that something was off. Where are the actions?
  *
  * According to the UPnP Device Architecture (UDA), a service may have zero or
- * more actions defined. For a device type that has no services, or for a
+ * more actions. For a device type that has no services or for a
  * device type that has services that in turn have no actions,
  * the above class declarations and definitions are enough.
  *
- * However, the standard \b BinaryLight device type specifies the \b SwitchPower service
- * that has three actions defined (look back in the service description document).
- * Namely these are \b SetTarget, \b GetTarget and \b GetStatus. To make the example complete,
- * the <c>MySwitchPowerService</c> class requires some additional work. Note, however, that the
+ * However, the standard \b BinaryLight:1 device type specifies the \b SwitchPower:1
+ * service type that has three actions defined (look back in the service description document).
+ * Namely these are \b SetTarget, \b GetTarget and \b GetStatus. To make the example complete
+ * the <c>MySwitchPowerService</c> class requires some additional work. Note, however, the
  * next example shows only one way of making the service complete. There are
  * a few other ways, which will be discussed later in depth.
  *
@@ -497,7 +490,9 @@
  * {
  * private:
  *
- *     virtual Herqq::Upnp::HActionMapT createActions();
+ *     virtual Herqq::Upnp::HActionMap createActions();
+ *     // see the documentation of Herqq::Upnp::HService::createActions()
+ *     // for an explanation why this is private
  *
  * public:
  *
@@ -529,7 +524,6 @@
  *
  * #include <HStateVariable>
  * #include <HActionArguments>
- * #include <HActionArguments>
  *
  * using namespace Herqq::Upnp;
  *
@@ -541,59 +535,19 @@
  * {
  * }
  *
- * qint32 MySwitchPowerService::setTarget(
- *     const HActionArguments& inArgs,
- *     HActionArguments* outArgs)
+ * HService::HActionMap MySwitchPowerService::createActions()
  * {
- *     const HActionArgument* iarg = inArgs["newTargetValue"];
- *     if (!iarg)
- *     {
- *         return HAction::InvalidArgs();
- *     }
- *
- *     bool newTargetValue = iarg->value().toBool();
- *     setStateVariableValue("Target", newTargetValue);
- *
- *     //
- *     // Do here whatever that is required to turn on / off the light
- *     //
- *
- *     //
- *     // If it succeeded, we better modify the Status state variable to reflect
- *     // the new state of the light.
- *     //
- *
- *     setStateVariableValue("Status", newTargetValue);
- *
- *     return HAction::Success();
- * }
- *
- * qint32 MySwitchPowerService::getTarget(
- *     const HActionArguments& inArgs,
- *     HActionArguments* outArgs)
- * {
- *     bool b = stateVariableByName("Target")->value().toBool();
- *     (*outArgs)["RetTargetValue"]->setValue(b);
- *
- *     return HAction::Success();
- * }
- *
- * qint32 MySwitchPowerService::getStatus(
- *     const HActionArguments& inArgs,
- *     HActionArguments* outArgs)
- * {
- *     bool b = stateVariableByName("Status")->value().toBool();
- *     (*outArgs)["ResultStatus"]->setValue(b);
- *
- *     return HAction::Success();
- * }
- *
- * HService::HActionMapT MySwitchPowerService::createActions()
- * {
- *     HActionMapT retVal;
+ *     HActionMap retVal;
  *
  *     retVal["SetTarget"] =
  *         HActionInvoke(this, &MySwitchPowerService::setTarget);
+ *
+ *     // The above lines map the MySwitchPowerService::setTarget() method to
+ *     // the action that has the name SetTarget. In essence, this mapping instructs
+ *     // HUPnP to call this method when the SetTarget action is invoked.
+ *     // However, note that HActionInvoke accepts any "callable entity",
+ *     // such as a normal function or a functor. Furthermore, if you use a method the
+ *     // method does not have to be public.
  *
  *     retVal["GetTarget"] =
  *         HActionInvoke(this, &MySwitchPowerService::getTarget);
@@ -604,18 +558,140 @@
  *     return retVal;
  * }
  *
+ * qint32 MySwitchPowerService::setTarget(
+ *     const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ *     const HActionArgument* newTargetValueArg = inArgs["newTargetValue"];
+ *     if (!newTargetValueArg)
+ *     {
+ *         // If MySwitchPowerService class is not made for direct public use
+ *         // this check is redundant, since in that case this method is called only by
+ *         // HUPnP and HUPnP always ensures that the action arguments defined in the
+ *         // service description are present when an action is invoked.
+ *
+ *         return HAction::InvalidArgs();
+ *     }
+ *
+ *     bool newTargetValue = newTargetValueArg->value().toBool();
+ *     stateVariableByName("Target")->writable()->setValue(newTargetValue);
+ *
+ *     // The above line modifies the state variable "Target", which reflects the
+ *     // "target state" of a light device, i.e. if a user wants to turn off a light, the
+ *     // "target state" is the light turned off whether the light can be turned
+ *     // off or not.
+ *
+ *     //
+ *     // Do here whatever that is required to turn on / off the light
+ *     // (set it to the target state)
+ *     //
+ *
+ *     //
+ *     // If it succeeded, we should modify the Status state variable to reflect
+ *     // the new state of the light.
+ *     //
+ *
+ *     stateVariableByName("Status")->writable()->setValue(newTargetValue);
+ *
+ *     return HAction::Success();
+ * }
+ *
+ * qint32 MySwitchPowerService::getTarget(
+ *     const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ *     if (!outArgs)
+ *     {
+ *         // See the comments in MySwitchPowerService::setTarget why this
+ *         // check is here. Basically, this check is redundant if this method
+ *         // is called only by HUPnP, as HUPnP ensures proper arguments
+ *         // are always provided when an action is invoked.
+ *
+ *         return HAction::InvalidArgs();
+ *     }
+ *
+ *     HActionArgument* retTargetValue = outArgs->get("RetTargetValue");
+ *     if (!retTargetValue)
+ *     {
+ *         // See the comments above. The same thing applies here as well.
+ *         return HAction::InvalidArgs();
+ *     }
+ *
+ *     bool b = stateVariableByName("Target")->value().toBool();
+ *     retTargetValue->setValue(b);
+ *
+ *     return HAction::Success();
+ * }
+ *
+ * qint32 MySwitchPowerService::getStatus(
+ *     const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ *     if (!outArgs)
+ *     {
+ *         // See the comments in MySwitchPowerService::getTarget();
+ *         return HAction::InvalidArgs();
+ *     }
+ *
+ *     HActionArgument* resultStatus = outArgs->get("ResultStatus");
+ *     if (!resultStatus)
+ *     {
+ *         // See the comments above. The same thing applies here as well.
+ *         return HAction::InvalidArgs();
+ *     }
+ *
+ *     bool b = stateVariableByName("Status")->value().toBool();
+ *     resultStatus->setValue(b);
+ *
+ *     return HAction::Success();
+ * }
+ *
  * \endcode
  *
- * And there you have it. Fully standard-compliant implementation
- * of BinaryLight:1. One final note however. Before implementing your own device
+ * \subsection some_notes_about_switchpower_example Some closing notes
+ *
+ * First of all, you may want to skim the discussion in \ref devicemodel and \ref devicehosting
+ * to fully understand the comments in the example above. That being said, perhaps the
+ * most important issues of building a custom UPnP device using HUPnP
+ * can be summarized to:
+ *
+ * - Every device description has to have a corresponding class derived from
+ * Herqq::Upnp::HDevice and every service description has to have a corresponding
+ * class derived from Herqq::Upnp::HService.
+ *
+ * - It is perfectly fine to create custom \c HDevice and \c HService classes just to be
+ * hosted in a Herqq::Upnp::HDeviceHost. Such classes exist only to run your code
+ * when UPnP control points interact with them over the network. These types of
+ * classes are to be used directly only by \c HDeviceHost.
+ *
+ * - You can create more advanced \c HDevice and \c HService classes perhaps
+ * to build a higher level public API or just to provide yourself a nicer interface for
+ * doing something. This was the case with \c MySwitchPowerService class, which
+ * extended the \c HService interface by providing the possibility of invoking
+ * the actions of the service through the \c setTarget(), \c getTarget() and \c getStatus()
+ * methods.
+ *
+ * - HUPnP allows direct access to the hosted \c HDevice and \c HService classes,
+ * which means you can interact with your classes \b while they are being hosted.
+ * Custom \c HDevice and \c HService interfaces may be beneficial if you intend
+ * to directly interact with them.
+ *
+ * - The type behind an Herqq::Upnp::HActionInvoke can hold any <em>callable entity</em>, such
+ * as a normal function, functor or a member function.
+ *
+ * - A public callable entity should always strictly verify the input and
+ * respond to illegal input accordingly. A "private" callable entity that
+ * is called only by HUPnP can rest assured that HUPnP never passes a null input
+ * argument or an argument that has an incorrect name or data type.
+ *
+ * - Before implementing your own device
  * and service types directly from Herqq::Upnp::HDevice and Herqq::Upnp::HService,
- * you should always check if HUPnP provides more refined classes to suit your
+ * you should check if HUPnP provides more refined classes to suit your
  * requirements. For instance, HUPnP provides a base class
  * Herqq::Upnp::Lighting::HAbstractSwitchPower for simplifying the implementation
  * and use of \b SwitchPower:1.
  *
- * To publish your \c HDevice in the network for UPnP control points to discover,
- * see Herqq::Upnp::HDeviceHost.
+ * In any case, the above example demonstrates a fully standard-compliant implementation
+ * of \b BinaryLight:1. The next step is to publish your \c HDevice in the network
+ * for UPnP control points to discover. You can find the instructions for that
+ * in Herqq::Upnp::HDeviceHost and \ref devicehosting.
  *
  * If, on the other hand, you wish to use the created \c HDevice type when a
  * control point discovers a device on the network matching the \em device \em type
@@ -629,33 +705,6 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HDeviceStatus
- ******************************************************************************/
-HDeviceStatus::HDeviceStatus() :
-    m_bootId(0), m_configId(0), m_searchPort(0)
-{
-}
-
-HDeviceStatus::~HDeviceStatus()
-{
-}
-
-qint32 HDeviceStatus::bootId() const
-{
-    return m_bootId;
-}
-
-qint32 HDeviceStatus::configId() const
-{
-    return m_configId;
-}
-
-quint32 HDeviceStatus::searchPort() const
-{
-    return m_searchPort;
-}
-
-/*******************************************************************************
  * HDeviceController
  ******************************************************************************/
 HDeviceController::HDeviceController(
@@ -663,8 +712,11 @@ HDeviceController::HDeviceController(
         QObject(parent),
             m_statusNotifier(new QTimer(this)),
             m_deviceStatus(new HDeviceStatus()),
-            m_device(device, &QObject::deleteLater)
+            m_device(device)
 {
+    Q_ASSERT(m_device);
+    m_device->setParent(this);
+
     m_statusNotifier->setInterval(deviceTimeoutInSecs * 1000);
     bool ok = connect(
         m_statusNotifier.data(), SIGNAL(timeout()), this, SLOT(timeout_()));
@@ -675,7 +727,6 @@ HDeviceController::HDeviceController(
 HDeviceController::~HDeviceController()
 {
     HLOG(H_AT, H_FUN);
-    dispose();
 }
 
 void HDeviceController::timeout_()
@@ -691,12 +742,6 @@ void HDeviceController::timeout_()
 void HDeviceController::startStatusNotifier(SearchCriteria searchCriteria)
 {
     HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return;
-    }
 
     m_statusNotifier->start();
     if (searchCriteria & Services)
@@ -722,12 +767,6 @@ void HDeviceController::stopStatusNotifier(SearchCriteria searchCriteria)
 {
     HLOG(H_AT, H_FUN);
 
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return;
-    }
-
     m_statusNotifier->stop();
     if (searchCriteria & Services)
     {
@@ -746,96 +785,8 @@ void HDeviceController::stopStatusNotifier(SearchCriteria searchCriteria)
     }
 }
 
-QList<HServiceController*> HDeviceController::services() const
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return QList<HServiceController*>();
-    }
-
-    return m_device->h_ptr->m_services;
-}
-
-QList<HDeviceController*> HDeviceController::embeddedDevices() const
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return QList<HDeviceController*>();
-    }
-
-    return m_device->h_ptr->m_embeddedDevices;
-}
-
-HDeviceController* HDeviceController::parentDevice() const
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return 0;
-    }
-
-    return m_device->h_ptr->m_parent;
-}
-
-HDeviceController* HDeviceController::rootDevice()
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return 0;
-    }
-
-    HDeviceController* root = this;
-    while (root->parentDevice()) { root = root->parentDevice(); }
-    return root;
-}
-
-HDeviceStatus* HDeviceController::deviceStatus() const
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return 0;
-    }
-
-    return m_deviceStatus.data();
-}
-
-qint32 HDeviceController::deviceTimeoutInSecs() const
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return -1;
-    }
-
-    return m_statusNotifier->interval() / 1000;
-}
-
 bool HDeviceController::isTimedout(SearchCriteria searchCriteria) const
 {
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return true;
-    }
-
     if (m_timedout)
     {
         return true;
@@ -861,24 +812,6 @@ bool HDeviceController::isTimedout(SearchCriteria searchCriteria) const
     }
 
     return false;
-}
-
-void HDeviceController::dispose()
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_device->h_ptr->m_disposed.testAndSetAcquire(0, 1))
-    {
-        emit m_device->disposed();
-        return;
-    }
-
-    m_statusNotifier->stop();
-
-    foreach(HDeviceController* embeddedDevice, m_device->h_ptr->m_embeddedDevices)
-    {
-        embeddedDevice->dispose();
-    }
 }
 
 namespace
@@ -910,14 +843,8 @@ void HDeviceController::addLocation(const QUrl& location)
     Q_ASSERT(!m_device->parentDevice());
     // embedded devices always query the parent device for locations
 
-    if (m_device->h_ptr->m_disposed)
-    {
-        Q_ASSERT_X(false, "", "The object is disposed");
-        return;
-    }
-
     QMutexLocker lock(&m_device->h_ptr->m_locationsMutex);
-    if (shouldAdd(m_device.data(), location))
+    if (shouldAdd(m_device, location))
     {
         m_device->h_ptr->m_locations.push_back(location);
     }
@@ -939,7 +866,7 @@ void HDeviceController::addLocations(const QList<QUrl>& locations)
  ******************************************************************************/
 HDevicePrivate::HDevicePrivate() :
     m_upnpDeviceInfo(0), m_embeddedDevices(), m_services(), m_parent(0),
-    q_ptr(0), m_locations(), m_deviceDescription(), m_disposed(0),
+    q_ptr(0), m_locations(), m_deviceDescription(),
     m_locationsMutex(QMutex::Recursive)
 {
 }
@@ -971,13 +898,23 @@ HDevice::HDevice(HDevicePrivate& dd) :
 HDevice::~HDevice()
 {
     HLOG(H_AT, H_FUN);
-
     delete h_ptr;
 }
 
 const HDevice* HDevice::parentDevice() const
 {
-    return !isDisposed() && h_ptr->m_parent ? h_ptr->m_parent->m_device.data() : 0;
+    return h_ptr->m_parent ? h_ptr->m_parent->m_device : 0;
+}
+
+const HDevice* HDevice::rootDevice() const
+{
+    const HDevice* root = this;
+    while(root->h_ptr->m_parent)
+    {
+        root = root->h_ptr->m_parent->m_device;
+    }
+
+    return root;
 }
 
 QString HDevice::deviceDescription() const
@@ -990,30 +927,20 @@ HDeviceInfo HDevice::deviceInfo() const
     return *h_ptr->m_upnpDeviceInfo;
 }
 
-HDevicePtrListT HDevice::embeddedDevices() const
+HDevicePtrList HDevice::embeddedDevices() const
 {
-    if (isDisposed())
-    {
-        return HDevicePtrListT();
-    }
-
-    HDevicePtrListT retVal;
+    HDevicePtrList retVal;
     foreach(HDeviceController* dc, h_ptr->m_embeddedDevices)
     {
-        retVal.push_back(dc->m_device.data());
+        retVal.push_back(dc->m_device);
     }
 
     return retVal;
 }
 
-HServicePtrListT HDevice::services() const
+HServicePtrList HDevice::services() const
 {
-    if (isDisposed())
-    {
-        return HServicePtrListT();
-    }
-
-    HServicePtrListT retVal;
+    HServicePtrList retVal;
     foreach(HServiceController* sc, h_ptr->m_services)
     {
         retVal.push_back(sc->m_service);
@@ -1024,11 +951,6 @@ HServicePtrListT HDevice::services() const
 
 HService* HDevice::serviceById(const HServiceId& serviceId) const
 {
-    if (isDisposed())
-    {
-        return 0;
-    }
-
     foreach(HServiceController* sc, h_ptr->m_services)
     {
         if (sc->m_service->serviceId() == serviceId)
@@ -1042,13 +964,7 @@ HService* HDevice::serviceById(const HServiceId& serviceId) const
 
 QList<QUrl> HDevice::locations(bool includeDeviceDescriptionPostfix) const
 {
-    HLOG(H_AT, H_FUN);
-
-    if (isDisposed())
-    {
-        return QList<QUrl>();
-    }
-    else if (h_ptr->m_parent)
+    if (h_ptr->m_parent)
     {
         // the root device "defines" the locations and they are the same for each
         // embedded device.
@@ -1068,11 +984,6 @@ QList<QUrl> HDevice::locations(bool includeDeviceDescriptionPostfix) const
     }
 
     return retVal;
-}
-
-bool HDevice::isDisposed() const
-{
-    return h_ptr->m_disposed;
 }
 
 }

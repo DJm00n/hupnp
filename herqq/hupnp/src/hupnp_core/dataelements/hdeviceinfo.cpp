@@ -95,23 +95,23 @@ HDeviceInfo::HDeviceInfo(
     QString errTmp;
     if (!tmp.setDeviceType(deviceType))
     {
-        errTmp = QObject::tr("Invalid device type: [%1]").arg(deviceType.toString());
+        errTmp = QString("Invalid device type: [%1]").arg(deviceType.toString());
     }
     else if (!tmp.setFriendlyName(friendlyName))
     {
-        errTmp = QObject::tr("Invalid friendly name: [%1]").arg(friendlyName);
+        errTmp = QString("Invalid friendly name: [%1]").arg(friendlyName);
     }
     else if (!tmp.setManufacturer(manufacturer))
     {
-        errTmp = QObject::tr("Invalid manufacturer: [%1]").arg(manufacturer);
+        errTmp = QString("Invalid manufacturer: [%1]").arg(manufacturer);
     }
     else if (!tmp.setModelName(modelName))
     {
-        errTmp = QObject::tr("Invalid model name: [%1]").arg(modelName);
+        errTmp = QString("Invalid model name: [%1]").arg(modelName);
     }
     else if (!tmp.setUdn(udn))
     {
-        errTmp = QObject::tr("Invalid UDN: [%1]").arg(udn.toString());
+        errTmp = QString("Invalid UDN: [%1]").arg(udn.toString());
     }
 
     if (!errTmp.isEmpty())
@@ -149,23 +149,23 @@ HDeviceInfo::HDeviceInfo(
     QString errTmp;
     if (!tmp.setDeviceType(deviceType))
     {
-        errTmp = QObject::tr("Invalid device type: [%1]").arg(deviceType.toString());
+        errTmp = QString("Invalid device type: [%1]").arg(deviceType.toString());
     }
     else if (!tmp.setFriendlyName(friendlyName))
     {
-        errTmp = QObject::tr("Invalid friendly name: [%1]").arg(friendlyName);
+        errTmp = QString("Invalid friendly name: [%1]").arg(friendlyName);
     }
     else if (!tmp.setManufacturer(manufacturer))
     {
-        errTmp = QObject::tr("Invalid manufacturer: [%1]").arg(manufacturer);
+        errTmp = QString("Invalid manufacturer: [%1]").arg(manufacturer);
     }
     else if (!tmp.setModelName(modelName))
     {
-        errTmp = QObject::tr("Invalid model name: [%1]").arg(modelName);
+        errTmp = QString("Invalid model name: [%1]").arg(modelName);
     }
     else if (!tmp.setUdn(udn))
     {
-        errTmp = QObject::tr("Invalid UDN: [%1]").arg(udn.toString());
+        errTmp = QString("Invalid UDN: [%1]").arg(udn.toString());
     }
 
     if (!errTmp.isEmpty())

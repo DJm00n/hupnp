@@ -52,7 +52,7 @@ HUdn::HUdn(const HUdn& other) :
 }
 
 HUdn::HUdn(const QString& value) :
-    m_value(QString(value.simplified()).remove("uuid:", Qt::CaseInsensitive))
+    m_value(value.simplified().remove("uuid:", Qt::CaseInsensitive))
 {
 }
 

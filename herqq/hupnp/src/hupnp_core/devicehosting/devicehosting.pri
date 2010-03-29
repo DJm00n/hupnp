@@ -3,7 +3,6 @@ HEADERS += \
     $$SRC_LOC/devicehosting/hdevicestorage_p.h \
     $$SRC_LOC/devicehosting/hdevicecreator.h \
     $$SRC_LOC/devicehosting/habstracthost_p.h \
-    $$SRC_LOC/devicehosting/habstracthost.h \
     $$SRC_LOC/devicehosting/hobjectcreator_p.h \
     $$SRC_LOC/devicehosting/hdefaultdevice.h \
     $$SRC_LOC/devicehosting/messages/hcontrol_messages_p.h \
@@ -20,6 +19,7 @@ HEADERS += \
     $$SRC_LOC/devicehosting/controlpoint/hcontrolpoint_configuration_p.h \
     $$SRC_LOC/devicehosting/controlpoint/hcontrolpoint_dataretriever_p.h \
     $$SRC_LOC/devicehosting/controlpoint/hevent_subscription_p.h \
+	$$SRC_LOC/devicehosting/controlpoint/hevent_subscriptionmanager_p.h \
     $$SRC_LOC/devicehosting/devicehost/hdevicehost_p.h \
     $$SRC_LOC/devicehosting/devicehost/hdevicehost.h \
     $$SRC_LOC/devicehosting/devicehost/hdevicehost_dataretriever_p.h \
@@ -33,7 +33,7 @@ HEADERS += \
 
 SOURCES += \
     $$SRC_LOC/devicehosting/hdevicestorage_p.cpp \
-    $$SRC_LOC/devicehosting/habstracthost.cpp \
+    $$SRC_LOC/devicehosting/habstracthost_p.cpp \
     $$SRC_LOC/devicehosting/hobjectcreator_p.cpp \
     $$SRC_LOC/devicehosting/hdefaultdevice.cpp \
     $$SRC_LOC/devicehosting/messages/hcontrol_messages_p.cpp \
@@ -48,6 +48,7 @@ SOURCES += \
     $$SRC_LOC/devicehosting/controlpoint/hcontrolpoint_configuration.cpp \
     $$SRC_LOC/devicehosting/controlpoint/hcontrolpoint_dataretriever_p.cpp \
     $$SRC_LOC/devicehosting/controlpoint/hevent_subscription_p.cpp \
+	$$SRC_LOC/devicehosting/controlpoint/hevent_subscriptionmanager_p.cpp \
     $$SRC_LOC/devicehosting/devicehost/hdevicehost.cpp \
     $$SRC_LOC/devicehosting/devicehost/hdevicehost_dataretriever_p.cpp \
     $$SRC_LOC/devicehosting/devicehost/hevent_notifier_p.cpp \

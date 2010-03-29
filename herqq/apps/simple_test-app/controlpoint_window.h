@@ -65,8 +65,9 @@ protected:
 
 private slots:
 
-    void rootDeviceAdded(const Herqq::Upnp::HDeviceInfo&);
-    void rootDeviceRemoved(const Herqq::Upnp::HDeviceInfo&);
+    void rootDeviceOnline(Herqq::Upnp::HDevice*);
+    void rootDeviceOffline(Herqq::Upnp::HDevice*);
+
     void stateVariableChanged(const Herqq::Upnp::HStateVariableEvent&);
 
     void on_navigatorTreeView_doubleClicked(QModelIndex);
@@ -79,6 +80,7 @@ public:
 
 Q_SIGNALS:
 
+    void contentSourceRemoved(Herqq::Upnp::HDevice*);
     void closed();
 };
 

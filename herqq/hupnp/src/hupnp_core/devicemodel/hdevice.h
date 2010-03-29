@@ -48,6 +48,11 @@ class HObjectCreator;
 class HDeviceController;
 
 /*!
+ * \file
+ * This file contains the declaration of the HDevice component.
+ */
+
+/*!
  * \brief An abstract base class that represents a UPnP device hosted by the HUPnP
  * library.
  *
@@ -74,10 +79,6 @@ class HDeviceController;
  * the device is an embedded device, it always has a parent defined, which you can
  * get by calling parentDevice().
  *
- * The only somewhat peculiar aspect of an \c %HDevice is that it can be \em disposed.
- * For more discussion about \c %HDevice disposal, see
- * isDisposed() and the discussion in \ref devicemodel.
- *
  * <h2>Sub-classing</h2>
  *
  * Sub-classing an \c %HDevice is simple. All you need to do is override the
@@ -92,9 +93,9 @@ class HDeviceController;
  * #include "switchpowerimpl.h" // this would be your code
  * #include "dimmingimpl.h"     // this would be your code
  *
- * Herqq::Upnp::HDevice::HServiceMapT DimmableLight::createServices()
+ * Herqq::Upnp::HDevice::HServiceMap DimmableLight::createServices()
  * {
- *   Herqq::Upnp::HDevice::HServiceMapT retVal;
+ *   Herqq::Upnp::HDevice::HServiceMap retVal;
  *
  *   retVal[Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1")]   =
  *       new SwitchPowerImpl(); // your type
@@ -135,10 +136,16 @@ friend class HDeviceController;
 public: // typedefs
 
     /*!
-     * Type definition for a map holding HResourceTypes as keys and
+     * A type definition for a map holding HResourceTypes as keys and
      * pointers to HServices as values.
+     *
+     * This type definition is used as a return value of private HDevice::createServices()
+     * method to convey information about the UPnP services the device exports
+     * to HUPnP during the object initialization.
+     *
+     * \sa HDevice, HService
      */
-    typedef QHash<HResourceType, HService*> HServiceMapT;
+    typedef QHash<HResourceType, HService*> HServiceMap;
 
 private:
 
@@ -156,7 +163,7 @@ private:
      * addresses of the created services and use them safely throughout the lifetime
      * of the containing device object. However, you cannot delete them.
      */
-    virtual HServiceMapT createServices() = 0;
+    virtual HServiceMap createServices() = 0;
 
 protected:
 
@@ -188,10 +195,6 @@ public:
      * Returns information about the device that is read from the device description.
      *
      * \return information about the device that is read from the device description.
-     *
-     * \remark a valid object is returned even in case the object is disposed.
-     *
-     * \sa isDisposed()
      */
     HDeviceInfo deviceInfo() const;
 
@@ -199,26 +202,31 @@ public:
      * Returns the parent device of this device, if any.
      *
      * \return the parent device of this device, if any, or a null pointer
-     * in case the device is a root device or the object is disposed.
+     * in case the device is a root device.
      *
-     * \remark the pointer is guaranteed to
-     * point to the parent object only throughout the lifetime of this object.
-     *
-     * \sa isDisposed()
+     * \remarks the pointer is guaranteed to
+     * point to the parent object throughout the lifetime of this object.
      */
     const HDevice* parentDevice() const;
+
+    /*!
+     * Returns the root device of the device tree to which this device belongs.
+     *
+     * \return the root device of the device tree to which this device belongs.
+     *
+     * \remark this device could be the root device of the device tree in question,
+     * in which case a pointer to this instance is returned.
+     */
+    const HDevice* rootDevice() const;
 
     /*!
      * Returns the full device description of the device.
      *
      * \return full device description that is associated to this device.
      *
-     * \remark
-     * \li that an embedded device returns the same device description as
+     * \remarks an embedded device returns the same device description as
      * its root device.
-     * \li the device description is returned even if the device is disposed.
      *
-     * \sa isDisposed()
      */
     QString deviceDescription() const;
 
@@ -226,30 +234,23 @@ public:
      * Returns the embedded devices of this device.
      *
      * \return the embedded devices of this device. The collection is empty
-     * if the device has no embedded devices or the object has been disposed.
+     * if the device has no embedded devices.
      *
-     * \remark
-     * \li the pointers are guaranteed to be valid only throughout the lifetime
+     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
      * of this object.
-     * \li if the containing device gets disposed, the device disposes its
-     * embedded devices. However, note that disposal does not mean deletion.
-     *
-     * \sa isDisposed()
      */
-    HDevicePtrListT embeddedDevices() const;
+    HDevicePtrList embeddedDevices() const;
 
     /*!
      * Returns the services this device exports.
      *
      * \return the services this device exports. The collection is empty
-     * if the device has no services or the object is disposed.
+     * if the device has no services.
      *
-     * \remark the pointers are guaranteed to be valid only throughout the lifetime
+     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
      * of this object.
-     *
-     * \sa isDisposed()
      */
-    HServicePtrListT services() const;
+    HServicePtrList services() const;
 
     /*!
      * Returns the service that has the specified service ID.
@@ -257,13 +258,10 @@ public:
      * \param serviceId specifies the service to be returned.
      *
      * \return the service that has the specified service ID or a null pointer
-     * in case there is no service with the specified ID or the device has been
-     * disposed.
+     * in case there is no service with the specified ID.
      *
-     * \remark the pointer is guaranteed to be valid only throughout the lifetime
+     * \remarks the pointer is guaranteed to be valid only throughout the lifetime
      * of this object.
-     *
-     * \sa isDisposed()
      */
     HService* serviceById(const HServiceId& serviceId) const;
 
@@ -275,46 +273,9 @@ public:
      * is true. If the parameter is specified as false, the returned URLs contain
      * only the base URLs of the device.
      *
-     * \return the list location where the device is currently available, if the
-     * object is not disposed. If the object is disposed, the list is empty.
-     *
-     * \sa isDisposed()
+     * \return the list location where the device is currently available.
      */
     QList<QUrl> locations(bool includeDeviceDescriptionPostfix=true) const;
-
-    /*!
-     * Indicates whether or not the object is usable.
-     *
-     * When the device enters "disposed" state, it means that the device, its
-     * services, embedded devices and all of its functionality are no more usable.
-     * In essence, it is a sign that the user should discard (not delete)
-     * the pointer to the object.
-     *
-     * If the device had services or embedded devices, they are no more retrievable,
-     * although any pointers to them retrieved earlier remain valid until
-     * this object is deleted.
-     *
-     * \return true in case the object is not usable anymore. In this case, the
-     * pointer to the object should be discarded (not deleted).
-     *
-     * \remark
-     * \li once an object has been disposed, it will never be usable again.
-     * \li you can hold a pointer to a disposed object indefinitely, in which
-     * case the object will not be deleted. Generally, you should discard
-     * a disposed object as soon as possible.
-     */
-    bool isDisposed() const;
-
-Q_SIGNALS:
-
-    /*!
-     * This signal is emitted when the device has been disposed.
-     *
-     * \remark the signal is emitted only once.
-     *
-     * \sa isDisposed()
-     */
-    void disposed();
 };
 
 }

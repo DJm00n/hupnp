@@ -22,8 +22,6 @@
 #include "hdevicehost_configuration.h"
 #include "hdevicehost_configuration_p.h"
 
-#include "./../../../utils/hlogger_p.h"
-
 #include <QFile>
 
 namespace Herqq
@@ -41,10 +39,6 @@ HDeviceConfigurationPrivate::HDeviceConfigurationPrivate() :
 {
 }
 
-HDeviceConfigurationPrivate::~HDeviceConfigurationPrivate()
-{
-}
-
 /*******************************************************************************
  * HDeviceConfiguration
  ******************************************************************************/
@@ -53,24 +47,24 @@ HDeviceConfiguration::HDeviceConfiguration() :
 {
 }
 
-HDeviceConfiguration::HDeviceConfiguration(
-    HDeviceConfigurationPrivate& dd) :
-        h_ptr(&dd)
-{
-}
-
 HDeviceConfiguration::~HDeviceConfiguration()
 {
     delete h_ptr;
 }
 
+HDeviceConfiguration* HDeviceConfiguration::doClone() const
+{
+    return new HDeviceConfiguration();
+}
+
 HDeviceConfiguration* HDeviceConfiguration::clone() const
 {
-    HDeviceConfiguration* clone =
-        new HDeviceConfiguration(
-            *new HDeviceConfigurationPrivate(*h_ptr));
+    HDeviceConfiguration* newClone = doClone();
+    if (!newClone) { return 0; }
 
-    return clone;
+    *newClone->h_ptr = *h_ptr;
+
+    return newClone;
 }
 
 QString HDeviceConfiguration::pathToDeviceDescription() const
@@ -92,18 +86,12 @@ bool HDeviceConfiguration::setPathToDeviceDescription(
 
 void HDeviceConfiguration::setCacheControlMaxAge(quint32 maxAgeInSecs)
 {
-    HLOG(H_AT, H_FUN);
-
     if (maxAgeInSecs < 5)
     {
         maxAgeInSecs = 5;
     }
     else if (maxAgeInSecs > 60*60*24)
     {
-        HLOG_WARN(QObject::tr(
-            "The specified max age [%1] is too large. Defaulting to a day.").
-                arg(QString::number(maxAgeInSecs)));
-
         maxAgeInSecs = 60*60*24; // a day
     }
 
@@ -145,7 +133,6 @@ HDeviceHostConfigurationPrivate::HDeviceHostConfigurationPrivate() :
 HDeviceHostConfiguration::HDeviceHostConfiguration() :
     h_ptr(new HDeviceHostConfigurationPrivate())
 {
-    HLOG(H_AT, H_FUN);
 }
 
 HDeviceHostConfiguration::HDeviceHostConfiguration(
@@ -155,28 +142,25 @@ HDeviceHostConfiguration::HDeviceHostConfiguration(
     add(arg);
 }
 
-HDeviceHostConfiguration::HDeviceHostConfiguration(
-    const HDeviceHostConfiguration& other) :
-        h_ptr(new HDeviceHostConfigurationPrivate())
+HDeviceHostConfiguration* HDeviceHostConfiguration::doClone() const
 {
-    foreach(HDeviceConfiguration* arg, other.h_ptr->m_collection)
-    {
-        add(*arg);
-    }
+    return new HDeviceHostConfiguration();
 }
 
-HDeviceHostConfiguration& HDeviceHostConfiguration::operator=(
-    const HDeviceHostConfiguration& other)
+HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
 {
-    qDeleteAll(h_ptr->m_collection);
-    h_ptr->m_collection.clear();
+    HDeviceHostConfiguration* newClone = doClone();
+    if (!newClone) { return 0; }
 
-    foreach(HDeviceConfiguration* arg, other.h_ptr->m_collection)
+    foreach(HDeviceConfiguration* arg, h_ptr->m_collection)
     {
-        add(*arg);
+        newClone->add(*arg);
     }
 
-    return *this;
+    newClone->h_ptr->m_individualAdvertisementCount =
+        h_ptr->m_individualAdvertisementCount;
+
+    return newClone;
 }
 
 HDeviceHostConfiguration::~HDeviceHostConfiguration()

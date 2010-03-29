@@ -159,10 +159,7 @@ public:
         m_lastErrorDescription = errDescr;
     }
 
-    inline QString lastErrorDescription() const
-    {
-        return m_lastErrorDescription;
-    }
+    QString lastErrorDescription() const;
 };
 
 

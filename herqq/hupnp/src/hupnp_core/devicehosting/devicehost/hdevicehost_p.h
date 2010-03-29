@@ -55,8 +55,8 @@ class HDeviceHostPrivate :
     public HAbstractHostPrivate
 {
 Q_OBJECT
-H_DISABLE_COPY(HDeviceHostPrivate)
 H_DECLARE_PUBLIC(HDeviceHost)
+H_DISABLE_COPY(HDeviceHostPrivate)
 
 private:
 
@@ -67,7 +67,7 @@ private:
 
 public: // attributes
 
-    HDeviceHostConfiguration m_initParams;
+    QScopedPointer<HDeviceHostConfiguration> m_initParams;
     //
 
     QScopedPointer<DeviceHostSsdpHandler> m_ssdp;
@@ -84,6 +84,8 @@ public: // attributes
 
     QScopedPointer<PresenceAnnouncer> m_presenceAnnouncer;
     //
+
+    HDeviceHost* q_ptr;
 
 public Q_SLOTS:
 

@@ -23,6 +23,7 @@
 #define HCONTROLPOINT_CONFIGURATION_P_H_
 
 #include "./../hdevicecreator.h"
+#include "./../../../utils/hglobal.h"
 
 //
 // !! Warning !!
@@ -46,6 +47,7 @@ class H_UPNP_CORE_EXPORT HControlPointConfigurationPrivate
 public: // attributes
 
     HDeviceCreator m_deviceCreator;
+    bool m_subscribeToEvents;
 
 public: // methods
 

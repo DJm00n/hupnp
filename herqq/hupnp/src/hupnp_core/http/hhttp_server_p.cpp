@@ -73,7 +73,7 @@ void HHttpServer::Server::incomingConnection(qint32 socketDescriptor)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr("Incoming connection."));
+    HLOG_DBG("Incoming connection.");
 
     m_owner->m_threadPool->start(
         new HHttpServer::Task(m_owner, socketDescriptor));
@@ -116,7 +116,7 @@ void HHttpServer::processRequest(qint32 socketDescriptor)
 
     QString peer = peerAsStr(client);
 
-    HLOG_INFO(QObject::tr("Client from [%1] accepted. Current client count: %2").
+    HLOG_INFO(QString("Client from [%1] accepted. Current client count: %2").
         arg(peer, QString::number(m_threadPool->activeThreadCount())));
 
     QTime stopWatch; stopWatch.start();
@@ -219,7 +219,7 @@ void HHttpServer::processRequest(qint32 socketDescriptor)
         client.disconnectFromHost();
     }
 
-    HLOG_INFO(QObject::tr("Client from [%1] disconnected. Current client count: %2").
+    HLOG_INFO(QString("Client from [%1] disconnected. Current client count: %2").
         arg(peer, QString::number(m_threadPool->activeThreadCount())));
 }
 
@@ -227,7 +227,7 @@ HHttpHandler::ReturnValue HHttpServer::processGet(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Dispatching unknown GET request."));
+    HLOG_DBG("Dispatching unknown GET request.");
     incomingUnknownGetRequest(mi, requestHdr);
 
     return HHttpHandler::Success;
@@ -237,7 +237,7 @@ HHttpHandler::ReturnValue HHttpServer::processHead(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Dispatching unknown HEAD request."));
+    HLOG_DBG("Dispatching unknown HEAD request.");
     incomingUnknownHeadRequest(mi, requestHdr);
 
     return HHttpHandler::Success;
@@ -251,7 +251,7 @@ HHttpHandler::ReturnValue HHttpServer::processPost(
     QString soapAction  = requestHdr.value("SOAPACTION");
     if (soapAction.indexOf("#") <= 0)
     {
-        HLOG_DBG(QObject::tr("Dispatching unknown POST request."));
+        HLOG_DBG("Dispatching unknown POST request.");
         incomingUnknownPostRequest(mi, requestHdr, body);
         return HHttpHandler::Success;
     }
@@ -259,7 +259,7 @@ HHttpHandler::ReturnValue HHttpServer::processPost(
     QString actionName = soapAction.mid(soapAction.indexOf("#"));
     if (actionName.isEmpty())
     {
-        HLOG_DBG(QObject::tr("Dispatching unknown POST request."));
+        HLOG_DBG("Dispatching unknown POST request.");
         incomingUnknownPostRequest(mi, requestHdr, body);
         return HHttpHandler::Success;
     }
@@ -279,7 +279,7 @@ HHttpHandler::ReturnValue HHttpServer::processPost(
     }
 
     InvokeActionRequest iareq(soapAction, soapMsg, controlUrl);
-    HLOG_DBG(QObject::tr("Dispatching control request."));
+    HLOG_DBG("Dispatching control request.");
     incomingControlRequest(mi, iareq);
 
     return HHttpHandler::Success;
@@ -303,7 +303,7 @@ HHttpHandler::ReturnValue HHttpServer::processSubscription(
 
     if (subscrRv == SubscribeRequest::Success)
     {
-        HLOG_DBG(QObject::tr("Dispatching subscription request."));
+        HLOG_DBG("Dispatching subscription request.");
         incomingSubscriptionRequest(mi, sreq);
     }
 
@@ -328,7 +328,7 @@ HHttpHandler::ReturnValue HHttpServer::processUnsubscription(
 
     if (unsubsRv == UnsubscribeRequest::Success)
     {
-        HLOG_DBG(QObject::tr("Dispatching unsubscription request."));
+        HLOG_DBG("Dispatching unsubscription request.");
         incomingUnsubscriptionRequest(mi, usreq);
     }
 
@@ -353,7 +353,7 @@ HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
 
     if (notifyRv == NotifyRequest::Success)
     {
-        HLOG_DBG(QObject::tr("Dispatching event notification."));
+        HLOG_DBG("Dispatching event notification.");
         incomingNotifyMessage(mi, nreq);
     }
 
@@ -364,7 +364,7 @@ void HHttpServer::incomingSubscriptionRequest(
     MessagingInfo& mi, const SubscribeRequest&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -373,7 +373,7 @@ void HHttpServer::incomingUnsubscriptionRequest(
     MessagingInfo& mi, const UnsubscribeRequest&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -382,7 +382,7 @@ void HHttpServer::incomingControlRequest(
     MessagingInfo& mi, const InvokeActionRequest&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -391,7 +391,7 @@ void HHttpServer::incomingNotifyMessage(
     MessagingInfo& mi, const NotifyRequest&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -400,7 +400,7 @@ void HHttpServer::incomingUnknownHeadRequest(
     MessagingInfo& mi, const QHttpRequestHeader&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -409,7 +409,7 @@ void HHttpServer::incomingUnknownGetRequest(
     MessagingInfo& mi, const QHttpRequestHeader&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -418,7 +418,7 @@ void HHttpServer::incomingUnknownPostRequest(
     MessagingInfo& mi, const QHttpRequestHeader&, const QByteArray&)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    HLOG_DBG(QObject::tr("Calling default implementation, which does nothing."));
+    HLOG_DBG("Calling default implementation, which does nothing.");
     mi.setKeepAlive(false);
     m_httpHandler.send(mi, MethotNotAllowed);
 }
@@ -456,7 +456,7 @@ bool HHttpServer::listen()
                     {
                         if (m_server.listen(entry.ip()))
                         {
-                            HLOG_INFO(QObject::tr(
+                            HLOG_INFO(QString(
                                 "Binding to %1").arg(entry.ip().toString()));
 
                             return true;
@@ -467,8 +467,8 @@ bool HHttpServer::listen()
         }
     }
 
-    HLOG_INFO(QObject::tr(
-        "Could not find a suitable network interface. Binding to localhost."));
+    HLOG_INFO(
+        "Could not find a suitable network interface. Binding to localhost.");
 
     return m_server.listen(QHostAddress::LocalHost);
 }

@@ -66,23 +66,23 @@ void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
     QUuid uuid = req.searchTarget().deviceUuid();
     if (uuid.isNull())
     {
-        HLOG_DBG(QObject::tr("Invalid device-UUID"));
+        HLOG_DBG("Invalid device-UUID");
         return;
     }
 
     HDeviceController* device = m_deviceStorage.searchDeviceByUdn(uuid);
     if (!device)
     {
-        HLOG_DBG(QObject::tr("No device with the specified UUID: [%1]").arg(
+        HLOG_DBG(QString("No device with the specified UUID: [%1]").arg(
             uuid.toString()));
 
         return;
     }
 
     QUrl location;
-    if (!m_deviceStorage.searchValidLocation(device->m_device.data(), source, &location))
+    if (!m_deviceStorage.searchValidLocation(device->m_device, source, &location))
     {
-        HLOG_DBG(QObject::tr(
+        HLOG_DBG(QString(
             "Found a device with uuid: [%1], but it is not "
             "available on the interface that has address: [%2]").arg(
                 uuid.toString(), source.toString()));
@@ -115,7 +115,7 @@ void DeviceHostSsdpHandler::processSearchRequest_deviceType(
 
     if (!foundDevices.size())
     {
-        HLOG_DBG(QObject::tr("No devices match the specified type: [%1]").arg(
+        HLOG_DBG(QString("No devices match the specified type: [%1]").arg(
             req.searchTarget().resourceType().toString()));
 
         return;
@@ -125,9 +125,9 @@ void DeviceHostSsdpHandler::processSearchRequest_deviceType(
     {
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(
-            device->m_device.data(), source, &location))
+            device->m_device, source, &location))
         {
-            HLOG_DBG(QObject::tr(
+            HLOG_DBG(QString(
                 "Found a matching device, but it is not "
                 "available on the interface that has address: [%1]").arg(
                     source.toString()));
@@ -161,7 +161,7 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
 
     if (!foundServices.size())
     {
-       HLOG_DBG(QObject::tr(
+       HLOG_DBG(QString(
            "No services match the specified type: [%1]").arg(
                req.searchTarget().resourceType().toString()));
 
@@ -176,7 +176,7 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(device, source, &location))
         {
-            HLOG_DBG(QObject::tr(
+            HLOG_DBG(QString(
                 "Found a matching device, but it is not "
                 "available on the interface that has address: [%1]").arg(
                     source.toString()));
@@ -235,8 +235,8 @@ void DeviceHostSsdpHandler::processSearchRequest(
             device->deviceStatus()->bootId(),
             device->deviceStatus()->configId()));
 
-    QList<HServiceController*> services = device->services();
-    foreach(HServiceController* service, services)
+    const QList<HServiceController*>* services = device->services();
+    foreach(HServiceController* service, *services)
     {
         usn.setResource(
             HResourceIdentifier(service->m_service->serviceType().toString()));
@@ -249,8 +249,8 @@ void DeviceHostSsdpHandler::processSearchRequest(
                 device->deviceStatus()->configId()));
     }
 
-    QList<HDeviceController*> devices = device->embeddedDevices();
-    foreach(HDeviceController* embeddedDevice, devices)
+    const QList<HDeviceController*>* devices = device->embeddedDevices();
+    foreach(HDeviceController* embeddedDevice, *devices)
     {
         processSearchRequest(embeddedDevice, location, responses);
     }
@@ -268,7 +268,7 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
     QList<HDeviceController*> rootDevices =
         m_deviceStorage.rootDeviceControllers();
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Received search request for all devices from: [%1].").arg(
             source.hostAddress().toString()));
 
@@ -276,9 +276,9 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
     {
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(
-                rootDevice->m_device.data(), source, &location))
+                rootDevice->m_device, source, &location))
         {
-            HLOG_DBG(QObject::tr(
+            HLOG_DBG(QString(
                 "Found a device, but it is not "
                 "available on the interface that has address: [%1]").arg(
                     source.toString()));
@@ -301,17 +301,17 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
 
         processSearchRequest(rootDevice, location, responses);
 
-        QList<HDeviceController*> devices = rootDevice->embeddedDevices();
-        foreach(HDeviceController* embeddedDevice, devices)
+        const QList<HDeviceController*>* devices = rootDevice->embeddedDevices();
+        foreach(HDeviceController* embeddedDevice, *devices)
         {
             if (!m_deviceStorage.searchValidLocation(
-                embeddedDevice->m_device.data(), source, &location))
+                embeddedDevice->m_device, source, &location))
             {
                 // highly uncommon, but possible; the root device is "active" on the network interface
                 // to which the request came, but at least one of its embedded
                 // devices is not.
 
-                HLOG_DBG(QObject::tr(
+                HLOG_DBG(QString(
                     "Skipping an embedded device that is not "
                     "available on the interface that has address: [%1]").arg(
                         source.toString()));
@@ -334,7 +334,7 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
     QList<HDeviceController*> rootDevices =
         m_deviceStorage.rootDeviceControllers();
 
-    HLOG_DBG(QObject::tr(
+    HLOG_DBG(QString(
         "Received search request for root devices from: [%1].").arg(
             source.toString()));
 
@@ -342,9 +342,9 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
     {
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(
-            rootDevice->m_device.data(), source, &location))
+            rootDevice->m_device, source, &location))
         {
-            HLOG_DBG(QObject::tr(
+            HLOG_DBG(QString(
                 "Found a root device, but it is not "
                 "available on the interface that has address: [%1]").arg(
                     source.hostAddress().toString()));

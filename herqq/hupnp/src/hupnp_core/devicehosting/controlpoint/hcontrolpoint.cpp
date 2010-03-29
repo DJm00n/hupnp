@@ -80,38 +80,24 @@ void ControlPointHttpServer::incomingNotifyMessage(
 
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 
-    HLOG_DBG(QObject::tr("Incoming event notify from [%1]").arg(
+    HLOG_DBG(QString("Incoming event notify from [%1]").arg(
         peerAsStr(mi.socket())));
 
     if (m_owner->m_initializationStatus != 2)
     {
-        HLOG_DBG(QObject::tr(
-            "The control point is not ready to accept notifications. Ignoring."));
+        HLOG_DBG("The control point is not ready to accept notifications. Ignoring.");
 
         return;
     }
 
     QString serviceCallbackId = req.callback().path().remove('/');
 
-    QMutexLocker lock(&m_owner->m_serviceSubscribtionsMutex);
-
-    QSharedPointer<HServiceSubscribtion> subscription =
-        m_owner->m_serviceSubscribtions.value(serviceCallbackId);
-
-    lock.unlock();
-
-    if (!subscription)
+    if (!m_owner->m_eventSubscriber->onNotify(serviceCallbackId, mi, req))
     {
-        HLOG_WARN(QObject::tr(
-            "Ignoring notification due to invalid callback ID [%1]").arg(
-                serviceCallbackId));
-
         mi.setKeepAlive(false);
         m_httpHandler.send(mi, BadRequest);
         return;
     }
-
-    subscription->onNotify(mi, req);
 }
 
 /*******************************************************************************
@@ -133,48 +119,19 @@ HControlPointSsdpHandler::~HControlPointSsdpHandler()
 bool HControlPointSsdpHandler::incomingDiscoveryResponse(
     const HDiscoveryResponse& msg, const HEndpoint& source)
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     return m_owner->processDeviceDiscovery(msg, source);
 }
 
 bool HControlPointSsdpHandler::incomingDeviceAvailableAnnouncement(
     const HResourceAvailable& msg)
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     return m_owner->processDeviceDiscovery(msg);
 }
 
 bool HControlPointSsdpHandler::incomingDeviceUnavailableAnnouncement(
     const HResourceUnavailable& msg)
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    QMutexLocker lock(&m_owner->m_deviceStorage->m_rootDevicesMutex);
-
-    HDeviceController* device =
-        m_owner->m_deviceStorage->searchDeviceByUdn(msg.usn().udn());
-
-    if (!device)
-    {
-        // the device is not (for whatever reason) known by us.
-        // note that even service announcements contain the "UDN", which identifies
-        // the device that contains them.
-        return true;
-    }
-
-    HLOG_INFO(QObject::tr("Resource [%1] is unavailable.").arg(
-        msg.usn().resource().toString()));
-
-    // according to the UDA v1.1 specification, if a bye bye message of any kind
-    // is received, the control point can assume that nothing in that
-    // device tree is available anymore
-
-    HDeviceController* root = device->rootDevice();
-    Q_ASSERT(root);
-
-    m_owner->removeRootDeviceAndSubscriptions(root, false);
-
-    return true;
+    return m_owner->processDeviceOffline(msg);
 }
 
 /*******************************************************************************
@@ -184,11 +141,10 @@ HControlPointPrivate::HControlPointPrivate() :
     HAbstractHostPrivate(
         QString("__CONTROL POINT %1__: ").arg(QUuid::createUuid().toString())),
             m_deviceBuildTasks(),
-            m_initParams(),
+            m_configuration(),
             m_ssdp(0),
             m_server(0),
-            m_serviceSubscribtions(),
-            m_serviceSubscribtionsMutex(QMutex::Recursive),
+            m_eventSubscriber(0),
             m_deviceCreationMutex()
 {
 }
@@ -200,8 +156,6 @@ HControlPointPrivate::~HControlPointPrivate()
 
 HActionInvoke HControlPointPrivate::createActionInvoker(HAction* action)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     return HActionInvokeProxy(m_loggingIdentifier, action);
 }
 
@@ -221,7 +175,7 @@ HDeviceController* HControlPointPrivate::buildDevice(
     HObjectCreationParameters creatorParams;
     creatorParams.m_createDefaultObjects = true;
     creatorParams.m_deviceDescription    = dd;
-    creatorParams.m_deviceCreator        = m_initParams->deviceCreator();
+    creatorParams.m_deviceCreator        = m_configuration->deviceCreator();
     creatorParams.m_deviceLocations      = deviceLocations;
 
     creatorParams.m_serviceDescriptionFetcher =
@@ -252,45 +206,70 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
+    Q_ASSERT(thread() == QThread::currentThread());
+
+    QScopedPointer<HDeviceController> newRootDevicePtr(newRootDevice);
+
     HDeviceController* existingDevice =
         m_deviceStorage->searchDeviceByUdn(
             newRootDevice->m_device->deviceInfo().udn());
 
     if (existingDevice)
     {
-        Q_ASSERT(!existingDevice->m_device->parentDevice());
+        // it seems that the device we've built has already been added
+        // (it is possible, although unlikely, we begin multiple device build
+        // processes of the same device tree)
+        // in this case we only make sure that the device's location list is
+        // updated if necessary
 
+        existingDevice = existingDevice->rootDevice();
         existingDevice->addLocations(newRootDevice->m_device->locations());
         return;
     }
 
+    if (q_ptr->acceptRootDevice(newRootDevice->m_device) == HControlPoint::Ignore)
+    {
+        HLOG_DBG(QString("Device [%1] rejected").arg(
+            newRootDevice->m_device->deviceInfo().udn().toString()));
+        return;
+    }
+
     newRootDevice->setParent(this);
-    newRootDevice->m_device->setParent(this);
     newRootDevice->startStatusNotifier(HDeviceController::All);
 
-    Q_ASSERT(QObject::connect(
-            newRootDevice, SIGNAL(statusTimeout(HDeviceController*)),
-            this, SLOT(deviceExpired(HDeviceController*))));
+    bool ok = connect(
+        newRootDevice, SIGNAL(statusTimeout(HDeviceController*)),
+        this, SLOT(deviceExpired(HDeviceController*)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
 
     try
     {
-        addRootDevice(newRootDevice);
+        m_deviceStorage->addRootDevice(newRootDevice);
+        emit q_ptr->rootDeviceOnline(newRootDevice->m_device);
+
+        newRootDevicePtr.take();
     }
     catch(HException& ex)
     {
-        HLOG_WARN(QObject::tr(
+        HLOG_WARN(QString(
             "Failed to add root device [UDN: %1]: %2").arg(
                 newRootDevice->m_device->deviceInfo().udn().toSimpleUuid(),
                 ex.reason()));
 
-        removeRootDeviceSubscriptions(newRootDevice, true);
-        delete newRootDevice;
+        m_eventSubscriber->remove(newRootDevice->m_device, true);
     }
 }
 
 void HControlPointPrivate::deviceExpired(HDeviceController* source)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(thread() == QThread::currentThread());
+
+    if (state() == Exiting)
+    {
+        return;
+    }
 
     QMutexLocker lock(&m_deviceStorage->m_rootDevicesMutex);
 
@@ -301,74 +280,71 @@ void HControlPointPrivate::deviceExpired(HDeviceController* source)
 
     if (source->isTimedout(HDeviceController::All))
     {
-        removeRootDeviceAndSubscriptions(source, false);
+        source->deviceStatus()->setOnline(false);
+        m_eventSubscriber->cancel(source->m_device, true, false);
+        lock.unlock();
+
+        emit q_ptr->rootDeviceOffline(source->m_device);
     }
 }
 
-void HControlPointPrivate::removeRootDeviceSubscriptions(
-    HDeviceController* rootDevice, bool unsubscribe)
+void HControlPointPrivate::unsubscribed(HService* service)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+}
 
-    Q_ASSERT(rootDevice);
-    Q_ASSERT(!rootDevice->m_device->parentDevice());
-    // this method should be called only with root devices
-
+bool HControlPointPrivate::processDeviceOffline(
+    const HResourceUnavailable& msg)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(thread() == QThread::currentThread());
 
-    // when removing a root device all of the subscriptions for services contained
-    // within the root device have to be removed as well.
-
-    QMutexLocker lock(&m_serviceSubscribtionsMutex);
-
-    QHash<QUuid, QSharedPointer<HServiceSubscribtion> >::iterator ci =
-        m_serviceSubscribtions.begin();
-
-    while (ci != m_serviceSubscribtions.end())
+    if (state() == Exiting)
     {
-        QSharedPointer<HServiceSubscribtion> subscription = (*ci);
-
-        // seek the root device of the device tree to which the service
-        // that contains the subscription belongs.
-        const HDevice* device = subscription->service()->parentDevice();
-        while(device->parentDevice()) { device = device->parentDevice(); }
-
-        if (device == rootDevice->m_device.data())
-        {
-            // the service appears to belong to the device tree that is about
-            // to be removed
-
-            ci = m_serviceSubscribtions.erase(ci);
-
-            if (unsubscribe)
-            {
-                subscription->unsubscribe(true);
-            }
-        }
-        else
-        {
-            ++ci;
-        }
+        return true;
     }
-}
 
-void HControlPointPrivate::removeRootDeviceAndSubscriptions(
-    HDeviceController* rootDevice, bool unsubscribe)
-{
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    QMutexLocker lock(&m_deviceStorage->m_rootDevicesMutex);
 
-    Q_ASSERT(thread() == QThread::currentThread());
+    HDeviceController* device =
+        m_deviceStorage->searchDeviceByUdn(msg.usn().udn());
 
-    removeRootDeviceSubscriptions(rootDevice, unsubscribe);
-    removeRootDevice(rootDevice);
+    if (!device)
+    {
+        // the device is not known by us.
+        // note that even service announcements contain the "UDN", which identifies
+        // the device that contains them.
+        return true;
+    }
+
+    HLOG_INFO(QString("Resource [%1] is unavailable.").arg(
+        msg.usn().resource().toString()));
+
+    // according to the UDA v1.1 specification, if a bye bye message of any kind
+    // is received, the control point can assume that nothing in that
+    // device tree is available anymore
+
+    HDeviceController* root = device->rootDevice();
+    Q_ASSERT(root);
+
+    root->deviceStatus()->setOnline(false);
+    m_eventSubscriber->cancel(root->m_device, true, false);
+    emit q_ptr->rootDeviceOffline(root->m_device);
+
+    return true;
 }
 
 template<typename Msg>
 bool HControlPointPrivate::processDeviceDiscovery(
-    const Msg& msg, const HEndpoint& /*source*/)
+    const Msg& msg, const HEndpoint& source)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(thread() == QThread::currentThread());
+
+    if (state() == Exiting)
+    {
+        return true;
+    }
 
     HUdn resourceUdn = msg.usn().udn();
 
@@ -392,14 +368,21 @@ bool HControlPointPrivate::processDeviceDiscovery(
         // the location that the root device specifies ==> the entire device
         // tree has to be available at that location.
         device->addLocation(msg.location());
+
+        if (!device->deviceStatus()->online())
+        {
+            device->deviceStatus()->setOnline(true);
+            emit q_ptr->rootDeviceOnline(device->m_device);
+            processDeviceOnline(device, false);
+        }
+
         return true;
     }
 
     // it does not matter if the device is an embedded device, since the
     // location of the device always points to the root device's description
-    // and the internal device model is built of that. Hence, it is only necessary
-    // to get an advertisement of a root or an embedded device to build the entire
-    // model correctly.
+    // and the internal device model is built of that. Hence, any advertisement
+    // will do to build the entire model correctly.
 
     DeviceBuildTask* dbp = m_deviceBuildTasks.get(msg);
     if (dbp)
@@ -408,6 +391,14 @@ bool HControlPointPrivate::processDeviceDiscovery(
         {
             dbp->m_locations.push_back(msg.location());
         }
+
+        return true;
+    }
+
+    if (!q_ptr->acceptResourceAd(msg.usn(), source))
+    {
+        HLOG_DBG(QString("Resource advertisement [%1] rejected").arg(
+            msg.usn().toString()));
 
         return true;
     }
@@ -425,7 +416,7 @@ bool HControlPointPrivate::processDeviceDiscovery(
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    HLOG_INFO(QObject::tr(
+    HLOG_INFO(QString(
         "New resource [%1] is available @ [%2]. "
         "Attempting to build the device model.").arg(
             msg.usn().resource().toString(), msg.location().toString()));
@@ -435,17 +426,71 @@ bool HControlPointPrivate::processDeviceDiscovery(
     return true;
 }
 
+void HControlPointPrivate::processDeviceOnline(
+    HDeviceController* device, bool newDevice)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    HControlPoint::DeviceDiscoveryAction actionToTake =
+        q_ptr->acceptRootDevice(device->m_device);
+
+    bool subscribe = false;
+    switch(actionToTake)
+    {
+    case HControlPoint::Ignore:
+
+        HLOG_DBG(QString("Discarding device with UDN %1").arg(
+            device->m_device->deviceInfo().udn().toString()));
+
+        if (newDevice) { delete device; device = 0; }
+        else { m_deviceStorage->removeRootDevice(device); }
+        break;
+
+    case HControlPoint::AddOnly:
+        break;
+
+    case HControlPoint::AddAndFollowConfiguration:
+        subscribe = m_configuration->subscribeToEvents();
+        break;
+
+    case HControlPoint::AddAndSubscribeToAll:
+        subscribe = true;
+        break;
+
+    default:
+        Q_ASSERT(false);
+        break;
+    };
+
+    if (device)
+    {
+        if (newDevice)
+        {
+            addRootDevice_(device);
+        }
+        if (subscribe)
+        {
+            m_eventSubscriber->subscribe(device->m_device, true);
+        }
+    }
+}
+
 void HControlPointPrivate::deviceModelBuildDone(const Herqq::Upnp::HUdn& udn)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(thread() == QThread::currentThread());
+
+    if (state() == Exiting)
+    {
+        return;
+    }
 
     DeviceBuildTask* build = m_deviceBuildTasks.get(udn);
     Q_ASSERT(build);
 
     if (build->completionValue() == 0)
     {
-        HLOG_INFO(QObject::tr("Device model for [%1] built successfully.").arg(
+        HLOG_INFO(QString("Device model for [%1] built successfully.").arg(
             udn.toString()));
 
         HDeviceController* device = build->createdDevice();
@@ -456,11 +501,11 @@ void HControlPointPrivate::deviceModelBuildDone(const Herqq::Upnp::HUdn& udn)
             device->addLocation(build->m_locations[i]);
         }
 
-        addRootDevice_(device);
+        processDeviceOnline(device, true);
     }
     else
     {
-        HLOG_WARN(QObject::tr("Device model for [%1] could not be built: %2.").arg(
+        HLOG_WARN(QString("Device model for [%1] could not be built: %2.").arg(
             udn.toString(), build->errorString()));
     }
 
@@ -482,45 +527,34 @@ void HControlPointPrivate::doClear()
     // this will tell the http handler that operations should quit as
     // soon as possible.
 
-    QMutexLocker lock(&m_serviceSubscribtionsMutex);
+    m_eventSubscriber->cancelAll(100);
+    m_eventSubscriber->removeAll();
 
-    QHash<QUuid, QSharedPointer<HServiceSubscribtion> >::iterator it =
-        m_serviceSubscribtions.begin();
-
-    for(; it != m_serviceSubscribtions.end(); ++it)
-    {
-        try
-        {
-            (*it)->unsubscribe(true);
-        }
-        catch(HException&)
-        {
-            // intentional. at most could print something.
-        }
-    }
-    m_serviceSubscribtions.clear();
-
-    lock.unlock();
-
+    QAbstractEventDispatcher* ed = QAbstractEventDispatcher::instance();
     while(m_threadPool->activeThreadCount())
     {
-        QAbstractEventDispatcher::instance()->processEvents(
-            QEventLoop::ExcludeUserInputEvents);
+        ed->processEvents(QEventLoop::ExcludeUserInputEvents);
     }
 
     m_threadPool->waitForDone();
     // ensure that no threads created by this thread pool are running when we
     // start deleting shared objects.
 
+    q_ptr->doQuit();
+    // At this point all that is left is to delete
+    // the private data structures ==> allow derived classes to run their
+    // "finalizers" before cleaning up
+
     delete m_server; m_server = 0;
     delete m_ssdp; m_ssdp = 0;
+    delete m_eventSubscriber; m_eventSubscriber = 0;
 
     m_http.reset(0);
 
     m_initializationStatus = 0;
 
     QAbstractEventDispatcher::instance()->processEvents(
-        QEventLoop::ExcludeUserInputEvents);
+        QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
     // this is execute to ensure that if there is deferred deletion to be performed
     // on some objects, the deleters get a chance to run.
 
@@ -533,100 +567,162 @@ void HControlPointPrivate::doClear()
  ******************************************************************************/
 HControlPoint::HControlPoint(
     const HControlPointConfiguration* initParams, QObject* parent) :
-        HAbstractHost(*new HControlPointPrivate(), parent)
+        QObject(parent), h_ptr(new HControlPointPrivate())
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    H_D(HControlPoint);
 
-    h->m_initParams.reset(initParams ?
+    h_ptr->m_configuration.reset(initParams ?
         initParams->clone() : new HControlPointConfiguration());
+
+    h_ptr->setParent(this);
+    h_ptr->q_ptr = this;
 }
 
 HControlPoint::HControlPoint(
     HControlPointPrivate& dd,
     const HControlPointConfiguration* initParams, QObject* parent) :
-        HAbstractHost(dd, parent)
+        QObject(parent), h_ptr(&dd)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    H_D(HControlPoint);
 
-    h->m_initParams.reset(initParams ?
+    h_ptr->m_configuration.reset(initParams ?
         initParams->clone() : new HControlPointConfiguration());
+
+    h_ptr->setParent(this);
+    h_ptr->q_ptr = this;
 }
 
 HControlPoint::~HControlPoint()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
     quit();
+    delete h_ptr;
 }
 
-qint32 HControlPoint::doInit()
+HControlPoint::ReturnCode HControlPoint::doInit()
 {
-    return Success();
+    // the default implementation does nothing.
+    return Success;
 }
 
-qint32 HControlPoint::init(QString* errorString)
+void HControlPoint::doQuit()
+{
+    // the default implementation does nothing.
+}
+
+HControlPoint::DeviceDiscoveryAction HControlPoint::acceptRootDevice(
+    HDevice* /*device*/)
+{
+    return AddAndFollowConfiguration;
+}
+
+bool HControlPoint::acceptResourceAd(
+    const HUsn& /*usn*/, const HEndpoint& /*source*/)
+{
+    return true;
+}
+
+const HControlPointConfiguration* HControlPoint::configuration() const
+{
+    return h_ptr->m_configuration.data();
+}
+
+HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    H_D(HControlPoint);
 
     Q_ASSERT_X(
         thread() == QThread::currentThread(), H_AT,
-        "The control point has to be initialized in the thread in which it is currently located.");
+        "The control point has to be initialized in the thread in which it is "
+        "currently located.");
 
-    if (h->state() == HAbstractHostPrivate::Initialized)
+    if (h_ptr->state() == HAbstractHostPrivate::Initialized)
     {
-        return AlreadyInitialized();
+        return AlreadyInitialized;
     }
 
-    Q_ASSERT(h->state() == HAbstractHostPrivate::Uninitialized);
+    Q_ASSERT(h_ptr->state() == HAbstractHostPrivate::Uninitialized);
 
     QString error;
-    qint32 rc = Success();
+    ReturnCode rc = Success;
     try
     {
-        h->setState(HAbstractHostPrivate::Initializing);
+        h_ptr->setState(HAbstractHostPrivate::Initializing);
 
-        HLOG_INFO(QObject::tr("ControlPoint initializing."));
+        HLOG_INFO("ControlPoint initializing.");
 
-        h->m_http.reset(new HHttpHandler(h->m_loggingIdentifier));
+        h_ptr->m_eventSubscriber = new HEventSubscriptionManager(h_ptr);
 
-        h->m_server = new ControlPointHttpServer(h);
-        if (!h->m_server->listen())
+        bool ok = connect(
+            h_ptr->m_eventSubscriber,
+            SIGNAL(subscribed(Herqq::Upnp::HService*)),
+            this,
+            SIGNAL(subscriptionSucceeded(Herqq::Upnp::HService*)));
+
+        Q_ASSERT(ok); Q_UNUSED(ok)
+
+        ok = connect(
+            h_ptr->m_eventSubscriber,
+            SIGNAL(subscriptionFailed(Herqq::Upnp::HService*)),
+            this,
+            SIGNAL(subscriptionFailed(Herqq::Upnp::HService*)));
+
+        Q_ASSERT(ok);
+
+        ok = connect(
+            h_ptr->m_eventSubscriber,
+            SIGNAL(unsubscribed(Herqq::Upnp::HService*)),
+            h_ptr,
+            SLOT(unsubscribed(Herqq::Upnp::HService*)),
+            Qt::QueuedConnection);
+
+        Q_ASSERT(ok);
+
+        h_ptr->m_ssdp = new HControlPointSsdpHandler(h_ptr);
+        h_ptr->m_http.reset(new HHttpHandler(h_ptr->m_loggingIdentifier));
+        h_ptr->m_server = new ControlPointHttpServer(h_ptr);
+
+        rc = doInit();
+        if (rc != Success)
         {
-            rc = UndefinedFailure();
+            goto end;
         }
-        else
+
+        if (!h_ptr->m_server->listen())
         {
-            h->m_ssdp = new HControlPointSsdpHandler(h);
-
-            if (!h->m_ssdp->bind())
-            {
-                throw HSocketException(QObject::tr(
-                    "Failed to initialize SSDP."));
-            }
-
-            HLOG_DBG(QObject::tr("Searching for UPnP devices..."));
-
-            h->m_ssdp->sendDiscoveryRequest(
-                HDiscoveryRequest(
-                    1, HResourceIdentifier("ssdp:all"), herqqProductTokens()));
-
-            h->setState(HAbstractHostPrivate::Initialized);
+            rc = CommunicationsError;
+            goto end;
         }
+
+        if (!h_ptr->m_ssdp->bind())
+        {
+            rc = CommunicationsError;
+            goto end;
+        }
+
+        HLOG_DBG("Searching for UPnP devices...");
+
+        h_ptr->m_ssdp->sendDiscoveryRequest(
+            HDiscoveryRequest(
+                1, HResourceIdentifier("ssdp:all"), herqqProductTokens()));
+
+        h_ptr->setState(HAbstractHostPrivate::Initialized);
     }
     catch(HSocketException& ex)
     {
         error = ex.reason();
-        rc = CommunicationsError();
+        rc = CommunicationsError;
     }
     catch(HException& ex)
     {
         error = ex.reason();
-        rc = UndefinedFailure();
+        rc = UndefinedFailure;
     }
 
-    if (rc != Success())
+end:
+
+    if (rc != Success)
     {
         HLOG_WARN(error);
 
@@ -635,14 +731,15 @@ qint32 HControlPoint::init(QString* errorString)
             *errorString = error;
         }
 
-        h->setState(HAbstractHostPrivate::Exiting);
-        h->clear();
-        HLOG_INFO(QObject::tr("ControlPoint initialization failed."));
+        h_ptr->setState(HAbstractHostPrivate::Exiting);
+        h_ptr->clear();
+
+        HLOG_INFO("ControlPoint initialization failed.");
 
         return rc;
     }
 
-    HLOG_INFO(QObject::tr("ControlPoint initialized."));
+    HLOG_INFO("ControlPoint initialized.");
 
     return rc;
 }
@@ -650,24 +747,137 @@ qint32 HControlPoint::init(QString* errorString)
 void HControlPoint::quit()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    H_D(HControlPoint);
 
     Q_ASSERT_X(
         thread() == QThread::currentThread(), H_AT,
-        "The control point has to be shutdown in the thread in which it is currently located.");
+        "The control point has to be shutdown in the thread in which it is "
+        "currently located.");
 
     if (!isStarted())
     {
         return;
     }
 
-    HLOG_INFO(QObject::tr("ControlPoint shutting down."));
+    HLOG_INFO("Shutting down.");
 
-    h->setState(HAbstractHostPrivate::Exiting);
-    h->clear();
+    h_ptr->setState(HAbstractHostPrivate::Exiting);
+    h_ptr->clear();
 
-    HLOG_INFO(QObject::tr("ControlPoint shut down."));
+    HLOG_INFO("Shut down.");
 }
+
+bool HControlPoint::isStarted() const
+{
+    return h_ptr->state() == HAbstractHostPrivate::Initialized;
+}
+
+HDevicePtrList HControlPoint::rootDevices() const
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        HLOG_WARN("The control point is not started");
+        return HDevicePtrList();
+    }
+
+    return h_ptr->m_deviceStorage->rootDevices();
+}
+
+HDevice* HControlPoint::rootDevice(const HUdn& udn) const
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        HLOG_WARN("The control point is not started");
+        return 0;
+    }
+
+    HDeviceController* dc = h_ptr->m_deviceStorage->searchDeviceByUdn(udn);
+
+    return dc ?
+        h_ptr->m_deviceStorage->searchDeviceByUdn(udn)->m_device : 0;
+}
+
+HControlPoint::ReturnCode HControlPoint::subscribeEvents(
+    HDevice* device, bool recursive)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!device)
+    {
+        return InvalidArgument;
+    }
+
+    h_ptr->m_eventSubscriber->subscribe(device, recursive);
+
+    return Success;
+}
+
+HControlPoint::ReturnCode HControlPoint::subscribeEvents(HService* service)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!service)
+    {
+        return InvalidArgument;
+    }
+
+    return h_ptr->m_eventSubscriber->subscribe(service) ? Success : InvalidArgument;;
+}
+
+HControlPoint::ReturnCode HControlPoint::cancelEvents(
+    HDevice* device, bool recursive)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!device)
+    {
+        return InvalidArgument;
+    }
+
+    return h_ptr->m_eventSubscriber->cancel(
+        device, recursive, true) ? Success : InvalidArgument;
+}
+
+HControlPoint::ReturnCode HControlPoint::cancelEvents(HService* service)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!service)
+    {
+        return InvalidArgument;
+    }
+
+    return h_ptr->m_eventSubscriber->cancel(service, true) ? Success : InvalidArgument;
+}
+
+HControlPoint::ReturnCode HControlPoint::removeDevice(HDevice* rootDevice)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!rootDevice || rootDevice->parentDevice())
+    {
+        return InvalidArgument;
+    }
+
+    Q_ASSERT(thread() == QThread::currentThread());
+
+    HDeviceController* controller =
+        static_cast<HDeviceController*>(rootDevice->parent());
+
+    h_ptr->m_eventSubscriber->remove(rootDevice, true);
+    // TODO should send unsubscription to the UPnP device?
+
+    return h_ptr->m_deviceStorage->removeRootDevice(controller) ?
+            Success : InvalidArgument;
+}
+
+//void HControlPoint::scan(const HResourceIdentifier& /*resource*/)
+//{
+
+//}
 
 }
 }

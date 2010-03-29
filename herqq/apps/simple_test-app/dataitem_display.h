@@ -25,6 +25,7 @@
 
 #include "controlpoint_navigatoritem.h"
 
+#include <HUdn>
 #include <HUpnp>
 
 #include <QList>
@@ -68,14 +69,14 @@ private:
 
     QList<QPair<QString, QString> > m_modelData;
 
-private slots:
-
-    void contentSourceDisposed();
+    Herqq::Upnp::HUdn m_rootDeviceUdn;
 
 public:
 
     DataItemDisplay(QObject* parent = 0);
     virtual ~DataItemDisplay();
+
+    void deviceRemoved(const Herqq::Upnp::HUdn&);
 
     void setData(ControlPointNavigatorItem*);
 

@@ -72,12 +72,13 @@ private: // attributes
     HSid          m_sid;
     QAtomicInt    m_seq;
     HTimeout      m_timeout;
-    QAtomicInt    m_shuttingDown;
     QTimer        m_timer;
     HHttpAsyncHandler m_asyncHttp;
 
     QScopedPointer<QTcpSocket> m_socket;
     QQueue<QByteArray> m_messagesToSend;
+
+    volatile bool m_expired;
 
     const QByteArray m_loggingIdentifier;
 
@@ -112,7 +113,7 @@ public:
     inline quint32   seq     () const { return m_seq;      }
     inline HTimeout  timeout () const { return m_timeout;  }
     inline HService* service () const { return m_service;  }
-    inline bool      expired () const { return m_shuttingDown; }
+    inline bool      expired () const { return m_expired;  }
 
     void renew();
 };

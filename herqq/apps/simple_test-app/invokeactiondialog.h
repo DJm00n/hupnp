@@ -62,16 +62,17 @@ public:
 
     virtual ~InvokeActionDialog();
 
+public Q_SLOTS:
+
+    void contentSourceRemoved(Herqq::Upnp::HDevice*);
+
 protected:
 
     virtual void changeEvent(QEvent*);
 
 private slots:
 
-    void contentSourceDisposed();
-
     void on_invokeButton_clicked();
-
     void invokeComplete(const QUuid& invokeId);
 };
 

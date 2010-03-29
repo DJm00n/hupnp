@@ -148,11 +148,12 @@ EventNotifier::ServiceEventSubscriberPtrT EventNotifier::remoteClient(
     return ServiceEventSubscriberPtrT(0);
 }
 
-EventNotifier::ServiceEventSubscriberPtrT EventNotifier::addSubscriber(
-    HService* service, const SubscribeRequest& sreq)
+StatusCode EventNotifier::addSubscriber(
+    HService* service, const SubscribeRequest& sreq, HSid* sid)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
+    Q_ASSERT(sid);
     Q_ASSERT(service->isEvented());
     // The UDA v1.1 does not specify what to do when a subscription is received
     // to a service that is not evented. A "safe" route was taken here and
@@ -165,7 +166,8 @@ EventNotifier::ServiceEventSubscriberPtrT EventNotifier::addSubscriber(
 
     if (m_shutdown)
     {
-        return ServiceEventSubscriberPtrT(0);
+        HLOG_DBG("Shutting down, rejecting subscription");
+        return InternalServerError;
     }
 
     for(qint32 i = 0; i < m_remoteClients.size(); ++i)
@@ -175,15 +177,15 @@ EventNotifier::ServiceEventSubscriberPtrT EventNotifier::addSubscriber(
         if (isSameService(rc->service(), service) &&
             sreq.callbacks().contains(rc->location()))
         {
-            HLOG_WARN(QObject::tr(
+            HLOG_WARN(QString(
                 "subscriber [%1] to the specified service URL [%2] already exists").arg(
                     rc->location().toString(), service->scpdUrl().toString()));
 
-            return ServiceEventSubscriberPtrT(0);
+            return PreconditionFailed;
         }
     }
 
-    HLOG_INFO(QObject::tr("adding subscriber from [%1]").arg(
+    HLOG_INFO(QString("adding subscriber from [%1]").arg(
         sreq.callbacks().at(0).toString()));
 
     HTimeout timeout = service->isEvented() ? sreq.timeout() : HTimeout(60*60*24);
@@ -196,7 +198,9 @@ EventNotifier::ServiceEventSubscriberPtrT EventNotifier::addSubscriber(
 
     m_remoteClients.push_back(rc);
 
-    return rc;
+    *sid = rc->sid();
+
+    return Ok;
 }
 
 bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
@@ -217,7 +221,7 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
     {
         if ((*it)->expired())
         {
-            HLOG_INFO(QObject::tr("removing subscriber from [%1] with SID [%2]").arg(
+            HLOG_INFO(QString("removing subscriber from [%1] with SID [%2]").arg(
                 (*it)->location().toString(), req.sid().toString()));
 
             it = m_remoteClients.erase(it);
@@ -225,7 +229,7 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
 
         if ((*it)->sid() == req.sid())
         {
-            HLOG_INFO(QObject::tr("removing subscriber from [%1] with SID [%2]").arg(
+            HLOG_INFO(QString("removing subscriber from [%1] with SID [%2]").arg(
                 (*it)->location().toString(), req.sid().toString()));
 
             it = m_remoteClients.erase(it);
@@ -240,7 +244,7 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
 
     if (!found)
     {
-        HLOG_WARN(QObject::tr("Could not cancel subscription. Invalid SID [%1]").arg(
+        HLOG_WARN(QString("Could not cancel subscription. Invalid SID [%1]").arg(
             req.sid().toString()));
         return false;
     }
@@ -248,16 +252,18 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
     return true;
 }
 
-EventNotifier::ServiceEventSubscriberPtrT EventNotifier::renewSubscription(
-    const SubscribeRequest& req)
+StatusCode EventNotifier::renewSubscription(
+    const SubscribeRequest& req, HSid* sid)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    Q_ASSERT(sid);
 
     QMutexLocker lock(&m_remoteClientsMutex);
 
     if (m_shutdown)
     {
-        return ServiceEventSubscriberPtrT(0);
+        return InternalServerError;
     }
 
     QList<ServiceEventSubscriberPtrT>::iterator it = m_remoteClients.begin();
@@ -271,18 +277,19 @@ EventNotifier::ServiceEventSubscriberPtrT EventNotifier::renewSubscription(
 
         if ((*it)->sid() == req.sid())
         {
-            HLOG_INFO(QObject::tr("renewing subscription from [%1]").arg(
+            HLOG_INFO(QString("renewing subscription from [%1]").arg(
                 (*it)->location().toString()));
 
             (*it)->renew();
-            return (*it);
+            *sid = (*it)->sid();
+            return Ok;
         }
     }
 
-    HLOG_WARN(QObject::tr("Cannot renew subscription. Invalid SID: [%1]").arg(
+    HLOG_WARN(QString("Cannot renew subscription. Invalid SID: [%1]").arg(
         req.sid().toString()));
 
-    return ServiceEventSubscriberPtrT(0);
+    return PreconditionFailed;
 }
 
 void EventNotifier::stateChanged(const HService* source)
@@ -335,26 +342,26 @@ void EventNotifier::initialNotify(ServiceEventSubscriberPtrT rc, MessagingInfo& 
         // !!slight deviation from the UDA v1.1 specification!!
         //
         // the timeout for acknowledging a initial notify request using the
-        // same connection is set to 3 seconds, instead of the 30 as specified
+        // same connection is set to two seconds, instead of the 30 as specified
         // in the standard. This is for two reasons:
         // 1) there exists UPnP software that do not implement and respect
         // HTTP keep-alive properly.
         // 2) initial notify using HTTP keep-alive is very fast (unless something
-        // is wrong) and 3 seconds should be more than enough.
+        // is wrong) and even a second should be more than enough.
 
         // with the above in mind, if the subscriber seems to use HTTP keep-alive,
         // the initial notify is sent using the connection in which the
         // subscription came. However, if that fails, the initial notify is
         // re-send using a new connection.
 
-        mi.setReceiveTimeoutForNoData(3000);
+        mi.setReceiveTimeoutForNoData(2000);
 
         if (rc->initialNotify(msgBody, &mi))
         {
             return;
         }
 
-        HLOG_WARN_NONSTD(QObject::tr(
+        HLOG_WARN_NONSTD(QString(
             "Initial notify to SID [%1] failed. The device does not seem to " \
             "respect HTTP keep-alive. Re-sending the initial notify using a new connection.").arg(
                 rc->sid().toString()));

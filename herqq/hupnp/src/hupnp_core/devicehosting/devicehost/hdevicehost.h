@@ -22,7 +22,10 @@
 #ifndef HDEVICEHOST_H_
 #define HDEVICEHOST_H_
 
-#include "./../habstracthost.h"
+#include "./../../general/hdefs_p.h"
+#include "./../../general/hupnp_fwd.h"
+
+#include <QObject>
 
 namespace Herqq
 {
@@ -33,7 +36,7 @@ namespace Upnp
 class HDeviceHostPrivate;
 
 /*!
- * A class for creating and hosting HDevices on the network.
+ * A class for creating and hosting \c %HDevice instances on the network.
  *
  * \headerfile hdevicehost.h HDeviceHost
  *
@@ -51,11 +54,11 @@ class HDeviceHostPrivate;
  * descriptions ready and the HUPnP device and service classes implemented.
  * Basically, you only need to:
  *
- * \li instantiate an HDeviceConfiguration for each device type to be hosted and
- * pass them to the %HDeviceHost inside a HDeviceHostConfiguration instance
- * \li instantiate and initialize an %HDeviceHost
+ * \li instantiate an HDeviceConfiguration for each UPnP device type to be hosted and
+ * pass them to the \c %HDeviceHost inside a HDeviceHostConfiguration instance
+ * \li instantiate and initialize an \c %HDeviceHost
  * \li make sure a Qt event loop is present in the thread in which the
- * %HDeviceHost is run.
+ * \c %HDeviceHost is run.
  *
  * As an example, consider the following:
  *
@@ -66,13 +69,18 @@ class HDeviceHostPrivate;
  * #include <HDeviceHost>
  * #include <QScopedPointer>
  *
- * class MyClass
+ * #include <QObject>
+ *
+ * class MyClass :
+ *     public QObject
  * {
+ * Q_OBJECT
+ *
  * private:
- *     QScopedPointer<Herqq::Upnp::HDeviceHost> m_deviceHost;
+ *     Herqq::Upnp::HDeviceHost* m_deviceHost;
  *
  * public:
- *     MyClass();
+ *     MyClass(QObject* parent = 0);
  * };
  *
  * // myclass.cpp
@@ -92,14 +100,16 @@ class HDeviceHostPrivate;
  * };
  * }
  *
- * MyClass::MyClass() :
- *     m_deviceHost(new Herqq::Upnp::HDeviceHost())
+ * MyClass::MyClass(QObject* parent) :
+ *     QObject(parent),
+ *         m_deviceHost(new Herqq::Upnp::HDeviceHost(this))
  * {
  *     Herqq::Upnp::HDeviceConfiguration deviceConf;
  *     deviceConf.setPathToDeviceDescription("my_hdevice_devicedescription.xml");
  *
  *     Creator deviceCreator;
- *     // this could also be a free function or a member function.
+ *     // you could also use a normal or a member function to create HDevice
+ *     // types
  *
  *     deviceConf.setDeviceCreator(deviceCreator);
  *
@@ -122,35 +132,36 @@ class HDeviceHostPrivate;
  * instance is invalid; for instance, the \e device \e creator is not specified or
  * the path to your UPnP Device Description is invalid. Similarly, if your
  * UPnP Device or UPnP Service description (if your UPnP device has one) is invalid, the device
- * host will fail to initialize. The point is, \b check \b the \b return \b value.
- * -# Your %HDevice is accessible only as long as your %HDeviceHost
- * is alive. When the device host is destroyed, any UPnP devices it hosted
+ * host will fail to initialize. The point is, you should always \b check \b the \b return \b value.
+ * -# Your HDevice is accessible only as long as your \c %HDeviceHost
+ * is alive. When the device host is destroyed every UPnP device it hosted
  * are destroyed as well.
- * -# %HDeviceHost requires an event loop to function.
- * -# %HDeviceHost takes in a HDeviceHostConfiguration object, which has a constructor
+ * -# \c %HDeviceHost requires an event loop to function.
+ * -# \c %HDeviceHost takes in a HDeviceHostConfiguration object, which has a constructor
  * that takes in a HDeviceConfiguration object. This is exploited in the example above,
- * since we are not interested in hosting multiple %HDevices in the same host and
- * we are not interested in modifying the default behavior of the %HDeviceHost.
+ * since we are not interested in hosting multiple HDevice instances in the same host and
+ * we are not interested in modifying the default behavior of the \c %HDeviceHost.
  *
- * \remark
+ * \remarks
  *
- * \li %HDeviceHost has thread affinity, which mandates
- * that the %HDeviceHost and any object managed by it must be used and destroyed in the
- * thread in which the %HDeviceHost at the time lives.
- * You can use <c>QObject::moveToThread()</c> on the %HDeviceHost, which causes
+ * \li \c %HDeviceHost has thread affinity, which mandates
+ * that the \c %HDeviceHost and any object managed by it must be destroyed in the
+ * thread in which the \c %HDeviceHost at the time lives.
+ * You can use <c>QObject::moveToThread()</c> on the \c %HDeviceHost, which causes
  * the device host and every object managed by it to be moved to the chosen thread.
- * However, you cannot move individual objects managed by %HDeviceHost.
+ * However, you cannot move individual objects managed by \c %HDeviceHost.
  *
- * \li %HDeviceHost is the owner of the instances of
- * %HDevice it manages. It takes care of the memory management
- * of every object it has created.
+ * \li \c %HDeviceHost is the owner of the instances of
+ * \c %HDevice it manages. It handles the memory management
+ * of every object it has created. In other words, a device host \b never
+ * transfers the ownership of the HDevice objects it manages.
  *
  * \li <b>%HDeviceHost always destroys every %HDevice it manages when it is being destroyed</b>.
  *
  * \sa devicehosting, HDevice, HDeviceHostConfiguration, HDeviceConfiguration
  */
 class H_UPNP_CORE_EXPORT HDeviceHost :
-    public HAbstractHost
+    public QObject
 {
 Q_OBJECT
 H_DISABLE_COPY(HDeviceHost)
@@ -164,14 +175,16 @@ public:
     enum ReturnCode
     {
         /*!
-         * Return value signifying general failure. This return code is used when
+         * Return value signifying general failure.
+         *
+         * This return code is used when
          * an operation could not be successfully completed, but the exact
          * cause for the error could not be determined.
          */
         UndefinedFailure = -1,
 
         /*!
-         *  Return value signifying success.
+         *  Return value used to indicate that an operation succeeded.
          */
         Success = 0,
 
@@ -182,19 +195,18 @@ public:
         AlreadyInitialized = 1,
 
         /*!
-         * Return value signifying that the provided
-         * host configuration was incorrect.
+         * Return value signifying that the provided host configuration was incorrect.
          */
         InvalidConfiguration = 2,
 
         /*!
-         * Return value signifying that the provided device description document
+         * Return value signifying that a provided device description document
          * was invalid.
          */
         InvalidDeviceDescription = 3,
 
         /*!
-         * Return value signifying that the provided service description document
+         * Return value signifying that a provided service description document
          * was invalid.
          */
         InvalidServiceDescription = 4,
@@ -202,29 +214,103 @@ public:
         /*!
          * Return value used to indicate one or more more problems in communications
          * layer.
+         *
+         * For instance, perhaps the HTTP server could not be started or SSDP
+         * listener could not be initialized.
          */
-        CommunicationsError
+        CommunicationsError = 5
     };
+
+private:
+
+    /*!
+     * Performs the initialization of a derived class.
+     *
+     * The \c %HDeviceHost uses two-phase initialization, in which the user
+     * first constructs an instance and then calls init() in order to ready
+     * the object for use. This method is called by the \c %HDeviceHost
+     * during its private initialization after all the private data structures
+     * are constructed but before any network activity. At this point, no HTTP
+     * or SSDP requests are served.
+     *
+     * You can override this method to perform any further initialization of a derived
+     * class.
+     *
+     * \return HDeviceHost::Success if and only if the initialization succeeded.
+     * If any other value is returned, the initialization of the device host is
+     * aborted with the error code returned by the derived class.
+     *
+     * \remark the default implementation does nothing.
+     *
+     * \sa init()
+     */
+    virtual ReturnCode doInit();
+
+    /*!
+     * Performs the de-initialization of a derived class.
+     *
+     * Since it is possible to shutdown a device host without actually destroying the
+     * instance by calling quit(), derived classes have the possibility to
+     * perform their own de-initialization procedure by overriding this method.
+     * This method is called \b before the \c %HDeviceHost cleans its
+     * private data structures but after it has stopped listening requests
+     * from the network.
+     *
+     * \remark the default implementation does nothing.
+     *
+     * \sa quit()
+     */
+    virtual void doQuit();
+
+    /*!
+     * Checks if a (re-)subscription should be accepted.
+     *
+     * Derived classes can opt to override this method to decide what
+     * event subscriptions are accepted and what are not.
+     *
+     * \param targetService specifies the target of the subscription.
+     *
+     * \param source specifies the location where the subscription came.
+     *
+     * \param renewal indicates the type of the subscription. The value is
+     * \e true in case the subscription is new and \e false in case the
+     * subscription is a renewal to an existing subscription.
+     *
+     * \return \e true in case the subscription should be accepted.
+     *
+     * \remark by default all subscriptions are accepted.
+     */
+    virtual bool acceptSubscription(
+        HService* targetService, const HEndpoint& source, bool isNew);
+
+protected:
+
+    HDeviceHostPrivate* h_ptr;
+
+    /*!
+     * Returns the configuration used to initialize the device host.
+     *
+     * \return the configuration used to initialize the device host or null
+     * in case the device host is not initialized.
+     *
+     * \remark the returned object is not a copy and the ownership of the
+     * object is not transferred.
+     */
+    const HDeviceHostConfiguration* configuration() const;
 
 public:
 
     /*!
      * Creates a new instance.
      *
-     * \param parent specifies the parent object.
+     * \param parent specifies the parent \c QObject.
      */
     explicit HDeviceHost(QObject* parent = 0);
 
     /*!
      * Destroys the device host and every hosted device.
-     *
-     * For more information,
-     *
-     * \sa HAbstractHost::~HAbstractHost()
      */
     virtual ~HDeviceHost();
-
-public Q_SLOTS:
 
     /*!
      * Initializes the device host and the devices it is supposed to host.
@@ -233,42 +319,80 @@ public Q_SLOTS:
      * object has to contain at least one device configuration.
      *
      * \param errorString will contain a textual error description
-     * in case the call failed and a pointer to a valid QString object was specified by the caller.
+     * in case the call failed and a pointer to a valid \c QString object was specified by the caller.
      *
-     * \retval Success when the host was successfully started.
+     * \retval HDeviceHost::Success when the host was successfully started.
      *
-     * \retval AlreadyInitialized when the host has already been successfully started.
+     * \retval HDeviceHost::AlreadyInitialized when the host has already been successfully started.
      *
-     * \retval InvalidInitParams when the provided initialization parameters
-     * contained one or more erroneous values, such as missing the HDeviceCreator.
+     * \retval HDeviceHost::InvalidConfiguration when the provided initialization parameters
+     * contained one or more erroneous values, such as missing an \c HDeviceCreator.
      *
-     * \retval InvalidDeviceDescription when the provided device description file
+     * \retval HDeviceHost::InvalidDeviceDescription when the provided device description file
      * is invalid.
      *
-     * \retval InvalidServiceDescription when the provided service description file
+     * \retval HDeviceHost::InvalidServiceDescription when the provided service description file
      * is invalid.
      *
-     * \retval UndefinedFailure in case some other initialization error occurred.
+     * \retval HDeviceHost::UndefinedFailure in case some other initialization error occurred.
      */
     ReturnCode init(
         const Herqq::Upnp::HDeviceHostConfiguration& configuration,
         QString* errorString = 0);
 
     /*!
+     * Indicates whether or not the host is successfully started.
+     *
+     * \return \e true in case the host is successfully started.
+     */
+    bool isStarted() const;
+
+    /*!
+     * Returns a list of UPnP root devices the host is currently managing.
+     *
+     * The returned list contains pointers to root HDevice objects that are currently
+     * hosted by this instance.
+     *
+     * \return a list of pointers to HDevice objects that are currently managed
+     * by the device host.
+     *
+     * \warning the returned HDevice instances will be deleted when the
+     * device host is being destroyed. However, do not delete
+     * the device objects directly. The ownership of an HDevice is \b never transferred.
+     */
+    HDevicePtrList rootDevices() const;
+
+    /*!
+     * Returns a root device with the specified Unique Device Name.
+     *
+     * \param udn specifies the Unique Device Name of the desired root device.
+     *
+     * \return the root device with the specified Unique Device Name or a
+     * null pointer in case no currently managed root device has the
+     * specified UDN.
+     *
+     * \warning the returned device will be deleted when the
+     * device host is being destroyed. However, do not delete
+     * the device object directly. The ownership of an HDevice is \b never transferred.
+     */
+    HDevice* rootDevice(const HUdn& udn) const;
+
+public Q_SLOTS:
+
+    /*!
      * Quits the device host and destroys the UPnP devices it is hosting. Note that
      * this is automatically called when the device host is destroyed.
      *
-     * \param errorString will contain a textual error description,
-     * in case the call failed and a pointer to a valid QString object was specified by the caller.
+     * \attention Every pointer to object retrieved from this instance will be
+     * deleted. Be sure not to use any such pointer after calling this method.
      *
-     * \retval Success when the device host was successfully shutdown,
-     * or it was already shutdown.
+     * \warning This method usually returns promptly, but in some scenarios it
+     * may involve invoking the \c QAbstractEventDispatcher to process events.
+     * Be sure not to call init() before this method has properly exited.
      *
-     * \retval UndefinedFailure when the device host could not be cleanly shutdown.
-     * This could mean that the host failed to announce that the
-     * devices it was hosting are leaving the network, for example.
+     * \sa init()
      */
-    ReturnCode quit(QString* errorString = 0);
+    void quit();
 };
 
 }

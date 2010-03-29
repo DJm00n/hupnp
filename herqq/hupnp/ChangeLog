@@ -1,5 +1,32 @@
 # HUPnP Changelog
 
+HUPnP 0.4.0 [Mar. 4, 2010]
+- Modified the design of state variables and their use. More specifically, the API is now clear 
+that state variables can be changed directly only at server-side.
+
+- Added the possibility of locking a writable state variable for exclusive access at server-side.
+
+- Modified the design of action arguments. Input and output arguments are no longer separated at type-level.
+
+- Removed exception usage from HTTP messaging. This was mainly because of a MinGW bug (http://sourceforge.net/tracker/index.php?func=detail&aid=2837096&group_id=2435&atid=102435), which essentially causes multi-threaded exception usage be unsafe. Please note, HUPnP still uses exceptions elsewhere, which means that with MinGW 4.4.0 HUPnP is subject to crashes. The HUPnP HTTP messaging used exceptions to signal timeouts, peer disconnects and such, which made the bug all too easy to appear in case multiple threads were simultaneously running their own HUPnP HTTP messaging "engines". This is the case with the simple HUPnP test app, which enables the launch of a HDeviceHost and multiple HControlPoints within the same process using separate threads.
+
+- Modified the server-side action invocation mechanics when the invocations come over the network.
+
+- Modified the example application to use the state variable locker, which fixes a race condition.
+
+- Fixed a few errors in internal HTTP messaging code. These mainly affected action invocation and
+event notification.
+
+- Modified the internal asynch. HTTP handler code to support chunked encoding.
+
+- Removed insulation from a few small classes that are unlikely to change.
+
+- Some small optimizations here and there.
+
+- Updated documentation.
+
+- Many smaller improvements not worth mentioning individually.
+
 HUPnP 0.3.0 [Feb. 17, 2010]
 - Significant refactoring of the project, file and class structures.
 

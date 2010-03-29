@@ -32,6 +32,7 @@
 
 #include "hcontrolpoint.h"
 #include "hdevicebuild_p.h"
+#include "hevent_subscriptionmanager_p.h"
 
 #include "./../habstracthost_p.h"
 #include "./../../devicemodel/hdevice.h"
@@ -42,7 +43,6 @@
 #include "./../../http/hhttp_server_p.h"
 #include "./../../ssdp/hdiscovery_messages.h"
 
-#include <QHash>
 #include <QUuid>
 #include <QMutex>
 #include <QScopedPointer>
@@ -65,7 +65,6 @@ namespace Herqq
 namespace Upnp
 {
 
-class HServiceSubscribtion;
 class HControlPointPrivate;
 
 //
@@ -106,8 +105,7 @@ private:
 protected:
 
     virtual bool incomingDiscoveryResponse(
-        const HDiscoveryResponse& msg,
-        const HEndpoint& source);
+        const HDiscoveryResponse& msg, const HEndpoint& source);
 
     virtual bool incomingDeviceAvailableAnnouncement(
         const HResourceAvailable& msg);
@@ -138,6 +136,8 @@ private:
     DeviceBuildTasks m_deviceBuildTasks;
     // this is accessed only from the thread in which all the HUpnp objects live.
 
+    HControlPoint* q_ptr;
+
 private Q_SLOTS:
 
     void deviceModelBuildDone(const Herqq::Upnp::HUdn&);
@@ -146,15 +146,11 @@ private:
 
     void subscribeToEvents(HDeviceController*);
 
-    void removeRootDeviceAndSubscriptions(
-        HDeviceController* rootDevice, bool unsubscribe);
-
-    void removeRootDeviceSubscriptions(
-        HDeviceController* rootDevice, bool unsubscribe);
+    void processDeviceOnline(HDeviceController*, bool newDevice);
 
     HActionInvoke createActionInvoker(HAction*);
 
-    virtual void doClear();
+    bool processDeviceOffline(const HResourceUnavailable& msg);
 
     template<class Msg>
     bool processDeviceDiscovery(
@@ -163,19 +159,21 @@ private:
     template<class Msg>
     bool shouldFetch(const Msg& msg);
 
+    virtual void doClear();
+
 private Q_SLOTS:
 
-    void deviceExpired(HDeviceController* source);
     void addRootDevice_(HDeviceController* device);
+    void deviceExpired(HDeviceController* source);
+    void unsubscribed(Herqq::Upnp::HService*);
 
 public:
 
-    QScopedPointer<HControlPointConfiguration> m_initParams;
+    QScopedPointer<HControlPointConfiguration> m_configuration;
     HControlPointSsdpHandler* m_ssdp;
 
     ControlPointHttpServer* m_server;
-    QHash<QUuid, QSharedPointer<HServiceSubscribtion> > m_serviceSubscribtions;
-    QMutex m_serviceSubscribtionsMutex;
+    HEventSubscriptionManager* m_eventSubscriber;
 
     QMutex m_deviceCreationMutex;
     //

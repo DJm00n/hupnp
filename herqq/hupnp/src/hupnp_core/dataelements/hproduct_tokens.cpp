@@ -48,7 +48,7 @@ HProductToken::HProductToken(const QString& token, const QString& productVersion
     QString productVersionTmp(productVersion.simplified());
     if (tokenTmp.isEmpty() || productVersionTmp.isEmpty())
     {
-        HLOG_WARN(QObject::tr(
+        HLOG_WARN(QString(
             "Invalid product token. Token: %1, Product Version: %2").arg(
                 token, productVersion));
 
@@ -270,13 +270,13 @@ public:
 
             if (parseCommaDelimited(tokensTmp))
             {
-                HLOG_WARN_NONSTD(QObject::tr(
+                HLOG_WARN_NONSTD(QString(
                     "The specified token string [%1] uses invalid delimiter [,],"
                     " but accepting it.").arg(tokens));
             }
             else
             {
-                HLOG_WARN(QObject::tr("Invalid Product Tokens: %1").arg(tokens));
+                HLOG_WARN(QString("Invalid Product Tokens: [%1]").arg(tokens));
             }
         }
     }

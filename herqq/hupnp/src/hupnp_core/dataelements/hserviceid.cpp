@@ -70,7 +70,7 @@ public:
             tmp[1] = tmp[1].replace('.', '-');
             if (tmp[1].isEmpty() || !tmp[1].contains('-'))
             {
-                HLOG_WARN(QObject::tr(
+                HLOG_WARN(QString(
                     "Invalid service identifier [%1]: the URN is invalid").arg(
                         arg));
 
@@ -80,13 +80,13 @@ public:
 
         if (tmp[2] != "serviceId")
         {
-            HLOG_WARN(QObject::tr("Invalid service identifier [%1].").arg(arg));
+            HLOG_WARN(QString("Invalid service identifier [%1].").arg(arg));
             return;
         }
 
         if (tmp[3].isEmpty())
         {
-            HLOG_WARN(QObject::tr("Invalid service identifier [%1].").arg(arg));
+            HLOG_WARN(QString("Invalid service identifier [%1].").arg(arg));
             return;
         }
 

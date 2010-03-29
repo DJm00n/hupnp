@@ -95,8 +95,9 @@ private:
     InternalState m_state;
     // the current state of this "state machine"
 
-    QHttpResponseHeader m_headerRead;
-    // the http reader read as response from the target socket
+    QHttpHeader* m_headerRead;
+    // the http reader read from the target socket
+    // (request / response, depends of the setup)
 
     QByteArray m_dataRead;
     // the response data that is currently read from the target socket
@@ -110,6 +111,11 @@ private:
 
     const QByteArray m_loggingIdentifier;
 
+    bool m_waitingHttpRequest;
+    // waiting http request or response
+    // used when expecting data only. that is, there has been no prior
+    // send() and the instance is used only to read http data from a socket.
+
 private:
 
     void sendChunked();
@@ -117,11 +123,15 @@ private:
     void readBlob();
     bool readChunkedSizeLine();
     bool readChunk();
-    void readHeader();
-    void readData();
+
+    // the return value of these two methods indicate if it is okay to continue
+    // the operation. when returned false, the operation has signaled completion
+    // and thus must be aborted immediately.
+    bool readHeader();
+    bool readData();
 
     bool run();
-    void done_(InternalState state);
+    void done_(InternalState state, bool emitSignal = true);
 
 private Q_SLOTS:
 
@@ -142,19 +152,25 @@ public:
 
     HHttpAsyncOperation(
         const QByteArray& loggingIdentifier, MessagingInfo* mi,
+        bool waitingRequest, QObject* parent);
+
+    HHttpAsyncOperation(
+        const QByteArray& loggingIdentifier, MessagingInfo* mi,
         const QByteArray& data, QObject* parent);
 
-    ~HHttpAsyncOperation();
-
-    inline QUuid uuid() const { return m_uuid; }
+    virtual ~HHttpAsyncOperation();
 
     State state() const;
+
+    inline QUuid uuid() const { return m_uuid; }
 
     // the data of the response
     inline QByteArray dataRead() const { return m_dataRead; }
 
     // the header of the response
-    inline QHttpResponseHeader headerRead() const { return m_headerRead; }
+    inline const QHttpHeader* headerRead() const { return m_headerRead; }
+
+    inline MessagingInfo* messagingInfo() const { return m_mi; }
 
 Q_SIGNALS:
 
@@ -206,6 +222,12 @@ public:
     //
     HHttpAsyncOperation* msgIo(
         MessagingInfo*, QHttpRequestHeader&, const QtSoapMessage&);
+
+    //
+    // waitingRequest == expecting to receive QHttpRequestHeader, otherwise
+    // expecting to receive QHttpResponseHeader
+    //
+    HHttpAsyncOperation* receive(MessagingInfo*, bool waitingRequest);
 };
 
 }
