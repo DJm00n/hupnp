@@ -90,6 +90,11 @@ QString HProductToken::version() const
 
 bool HProductToken::isValidUpnpToken(const HProductToken& token)
 {
+    if (!token.isValid())
+    {
+        return false;
+    }
+
     if (token.token() != "UPnP")
     {
         return false;
@@ -105,6 +110,11 @@ bool HProductToken::isValidUpnpToken(const HProductToken& token)
 
 qint32 HProductToken::minorVersion(const HProductToken& token)
 {
+    if (!token.isValid())
+    {
+        return -1;
+    }
+
     QString tokenVersion = token.version();
 
     qint32 separatorIndex = tokenVersion.indexOf('.');
@@ -126,6 +136,11 @@ qint32 HProductToken::minorVersion(const HProductToken& token)
 
 qint32 HProductToken::majorVersion(const HProductToken& token)
 {
+    if (!token.isValid())
+    {
+        return -1;
+    }
+
     QString tokenVersion = token.version();
 
     qint32 separatorIndex = tokenVersion.indexOf('.');

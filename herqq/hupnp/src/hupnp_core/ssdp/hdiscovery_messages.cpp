@@ -141,10 +141,8 @@ HResourceAvailable::HResourceAvailable(
 
     if (!serverTokens.isValid())
     {
-        HLOG_WARN(QString("Invalid server tokens: %1").arg(
+        HLOG_WARN_NONSTD(QString("Invalid server tokens: %1").arg(
             serverTokens.toString()));
-
-        return;
     }
 
     if (HProductToken::minorVersion(serverTokens.upnpToken()) > 0)
@@ -806,10 +804,8 @@ HDiscoveryResponse::HDiscoveryResponse(
 
     if (!serverTokens.isValid())
     {
-        HLOG_WARN(QString("Invalid server tokens: %1.").arg(
+        HLOG_WARN_NONSTD(QString("Invalid server tokens: %1.").arg(
             serverTokens.toString()));
-
-        return;
     }
 
     if (HProductToken::minorVersion(serverTokens.upnpToken()) > 0)

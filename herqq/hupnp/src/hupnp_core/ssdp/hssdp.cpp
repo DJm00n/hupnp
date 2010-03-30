@@ -414,7 +414,12 @@ void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)
     }
 
     HDiscoveryResponse rcvdMsg = parseDiscoveryResponse(hdr);
-    if (!q_ptr->incomingDiscoveryResponse(rcvdMsg, source))
+    if (!rcvdMsg.isValid())
+    {
+        HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
+            source.toString(), msg));
+    }
+    else if (!q_ptr->incomingDiscoveryResponse(rcvdMsg, source))
     {
         emit q_ptr->discoveryResponseReceived(rcvdMsg, source);
     }
@@ -435,7 +440,11 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
     if (nts.compare(QString("ssdp:alive"), Qt::CaseInsensitive) == 0)
     {
         HResourceAvailable rcvdMsg = parseDeviceAvailable(hdr);
-        if (!q_ptr->incomingDeviceAvailableAnnouncement(rcvdMsg))
+        if (!rcvdMsg.isValid())
+        {
+            HLOG_WARN(QString("Ignoring invalid ssdp:alive announcement: %1").arg(msg));
+        }
+        else if (!q_ptr->incomingDeviceAvailableAnnouncement(rcvdMsg))
         {
             emit q_ptr->resourceAvailableReceived(rcvdMsg);
         }
@@ -443,7 +452,11 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
     else if (nts.compare(QString("ssdp:byebye"), Qt::CaseInsensitive) == 0)
     {
         HResourceUnavailable rcvdMsg = parseDeviceUnavailable(hdr);
-        if (!q_ptr->incomingDeviceUnavailableAnnouncement(rcvdMsg))
+        if (!rcvdMsg.isValid())
+        {
+            HLOG_WARN(QString("Ignoring invalid ssdp:byebye announcement: %1").arg(msg));
+        }
+        else if (!q_ptr->incomingDeviceUnavailableAnnouncement(rcvdMsg))
         {
             emit q_ptr->resourceUnavailableReceived(rcvdMsg);
         }
@@ -451,7 +464,11 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
     else if (nts.compare(QString("ssdp:update"), Qt::CaseInsensitive) == 0)
     {
         HResourceUpdate rcvdMsg = parseDeviceUpdate(hdr);
-        if (!q_ptr->incomingDeviceUpdateAnnouncement(rcvdMsg))
+        if (!rcvdMsg.isValid())
+        {
+            HLOG_WARN(QString("Ignoring invalid ssdp:update announcement: %1").arg(msg));
+        }
+        else if (!q_ptr->incomingDeviceUpdateAnnouncement(rcvdMsg))
         {
             emit q_ptr->deviceUpdateReceived(rcvdMsg);
         }
@@ -476,7 +493,12 @@ void HSsdpPrivate::processSearch(
     }
 
     HDiscoveryRequest rcvdMsg = parseDiscoveryRequest(hdr);
-    if (!q_ptr->incomingDiscoveryRequest(rcvdMsg, source, destination))
+    if (!rcvdMsg.isValid())
+    {
+        HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
+            source.toString(), msg));
+    }
+    else if (!q_ptr->incomingDiscoveryRequest(rcvdMsg, source, destination))
     {
         emit q_ptr->discoveryRequestReceived(rcvdMsg, source, destination);
     }
