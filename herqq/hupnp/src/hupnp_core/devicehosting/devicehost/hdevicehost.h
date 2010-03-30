@@ -360,7 +360,7 @@ public:
      * device host is being destroyed. However, do not delete
      * the device objects directly. The ownership of an HDevice is \b never transferred.
      */
-    HDevicePtrList rootDevices() const;
+    HDeviceList rootDevices() const;
 
     /*!
      * Returns a root device with the specified Unique Device Name.

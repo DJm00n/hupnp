@@ -771,14 +771,14 @@ bool HControlPoint::isStarted() const
     return h_ptr->state() == HAbstractHostPrivate::Initialized;
 }
 
-HDevicePtrList HControlPoint::rootDevices() const
+HDeviceList HControlPoint::rootDevices() const
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (!isStarted())
     {
         HLOG_WARN("The control point is not started");
-        return HDevicePtrList();
+        return HDeviceList();
     }
 
     return h_ptr->m_deviceStorage->rootDevices();

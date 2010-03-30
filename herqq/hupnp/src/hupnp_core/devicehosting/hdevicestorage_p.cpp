@@ -576,11 +576,11 @@ HServiceController* DeviceStorage::searchServiceByEventUrl(
     return seekService(m_rootDevices, MatchFunctor<EventUrlTester>(eventUrl));
 }
 
-HDevicePtrList DeviceStorage::rootDevices() const
+HDeviceList DeviceStorage::rootDevices() const
 {
     QMutexLocker lock(&m_rootDevicesMutex);
 
-    HDevicePtrList retVal;
+    HDeviceList retVal;
     foreach(HDeviceController* dc, m_rootDevices)
     {
         Q_ASSERT(dc->m_device);

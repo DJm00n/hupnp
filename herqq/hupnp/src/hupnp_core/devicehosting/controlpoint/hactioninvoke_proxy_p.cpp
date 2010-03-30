@@ -111,8 +111,8 @@ void HActionInvokeProxyConnection::error(QAbstractSocket::SocketError serr)
         serr ==  QAbstractSocket::HostNotFoundError)
     {
         HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
-        m_service->parentDevice()->deviceInfo().udn().toSimpleUuid(),
-        m_locations[m_iNextLocationToTry].toString()));
+            m_service->parentDevice()->deviceInfo().udn().toSimpleUuid(),
+            m_locations[m_iNextLocationToTry].toString()));
 
         m_iNextLocationToTry =
             m_iNextLocationToTry == m_locations.size() - 1 ? 0 :

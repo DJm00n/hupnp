@@ -117,7 +117,7 @@ void HEventSubscriptionManager::subscribe(HDevice* device, bool recursive)
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(device);
 
-    HServicePtrList services = device->services();
+    HServiceList services = device->services();
     foreach(HService* service, services)
     {
         if (service->isEvented())
@@ -128,7 +128,7 @@ void HEventSubscriptionManager::subscribe(HDevice* device, bool recursive)
 
     if (recursive)
     {
-        HDevicePtrList devices = device->embeddedDevices();
+        HDeviceList devices = device->embeddedDevices();
         foreach(HDevice* embDevice, devices)
         {
             subscribe(embDevice, recursive);
@@ -235,7 +235,7 @@ bool HEventSubscriptionManager::cancel(
 
     if (recursive)
     {
-        HDevicePtrList devices = device->embeddedDevices();
+        HDeviceList devices = device->embeddedDevices();
         foreach(HDevice* embDevice, devices)
         {
             cancel(embDevice, recursive, unsubscribe);
@@ -275,7 +275,7 @@ bool HEventSubscriptionManager::remove(HDevice* device, bool recursive)
 
     if (recursive)
     {
-        HDevicePtrList devices = device->embeddedDevices();
+        HDeviceList devices = device->embeddedDevices();
         foreach(HDevice* embDevice, devices)
         {
             remove(embDevice, recursive);

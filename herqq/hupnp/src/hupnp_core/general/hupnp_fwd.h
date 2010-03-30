@@ -74,7 +74,7 @@ class HResourceUnavailable;
  *
  * \sa HDevice
  */
-typedef QList<HDevice*> HDevicePtrList;
+typedef QList<HDevice*> HDeviceList;
 
 /*!
  * Type definition for a list of pointers to HService instances.
@@ -83,7 +83,7 @@ typedef QList<HDevice*> HDevicePtrList;
  *
  * \sa HService
  */
-typedef QList<HService*> HServicePtrList;
+typedef QList<HService*> HServiceList;
 
 }
 }

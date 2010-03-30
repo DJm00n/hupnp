@@ -927,9 +927,9 @@ HDeviceInfo HDevice::deviceInfo() const
     return *h_ptr->m_upnpDeviceInfo;
 }
 
-HDevicePtrList HDevice::embeddedDevices() const
+HDeviceList HDevice::embeddedDevices() const
 {
-    HDevicePtrList retVal;
+    HDeviceList retVal;
     foreach(HDeviceController* dc, h_ptr->m_embeddedDevices)
     {
         retVal.push_back(dc->m_device);
@@ -938,9 +938,9 @@ HDevicePtrList HDevice::embeddedDevices() const
     return retVal;
 }
 
-HServicePtrList HDevice::services() const
+HServiceList HDevice::services() const
 {
-    HServicePtrList retVal;
+    HServiceList retVal;
     foreach(HServiceController* sc, h_ptr->m_services)
     {
         retVal.push_back(sc->m_service);

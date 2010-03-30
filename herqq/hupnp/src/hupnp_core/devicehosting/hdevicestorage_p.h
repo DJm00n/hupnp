@@ -110,7 +110,7 @@ public: // instance methods
     HServiceController* searchServiceByEventUrl(
         const QUrl& eventUrl) const;
 
-    HDevicePtrList rootDevices() const;
+    HDeviceList rootDevices() const;
 
     QList<HDeviceController*> rootDeviceControllers() const;
 

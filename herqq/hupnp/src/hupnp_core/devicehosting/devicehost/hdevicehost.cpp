@@ -460,14 +460,14 @@ bool HDeviceHost::isStarted() const
     return h_ptr->state() == HAbstractHostPrivate::Initialized;
 }
 
-HDevicePtrList HDeviceHost::rootDevices() const
+HDeviceList HDeviceHost::rootDevices() const
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (!isStarted())
     {
         HLOG_WARN("The device host is not started");
-        return HDevicePtrList();
+        return HDeviceList();
     }
 
     return h_ptr->m_deviceStorage->rootDevices();

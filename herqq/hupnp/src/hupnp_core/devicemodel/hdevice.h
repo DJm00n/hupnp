@@ -239,7 +239,7 @@ public:
      * \remarks the pointers are guaranteed to be valid only throughout the lifetime
      * of this object.
      */
-    HDevicePtrList embeddedDevices() const;
+    HDeviceList embeddedDevices() const;
 
     /*!
      * Returns the services this device exports.
@@ -250,7 +250,7 @@ public:
      * \remarks the pointers are guaranteed to be valid only throughout the lifetime
      * of this object.
      */
-    HServicePtrList services() const;
+    HServiceList services() const;
 
     /*!
      * Returns the service that has the specified service ID.

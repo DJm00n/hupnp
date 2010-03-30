@@ -47,7 +47,7 @@ void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
 {
     DeviceItem* deviceItem = new DeviceItem(newDevice, m_rootItem);
 
-    HServicePtrList services = newDevice->services();
+    HServiceList services = newDevice->services();
     foreach(HService* service, services)
     {
         ServiceItem* serviceItem = new ServiceItem(service, deviceItem);

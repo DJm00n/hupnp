@@ -160,7 +160,7 @@ class HControlPointConfiguration;
  *
  * \warning see notes about object deletion in ~HControlPoint().
  *
- * \sa HDevice, HDevicePtrList, devicemodel
+ * \sa HDevice, HDeviceList, devicemodel
  */
 class H_UPNP_CORE_EXPORT HControlPoint :
     public QObject
@@ -436,7 +436,7 @@ public:
      * removeDevice() to remove and delete a device. However, do not delete
      * the device objects directly. The ownership of an HDevice is \b never transferred.
      */
-    HDevicePtrList rootDevices() const;
+    HDeviceList rootDevices() const;
 
     /*!
      * Returns a root device with the specified Unique Device Name.
