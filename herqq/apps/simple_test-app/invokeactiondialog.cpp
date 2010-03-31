@@ -78,7 +78,7 @@ void InvokeActionDialog::invokeComplete(const QUuid& invokeId)
     {
         QMessageBox msgBox;
 
-        msgBox.setText(QString("Action invocation [id: %1] failed: %1").arg(
+        msgBox.setText(QString("Action invocation [id: %1] failed: %2").arg(
             invokeId.toString(), HAction::errorCodeToString(rc)));
 
         msgBox.exec();

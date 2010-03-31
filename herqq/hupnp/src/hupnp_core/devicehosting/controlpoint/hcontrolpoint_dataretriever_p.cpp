@@ -143,7 +143,15 @@ QImage DataRetriever::retrieveIcon(const QUrl& deviceLocation, const QUrl& iconU
         "Attempting to retrieve icon [%1] from: [%2]").arg(
             iconUrl.toString(), deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, iconUrl, false);
+    QString iconUrlAsStr = iconUrl.toString();
+    if (iconUrlAsStr.startsWith('/'))
+    {
+        HLOG_WARN_NONSTD(QString(
+            "Icon URL [%1] should be relative, not absolute. [UDA, section 2.3]").arg(
+                iconUrlAsStr));
+    }
+
+    QByteArray data = retrieveData(deviceLocation, iconUrl, true);
 
     QImage image;
     if (!image.loadFromData(data))
@@ -155,7 +163,7 @@ QImage DataRetriever::retrieveIcon(const QUrl& deviceLocation, const QUrl& iconU
     return image;
 }
 
-QDomDocument DataRetriever::retrieveDeviceDescription(QUrl deviceLocation)
+QDomDocument DataRetriever::retrieveDeviceDescription(const QUrl& deviceLocation)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -163,15 +171,15 @@ QDomDocument DataRetriever::retrieveDeviceDescription(QUrl deviceLocation)
         "Attempting to fetch a device description from: [%1]").arg(
             deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, QUrl(), false);
+    QByteArray data = retrieveData(deviceLocation, deviceLocation, false);
 
     QDomDocument dd;
     QString errMsg; qint32 errLine = 0;
     if (!dd.setContent(data, false, &errMsg, &errLine))
     {
-        throw InvalidDeviceDescription(
-            QString("Could not parse the device description file: [%1] @ line [%2]:\n[%3]").
-            arg(errMsg, QString::number(errLine), QString::fromUtf8(data)));
+        throw InvalidDeviceDescription(QString(
+            "Could not parse the device description file: [%1] @ line [%2]:\n[%3]").arg(
+                errMsg, QString::number(errLine), QString::fromUtf8(data)));
     }
 
     return dd;

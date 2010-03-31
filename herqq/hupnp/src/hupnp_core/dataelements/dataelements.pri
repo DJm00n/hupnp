@@ -1,6 +1,7 @@
 
 HEADERS += \
     $$SRC_LOC/dataelements/hdeviceinfo.h \
+	$$SRC_LOC/dataelements/hdeviceinfo_p.h \
     $$SRC_LOC/dataelements/hserviceid.h \
     $$SRC_LOC/dataelements/hudn.h \
     $$SRC_LOC/dataelements/hresourcetype.h \

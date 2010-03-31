@@ -670,7 +670,7 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
         {
             QImage icon = m_creationParameters.m_iconFetcher(
                 extractBaseUrl(m_creationParameters.m_deviceLocations[0]),
-                iconUrl); // TODO
+                iconUrl);
 
             if (icon.isNull())
             {

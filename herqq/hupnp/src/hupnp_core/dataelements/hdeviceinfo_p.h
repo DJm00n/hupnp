@@ -190,7 +190,7 @@ public: // methods
     {
         HLOG(H_AT, H_FUN);
 
-        if (serialNumber.size() > 32)
+        if (serialNumber.size() > 64)
         {
             HLOG_WARN(QString(
                 "serialNumber longer than 64 characters: [%1]").arg(serialNumber));

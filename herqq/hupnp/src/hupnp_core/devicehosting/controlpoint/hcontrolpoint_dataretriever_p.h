@@ -69,9 +69,11 @@ public:
     QDomDocument retrieveServiceDescription(
         const QUrl& deviceLocation, const QUrl& scpdUrl);
 
-    QImage retrieveIcon(const QUrl& deviceLocation, const QUrl& iconUrl);
+    QImage retrieveIcon(
+        const QUrl& deviceLocation, const QUrl& iconUrl);
 
-    QDomDocument retrieveDeviceDescription(QUrl deviceLocation);
+    QDomDocument retrieveDeviceDescription(
+        const QUrl& deviceLocation);
 };
 
 }
