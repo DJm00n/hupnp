@@ -185,7 +185,7 @@ private:
             return false;
         }
 
-        for (qint32 i = 0; i < 3; ++i)
+        for (qint32 i = 0; i < tmp.size(); ++i)
         {
             qint32 index = tmp[i].indexOf('/');
             if (index < 0)
@@ -228,7 +228,14 @@ private:
                 }
 
                 HProductToken newToken(token, buf.left(lastSpace));
-                productTokens.append(newToken);
+                if (newToken.isValid())
+                {
+                    productTokens.append(newToken);
+                }
+                else
+                {
+                    return false;
+                }
 
                 token = buf.mid(lastSpace+1);
 
@@ -244,10 +251,16 @@ private:
         }
 
         HProductToken newToken(token, buf);
-        productTokens.append(newToken);
+        if (newToken.isValid())
+        {
+            productTokens.append(newToken);
+        }
+        else
+        {
+            return false;
+        }
 
-        if (productTokens.size() != 3 ||
-           !HProductToken::isValidUpnpToken(productTokens[1]))
+        if (productTokens.size() < 3 || !HProductToken::isValidUpnpToken(productTokens[1]))
         {
             return false;
         }
@@ -364,6 +377,27 @@ HProductToken HProductTokens::productToken() const
     }
 
     return h_ptr->m_productTokens[2];
+}
+
+QList<HProductToken> HProductTokens::extraTokens() const
+{
+    if (!isValid())
+    {
+        return QList<HProductToken>();
+    }
+
+    return h_ptr->m_productTokens.size() > 3 ?
+        h_ptr->m_productTokens.mid(3) : QList<HProductToken>();
+}
+
+QList<HProductToken> HProductTokens::tokens() const
+{
+    if (!isValid())
+    {
+        return QList<HProductToken>();
+    }
+
+    return h_ptr->m_productTokens;
 }
 
 QString HProductTokens::toString() const

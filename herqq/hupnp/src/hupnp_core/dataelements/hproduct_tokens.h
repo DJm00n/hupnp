@@ -179,8 +179,9 @@ class HProductTokensPrivate;
  * This class is used to parse the <em>product tokens</em> defined by HTTP/1.1.
  *
  * According to the HTTP/1.1, <em>Product tokens are used to allow communicating applications
- * to identify themselves by software name and version</em>. In UDA, the <em>product tokens</em>
- * consist of three tokens, in which <em>The first product token identifes the operating system in
+ * to identify themselves by software name and version</em>. In UDA,
+ * the <em>product tokens</em> consist of three tokens,
+ * in which <em>The first product token identifes the operating system in
  * the form OS name/OS version, the second token represents the UPnP version and
  * MUST be UPnP/1.1, and the third token identifes the product using the form
  * product name/product version</em>. For example, "SERVER: unix/5.1 UPnP/1.1 MyProduct/1.0".
@@ -273,6 +274,35 @@ public:
      * \remark The returned object is invalid in case this object is invalid.
      */
     HProductToken productToken() const;
+
+    /*!
+     * Returns the extra tokens.
+     *
+     * A valid \c %HProductTokens object contains at least the osToken(),
+     * upnpToken() and productToken(), but it may also contain additional tokens
+     * not defined by the UDA. This method returns such tokens as a list.
+     *
+     * \return the extra tokens, if such are defined.
+     *
+     * \sa tokens()
+     */
+    QList<HProductToken> extraTokens() const;
+
+    /*!
+     * Returns all product tokens in a list.
+     *
+     * A valid \c %HProductTokens object will return a list that contains
+     * at least three entries, where the entry at index
+     * - 0 is equivalent to calling osToken(),
+     * - 1 is equivalent to calling upnpToken() and
+     * - 2 is equivalent to calling productToken().
+     *
+     * The returned list may contain more than three items and these items
+     * are the items returned by extraTokens() appended to the list.
+     *
+     * \return all product tokens in a list.
+     */
+    QList<HProductToken> tokens() const;
 
     /*!
      * Returns a string representation of the object.
