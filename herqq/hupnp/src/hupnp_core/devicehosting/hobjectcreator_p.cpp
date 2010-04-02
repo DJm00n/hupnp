@@ -94,14 +94,14 @@ void HObjectCreator::initService(
     if (!wasDefined)
     {
         throw HParseException(QString(
-            "Missing mandatory <serviceId> element: %1").arg(
+            "Missing mandatory <serviceId> element:\n%1").arg(
                 toString(serviceDefinition)));
     }
 
     if (!service->h_ptr->m_serviceId.isValid())
     {
         throw HParseException(QString(
-            "The service ID is invalid: %1").arg(toString(serviceDefinition)));
+            "The service ID is invalid:\n%1").arg(toString(serviceDefinition)));
     }
 
     service->h_ptr->m_serviceType =
@@ -110,28 +110,28 @@ void HObjectCreator::initService(
     if (!wasDefined)
     {
         throw HParseException(QString(
-            "Missing mandatory <serviceType> element: %1").arg(
+            "Missing mandatory <serviceType> element:\n%1").arg(
                 toString(serviceDefinition)));
     }
 
     if (!service->h_ptr->m_serviceType.isValid())
     {
         throw HParseException(QString(
-            "The service type is invalid: %1").arg(toString(serviceDefinition)));
+            "The service type is invalid:\n%1").arg(toString(serviceDefinition)));
     }
 
     QUrl tmp = readElementValue("SCPDURL", serviceDefinition, &wasDefined);
     if (!wasDefined)
     {
         throw HParseException(QString(
-            "Missing mandatory <SCPDURL> element: %1").arg(
+            "Missing mandatory <SCPDURL> element:\n%1").arg(
                 toString(serviceDefinition)));
     }
 
     if (tmp.isEmpty() || !tmp.isValid())
     {
         throw HParseException(QString(
-            "The SCPDURL is invalid: %1").arg(toString(serviceDefinition)));
+            "The SCPDURL is invalid:\n%1").arg(toString(serviceDefinition)));
     }
 
     service->h_ptr->m_scpdUrl = tmp;
@@ -140,14 +140,14 @@ void HObjectCreator::initService(
     if (!wasDefined)
     {
         throw HParseException(QString(
-            "Missing mandatory <controlURL> element: %1").arg(
+            "Missing mandatory <controlURL> element:\n%1").arg(
                 toString(serviceDefinition)));
     }
 
     if (tmp.isEmpty() || !tmp.isValid())
     {
         throw HParseException(QString(
-            "The controlURL is invalid: %1").arg(toString(serviceDefinition)));
+            "The controlURL is invalid:\n%1").arg(toString(serviceDefinition)));
     }
     service->h_ptr->m_controlUrl = tmp;
 
@@ -155,21 +155,21 @@ void HObjectCreator::initService(
     if (!wasDefined)
     {
         throw HParseException(QString(
-            "Missing mandatory <eventSubURL> element: %1").arg(
+            "Missing mandatory <eventSubURL> element:\n%1").arg(
                 toString(serviceDefinition)));
     }
 
     if (tmp.isEmpty() || !tmp.isValid())
     {
         throw HParseException(QString(
-            "The eventSubURL is invalid: %1").arg(toString(serviceDefinition)));
+            "The eventSubURL is invalid:\n%1").arg(toString(serviceDefinition)));
     }
     service->h_ptr->m_eventSubUrl = tmp;
 
     service->h_ptr->m_serviceDescriptor =
         m_creationParameters.m_serviceDescriptionFetcher(
             extractBaseUrl(m_creationParameters.m_deviceLocations[0]),
-            service->h_ptr->m_scpdUrl); // TODO
+            service->h_ptr->m_scpdUrl);
 
     parseServiceDescription(service);
 }
@@ -187,7 +187,7 @@ void HObjectCreator::parseServiceDescription(HService* service)
     if (scpdElement.isNull())
     {
         throw HParseException(
-            QString("Invalid service description: missing <scpd> element"));
+            "Invalid service description: missing <scpd> element");
     }
 
     verifySpecVersion(scpdElement);
@@ -278,7 +278,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     else if (strSendEvents.compare("no", Qt::CaseInsensitive) != 0)
     {
         throw HParseException(QString(
-            "Invalid value for [sendEvents] attribute: %1.").arg(
+            "Invalid value for [sendEvents] attribute:\n%1.").arg(
                 toString(stateVariableElement)));
     }
 
@@ -459,10 +459,8 @@ HActionController* HObjectCreator::parseAction(
 
                 if (!parentService->h_ptr->m_stateVariables.contains(relatedStateVar))
                 {
-                    QString err("No state variable named ");
-                    err.append(relatedStateVar);
-
-                    throw HParseException(err);
+                    throw HParseException(QString(
+                        "No state variable named %1").arg(relatedStateVar));
                 }
 
                 if (dirStr.compare("out", Qt::CaseInsensitive) == 0)
@@ -471,8 +469,8 @@ HActionController* HObjectCreator::parseAction(
                     {
                         if (firstOutArgFound)
                         {
-                            throw HParseException(QString(
-                                "[retval] must be the first [out] argument."));
+                            throw HParseException(
+                                "[retval] must be the first [out] argument.");
                         }
 
                         hasRetvalArgument = true;
@@ -491,9 +489,9 @@ HActionController* HObjectCreator::parseAction(
                 {
                     if (firstOutArgFound)
                     {
-                        throw HParseException(QString(
+                        throw HParseException(
                             "Invalid argument order. Input arguments must all come "
-                            "before output arguments."));
+                            "before output arguments.");
                     }
 
                     HActionArgument* arg = new HActionArgument();
@@ -505,7 +503,7 @@ HActionController* HObjectCreator::parseAction(
                 }
                 else
                 {
-                    throw HParseException(QString("Invalid [direction] value."));
+                    throw HParseException("Invalid [direction] value.");
                 }
 
                 argumentElement = argumentElement.nextSiblingElement("argument");
@@ -824,13 +822,13 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
             if (!serviceId.isValid())
             {
                 throw InvalidServiceDescription(
-                    QString("Service ID is invalid: %1.").arg(
+                    QString("Service ID is invalid:\n%1.").arg(
                         toString(serviceElement)));
             }
             if (!serviceType.isValid())
             {
                 throw InvalidServiceDescription(
-                    QString("Service Type is invalid: %1.").arg(
+                    QString("Service Type is invalid:\n%1.").arg(
                         toString(serviceElement)));
             }
 

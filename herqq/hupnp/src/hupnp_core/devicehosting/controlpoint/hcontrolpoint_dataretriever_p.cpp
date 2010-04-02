@@ -27,6 +27,7 @@
 #include "./../../http/hhttp_messaginginfo_p.h"
 
 #include "./../../../utils/hlogger_p.h"
+#include "./../../general/hupnp_global_p.h"
 
 #include <QUrl>
 #include <QImage>
@@ -52,29 +53,33 @@ QByteArray DataRetriever::retrieveData(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QString queryPart =
-        query.toString(
-            QUrl::RemoveAuthority | QUrl::RemovePassword | QUrl::RemoveUserInfo |
-            QUrl::RemoveScheme | QUrl::RemovePort | QUrl::StripTrailingSlash);
-
-    QString request(baseUrl.path());
-
-    if (processAbsoluteUrl && queryPart.startsWith('/'))
+    QString request;
+    if (query.isEmpty())
     {
-        request = queryPart;
+        request = extractRequestPart(baseUrl);
     }
-    else if (!queryPart.isEmpty())
+    else
     {
-        if (!request.endsWith('/'))
-        {
-            request.append('/');
-        }
+        request = baseUrl.path();
 
-        if (queryPart.startsWith('/'))
+        QString queryPart = extractRequestPart(query);
+        if (processAbsoluteUrl && queryPart.startsWith('/'))
         {
-            queryPart.remove(0, 1);
+            request = queryPart;
         }
-        request.append(queryPart);
+        else if (!queryPart.isEmpty())
+        {
+            if (!request.endsWith('/'))
+            {
+                request.append('/');
+            }
+
+            if (queryPart.startsWith('/'))
+            {
+                queryPart.remove(0, 1);
+            }
+            request.append(queryPart);
+        }
     }
 
     QHttpRequestHeader requestHdr("GET", request);
@@ -171,7 +176,7 @@ QDomDocument DataRetriever::retrieveDeviceDescription(const QUrl& deviceLocation
         "Attempting to fetch a device description from: [%1]").arg(
             deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, deviceLocation, false);
+    QByteArray data = retrieveData(deviceLocation, QUrl(), false);
 
     QDomDocument dd;
     QString errMsg; qint32 errLine = 0;

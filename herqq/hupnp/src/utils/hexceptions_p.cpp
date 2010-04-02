@@ -29,7 +29,7 @@ namespace Herqq
  * HException
  *******************************************************************************/
 HException::HException() :
-    std::exception(), m_reason(), m_inner()
+    std::exception(), m_reason(), m_inner(0)
 {
     HLOG(H_AT, H_FUN);
 }
@@ -37,13 +37,13 @@ HException::HException() :
 HException::HException(const HException& other) :
     std::exception(),
         m_reason(other.m_reason),
-        m_inner(other.m_inner->clone())
+        m_inner(other.m_inner.isNull() ? 0 : other.m_inner->clone())
 {
     HLOG(H_AT, H_FUN);
 }
 
 HException::HException(const QString& reason) :
-    m_reason(reason), m_inner()
+    m_reason(reason), m_inner(0)
 {
     HLOG(H_AT, H_FUN);
 }
@@ -58,7 +58,7 @@ HException& HException::operator=(const HException& other)
 {
     HLOG(H_AT, H_FUN);
     m_reason = other.m_reason;
-    m_inner.reset(other.m_inner->clone());
+    m_inner.reset(other.m_inner.isNull() ? 0 : other.m_inner->clone());
 
     return *this;
 }

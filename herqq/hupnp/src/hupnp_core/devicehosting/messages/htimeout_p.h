@@ -50,13 +50,13 @@ private:
 public:
 
     HTimeout();
-    explicit HTimeout (qint32 timeout);
-    explicit HTimeout (const QString& timeout);
+    explicit HTimeout(qint32);
+    explicit HTimeout(const QString&);
 
     ~HTimeout();
 
-    HTimeout& operator=(qint32 value);
-    HTimeout& operator=(const QString& value);
+    HTimeout& operator=(qint32);
+    HTimeout& operator=(const QString&);
 
     inline qint32 value() const
     {
@@ -71,8 +71,8 @@ public:
     }
 };
 
-bool operator==(const HTimeout& obj1, const HTimeout& obj2);
-bool operator!=(const HTimeout& obj1, const HTimeout& obj2);
+bool operator==(const HTimeout&, const HTimeout&);
+bool operator!=(const HTimeout&, const HTimeout&);
 
 }
 }

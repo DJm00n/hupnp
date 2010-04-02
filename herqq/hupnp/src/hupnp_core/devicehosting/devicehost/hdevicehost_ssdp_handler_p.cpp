@@ -47,10 +47,10 @@ namespace Upnp
  ******************************************************************************/
 DeviceHostSsdpHandler::DeviceHostSsdpHandler(
     const QByteArray& loggingIdentifier, DeviceStorage& ds, QObject* parent) :
-        HSsdp(parent), m_deviceStorage(ds)
+        HSsdp(loggingIdentifier, parent), m_deviceStorage(ds)
 {
     Q_ASSERT(parent);
-    h_ptr->m_loggingIdentifier = loggingIdentifier;
+    setFilter(DiscoveryRequest);
 }
 
 DeviceHostSsdpHandler::~DeviceHostSsdpHandler()

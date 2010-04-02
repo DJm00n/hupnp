@@ -290,6 +290,8 @@ void HControlPointPrivate::deviceExpired(HDeviceController* source)
 void HControlPointPrivate::unsubscribed(HService* service)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(service);
+    emit q_ptr->subscriptionCanceled(service);
 }
 
 bool HControlPointPrivate::processDeviceOffline(
@@ -675,8 +677,7 @@ HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
             h_ptr->m_eventSubscriber,
             SIGNAL(unsubscribed(Herqq::Upnp::HService*)),
             h_ptr,
-            SLOT(unsubscribed(Herqq::Upnp::HService*)),
-            Qt::QueuedConnection);
+            SLOT(unsubscribed(Herqq::Upnp::HService*)));
 
         Q_ASSERT(ok);
 
