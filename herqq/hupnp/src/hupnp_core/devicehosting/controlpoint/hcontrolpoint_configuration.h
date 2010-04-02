@@ -105,6 +105,19 @@ public:
     bool subscribeToEvents() const;
 
     /*!
+     * Returns the subscription timeout a control point requests when it subscribes
+     * to an evented service.
+     *
+     * The default value is 30 minutes.
+     *
+     * \return the subscription timeout in seconds a control point requests
+     * when it subscribes to an evented service.
+     *
+     * \sa setDesiredSubscriptionTimeout()
+     */
+    qint32 desiredSubscriptionTimeout() const;
+
+    /*!
      * Sets the callable entity that is used to create HDevice instances.
      *
      * Setting the device creator is useful when you want to create the
@@ -124,7 +137,7 @@ public:
      * Herqq::Upnp::HDevice* and the ownership of the created device will be
      * transferred to the \c %HControlPoint after returning.
      *
-     * From this follows, that the device creator can be either a:
+     * From this follows, that the device creator can be a:
      *
      * \li functor,
      * \li function pointer or
@@ -200,6 +213,19 @@ public:
      * \sa subscribeToEvents()
      */
     void setSubscribeToEvents(bool subscribeAutomatically);
+
+    /*!
+     * Sets the subscription timeout a control point requests when it subscribes
+     * to an evented service.
+     *
+     * Values less than or equal to zero are rejected and instead the default value
+     * is used. The default value is 30 minutes.
+     *
+     * \param timeout specifies the requested timeout in seconds.
+     *
+     * \sa desiredSubscriptionTimeout()
+     */
+    void setDesiredSubscriptionTimeout(qint32 timeout);
 };
 
 }

@@ -32,7 +32,8 @@ namespace Upnp
  * HControlPointConfigurationPrivate
  ******************************************************************************/
 HControlPointConfigurationPrivate::HControlPointConfigurationPrivate() :
-    m_deviceCreator(), m_subscribeToEvents(true)
+    m_deviceCreator(), m_subscribeToEvents(true),
+    m_desiredSubscriptionTimeout(1800)
 {
 }
 
@@ -73,20 +74,37 @@ HDeviceCreator HControlPointConfiguration::deviceCreator() const
     return h_ptr->m_deviceCreator;
 }
 
+bool HControlPointConfiguration::subscribeToEvents() const
+{
+    return h_ptr->m_subscribeToEvents;
+}
+
+qint32 HControlPointConfiguration::desiredSubscriptionTimeout() const
+{
+    return h_ptr->m_desiredSubscriptionTimeout;
+}
+
 void HControlPointConfiguration::setDeviceCreator(
     HDeviceCreator deviceCreator)
 {
     h_ptr->m_deviceCreator = deviceCreator;
 }
 
-bool HControlPointConfiguration::subscribeToEvents() const
-{
-    return h_ptr->m_subscribeToEvents;
-}
-
 void HControlPointConfiguration::setSubscribeToEvents(bool arg)
 {
     h_ptr->m_subscribeToEvents = arg;
+}
+
+void HControlPointConfiguration::setDesiredSubscriptionTimeout(qint32 arg)
+{
+    static const qint32 def = 60*30;
+
+    if (arg <= 0)
+    {
+        arg = def;
+    }
+
+    h_ptr->m_desiredSubscriptionTimeout = arg;
 }
 
 }

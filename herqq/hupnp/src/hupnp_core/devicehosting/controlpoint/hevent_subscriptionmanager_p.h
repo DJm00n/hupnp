@@ -60,7 +60,7 @@ private:
 
 private:
 
-    HServiceSubscribtion* createSubscription(HServiceController*);
+    HServiceSubscribtion* createSubscription(HServiceController*, qint32 timeout);
 
 public Q_SLOTS:
 
@@ -86,8 +86,8 @@ public:
         Sub_Failed_NotEvented = 2,
     };
 
-    void subscribe(HDevice*, bool recursive);
-    SubscriptionResult subscribe(HService*);
+    void subscribe(HDevice*, bool recursive, qint32 timeout);
+    SubscriptionResult subscribe(HService*, qint32 timeout);
 
     // the unsubscribe flag specifies whether to send unsubscription to the UPnP device
     // if not, the subscription is just reset to default state (in which it does nothing)

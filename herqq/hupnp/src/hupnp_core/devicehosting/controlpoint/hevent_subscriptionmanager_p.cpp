@@ -21,6 +21,7 @@
 
 #include "hevent_subscriptionmanager_p.h"
 #include "hcontrolpoint_p.h"
+#include "hcontrolpoint_configuration.h"
 
 #include "./../../devicemodel/hservice_p.h"
 #include "./../../dataelements/hdeviceinfo.h"
@@ -74,7 +75,7 @@ void HEventSubscriptionManager::unsubscribed(HServiceSubscribtion* sub)
 }
 
 HServiceSubscribtion* HEventSubscriptionManager::createSubscription(
-    HServiceController* service)
+    HServiceController* service, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
@@ -85,6 +86,7 @@ HServiceSubscribtion* HEventSubscriptionManager::createSubscription(
             m_owner->m_loggingIdentifier,
             service,
             m_owner->m_server->rootUrl(),
+            HTimeout(m_owner->m_configuration->desiredSubscriptionTimeout()),
             this);
 
     bool ok = connect(
@@ -112,7 +114,8 @@ HServiceSubscribtion* HEventSubscriptionManager::createSubscription(
     return subscription;
 }
 
-void HEventSubscriptionManager::subscribe(HDevice* device, bool recursive)
+void HEventSubscriptionManager::subscribe(
+    HDevice* device, bool recursive, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(device);
@@ -122,7 +125,7 @@ void HEventSubscriptionManager::subscribe(HDevice* device, bool recursive)
     {
         if (service->isEvented())
         {
-            subscribe(service);
+            subscribe(service, timeout);
         }
     }
 
@@ -131,13 +134,13 @@ void HEventSubscriptionManager::subscribe(HDevice* device, bool recursive)
         HDeviceList devices = device->embeddedDevices();
         foreach(HDevice* embDevice, devices)
         {
-            subscribe(embDevice, recursive);
+            subscribe(embDevice, recursive, timeout);
         }
     }
 }
 
 HEventSubscriptionManager::SubscriptionResult
-    HEventSubscriptionManager::subscribe(HService* service)
+    HEventSubscriptionManager::subscribe(HService* service, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
@@ -190,7 +193,7 @@ end:
 
     HServiceController* sc = static_cast<HServiceController*>(service->parent());
 
-    HServiceSubscribtion* sub = createSubscription(sc);
+    HServiceSubscribtion* sub = createSubscription(sc, timeout);
     m_subscribtionsByUuid.insert(sub->id(), sub);
     m_subscriptionsByUdn.insert(deviceUdn, subs);
     subs->append(sub);

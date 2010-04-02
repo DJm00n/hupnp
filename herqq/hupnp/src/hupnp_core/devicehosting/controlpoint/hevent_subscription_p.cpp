@@ -44,7 +44,7 @@ namespace Upnp
  ******************************************************************************/
 HServiceSubscribtion::HServiceSubscribtion(
     const QByteArray& loggingIdentifier, HServiceController* service,
-    const QUrl& serverRootUrl, QObject* parent) :
+    const QUrl& serverRootUrl, const HTimeout& desiredTimeout, QObject* parent) :
         QObject(parent),
             m_loggingIdentifier(loggingIdentifier),
             m_randomIdentifier (QUuid::createUuid()),
@@ -53,6 +53,7 @@ HServiceSubscribtion::HServiceSubscribtion(
             m_eventUrl(),
             m_sid(),
             m_seq(0),
+            m_desiredTimeout(desiredTimeout),
             m_timeout(),
             m_subscriptionTimer(this),
             m_announcementTimer(this),
@@ -253,7 +254,9 @@ void HServiceSubscribtion::renewSubscription_done(HHttpAsyncOperation* op)
 
     if (op->state() == HHttpAsyncOperation::Failed)
     {
-        HLOG_WARN("Event subscription renewal failed.");
+        HLOG_WARN(QString("Event subscription renewal [sid: %1] failed.").arg(
+            m_sid.toString()));
+
         emit subscriptionFailed(this);
         return;
     }
@@ -266,7 +269,9 @@ void HServiceSubscribtion::renewSubscription_done(HHttpAsyncOperation* op)
     SubscribeResponse response;
     if (!HHttpMessageCreator::create(*hdr, response))
     {
-        HLOG_WARN("Received an invalid response to event subscription renewal.");
+        HLOG_WARN(QString("Received an invalid response to event "
+                  "subscription renewal: %1.").arg(hdr->toString()));
+
         emit subscriptionFailed(this);
         return;
     }
@@ -321,7 +326,7 @@ void HServiceSubscribtion::renewSubscription()
     MessagingInfo* mi = new MessagingInfo(m_socket, false);
     mi->setHostInfo(eventUrl);
 
-    SubscribeRequest req(eventUrl, m_sid, HTimeout(1800));
+    SubscribeRequest req(eventUrl, m_sid, m_desiredTimeout);
     QByteArray data = HHttpMessageCreator::create(req, *mi);
 
     if (!m_http.msgIo(mi, data))
@@ -489,10 +494,11 @@ void HServiceSubscribtion::subscribe()
     mi->setHostInfo(m_eventUrl);
 
     SubscribeRequest req(
-        m_eventUrl, herqqProductTokens(),
+        m_eventUrl,
+        herqqProductTokens(),
         m_serverRootUrl.toString().append("/").append(
             m_randomIdentifier.toString().remove('{').remove('}')),
-        HTimeout(1800));
+        m_desiredTimeout);
 
     QByteArray data = HHttpMessageCreator::create(req, *mi);
 

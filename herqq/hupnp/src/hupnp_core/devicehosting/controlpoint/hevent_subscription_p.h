@@ -96,8 +96,12 @@ private:
     QMutex m_seqLock;
     // the sequence number which is incremented upon each notify
 
+    HTimeout m_desiredTimeout;
+    // the desired timeout for the subscription
+
     HTimeout m_timeout;
-    // the timeout of the subscription. if no error occurs, the subcription will
+    // the actual timeout of the subscription. this is received from the device
+    // upon successful subscription. if no error occurs, the subscription will
     // be renewed before the specified timeout elapses.
 
     QTimer m_subscriptionTimer;
@@ -171,6 +175,7 @@ public:
         const QByteArray& loggingIdentifier,
         HServiceController* service,
         const QUrl& serverRootUrl,
+        const HTimeout& desiredTimeout,
         QObject* parent = 0);
 
     virtual ~HServiceSubscribtion();

@@ -625,15 +625,11 @@ Q_SIGNALS:
      * This signal is emitted when an event subscription to the specified
      * service failed.
      *
-     * This signal represents a failure to communicate with the device to which
-     * the subscription was sent. When this signal is emitted
-     * the source subscription is canceled and removed.
-     *
      * \note this signal may be emitted in three different scenarios:
-     * - the initial subscription fails
-     * - a subscription renewal fails
-     * - a re-subscription fails
-     * Regardless, if you want to try to re-subscribe to the service you can
+     * - the initial subscription failed
+     * - a subscription renewal failed
+     * - a re-subscription failed
+     * If you want to try to re-subscribe to the service you can
      * call subscribe() again.
      *
      * \param service specifies the target service of the event subscription that
@@ -645,7 +641,7 @@ Q_SIGNALS:
 
     /*!
      * This signal is emitted when the event subscription to the specified
-     * service has been cancelled.
+     * service has been canceled.
      *
      * \param service specifies the target service of the subscription cancellation.
      */
@@ -657,7 +653,7 @@ Q_SIGNALS:
      *
      * \param device is the discovered device.
      *
-     * \remark the discovered device may already be in control of the control point.
+     * \remarks the discovered device may already be in control of the control point.
      * This is the case when device goes offline and comes back online before
      * it is removed from the control point.
      *
@@ -667,12 +663,11 @@ Q_SIGNALS:
 
     /*!
      * This signal is sent when a root device has announced that it is going
-     * offline or the timeouts associated with the device tree the root device
-     * represents have elapsed.
+     * offline or the expiration timeout associated with the device tree has elapsed.
      *
      * After a device has gone offline you may want to remove the device from the
      * control point using removeDevice(). Alternatively, if you do not remove the
-     * device and the device comes online later then either:
+     * device and the device comes online later:
      *
      * \li a rootDeviceOnline() signal is emitted in case the device uses the
      * same configuration as it did before going offline or
@@ -707,7 +702,7 @@ Q_SIGNALS:
      *
      * \param device is the device that has been invalidated.
      */
-    //void rootDeviceInvalidated(Herqq::Upnp::HDevice* device);
+    void rootDeviceInvalidated(Herqq::Upnp::HDevice* device);
 
     /*!
      * This signal is emitted when a run-time error has occurred.

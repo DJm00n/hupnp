@@ -105,10 +105,9 @@ void ControlPointHttpServer::incomingNotifyMessage(
  ******************************************************************************/
 HControlPointSsdpHandler::HControlPointSsdpHandler(
     HControlPointPrivate* owner) :
-        HSsdp(owner), m_owner(owner)
+        HSsdp(owner->m_loggingIdentifier, owner), m_owner(owner)
 {
-    Q_ASSERT(m_owner);
-    h_ptr->m_loggingIdentifier = m_owner->m_loggingIdentifier;
+    setFilter(DiscoveryResponse | DeviceUnavailable | DeviceAvailable);
 }
 
 HControlPointSsdpHandler::~HControlPointSsdpHandler()
@@ -470,7 +469,9 @@ void HControlPointPrivate::processDeviceOnline(
         }
         if (subscribe)
         {
-            m_eventSubscriber->subscribe(device->m_device, true);
+            m_eventSubscriber->subscribe(
+                device->m_device, true,
+                m_configuration->desiredSubscriptionTimeout());
         }
     }
 }
@@ -810,7 +811,8 @@ HControlPoint::ReturnCode HControlPoint::subscribeEvents(
         return InvalidArgument;
     }
 
-    h_ptr->m_eventSubscriber->subscribe(device, recursive);
+    h_ptr->m_eventSubscriber->subscribe(
+        device, recursive, h_ptr->m_configuration->desiredSubscriptionTimeout());
 
     return Success;
 }
@@ -824,7 +826,9 @@ HControlPoint::ReturnCode HControlPoint::subscribeEvents(HService* service)
         return InvalidArgument;
     }
 
-    return h_ptr->m_eventSubscriber->subscribe(service) ? Success : InvalidArgument;;
+    return h_ptr->m_eventSubscriber->subscribe(
+        service, h_ptr->m_configuration->desiredSubscriptionTimeout()) ?
+            Success : InvalidArgument;;
 }
 
 HControlPoint::ReturnCode HControlPoint::cancelEvents(
