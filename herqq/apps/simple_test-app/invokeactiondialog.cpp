@@ -111,6 +111,7 @@ void InvokeActionDialog::setupArgumentWidgets()
         m_ui->inputArguments->setItem(i, 1, item);
 
         IDataHolder* dh = createDataHolder(stateVar);
+        Q_ASSERT(dh);
         m_inputWidgets[inputArg->name()] = dh;
 
         m_ui->inputArguments->setCellWidget(i, 2, dh);
@@ -213,8 +214,7 @@ void minMaxValues(HUpnpDataTypes::DataType dt, qreal* max, qreal* min)
 }
 }
 
-IDataHolder* InvokeActionDialog::createDataHolder(
-    HStateVariable* stateVar)
+IDataHolder* InvokeActionDialog::createDataHolder(HStateVariable* stateVar)
 {
     IDataHolder* content = 0;
 
@@ -271,6 +271,10 @@ IDataHolder* InvokeActionDialog::createDataHolder(
         allowedValues.append("False");
 
         content = new AllowedValueListInput(allowedValues);
+    }
+    else
+    {
+        content = new GenericInput();
     }
 
     return content;

@@ -33,6 +33,7 @@
 #include <HDeviceInfo>
 #include <HControlPoint>
 #include <HStateVariable>
+#include <HControlPointConfiguration>
 
 using namespace Herqq::Upnp;
 
@@ -45,7 +46,11 @@ ControlPointWindow::ControlPointWindow(QWidget* parent) :
 
     m_ui->setupUi(this);
 
-    m_controlPoint = new HControlPoint(0, this);
+    HControlPointConfiguration configuration;
+    //configuration.setDesiredSubscriptionTimeout(30);
+    // you can uncomment this ^^ to test subscription renewal with UPnP devices
+    // that respect the subscription timeout requests of control points
+    m_controlPoint = new HControlPoint(&configuration, this);
 
     bool ok = connect(
         m_controlPoint,
