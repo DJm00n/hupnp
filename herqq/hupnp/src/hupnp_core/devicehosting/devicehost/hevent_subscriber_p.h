@@ -115,7 +115,7 @@ public:
     inline HService* service () const { return m_service;  }
     inline bool      expired () const { return m_expired;  }
 
-    void renew();
+    void renew(const HTimeout&);
 };
 
 }

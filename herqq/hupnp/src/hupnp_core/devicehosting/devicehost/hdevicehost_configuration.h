@@ -365,6 +365,40 @@ public:
     void setIndividualAdvertisementCount(quint32);
 
     /*!
+     * Returns the timeout the device host uses for subscriptions.
+     *
+     * The default value is zero, which means that the device host honors the
+     * timeouts requested by control points up to a day. Larger values are
+     * set to a day.
+     *
+     * \return the timeout in seconds the device host uses for subscriptions.
+     *
+     * \sa setSubscriptionExpirationTimeout()
+     */
+    qint32 subscriptionExpirationTimeout() const;
+
+    /*!
+     * Specifies the timeout the device host uses for subscriptions.
+     *
+     * The default value is zero, which means that the device host honors the
+     * timeouts requested by control points.
+     *
+     * \param timeout specifies the desired timeout in seconds.
+     * - If timeout is greater than
+     * zero the device host will use the timeout as such for subscriptions.
+     * - If timeout is zero the device host will honor the timeout requested
+     * by control points.
+     * - If timeout is negative the subscription timeout is set to a day.
+     *
+     * \note the maximum expiration timeout value is a day. Larger values are
+     * set to a day. This applies to the timeout requests made by control points
+     * as well.
+     *
+     * \sa subscriptionExpirationTimeout()
+     */
+    void setSubscriptionExpirationTimeout(qint32 timeout);
+
+    /*!
      * Indicates if the instance contains any device configurations.
      *
      * \return \e true in case the instance contains at least

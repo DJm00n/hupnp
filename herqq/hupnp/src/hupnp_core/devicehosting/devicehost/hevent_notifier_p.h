@@ -30,15 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hevent_subscriber_p.h"
-
 #include "./../../http/hhttp_p.h"
 #include "./../../general/hdefs_p.h"
-#include "./../messages/hevent_messages_p.h"
 
 #include <QList>
 #include <QMutex>
 #include <QObject>
+#include <QByteArray>
 #include <QSharedPointer>
 
 namespace Herqq
@@ -47,7 +45,15 @@ namespace Herqq
 namespace Upnp
 {
 
+class HSid;
 class HService;
+class HTimeout;
+class HHttpHandler;
+class MessagingInfo;
+class SubscribeRequest;
+class UnsubscribeRequest;
+class ServiceEventSubscriber;
+class HDeviceHostConfiguration;
 
 //
 // Internal class used to notify event subscribers of events.
@@ -62,7 +68,7 @@ public:
 
     typedef QSharedPointer<ServiceEventSubscriber> ServiceEventSubscriberPtrT;
 
-private:
+private: // attributes
 
     const QByteArray m_loggingIdentifier;
     // prefix for logging
@@ -76,6 +82,12 @@ private:
 
     volatile bool m_shutdown;
 
+    HDeviceHostConfiguration& m_configuration;
+
+private: // methods
+
+    HTimeout getSubscriptionTimeout(const SubscribeRequest&);
+
 private Q_SLOTS:
 
     void stateChanged(const Herqq::Upnp::HService* source);
@@ -83,7 +95,10 @@ private Q_SLOTS:
 public:
 
     EventNotifier(
-        const QByteArray& loggingIdentifier, HHttpHandler&, QObject* parent);
+        const QByteArray& loggingIdentifier,
+        HHttpHandler&,
+        HDeviceHostConfiguration&,
+        QObject* parent);
 
     virtual ~EventNotifier();
 
@@ -95,7 +110,7 @@ public:
     StatusCode renewSubscription(const SubscribeRequest&, HSid*);
     ServiceEventSubscriberPtrT remoteClient(const HSid&) const;
 
-    void initialNotify(ServiceEventSubscriberPtrT, MessagingInfo& mi);
+    void initialNotify(ServiceEventSubscriberPtrT, MessagingInfo&);
 };
 
 }

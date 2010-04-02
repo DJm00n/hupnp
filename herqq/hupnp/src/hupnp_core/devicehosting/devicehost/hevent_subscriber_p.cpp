@@ -53,7 +53,7 @@ bool notifyClient(
     if (mi.socket().state() != QTcpSocket::ConnectedState)
     {
         HLOG_WARN(QString(
-            "Client @ [sid: %1] is not connected. Failed to notify.").arg(
+            "Client @ [sid: [%1]] is not connected. Failed to notify.").arg(
                 sid.toString()));
 
         return false;
@@ -247,7 +247,7 @@ bool ServiceEventSubscriber::isInterested(const HService* service) const
             m_service->serviceId() == service->serviceId();
 }
 
-void ServiceEventSubscriber::renew()
+void ServiceEventSubscriber::renew(const HTimeout& newTimeout)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -258,7 +258,12 @@ void ServiceEventSubscriber::renew()
         return;
     }
 
-    m_timer.start();
+    m_timeout = newTimeout;
+
+    if (!m_timeout.isInfinite())
+    {
+        m_timer.start(m_timeout.value() * 1000);
+    }
 }
 
 void ServiceEventSubscriber::notify(const QByteArray& msgBody)

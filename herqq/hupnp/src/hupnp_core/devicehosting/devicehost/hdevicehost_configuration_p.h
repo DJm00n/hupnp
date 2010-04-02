@@ -73,6 +73,8 @@ public:
     quint32 m_individualAdvertisementCount;
     // how many times each announcement / advertisement is sent
 
+    qint32 m_subscriptionExpirationTimeout;
+
     HDeviceHostConfigurationPrivate();
 };
 

@@ -20,6 +20,10 @@
  */
 
 #include "hevent_notifier_p.h"
+#include "hevent_subscriber_p.h"
+#include "hdevicehost_configuration.h"
+
+#include "./../messages/hevent_messages_p.h"
 
 #include "./../../devicemodel/hdevice.h"
 #include "./../../devicemodel/hservice.h"
@@ -89,21 +93,47 @@ void getCurrentValues(QByteArray& msgBody, const HService* service)
  * EventNotifier
  ******************************************************************************/
 EventNotifier::EventNotifier(
-    const QByteArray& loggingIdentifier, HHttpHandler& http, QObject* parent) :
+    const QByteArray& loggingIdentifier,
+    HHttpHandler& http,
+    HDeviceHostConfiguration& configuration,
+    QObject* parent) :
         QObject(parent),
             m_loggingIdentifier(loggingIdentifier),
             m_httpHandler(http),
             m_remoteClients(),
             m_remoteClientsMutex(QMutex::Recursive),
-            m_shutdown(false)
+            m_shutdown(false),
+            m_configuration(configuration)
 {
-    HLOG(H_AT, H_FUN);
 }
 
 EventNotifier::~EventNotifier()
 {
     HLOG(H_AT, H_FUN);
     shutdown();
+}
+
+HTimeout EventNotifier::getSubscriptionTimeout(const SubscribeRequest& sreq)
+{
+    const static qint32 max = 60*60*24;
+
+    qint32 configuredTimeout = m_configuration.subscriptionExpirationTimeout();
+    if (configuredTimeout > 0)
+    {
+        return HTimeout(configuredTimeout);
+    }
+    else if (configuredTimeout == 0)
+    {
+        HTimeout requested = sreq.timeout();
+        if (requested.isInfinite() || requested.value() > max)
+        {
+            return HTimeout(max);
+        }
+
+        return requested;
+    }
+
+    return HTimeout(max);
 }
 
 void EventNotifier::shutdown()
@@ -121,9 +151,7 @@ namespace
 {
 inline bool isSameService(HService* srv1, HService* srv2)
 {
-    HLOG(H_AT, H_FUN);
-    return srv1->parentDevice()->deviceInfo().udn() ==
-           srv2->parentDevice()->deviceInfo().udn() &&
+    return srv1->parentDevice()->deviceInfo().udn() == srv2->parentDevice()->deviceInfo().udn() &&
            srv1->scpdUrl() == srv2->scpdUrl();
 }
 }
@@ -188,13 +216,18 @@ StatusCode EventNotifier::addSubscriber(
     HLOG_INFO(QString("adding subscriber from [%1]").arg(
         sreq.callbacks().at(0).toString()));
 
-    HTimeout timeout = service->isEvented() ? sreq.timeout() : HTimeout(60*60*24);
+    HTimeout timeout = service->isEvented() ?
+        getSubscriptionTimeout(sreq) : HTimeout(60*60*24);
 
     ServiceEventSubscriberPtrT rc(
         new ServiceEventSubscriber(
-            m_httpHandler, m_loggingIdentifier, service,
-            sreq.callbacks().at(0), timeout, this),
-            &QObject::deleteLater);
+            m_httpHandler,
+            m_loggingIdentifier,
+            service,
+            sreq.callbacks().at(0),
+            timeout,
+            this),
+        &QObject::deleteLater);
 
     m_remoteClients.push_back(rc);
 
@@ -272,7 +305,11 @@ StatusCode EventNotifier::renewSubscription(
         ServiceEventSubscriberPtrT sub = (*it);
         if (sub->expired() || sub->seq() == 0)
         {
-            // TODO
+            HLOG_INFO(QString("removing subscriber from [%1] with SID [%2]").arg(
+                (*it)->location().toString(), req.sid().toString()));
+
+            it = m_remoteClients.erase(it);
+            continue;
         }
 
         if ((*it)->sid() == req.sid())
@@ -280,7 +317,7 @@ StatusCode EventNotifier::renewSubscription(
             HLOG_INFO(QString("renewing subscription from [%1]").arg(
                 (*it)->location().toString()));
 
-            (*it)->renew();
+            (*it)->renew(getSubscriptionTimeout(req));
             *sid = (*it)->sid();
             return Ok;
         }

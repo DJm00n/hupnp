@@ -86,13 +86,15 @@ bool HDeviceConfiguration::setPathToDeviceDescription(
 
 void HDeviceConfiguration::setCacheControlMaxAge(quint32 maxAgeInSecs)
 {
+    static const quint32 max = 60*60*24;
+
     if (maxAgeInSecs < 5)
     {
         maxAgeInSecs = 5;
     }
-    else if (maxAgeInSecs > 60*60*24)
+    else if (maxAgeInSecs > max)
     {
-        maxAgeInSecs = 60*60*24; // a day
+        maxAgeInSecs = max;
     }
 
     h_ptr->m_cacheControlMaxAgeInSecs = maxAgeInSecs;
@@ -123,7 +125,8 @@ bool HDeviceConfiguration::isValid() const
  * HDeviceHostConfigurationPrivate
  ******************************************************************************/
 HDeviceHostConfigurationPrivate::HDeviceHostConfigurationPrivate() :
-    m_collection(), m_individualAdvertisementCount(2)
+    m_collection(), m_individualAdvertisementCount(2),
+    m_subscriptionExpirationTimeout(0)
 {
 }
 
@@ -193,6 +196,23 @@ quint32 HDeviceHostConfiguration::individualAdvertisementCount() const
 void HDeviceHostConfiguration::setIndividualAdvertisementCount(quint32 arg)
 {
     h_ptr->m_individualAdvertisementCount = arg;
+}
+
+qint32 HDeviceHostConfiguration::subscriptionExpirationTimeout() const
+{
+    return h_ptr->m_subscriptionExpirationTimeout;
+}
+
+void HDeviceHostConfiguration::setSubscriptionExpirationTimeout(qint32 arg)
+{
+    static const qint32 max = 60*60*24;
+
+    if (arg > max)
+    {
+        arg = max;
+    }
+
+    h_ptr->m_subscriptionExpirationTimeout = arg;
 }
 
 bool HDeviceHostConfiguration::isEmpty() const

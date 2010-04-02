@@ -21,6 +21,11 @@
 
 #include "hdevicehost.h"
 #include "hdevicehost_p.h"
+#include "hevent_notifier_p.h"
+#include "hpresence_announcer_p.h"
+#include "hdevicehost_configuration.h"
+#include "hdevicehost_http_server_p.h"
+#include "hdevicehost_ssdp_handler_p.h"
 #include "hdevicehost_dataretriever_p.h"
 
 #include "./../hobjectcreator_p.h"
@@ -322,7 +327,11 @@ HDeviceHost::ReturnCode HDeviceHost::init(
         h_ptr->m_http.reset(new HHttpHandler(h_ptr->m_loggingIdentifier));
 
         h_ptr->m_eventNotifier.reset(
-            new EventNotifier(h_ptr->m_loggingIdentifier, *h_ptr->m_http, this));
+            new EventNotifier(
+                h_ptr->m_loggingIdentifier,
+                *h_ptr->m_http,
+                *h_ptr->m_initParams,
+                this));
 
         h_ptr->m_httpServer.reset(
             new DeviceHostHttpServer(

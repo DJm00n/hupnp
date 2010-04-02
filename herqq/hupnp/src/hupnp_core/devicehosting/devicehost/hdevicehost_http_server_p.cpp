@@ -20,6 +20,7 @@
  */
 
 #include "hdevicehost_http_server_p.h"
+#include "hevent_subscriber_p.h"
 
 #include "./../messages/hcontrol_messages_p.h"
 

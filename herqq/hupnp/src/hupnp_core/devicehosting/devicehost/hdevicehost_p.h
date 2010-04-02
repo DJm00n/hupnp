@@ -30,13 +30,6 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hdevicehost.h"
-#include "hevent_notifier_p.h"
-#include "hpresence_announcer_p.h"
-#include "hdevicehost_http_server_p.h"
-#include "hdevicehost_configuration.h"
-#include "hdevicehost_ssdp_handler_p.h"
-
 #include "./../habstracthost_p.h"
 
 #include <QAtomicInt>
@@ -47,6 +40,13 @@ namespace Herqq
 
 namespace Upnp
 {
+
+class HDeviceHost;
+class EventNotifier;
+class PresenceAnnouncer;
+class DeviceHostHttpServer;
+class DeviceHostSsdpHandler;
+class HDeviceHostConfiguration;
 
 //
 // Implementation details of HDeviceHost class
