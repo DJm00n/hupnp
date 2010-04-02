@@ -284,10 +284,10 @@ QByteArray HHttpMessageCreator::create(
 
     mi.setHostInfo(req.callback());
 
-    reqHdr.setValue  ("SID"   , req.sid().toString());
-    reqHdr.setValue  ("SEQ"   , QString::number(req.seq()));
-    reqHdr.setValue  ("NT"    , "upnp:event");
-    reqHdr.setValue  ("NTS"   , "upnp:propchange");
+    reqHdr.setValue("SID", req.sid().toString());
+    reqHdr.setValue("SEQ", QString::number(req.seq()));
+    reqHdr.setValue("NT" , "upnp:event");
+    reqHdr.setValue("NTS", "upnp:propchange");
 
     return setupData(reqHdr, req.data(), mi);
 }
@@ -300,14 +300,21 @@ QByteArray HHttpMessageCreator::create(
     QHttpRequestHeader requestHdr(
         "SUBSCRIBE", extractRequestPart(req.eventUrl()));
 
-    if (req.hasUserAgent())
-    {
-        requestHdr.setValue("USER-AGENT", req.userAgent().toString());
-    }
-
     requestHdr.setValue("TIMEOUT", req.timeout().toString());
-    requestHdr.setValue("NT", req.nt().typeToString());
-    requestHdr.setValue("CALLBACK", HHttpUtils::callbackAsStr(req.callbacks()));
+
+    if (!req.isRenewal())
+    {
+        if (req.hasUserAgent())
+        {
+            requestHdr.setValue("USER-AGENT", req.userAgent().toString());
+        }
+        requestHdr.setValue("CALLBACK", HHttpUtils::callbackAsStr(req.callbacks()));
+        requestHdr.setValue("NT", req.nt().typeToString());
+    }
+    else
+    {
+        requestHdr.setValue("SID", req.sid().toString());
+    }
 
     return setupData(requestHdr, mi);
 }
