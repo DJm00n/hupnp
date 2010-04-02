@@ -82,6 +82,11 @@ QByteArray DataRetriever::retrieveData(
         }
     }
 
+    if (request.isEmpty())
+    {
+        request.append('/');
+    }
+
     QHttpRequestHeader requestHdr("GET", request);
     QHttpResponseHeader responseHdr;
 

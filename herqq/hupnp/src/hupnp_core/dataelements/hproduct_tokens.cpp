@@ -299,12 +299,12 @@ public:
             if (parseCommaDelimited(tokensTmp))
             {
                 HLOG_WARN_NONSTD(QString(
-                    "The specified token string [%1] uses invalid delimiter [,]").arg(
-                        tokens));
+                    "Token string [%1] uses invalid delimiter").arg(tokens));
             }
             else
             {
-                HLOG_WARN_NONSTD(QString("Invalid Product Tokens: [%1]").arg(tokens));
+                HLOG_WARN_NONSTD(QString(
+                    "Invalid Product Tokens: [%1]").arg(tokens));
             }
         }
     }

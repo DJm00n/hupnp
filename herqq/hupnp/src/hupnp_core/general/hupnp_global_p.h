@@ -138,7 +138,7 @@ inline QString extractRequestPart(const QUrl& arg)
 {
     return arg.toString(
         QUrl::RemoveAuthority | QUrl::RemovePassword | QUrl::RemoveUserInfo |
-        QUrl::RemoveScheme | QUrl::RemovePort | QUrl::StripTrailingSlash);
+        QUrl::RemoveScheme | QUrl::RemovePort);
 }
 
 //

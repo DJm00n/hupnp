@@ -80,8 +80,8 @@ public:
 
         if (tmp[2] != "serviceId")
         {
-            HLOG_WARN(QString("Invalid service identifier [%1].").arg(arg));
-            return;
+            HLOG_WARN_NONSTD(QString("Invalid service identifier [%1]: .").arg(arg));
+            // at least some Intel software fails to specify this right
         }
 
         if (tmp[3].isEmpty())
