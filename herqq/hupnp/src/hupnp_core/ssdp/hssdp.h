@@ -78,6 +78,7 @@ private Q_SLOTS:
 protected:
 
     HSsdpPrivate* h_ptr;
+    HSsdp(const QByteArray& loggingIdentifier, QObject* parent = 0);
 
 protected:
 
@@ -186,6 +187,75 @@ public:
      * Destroys the instance.
      */
     virtual ~HSsdp();
+
+    /*!
+     * This enum is used to define a "filter", which specifies which message
+     * types are to be processed when encountered.
+     *
+     * \sa filter(), setFilter()
+     */
+    enum AllowedMessage
+    {
+        /*!
+         * No messages are processed.
+         */
+        None = 0x00,
+
+        /*!
+         * Device available messages are processed.
+         */
+        DeviceAvailable = 0x01,
+
+        /*!
+         * Device update messages are processed.
+         */
+        DeviceUpdate = 0x02,
+
+        /*!
+         * Device unavailable messages are processed.
+         */
+        DeviceUnavailable = 0x04,
+
+        /*!
+         * Discovery request messages are processed.
+         */
+        DiscoveryRequest = 0x08,
+
+        /*!
+         * Discovery response messages are processed.
+         */
+        DiscoveryResponse = 0x10,
+
+        /*!
+         * Discovery response messages are processed.
+         */
+        All = 0x1f
+    };
+
+    Q_DECLARE_FLAGS(AllowedMessages, AllowedMessage);
+
+    /*!
+     * Sets the filter of what message types are accepted for processing.
+     *
+     * The default is HSsdp::All.
+     *
+     * \param allowedMessages defines the message types the instance should
+     * accept for further processing. Other message types will be silently ignored.
+     *
+     * \sa filter()
+     */
+    void setFilter(AllowedMessages allowedMessages);
+
+    /*!
+     * Returns the message types that are currently accepted for processing.
+     *
+     * Default is HSsdp::All.
+     *
+     * \return the message types that are currently accepted for processing.
+     *
+     * \sa setFilter()
+     */
+    AllowedMessages filter() const;
 
     /*!
      * Sets the instance to listen the network for SSDP messages and and attempts to
@@ -332,6 +402,8 @@ Q_SIGNALS:
      */
     void resourceUnavailableReceived(const Herqq::Upnp::HResourceUnavailable& msg);
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(HSsdp::AllowedMessages)
 
 }
 }

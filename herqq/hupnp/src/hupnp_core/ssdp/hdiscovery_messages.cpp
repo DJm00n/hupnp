@@ -243,12 +243,12 @@ QString HResourceAvailable::toString() const
 
     ts << "NOTIFY * HTTP/1.1\r\n"
        << "HOST: "                  << multicastEndpoint().toString() << "\r\n"
-       << "CACHE-CONTROL: max-age=" << cacheControlMaxAge  () << "\r\n"
-       << "LOCATION: "              << location().toString () << "\r\n"
+       << "CACHE-CONTROL: max-age=" << cacheControlMaxAge() << "\r\n"
+       << "LOCATION: "              << location().toString() << "\r\n"
        << "NT: "                    << usn().resource().toString() << "\r\n"
        << "NTS: "                   << "ssdp:alive\r\n"
-       << "SERVER: "                << serverTokens().toString()   << "\r\n"
-       << "USN: "                   << usn().toString()       << "\r\n";
+       << "SERVER: "                << serverTokens().toString() << "\r\n"
+       << "USN: "                   << usn().toString() << "\r\n";
 
     if (HProductToken::minorVersion(serverTokens().upnpToken()) > 0)
     {
@@ -399,15 +399,15 @@ QString HResourceUnavailable::toString() const
     QTextStream ts(&retVal);
 
     ts << "NOTIFY * HTTP/1.1\r\n"
-       << "HOST: "     << multicastEndpoint().toString()<< "\r\n"
-       << "NT: "       << usn().resource().toString()   << "\r\n"
-       << "NTS: "      << "ssdp:byebye\r\n"
-       << "USN: "      << usn().toString() << "\r\n";
+       << "HOST: " << multicastEndpoint().toString()<< "\r\n"
+       << "NT: "   << usn().resource().toString() << "\r\n"
+       << "NTS: "  << "ssdp:byebye\r\n"
+       << "USN: "  << usn().toString() << "\r\n";
 
     if (bootId() >= 0)
     {
-        ts << "BOOTID.UPNP.ORG: "   << bootId  ()  << "\r\n"
-           << "CONFIGID.UPNP.ORG: " << configId()  << "\r\n";
+        ts << "BOOTID.UPNP.ORG: "   << bootId  () << "\r\n"
+           << "CONFIGID.UPNP.ORG: " << configId() << "\r\n";
     }
 
     ts << "\r\n";
@@ -641,6 +641,12 @@ public: // methods
         {
             HLOG_WARN("MX is larger than 5, setting it to 5.");
             mx = 5; // UDA instructs to treat MX values larger than 5 as 5
+        }
+
+        if (!userAgent.isValid())
+        {
+            HLOG_WARN_NONSTD(QString("Invalid user agent: [%1]").arg(
+                userAgent.toString()));
         }
 
         m_st          = st;

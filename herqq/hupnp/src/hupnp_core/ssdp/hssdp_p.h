@@ -83,9 +83,11 @@ public: // attributes
 
     HSsdp* q_ptr;
 
+    HSsdp::AllowedMessages m_allowedMessages;
+
 public: // methods
 
-    HSsdpPrivate ();
+    HSsdpPrivate(const QByteArray& loggingIdentifier = QByteArray());
     ~HSsdpPrivate();
 
     bool init(const QHostAddress& addressToBind, HSsdp* qptr);

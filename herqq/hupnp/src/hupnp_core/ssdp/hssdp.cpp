@@ -141,11 +141,12 @@ inline static qint16 multicastPort()
 /*******************************************************************************
  * HSsdpPrivate
  ******************************************************************************/
-HSsdpPrivate::HSsdpPrivate() :
-    m_loggingIdentifier("__SSDP__: "),
+HSsdpPrivate::HSsdpPrivate(const QByteArray& loggingIdentifier) :
+    m_loggingIdentifier(loggingIdentifier),
     m_multicastSocket(),
     m_unicastSocket  (),
-    q_ptr            (0)
+    q_ptr            (0),
+    m_allowedMessages(HSsdp::All)
 {
 }
 
@@ -409,19 +410,22 @@ void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)
     QHttpResponseHeader hdr(msg);
     if (!hdr.isValid())
     {
-        HLOG_WARN("Ignoring an invalid HTTP response.");
+        HLOG_WARN("Ignoring a malformed HTTP response.");
         return;
     }
 
-    HDiscoveryResponse rcvdMsg = parseDiscoveryResponse(hdr);
-    if (!rcvdMsg.isValid())
+    if (m_allowedMessages & HSsdp::DiscoveryResponse)
     {
-        HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
-            source.toString(), msg));
-    }
-    else if (!q_ptr->incomingDiscoveryResponse(rcvdMsg, source))
-    {
-        emit q_ptr->discoveryResponseReceived(rcvdMsg, source);
+        HDiscoveryResponse rcvdMsg = parseDiscoveryResponse(hdr);
+        if (!rcvdMsg.isValid())
+        {
+            HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
+                source.toString(), msg));
+        }
+        else if (!q_ptr->incomingDiscoveryResponse(rcvdMsg, source))
+        {
+            emit q_ptr->discoveryResponseReceived(rcvdMsg, source);
+        }
     }
 }
 
@@ -432,45 +436,54 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
     QHttpRequestHeader hdr(msg);
     if (!hdr.isValid())
     {
-        HLOG_WARN("Ignoring an invalid HTTP response.");
+        HLOG_WARN("Ignoring a malformed HTTP response.");
         return;
     }
 
     QString nts = hdr.value("NTS");
     if (nts.compare(QString("ssdp:alive"), Qt::CaseInsensitive) == 0)
     {
-        HResourceAvailable rcvdMsg = parseDeviceAvailable(hdr);
-        if (!rcvdMsg.isValid())
+        if (m_allowedMessages & HSsdp::DeviceAvailable)
         {
-            HLOG_WARN(QString("Ignoring invalid ssdp:alive announcement: %1").arg(msg));
-        }
-        else if (!q_ptr->incomingDeviceAvailableAnnouncement(rcvdMsg))
-        {
-            emit q_ptr->resourceAvailableReceived(rcvdMsg);
+            HResourceAvailable rcvdMsg = parseDeviceAvailable(hdr);
+            if (!rcvdMsg.isValid())
+            {
+                HLOG_WARN(QString("Ignoring invalid ssdp:alive announcement: %1").arg(msg));
+            }
+            else if (!q_ptr->incomingDeviceAvailableAnnouncement(rcvdMsg))
+            {
+                emit q_ptr->resourceAvailableReceived(rcvdMsg);
+            }
         }
     }
     else if (nts.compare(QString("ssdp:byebye"), Qt::CaseInsensitive) == 0)
     {
-        HResourceUnavailable rcvdMsg = parseDeviceUnavailable(hdr);
-        if (!rcvdMsg.isValid())
+        if (m_allowedMessages & HSsdp::DeviceUnavailable)
         {
-            HLOG_WARN(QString("Ignoring invalid ssdp:byebye announcement: %1").arg(msg));
-        }
-        else if (!q_ptr->incomingDeviceUnavailableAnnouncement(rcvdMsg))
-        {
-            emit q_ptr->resourceUnavailableReceived(rcvdMsg);
+            HResourceUnavailable rcvdMsg = parseDeviceUnavailable(hdr);
+            if (!rcvdMsg.isValid())
+            {
+                HLOG_WARN(QString("Ignoring invalid ssdp:byebye announcement: %1").arg(msg));
+            }
+            else if (!q_ptr->incomingDeviceUnavailableAnnouncement(rcvdMsg))
+            {
+                emit q_ptr->resourceUnavailableReceived(rcvdMsg);
+            }
         }
     }
     else if (nts.compare(QString("ssdp:update"), Qt::CaseInsensitive) == 0)
     {
-        HResourceUpdate rcvdMsg = parseDeviceUpdate(hdr);
-        if (!rcvdMsg.isValid())
+        if (m_allowedMessages & HSsdp::DeviceUpdate)
         {
-            HLOG_WARN(QString("Ignoring invalid ssdp:update announcement: %1").arg(msg));
-        }
-        else if (!q_ptr->incomingDeviceUpdateAnnouncement(rcvdMsg))
-        {
-            emit q_ptr->deviceUpdateReceived(rcvdMsg);
+            HResourceUpdate rcvdMsg = parseDeviceUpdate(hdr);
+            if (!rcvdMsg.isValid())
+            {
+                HLOG_WARN(QString("Ignoring invalid ssdp:update announcement: %1").arg(msg));
+            }
+            else if (!q_ptr->incomingDeviceUpdateAnnouncement(rcvdMsg))
+            {
+                emit q_ptr->deviceUpdateReceived(rcvdMsg);
+            }
         }
     }
     else
@@ -492,15 +505,18 @@ void HSsdpPrivate::processSearch(
         return;
     }
 
-    HDiscoveryRequest rcvdMsg = parseDiscoveryRequest(hdr);
-    if (!rcvdMsg.isValid())
+    if (m_allowedMessages & HSsdp::DiscoveryRequest)
     {
-        HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
-            source.toString(), msg));
-    }
-    else if (!q_ptr->incomingDiscoveryRequest(rcvdMsg, source, destination))
-    {
-        emit q_ptr->discoveryRequestReceived(rcvdMsg, source, destination);
+        HDiscoveryRequest rcvdMsg = parseDiscoveryRequest(hdr);
+        if (!rcvdMsg.isValid())
+        {
+            HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
+                source.toString(), msg));
+        }
+        else if (!q_ptr->incomingDiscoveryRequest(rcvdMsg, source, destination))
+        {
+            emit q_ptr->discoveryRequestReceived(rcvdMsg, source, destination);
+        }
     }
 }
 
@@ -607,7 +623,13 @@ void HSsdpPrivate::messageReceived(
  ******************************************************************************/
 HSsdp::HSsdp(QObject* parent) :
     QObject(parent),
-        h_ptr (new HSsdpPrivate())
+        h_ptr(new HSsdpPrivate())
+{
+}
+
+HSsdp::HSsdp(const QByteArray& loggingIdentifier, QObject* parent) :
+    QObject(parent),
+        h_ptr(new HSsdpPrivate(loggingIdentifier))
 {
 }
 
@@ -626,6 +648,16 @@ HSsdp::~HSsdp()
     }
 
     delete h_ptr;
+}
+
+void HSsdp::setFilter(AllowedMessages allowedMessages)
+{
+    h_ptr->m_allowedMessages = allowedMessages;
+}
+
+HSsdp::AllowedMessages HSsdp::filter() const
+{
+    return h_ptr->m_allowedMessages;
 }
 
 bool HSsdp::bind()
