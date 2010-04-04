@@ -707,7 +707,7 @@ HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
 
         h_ptr->m_ssdp->sendDiscoveryRequest(
             HDiscoveryRequest(
-                1, HResourceIdentifier("ssdp:all"), herqqProductTokens()));
+                1, HResourceIdentifier::getRootDeviceIdentifier(), herqqProductTokens()));
 
         h_ptr->setState(HAbstractHostPrivate::Initialized);
     }

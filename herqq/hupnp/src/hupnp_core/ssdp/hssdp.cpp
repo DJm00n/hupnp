@@ -790,7 +790,7 @@ void HSsdp::multicastMessageReceived()
 namespace
 {
 template<class Msg>
-qint32 send(HSsdpPrivate* hptr, Msg msg, qint32 count)
+qint32 send(HSsdpPrivate* hptr, const Msg& msg, qint32 count)
 {
     HLOG2(H_AT, H_FUN, hptr->m_loggingIdentifier);
     if (!msg.isValid())
@@ -808,7 +808,7 @@ qint32 send(HSsdpPrivate* hptr, Msg msg, qint32 count)
 }
 
 template<class Msg>
-qint32 send(HSsdpPrivate* hptr, Msg msg, const HEndpoint& receiver, qint32 count)
+qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver, qint32 count)
 {
     HLOG2(H_AT, H_FUN, hptr->m_loggingIdentifier);
     if (!msg.isValid())

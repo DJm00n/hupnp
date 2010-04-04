@@ -252,22 +252,22 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
     QList<ServiceEventSubscriberPtrT>::iterator it = m_remoteClients.begin();
     for(; it != m_remoteClients.end(); )
     {
-        if ((*it)->expired())
-        {
-            HLOG_INFO(QString("removing subscriber from [%1] with SID [%2]").arg(
-                (*it)->location().toString(), req.sid().toString()));
-
-            it = m_remoteClients.erase(it);
-        }
-
         if ((*it)->sid() == req.sid())
         {
-            HLOG_INFO(QString("removing subscriber from [%1] with SID [%2]").arg(
-                (*it)->location().toString(), req.sid().toString()));
+            HLOG_INFO(QString("removing subscriber [SID [%1]] from [%2]").arg(
+                req.sid().toString(), (*it)->location().toString()));
 
             it = m_remoteClients.erase(it);
 
             found = true;
+        }
+        else if ((*it)->expired())
+        {
+            HLOG_INFO(QString(
+                "removing an expired subscription [SID [%1]] from [%2]").arg(
+                    (*it)->sid().toString(), (*it)->location().toString()));
+
+            it = m_remoteClients.erase(it);
         }
         else
         {
@@ -300,18 +300,9 @@ StatusCode EventNotifier::renewSubscription(
     }
 
     QList<ServiceEventSubscriberPtrT>::iterator it = m_remoteClients.begin();
-    for(; it != m_remoteClients.end(); ++it)
+    for(; it != m_remoteClients.end();)
     {
         ServiceEventSubscriberPtrT sub = (*it);
-        if (sub->expired() || sub->seq() == 0)
-        {
-            HLOG_INFO(QString("removing subscriber from [%1] with SID [%2]").arg(
-                (*it)->location().toString(), req.sid().toString()));
-
-            it = m_remoteClients.erase(it);
-            continue;
-        }
-
         if ((*it)->sid() == req.sid())
         {
             HLOG_INFO(QString("renewing subscription from [%1]").arg(
@@ -320,6 +311,17 @@ StatusCode EventNotifier::renewSubscription(
             (*it)->renew(getSubscriptionTimeout(req));
             *sid = (*it)->sid();
             return Ok;
+        }
+        else if (sub->expired())
+        {
+            HLOG_INFO(QString("removing subscriber [SID [%1]] from [%2]").arg(
+                sub->sid().toString(), (*it)->location().toString()));
+
+            it = m_remoteClients.erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
 
