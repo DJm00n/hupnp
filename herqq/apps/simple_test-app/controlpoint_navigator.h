@@ -30,6 +30,7 @@
 class QVariant;
 class QModelIndex;
 
+class DeviceItem;
 class ControlPointNavigatorItem;
 
 //
@@ -44,6 +45,9 @@ H_DISABLE_COPY(ControlPointNavigator)
 private:
 
     ControlPointNavigatorItem* m_rootItem;
+
+    ControlPointNavigatorItem* buildModel(
+        Herqq::Upnp::HDevice*, ControlPointNavigatorItem*);
 
 public:
 

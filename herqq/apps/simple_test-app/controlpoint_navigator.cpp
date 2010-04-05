@@ -43,11 +43,12 @@ ControlPointNavigator::~ControlPointNavigator()
     delete m_rootItem;
 }
 
-void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
+ControlPointNavigatorItem* ControlPointNavigator::buildModel(
+    HDevice* device, ControlPointNavigatorItem* parentItem)
 {
-    DeviceItem* deviceItem = new DeviceItem(newDevice, m_rootItem);
+    DeviceItem* deviceItem = new DeviceItem(device, parentItem);
 
-    HServiceList services = newDevice->services();
+    HServiceList services = device->services();
     foreach(HService* service, services)
     {
         ServiceItem* serviceItem = new ServiceItem(service, deviceItem);
@@ -80,10 +81,25 @@ void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
         deviceItem->appendChild(serviceItem);
     }
 
+    foreach(HDevice* embeddedDevice, device->embeddedDevices())
+    {
+        ControlPointNavigatorItem* childItem =
+            buildModel(embeddedDevice, deviceItem);
+
+        deviceItem->appendChild(childItem);
+    }
+
+    return deviceItem;
+}
+
+void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
+{
+    ControlPointNavigatorItem* childItem = buildModel(newDevice, m_rootItem);
+
     beginInsertRows(
         QModelIndex(), m_rootItem->childCount(), m_rootItem->childCount());
 
-    m_rootItem->appendChild(deviceItem);
+    m_rootItem->appendChild(childItem);
 
     endInsertRows();
 }
