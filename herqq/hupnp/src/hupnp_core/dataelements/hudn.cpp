@@ -46,11 +46,6 @@ HUdn::HUdn(const QUuid& value) :
 {
 }
 
-HUdn::HUdn(const HUdn& other) :
-    m_value(other.m_value)
-{
-}
-
 HUdn::HUdn(const QString& value) :
     m_value(value.simplified().remove("uuid:", Qt::CaseInsensitive))
 {
@@ -58,37 +53,6 @@ HUdn::HUdn(const QString& value) :
 
 HUdn::~HUdn()
 {
-}
-
-/*
-HUdn& HUdn::operator=(const QUuid& value)
-{
-    HUdn copy(value);
-    *this = copy;
-    return *this;
-}
-
-HUdn& HUdn::operator=(const QString& value)
-{
-    HUdn copy(value);
-    *this = copy;
-    return *this;
-}
-*/
-HUdn& HUdn::operator=(const HUdn& other)
-{
-    m_value = other.m_value;
-    return *this;
-}
-
-bool HUdn::isValid() const
-{
-    return !m_value.isNull();
-}
-
-QUuid HUdn::value() const
-{
-    return m_value;
 }
 
 QString HUdn::toString() const

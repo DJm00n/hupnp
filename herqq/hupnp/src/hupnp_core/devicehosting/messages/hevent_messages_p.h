@@ -57,10 +57,10 @@ class SubscribeRequest
 {
 private:
 
-    QList<QUrl> m_callbacks;
-    HTimeout    m_timeout;
-    HSid        m_sid;
-    QUrl        m_eventUrl;
+    QList<QUrl>    m_callbacks;
+    HTimeout       m_timeout;
+    HSid           m_sid;
+    QUrl           m_eventUrl;
     HProductTokens m_userAgent;
 
 public:
@@ -100,12 +100,20 @@ public:
 
     ~SubscribeRequest();
 
-    HNt nt() const;
-    QList<QUrl> callbacks() const;
-
-    inline bool isValid() const
+    inline HNt nt() const
     {
-        return !m_callbacks.isEmpty() || !m_sid.isNull();
+        return HNt(HNt::Type_UpnpEvent);
+    }
+
+    inline QList<QUrl> callbacks() const
+    {
+        return m_callbacks;
+    }
+
+    inline bool isValid(bool strict) const
+    {
+        return !m_callbacks.isEmpty() ||
+              (strict ? m_sid.isValid() : !m_sid.isEmpty());
     }
 
     inline HTimeout timeout() const
@@ -125,7 +133,7 @@ public:
 
     inline bool isRenewal() const
     {
-        return !m_sid.isNull();
+        return !m_sid.isEmpty();
     }
 
     inline HProductTokens userAgent() const
@@ -146,10 +154,10 @@ class SubscribeResponse
 {
 private:
 
-    HSid            m_sid;
-    HTimeout        m_timeout;
-    HProductTokens  m_server;
-    QDateTime       m_responseGenerated;
+    HSid           m_sid;
+    HTimeout       m_timeout;
+    HProductTokens m_server;
+    QDateTime      m_responseGenerated;
 
 public:
 
@@ -160,12 +168,30 @@ public:
 
     ~SubscribeResponse();
 
-    bool isValid() const;
+    inline bool isValid(bool strict) const
+    {
+        return strict ? m_sid.isValid() : !m_sid.isEmpty();
+    }
 
-    HTimeout       timeout() const;
-    HSid           sid    () const;
-    HProductTokens server () const;
-    QDateTime      responseGenerated() const;
+    inline HTimeout timeout() const
+    {
+        return m_timeout;
+    }
+
+    inline HSid sid() const
+    {
+        return m_sid;
+    }
+
+    inline HProductTokens server() const
+    {
+        return m_server;
+    }
+
+    inline QDateTime responseGenerated() const
+    {
+        return m_responseGenerated;
+    }
 };
 
 //
@@ -197,10 +223,20 @@ public:
 
     RetVal setContents(const QUrl& eventUrl, const QString& sid);
 
-    bool isValid()const;
+    inline bool isValid(bool strict)const
+    {
+        return strict ? m_sid.isValid() : !m_sid.isEmpty();
+    }
 
-    HSid sid() const;
-    QUrl eventUrl() const;
+    inline HSid sid() const
+    {
+        return m_sid;
+    }
+
+    inline QUrl eventUrl() const
+    {
+        return m_eventUrl;
+    }
 };
 
 //
@@ -244,15 +280,19 @@ public:
         const QString& nt, const QString& nts, const QString& sid,
         const QString& seq, const QString& contents);
 
-    inline bool isValid () const
+    inline bool isValid(bool strict) const
     {
-        return !m_sid.isNull();
+        return strict ? m_sid.isValid() : !m_sid.isEmpty();
         // if this is defined then everything else is defined as well
     }
 
     inline QUrl callback() const { return m_callback; }
 
-    HNt nt() const;
+    inline HNt nt() const
+    {
+        return HNt(HNt::Type_UpnpEvent, HNt::SubType_UpnpPropChange);
+    }
+
     inline HSid       sid      () const { return m_sid            ; }
     inline quint32    seq      () const { return m_seq            ; }
     inline QByteArray data     () const { return m_data           ; }

@@ -40,14 +40,13 @@
 
 #include "./../../socket/hendpoint.h"
 
-#include "./../../ssdp/husn.h"
 #include "./../../ssdp/hssdp.h"
 #include "./../../ssdp/hdiscovery_messages.h"
-#include "./../../ssdp/hresource_identifier.h"
 
 #include "./../../dataelements/hudn.h"
 #include "./../../dataelements/hdeviceinfo.h"
 #include "./../../dataelements/hproduct_tokens.h"
+#include "./../../dataelements/hresource_identifier.h"
 
 #include <QUrl>
 
@@ -66,7 +65,7 @@ class Announcement
 protected:
 
     HDeviceController* m_device;
-    HUsn m_usn;
+    HResourceIdentifier m_usn;
     QUrl m_location;
 
 public:
@@ -76,11 +75,12 @@ public:
     }
 
     Announcement(
-        HDeviceController* device, const HUsn& usn, const QUrl& location) :
+        HDeviceController* device, const HResourceIdentifier& usn,
+        const QUrl& location) :
             m_device(device), m_usn(usn), m_location(location)
     {
         Q_ASSERT(m_device);
-        Q_ASSERT(m_usn.isValid());
+        Q_ASSERT(m_usn.type() != HResourceIdentifier::Undefined);
         Q_ASSERT(m_location.isValid() && !m_location.isEmpty());
     }
 
@@ -102,12 +102,13 @@ public:
     }
 
     ResourceAvailableAnnouncement(
-        HDeviceController* device, const HUsn& usn, const QUrl& location) :
+        HDeviceController* device, const HResourceIdentifier& usn,
+        const QUrl& location) :
             Announcement(device, usn, location)
     {
     }
 
-    HResourceAvailable operator()()
+    HResourceAvailable operator()() const
     {
         HProductTokens pt = herqqProductTokens();
 
@@ -134,12 +135,12 @@ public:
     }
 
     ResourceUnavailableAnnouncement(
-        HDeviceController* device, const HUsn& usn, const QUrl& location) :
+        HDeviceController* device, const HResourceIdentifier& usn, const QUrl& location) :
             Announcement(device, usn, location)
     {
     }
 
-    HResourceUnavailable operator()()
+    HResourceUnavailable operator()() const
     {
         return HResourceUnavailable(
             m_usn,
@@ -191,10 +192,10 @@ public:
         QList<AnnouncementType>& announcements)
     {
         QList<QUrl> locations = rootDevice->m_device->locations(true);
-        foreach(QUrl location, locations)
+        foreach(const QUrl& location, locations)
         {
             HUdn udn(rootDevice->m_device->deviceInfo().udn());
-            HUsn usn(udn, HResourceIdentifier::getRootDeviceIdentifier());
+            HResourceIdentifier usn(udn, true);
 
             announcements.push_back(AnnouncementType(rootDevice, usn, location));
         }
@@ -208,25 +209,25 @@ public:
         HDeviceController* device, QList<AnnouncementType>& announcements)
     {
         QList<QUrl> locations = device->m_device->locations(true);
-        foreach(QUrl location, locations)
+        foreach(const QUrl& location, locations)
         {
             HDeviceInfo deviceInfo = device->m_device->deviceInfo();
 
             HUdn udn = deviceInfo.udn();
-            HUsn usn = udn;
+            HResourceIdentifier usn(udn);
 
             // device UDN advertisement
             announcements.push_back(AnnouncementType(device, usn, location));
 
             // device type advertisement
-            usn.setResource(deviceInfo.deviceType());
+            usn.setResourceType(deviceInfo.deviceType());
             announcements.push_back(AnnouncementType(device, usn, location));
 
             // service advertisements
             const QList<HServiceController*>* services = device->services();
             foreach(HServiceController* service, *services)
             {
-                usn.setResource(service->m_service->serviceType().toString());
+                usn.setResourceType(service->m_service->serviceType());
                 announcements.push_back(AnnouncementType(device, usn, location));
             }
         }
@@ -243,7 +244,7 @@ public:
     {
         for (quint32 i = 0; i < m_advertisementCount; ++i)
         {
-            foreach(AnnouncementType at, announcements)
+            foreach(const AnnouncementType& at, announcements)
             {
                 m_ssdp->announcePresence(at());
             }

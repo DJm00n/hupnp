@@ -171,10 +171,15 @@ public:
     {
         // either an exact match is searched, or the searched device type's version
         // is smaller or equals to the version number of the stored type.
-        return ExactMatch ? resType == m_resourceType :
-            resType.resourceUrn()     == m_resourceType.resourceUrn() &&
-            resType.type()            == m_resourceType.type() &&
-            resType.typeSuffix(false) == m_resourceType.typeSuffix(false) &&
+        if (ExactMatch)
+        {
+            return resType == m_resourceType;
+        }
+
+        HResourceType::Tokens tokens(HResourceType::All);
+        tokens ^= HResourceType::Version;
+
+        return resType.toString(tokens) == m_resourceType.toString(tokens) &&
             m_resourceType.version() <= resType.version();
     }
 

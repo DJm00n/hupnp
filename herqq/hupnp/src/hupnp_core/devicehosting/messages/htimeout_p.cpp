@@ -21,6 +21,8 @@
 
 #include "htimeout_p.h"
 
+#include <QString>
+
 namespace Herqq
 {
 
@@ -40,12 +42,12 @@ HTimeout::HTimeout(qint32 timeout) :
 HTimeout::HTimeout(const QString& timeout) :
     m_value(-1)
 {
-    if (timeout.compare("infinite", Qt::CaseInsensitive) != 0)
+    QString tmp(timeout.simplified());
+    if (tmp.compare("infinite", Qt::CaseInsensitive) != 0)
     {
-        QString tmp = timeout;
-        if (timeout.startsWith("Second-", Qt::CaseInsensitive))
+        if (tmp.startsWith("Second-", Qt::CaseInsensitive))
         {
-            tmp = timeout.mid(7);
+            tmp = tmp.mid(7);
         }
 
         bool ok = false;
@@ -83,7 +85,7 @@ QString HTimeout::toString() const
 
 bool operator==(const HTimeout& obj1, const HTimeout& obj2)
 {
-    return obj1.value() == obj2.value();
+    return obj1.m_value == obj2.m_value;
 }
 
 bool operator!=(const HTimeout& obj1, const HTimeout& obj2)

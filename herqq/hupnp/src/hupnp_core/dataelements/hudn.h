@@ -33,8 +33,9 @@ namespace Upnp
 {
 
 /*!
- * A class used to depict a <em>Unique Device Name</em> (UDN), which is a unique device identifier
- * that has to remain the same over time for a specific device instance.
+ * A class used to depict a <em>Unique Device Name</em> (UDN), which is a
+ * unique device identifier that has to remain the same over time for a
+ * specific device instance.
  *
  * A valid UDN follows the format \c "uuid:"+"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
  * where the five hex fields form up a valid UUID.
@@ -71,7 +72,7 @@ public:
      *
      * \sa isValid
      */
-    HUdn (const QUuid& value);
+    explicit HUdn(const QUuid& value);
 
     /*!
      * Constructs a new instance based on the provided value.
@@ -87,17 +88,7 @@ public:
      *
      * \sa isValid
      */
-    HUdn (const QString& value);
-
-    /*!
-     * Constructs a copy of the other object.
-     */
-    HUdn(const HUdn& other);
-
-    /*!
-     * Assignment operator.
-     */
-    HUdn& operator=(const HUdn&);
+    explicit HUdn(const QString& value);
 
     /*!
      * Destroys the instance.
@@ -109,14 +100,14 @@ public:
      *
      * \return true in case the UDN is defined.
      */
-    bool isValid() const;
+    inline bool isValid() const { return !m_value.isNull(); }
 
     /*!
      * Returns the UUID component of the UDN.
      *
      * \return the UUID component of the UDN.
      */
-    QUuid value() const;
+    inline QUuid value() const { return m_value; }
 
     /*!
      * Returns the complete UDN value.

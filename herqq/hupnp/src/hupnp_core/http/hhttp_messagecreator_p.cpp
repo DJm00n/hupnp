@@ -274,7 +274,7 @@ QByteArray HHttpMessageCreator::createResponse(
 QByteArray HHttpMessageCreator::create(
     const NotifyRequest& req, MessagingInfo& mi)
 {
-    Q_ASSERT(req.isValid());
+    Q_ASSERT(req.isValid(true));
 
     QHttpRequestHeader reqHdr;
     reqHdr.setContentType("Content-type: text/xml; charset=\"utf-8\"");
@@ -295,7 +295,7 @@ QByteArray HHttpMessageCreator::create(
 QByteArray HHttpMessageCreator::create(
     const SubscribeRequest& req, MessagingInfo& mi)
 {
-    Q_ASSERT(req.isValid());
+    Q_ASSERT(req.isValid(false));
 
     QHttpRequestHeader requestHdr(
         "SUBSCRIBE", extractRequestPart(req.eventUrl()));
@@ -322,7 +322,7 @@ QByteArray HHttpMessageCreator::create(
 QByteArray HHttpMessageCreator::create(
     const UnsubscribeRequest& req, MessagingInfo& mi)
 {
-    Q_ASSERT(req.isValid());
+    Q_ASSERT(req.isValid(false));
 
     QHttpRequestHeader requestHdr(
         "UNSUBSCRIBE", extractRequestPart(req.eventUrl()));
@@ -337,7 +337,7 @@ QByteArray HHttpMessageCreator::create(
 QByteArray HHttpMessageCreator::create(
     const SubscribeResponse& response, MessagingInfo& mi)
 {
-    Q_ASSERT(response.isValid());
+    Q_ASSERT(response.isValid(true));
 
     QHttpResponseHeader responseHdr(200, "OK");
     responseHdr.setContentLength(0);
@@ -491,8 +491,8 @@ bool HHttpMessageCreator::create(
     QDateTime date    =
         QDateTime::fromString(respHdr.value("DATE"), HHttpUtils::rfc1123DateFormat());
 
-    resp = SubscribeResponse(sid, server, timeout, date);
-    return resp.isValid();
+    resp = SubscribeResponse(sid, HProductTokens(server), timeout, date);
+    return resp.isValid(false);
 }
 
 }

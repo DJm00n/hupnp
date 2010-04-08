@@ -67,9 +67,9 @@ public:
 
     HNt ();
 
-    explicit HNt (const QString& type);
-    explicit HNt (const QString& type, const QString& subTybe);
-    explicit HNt (Type type);
+    explicit HNt(const QString& type);
+    explicit HNt(const QString& type, const QString& subTybe);
+    explicit HNt(Type type);
 
     HNt(Type type, SubType subType);
 

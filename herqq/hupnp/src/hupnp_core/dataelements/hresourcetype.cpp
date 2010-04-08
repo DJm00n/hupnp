@@ -31,13 +31,15 @@ namespace Upnp
 {
 
 HResourceType::HResourceType() :
-    m_resourceElements()
+    m_type(Undefined), m_resourceElements()
 {
 }
 
 HResourceType::HResourceType(const QString& resourceTypeAsStr) :
-    m_resourceElements()
+    m_type(Undefined), m_resourceElements()
 {
+    qint32 flags = 0;
+
     QStringList tmp = resourceTypeAsStr.simplified().split(":");
     if (tmp.size() != 5)
     {
@@ -49,17 +51,65 @@ HResourceType::HResourceType(const QString& resourceTypeAsStr) :
         return;
     }
 
+    tmp[1] = tmp[1].simplified();
+    if (tmp[1].isEmpty())
+    {
+        return;
+    }
+    if (tmp[1].compare("schemas-upnp-org") != 0)
+    {
+        flags = 0x01;
+        tmp[1] = tmp[1].replace('.', '-');
+    }
+    else
+    {
+        flags = 0x02;
+    }
+
+    tmp[2] = tmp[2].simplified();
+    if (tmp[2].compare("device") == 0)
+    {
+        flags |= 0x04;
+    }
+    else if (tmp[2].compare("service") == 0)
+    {
+        flags |= 0x08;
+    }
+    else
+    {
+        return;
+    }
+
+    tmp[3] = tmp[3].simplified();
+    if (tmp[3].isEmpty())
+    {
+        return;
+    }
+
     bool ok = false;
     tmp[4].toInt(&ok);
-
     if (!ok)
     {
         return;
     }
 
-    if (tmp[1] != "schemas-upnp-org")
+    switch(flags)
     {
-        tmp[1] = tmp[1].replace('.', '-');
+    case 0x05:
+        m_type = VendorSpecifiedDeviceType;
+        break;
+    case 0x06:
+        m_type = StandardDeviceType;
+        break;
+    case 0x09:
+        m_type = VendorSpecifiedServiceType;
+        break;
+    case 0x0a:
+        m_type = StandardServiceType;
+        break;
+    default:
+        Q_ASSERT(false);
+        return;
     }
 
     m_resourceElements = tmp;
@@ -69,22 +119,7 @@ HResourceType::~HResourceType()
 {
 }
 
-bool HResourceType::isValid() const
-{
-    return !m_resourceElements.isEmpty();
-}
-
-bool HResourceType::isStandardType() const
-{
-    if (!isValid())
-    {
-        return false;
-    }
-
-    return m_resourceElements[1] == "schemas-upnp-org";
-}
-
-QString HResourceType::resourceUrn(bool completeUrn) const
+QString HResourceType::toString(Tokens tokens) const
 {
     if (!isValid())
     {
@@ -92,58 +127,39 @@ QString HResourceType::resourceUrn(bool completeUrn) const
     }
 
     QString retVal;
-    if (completeUrn)
+    bool appendDelim = false;
+    if (tokens & UrnPrefix)
     {
         retVal.append("urn:");
     }
 
-    retVal.append(m_resourceElements[1]);
+    if (tokens & Domain)
+    {
+        retVal.append(m_resourceElements[1]);
+        appendDelim = true;
+    }
+
+    if (tokens & Type)
+    {
+        if (appendDelim) { retVal.append(':'); }
+        retVal.append(m_resourceElements[2]);
+        appendDelim = true;
+    }
+
+    if (tokens & TypeSuffix)
+    {
+        if (appendDelim) { retVal.append(':'); }
+        retVal.append(m_resourceElements[3]);
+        appendDelim = true;
+    }
+
+    if (tokens & Version)
+    {
+        if (appendDelim) { retVal.append(':'); }
+        retVal.append(m_resourceElements[4]);
+    }
 
     return retVal;
-}
-
-QString HResourceType::type() const
-{
-    if (!isValid())
-    {
-        return QString();
-    }
-
-    return m_resourceElements[2];
-}
-
-QString HResourceType::completeType(bool includeVersion) const
-{
-    if (!isValid())
-    {
-        return QString();
-    }
-
-    return type().append(":").append(typeSuffix(includeVersion));
-}
-
-QString HResourceType::completeTypeWithUrn(bool includeVersion) const
-{
-    if (!isValid())
-    {
-        return QString();
-    }
-
-    return resourceUrn(true).append(':').append(completeType(includeVersion));
-}
-
-QString HResourceType::typeSuffix(bool includeVersion) const
-{
-    if (!isValid())
-    {
-        return QString();
-    }
-
-    return includeVersion ?
-        QString("%1:%2").arg(
-            m_resourceElements[3],
-            m_resourceElements[4]) :
-                m_resourceElements[3];
 }
 
 qint32 HResourceType::version() const
@@ -156,14 +172,9 @@ qint32 HResourceType::version() const
     return m_resourceElements[4].toInt();
 }
 
-QString HResourceType::toString() const
-{
-    return m_resourceElements.join(":");
-}
-
 bool operator==(const HResourceType& arg1, const HResourceType& arg2)
 {
-    return arg1.toString() == arg2.toString();
+    return arg1.m_resourceElements == arg2.m_resourceElements;
 }
 
 bool operator!=(const HResourceType& arg1, const HResourceType& arg2)

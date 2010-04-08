@@ -657,9 +657,10 @@ HHttpHandler::ReturnValue HHttpHandler::send(
     return send(mi, HHttpMessageCreator::createResponse(sc, mi, data, ct));
 }
 
-HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const SubscribeRequest& request)
+HHttpHandler::ReturnValue HHttpHandler::send(
+    MessagingInfo& mi, const SubscribeRequest& request)
 {
-    Q_ASSERT(request.isValid());
+    Q_ASSERT(request.isValid(false));
 
     QByteArray data = HHttpMessageCreator::create(request, mi);
     return send(mi, data);
@@ -669,23 +670,25 @@ HHttpHandler::ReturnValue HHttpHandler::send(
     MessagingInfo& mi, const SubscribeResponse& response)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    Q_ASSERT(response.isValid());
+    Q_ASSERT(response.isValid(true));
 
     QByteArray data = HHttpMessageCreator::create(response, mi);
     return send(mi, data);
 }
 
-HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const UnsubscribeRequest& req)
+HHttpHandler::ReturnValue HHttpHandler::send(
+    MessagingInfo& mi, const UnsubscribeRequest& req)
 {
-    Q_ASSERT(req.isValid());
+    Q_ASSERT(req.isValid(false));
 
     QByteArray data = HHttpMessageCreator::create(req, mi);
     return send(mi, data);
 }
 
-HHttpHandler::ReturnValue HHttpHandler::send(MessagingInfo& mi, const NotifyRequest& req)
+HHttpHandler::ReturnValue HHttpHandler::send(
+    MessagingInfo& mi, const NotifyRequest& req)
 {
-    Q_ASSERT(req.isValid());
+    Q_ASSERT(req.isValid(true));
 
     QByteArray data = HHttpMessageCreator::create(req, mi);
     return send(mi, data);
@@ -891,7 +894,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 HHttpHandler::ReturnValue HHttpHandler::msgIO(
     MessagingInfo& mi, const UnsubscribeRequest& request)
 {
-    Q_ASSERT(request.isValid());
+    Q_ASSERT(request.isValid(false));
 
     ReturnValue rv = send(mi, HHttpMessageCreator::create(request, mi));
     if (rv != Success)

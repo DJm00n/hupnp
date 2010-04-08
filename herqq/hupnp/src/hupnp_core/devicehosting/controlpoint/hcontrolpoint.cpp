@@ -29,12 +29,12 @@
 #include "./../hobjectcreator_p.h"
 #include "./../../general/hupnp_global_p.h"
 #include "./../../devicemodel/hservice_p.h"
-#include "./../../dataelements/hdeviceinfo.h"
-#include "./../../dataelements/hproduct_tokens.h"
 #include "./../../datatypes/hdatatype_mappings_p.h"
 
-#include "./../../ssdp/husn.h"
-#include "./../../ssdp/hresource_identifier.h"
+#include "./../../dataelements/hdeviceinfo.h"
+#include "./../../dataelements/hproduct_tokens.h"
+#include "./../../dataelements/hresource_identifier.h"
+
 #include "./../../http/hhttp_messagecreator_p.h"
 
 #include "./../../../utils/hlogger_p.h"
@@ -319,7 +319,7 @@ bool HControlPointPrivate::processDeviceOffline(
     }
 
     HLOG_INFO(QString("Resource [%1] is unavailable.").arg(
-        msg.usn().resource().toString()));
+        msg.usn().resourceType().toString()));
 
     // according to the UDA v1.1 specification, if a bye bye message of any kind
     // is received, the control point can assume that nothing in that
@@ -420,7 +420,7 @@ bool HControlPointPrivate::processDeviceDiscovery(
     HLOG_INFO(QString(
         "New resource [%1] is available @ [%2]. "
         "Attempting to build the device model.").arg(
-            msg.usn().resource().toString(), msg.location().toString()));
+            msg.usn().resourceType().toString(), msg.location().toString()));
 
     m_threadPool->start(newBuildTask);
 
@@ -621,7 +621,7 @@ HControlPoint::DeviceDiscoveryAction HControlPoint::acceptRootDevice(
 }
 
 bool HControlPoint::acceptResourceAd(
-    const HUsn& /*usn*/, const HEndpoint& /*source*/)
+    const HResourceIdentifier& /*usn*/, const HEndpoint& /*source*/)
 {
     return true;
 }
@@ -707,7 +707,9 @@ HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
 
         h_ptr->m_ssdp->sendDiscoveryRequest(
             HDiscoveryRequest(
-                1, HResourceIdentifier::getRootDeviceIdentifier(), herqqProductTokens()));
+                1,
+                HResourceIdentifier::createRootDeviceIdentifier(),
+                herqqProductTokens()));
 
         h_ptr->setState(HAbstractHostPrivate::Initialized);
     }

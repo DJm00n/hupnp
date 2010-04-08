@@ -39,13 +39,13 @@ namespace Upnp
  *******************************************************************************/
 namespace
 {
-bool isValidCallback(const QUrl& callback)
+inline bool isValidCallback(const QUrl& callback)
 {
     return callback.isValid() && !callback.isEmpty() &&
            callback.scheme() == "http" && !(QHostAddress(callback.host()).isNull());
 }
 
-bool isValidEventUrl(const QUrl& eventUrl)
+inline bool isValidEventUrl(const QUrl& eventUrl)
 {
     return eventUrl.isValid() && !eventUrl.isEmpty() &&
         !(QHostAddress(eventUrl.host()).isNull());
@@ -68,9 +68,9 @@ SubscribeRequest::SubscribeRequest(
         HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
         return;
     }
-    else if (sid.isNull())
+    else if (sid.isEmpty())
     {
-        HLOG_WARN("Null SID");
+        HLOG_WARN("Empty SID");
         return;
     }
 
@@ -85,6 +85,7 @@ SubscribeRequest::SubscribeRequest(
         m_callbacks (), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
 {
     HLOG(H_AT, H_FUN);
+
     if (!isValidEventUrl(eventUrl))
     {
         HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
@@ -106,21 +107,21 @@ SubscribeRequest::SubscribeRequest(
 SubscribeRequest::SubscribeRequest(
     const QUrl& eventUrl, const HProductTokens& userAgent,
     const QList<QUrl>& callbacks, const HTimeout& timeout) :
-        m_callbacks (callbacks), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
+        m_callbacks(), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
 {
     HLOG(H_AT, H_FUN);
+
     if (!isValidEventUrl(eventUrl))
     {
         HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
         return;
     }
 
-    Q_ASSERT(!callbacks.isEmpty());
-
-    foreach(QUrl callback, callbacks)
+    foreach(const QUrl& callback, callbacks)
     {
-        if (isValidCallback(callback))
+        if (!isValidCallback(callback))
         {
+            HLOG_WARN(QString("Invalid callback: [%1]").arg(callback.toString()));
             return;
         }
     }
@@ -139,7 +140,6 @@ namespace
 {
 QList<QUrl> parseCallbacks(const QString& arg)
 {
-    HLOG(H_AT, H_FUN);
     QList<QUrl> retVal;
 
     QStringList callbacks =
@@ -165,7 +165,8 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
     const QString& callback, const QString& timeout, const QString& userAgent)
 {
     HLOG(H_AT, H_FUN);
-    // these have to be properly defined no matter what
+
+    // this has to be properly defined no matter what
     if (!isValidEventUrl(eventUrl))
     {
         HLOG_WARN(QString("Invalid eventURL: [%1]").arg(eventUrl.toString()));
@@ -178,7 +179,7 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
     tmp.m_eventUrl = eventUrl;
     tmp.m_timeout  = timeout;
 
-    if (!HSid(sid).isNull())
+    if (!HSid(sid).isEmpty())
     {
         // this appears to be a renewal, confirm.
         if (!callback.isEmpty() || !nt.isEmpty())
@@ -194,7 +195,7 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
 
     // this appears to be an initial subscription
 
-    if (nt.compare("upnp:event", Qt::CaseInsensitive) != 0)
+    if (nt.simplified().compare("upnp:event", Qt::CaseInsensitive) != 0)
     {
         return PreConditionFailed;
     }
@@ -205,20 +206,10 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
         return PreConditionFailed;
     }
 
-    tmp.m_userAgent = userAgent;
+    tmp.m_userAgent = HProductTokens(userAgent);
 
     *this = tmp;
     return Success;
-}
-
-HNt SubscribeRequest::nt() const
-{
-    return HNt(HNt::Type_UpnpEvent);
-}
-
-QList<QUrl> SubscribeRequest::callbacks() const
-{
-    return m_callbacks;
 }
 
 /*******************************************************************************
@@ -235,7 +226,7 @@ SubscribeResponse::SubscribeResponse(
         m_sid(sid), m_timeout(timeout), m_server(server),
         m_responseGenerated(responseGenerated)
 {
-    if (m_sid.isNull())
+    if (m_sid.isEmpty())
     {
         *this = SubscribeResponse();
     }
@@ -243,31 +234,6 @@ SubscribeResponse::SubscribeResponse(
 
 SubscribeResponse::~SubscribeResponse()
 {
-}
-
-HTimeout SubscribeResponse::timeout() const
-{
-    return m_timeout;
-}
-
-HSid SubscribeResponse::sid() const
-{
-    return m_sid;
-}
-
-bool SubscribeResponse::isValid() const
-{
-    return !m_sid.isNull();
-}
-
-HProductTokens SubscribeResponse::server() const
-{
-    return m_server;
-}
-
-QDateTime SubscribeResponse::responseGenerated() const
-{
-    return m_responseGenerated;
 }
 
 /*******************************************************************************
@@ -281,8 +247,7 @@ UnsubscribeRequest::UnsubscribeRequest() :
 UnsubscribeRequest::UnsubscribeRequest(const QUrl& eventUrl, const HSid& sid) :
     m_eventUrl(), m_sid()
 {
-    HLOG(H_AT, H_FUN);
-    if (sid.isNull() || !isValidEventUrl(eventUrl))
+    if (sid.isEmpty() || !isValidEventUrl(eventUrl))
     {
         return;
     }
@@ -298,13 +263,12 @@ UnsubscribeRequest::~UnsubscribeRequest()
 UnsubscribeRequest::RetVal UnsubscribeRequest::setContents(
     const QUrl& eventUrl, const QString& sid)
 {
-    HLOG(H_AT, H_FUN);
     UnsubscribeRequest tmp;
 
     tmp.m_sid = sid;
     tmp.m_eventUrl = eventUrl;
 
-    if (tmp.m_sid.isNull())
+    if (tmp.m_sid.isEmpty())
     {
         return PreConditionFailed;
     }
@@ -317,21 +281,6 @@ UnsubscribeRequest::RetVal UnsubscribeRequest::setContents(
     return Success;
 }
 
-bool UnsubscribeRequest::isValid() const
-{
-    return !m_sid.isNull();
-}
-
-HSid UnsubscribeRequest::sid() const
-{
-    return m_sid;
-}
-
-QUrl UnsubscribeRequest::eventUrl() const
-{
-    return m_eventUrl;
-}
-
 /*******************************************************************************
  * NotifyRequest
  *******************************************************************************/
@@ -341,6 +290,7 @@ NotifyRequest::RetVal parseData(
     const QByteArray& data, QList<QPair<QString, QString> >& parsedData)
 {
     HLOG(H_AT, H_FUN);
+
     QDomDocument dd;
     if (!dd.setContent(data, true))
     {
@@ -403,8 +353,7 @@ NotifyRequest::NotifyRequest(
 {
     HLOG(H_AT, H_FUN);
 
-    if (!isValidCallback(callback) ||
-        sid.isNull() || contents.isEmpty())
+    if (!isValidCallback(callback) || sid.isEmpty() || contents.isEmpty())
     {
         return;
     }
@@ -447,7 +396,7 @@ NotifyRequest::RetVal NotifyRequest::setContents(
     }
 
     tmp.m_sid = sid;
-    if (tmp.m_sid.isNull())
+    if (tmp.m_sid.isEmpty())
     {
         return PreConditionFailed;
     }
@@ -471,11 +420,6 @@ NotifyRequest::RetVal NotifyRequest::setContents(
 
     *this = tmp;
     return Success;
-}
-
-HNt NotifyRequest::nt() const
-{
-    return HNt(HNt::Type_UpnpEvent, HNt::SubType_UpnpPropChange);
 }
 
 }

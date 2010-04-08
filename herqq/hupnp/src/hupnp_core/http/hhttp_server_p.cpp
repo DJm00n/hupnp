@@ -442,13 +442,13 @@ bool HHttpServer::listen()
             "The HTTP Server has to be shutdown in the thread in which it is currently located.");
 
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
-    foreach (QNetworkInterface iface, interfaces)
+    foreach (const QNetworkInterface& iface, interfaces)
     {
         if (iface.flags() & QNetworkInterface::IsUp &&
           !(iface.flags() & QNetworkInterface::IsLoopBack))
         {
             QList<QNetworkAddressEntry> entries = iface.addressEntries();
-            foreach(QNetworkAddressEntry entry, entries)
+            foreach(const QNetworkAddressEntry& entry, entries)
             {
                 if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol)
                 {

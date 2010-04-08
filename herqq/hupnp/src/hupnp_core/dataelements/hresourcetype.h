@@ -40,16 +40,18 @@ class HResourceTypePrivate;
  *
  * Both UPnP device and service descriptions use the \em type concept to a give the
  * corresponding device or service context that can be used in identification.
- * In device descriptions, the device type is specified following the format
+ * In device descriptions the device type is specified following the format
  * \verbatim urn:schemas-upnp-org:device:deviceType:ver \endverbatim  or
- * \verbatim urn:domain-name:device:deviceType:ver \endverbatim in case of a vendor defined type.
+ * \verbatim urn:domain-name:device:deviceType:ver \endverbatim in case of a
+ * vendor defined type.
  *
- * In service descriptions, the service type is specified as
+ * In service descriptions the service type is specified as
  * \verbatim urn:schemas-upnp-org:service:serviceType:ver \endverbatim  or
- * \verbatim urn:domain-name:service:serviceType:ver \endverbatim in case of a vendor defined type.
+ * \verbatim urn:domain-name:service:serviceType:ver \endverbatim in case of a
+ * vendor defined type.
  *
- * For more information, see the <em>device type</em> and <em>service type</em> definitions
- * in UDA v1.1 at pages 44 and 46, respectively.
+ * For more information, see the <em>device type</em> and <em>service type</em>
+ * definitions in UDA v1.1 at pages 44 and 46, respectively.
  *
  * This class abstracts the above service and device type concepts to a \em resource
  * and helps in handling the various elements of a <em>resource type</em>.
@@ -62,8 +64,47 @@ class HResourceTypePrivate;
  */
 class H_UPNP_CORE_EXPORT HResourceType
 {
+friend H_UPNP_CORE_EXPORT bool operator==(
+    const HResourceType&, const HResourceType&);
+
+public:
+
+    /*!
+     * Specifies the type of the resource. See UPnP v1.1 Device Architecture
+     * specification for more information.
+     */
+    enum Type
+    {
+        /*!
+         * No resource defined. This is used when the object is constructed using
+         * the default constructor.
+         */
+        Undefined = 0,
+
+        /*!
+         * The resource is urn:schemas-upnp-org:device:deviceType:ver.
+         */
+        StandardDeviceType,
+
+        /*!
+         * The resource is urn:schemas-upnp-org:service:serviceType:ver.
+         */
+        StandardServiceType,
+
+        /*!
+         * The resource is urn:domain-name:device:deviceType:ver.
+         */
+        VendorSpecifiedDeviceType,
+
+        /*!
+         * The resource is urn:domain-name:service:serviceType:ver.
+         */
+        VendorSpecifiedServiceType
+    };
+
 private:
 
+    Type m_type;
     QStringList m_resourceElements;
 
 public:
@@ -97,7 +138,7 @@ public:
      *
      * \sa isValid()
      */
-    HResourceType(const QString& resourceTypeAsStr);
+    explicit HResourceType(const QString& resourceTypeAsStr);
 
     /*!
      * Destroys the instance.
@@ -105,101 +146,114 @@ public:
     ~HResourceType();
 
     /*!
+     * Returns the type of the resource.
+     *
+     * \return the type of the resource.
+     */
+    inline Type type() const { return m_type; }
+
+    /*!
      * Indicates if the object is valid.
      *
-     * \returns true in case the object represents a valid resource type.
+     * This method is provided for convenience. It simply checks if the
+     * type() is HResourceType::Undefined.
+     *
+     * \returns \e true in case the object represents a valid resource type.
      */
-    bool isValid() const;
+    inline bool isValid() const { return m_type != Undefined; }
+
+    /*!
+     * Indicates whether or not the resource type is a device type.
+     *
+     * This method is provided for convenience. It checks if the type
+     * is either HResourceType::StandardDeviceType or
+     * HResourceType::VendorSpecifiedDeviceType.
+     *
+     * \return \e true in case the resource type is a device type.
+     */
+    inline bool isDeviceType() const
+    {
+        return m_type == StandardDeviceType ||
+               m_type == VendorSpecifiedDeviceType;
+    }
+
+    /*!
+     * Indicates whether or not the resource type is a service type.
+     *
+     * This method is provided for convenience. It checks if the type
+     * is either HResourceType::StandardServiceType or
+     * HResourceType::VendorSpecifiedServiceType.
+     *
+     * \return \e true in case the resource type is a service type.
+     */
+    inline bool isServiceType() const
+    {
+        return m_type == StandardServiceType ||
+               m_type == VendorSpecifiedServiceType;
+    }
 
     /*!
      * Indicates whether or not the resource type is a standard type defined
      * by the UPnP forum.
      *
+     * This method is provided for convenience. It checks if the type
+     * is either HResourceType::StandardDeviceType or
+     * HResourceType::StandardServiceType.
+     *
      * \retval true in case the resource type is defined by the UPnP forum.
      * \retval false in case the resource type is vendor defined.
      */
-    bool isStandardType() const;
+    inline bool isStandardType() const
+    {
+        return m_type == StandardDeviceType ||
+               m_type == StandardServiceType;
+    }
 
     /*!
-     * Returns the resource URN.
-     *
-     * \param completeUrn specifies whether or not the prefix \c urn is returned
-     * as well. If the argument is false, only the actual URN is returned. i.e
-     * if the resource type is defined as <c>urn:schemas-upnp-org:device:deviceType:ver</c>
-     * only <c>schemas-upnp-org</c> is returned.
-     *
-     * \returns the resource URN if the object is valid. Otherwise an empty
-     * string is returned.
-     *
-     * \sa isValid()
+     * Enumeration that specifies the tokens or parts of a resource type.
+     * For instance, if the resource type
+     * is defined as <c>urn:schemas-upnp-org:device:deviceType:ver</c> then
+     * the tokens are the parts separated by colons.
      */
-    QString resourceUrn(bool completeUrn = true) const;
+    enum Token
+    {
+        /*!
+         * This is a special value used to denote "no tokens".
+         */
+        None = 0x00,
 
-    /*!
-     * Returns the type identifier of the resource.
-     *
-     * \returns the type identifier of the resource if the object is valid. For instance, if the
-     * resource type is defined as <c>urn:schemas-upnp-org:device:deviceType:ver</c>,
-     * the resource type identifier and thus the value returned is \c "device".
-     * Otherwise an empty string is returned.
-     *
-     * \sa isValid()
-     */
-    QString type() const;
+        /*!
+         * The "urn:" token.
+         */
+        UrnPrefix = 0x01,
 
-    /*!
-     * Returns the type suffix of the resource.
-     *
-     * \param includeVersion specifies whether or not the \em version of the resource is included
-     * in the return value.
-     *
-     * \return the type suffix of the resource if the object is valid. For instance, if the
-     * resource type is defined as <c>urn:schemas-upnp-org:device:deviceType:ver</c>,
-     * the <em>resource type suffix</em> and thus the value returned is either
-     * <c>deviceType:ver</c> or <c>deviceType</c> depending on whether the
-     * version information if included. If the object is invalid, an empty string is returned.
-     *
-     * \sa isValid()
-     */
-    QString typeSuffix(bool includeVersion = true) const;
+        /*!
+         * The domain token, e.g. "schemas-upnp-org".
+         */
+        Domain = 0x02,
 
-    /*!
-     * Returns the <em>type identifier</em> and the <em>type suffix</em> as they appear in the
-     * specified resource.
-     *
-     * \param includeVersion specifies whether or not to include the
-     * <em>version number</em> after the \em type.
-     *
-     * \return the <em>type identifier</em> and the <em>type suffix</em> as they appear in the
-     * specified resource if the object is valid. For instance, if the
-     * <em>complete resource type</em> with URN is defined as <c>urn:schemas-upnp-org:device:deviceType:ver</c>,
-     * the value returned is either <c>device:deviceType:ver</c> or <c>device:deviceType</c>,
-     * depending on whether or not the version information is included.
-     * If the object is invalid, an empty string is returned.
-     *
-     * \sa isValid()
-     */
-    QString completeType(bool includeVersion = true) const;
+        /*!
+         * The type of the resource, e.g. "device" or "service".
+         */
+        Type = 0x04,
 
-    /*!
-     * Returns the type identifier and the type suffix as they appear in the
-     * specified resource prefixed with the URN to which the type belongs.
-     *
-     * \param includeVersion specifies whether or not to include the
-     * <em>version number</em> after the \em type.
-     *
-     * \return the <em>resource URN</em>, <em>type identifier</em> and the
-     * <em>type suffix</em> as they appear in the
-     * specified resource if the object is valid. For instance, if the
-     * resource type is defined as <c>urn:schemas-upnp-org:device:deviceType:ver</c>,
-     * the value returned is either <c>urn:schemas-upnp-org:device:deviceType:ver</c>,
-     * or <c>urn:schemas-upnp-org:device:deviceType</c>,
-     * depending on whether or not the version information is included.
-     * If the object is invalid, an empty string is returned.
-     *
-     * \sa isValid()
-     */
-    QString completeTypeWithUrn(bool includeVersion = true) const;
+        /*!
+         * The \e type \e suffix of the resource, e.g. "deviceType" or "serviceType".
+         */
+        TypeSuffix = 0x08,
+
+        /*!
+         * The version of the resource type. Most commonly this is an integer.
+         */
+        Version = 0x10,
+
+        /*!
+         * This is a special value used to denote "all tokens".
+         */
+        All = 0x1f
+    };
+
+    Q_DECLARE_FLAGS(Tokens, Token);
 
     /*!
      * Returns the version of the resource type.
@@ -214,10 +268,24 @@ public:
     /*!
      * Returns a string representation of the object.
      *
-     * \return a string representation of the object. This is the same as calling
-     * completeTypeWithUrn() with argument \c true.
+     * A resource type can be broken into 5 tokens, which are depicted in the
+     * Token enum. This function is used to retrieve an arbitrary combination
+     * of these tokens as a string. For instance, if you would like to retrieve
+     * the resource type, resource type suffix and the version as a string
+     * you would issue:
+     *
+     * \code
+     * QString retVal = tokens(
+     *     HResourceType::Type | HResourceType::TypeSuffix | HResourceType::Version);
+     * \endcode
+     *
+     * \return a string representation of the object as defined by the provided
+     * tokens if the object is valid. Otherwise an empty string is returned.
+     *
+     * \remarks
+     * By default the contents of the object are returned in full.
      */
-    QString toString() const;
+    QString toString(Tokens tokens=All) const;
 };
 
 /*!
@@ -250,6 +318,8 @@ H_UPNP_CORE_EXPORT bool operator!=(const HResourceType&, const HResourceType&);
  * \relates HResourceType
  */
 H_UPNP_CORE_EXPORT quint32 qHash(const HResourceType& key);
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(HResourceType::Tokens)
 
 }
 }

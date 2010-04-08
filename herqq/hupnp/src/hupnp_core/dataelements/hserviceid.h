@@ -42,20 +42,26 @@ class HServiceIdPrivate;
  * \verbatim urn:upnp-org:serviceId:serviceID \endverbatim
  *
  * In the above format, only the tailing \e serviceID varies.
- * Every service identifier of a standard service type has to begin with <c>urn:upnp-org:serviceId:</c>.
+ * Every service identifier of a standard service type has to begin with
+ * <c>urn:upnp-org:serviceId:</c>.
  *
  * With a vendor defined service the format for a service identifier is:
  * \verbatim urn:domain-name:serviceId:serviceID \endverbatim
  *
- * Note, that according to the UDA: <em>Period characters in the Vendor Domain Name
+ * Note, according to the UDA specification <em>Period characters in the Vendor Domain Name
  * MUST be replaced with hyphens in accordance with RFC 2141</em>.
  *
  * In both formats, the last \e serviceID component is the
  * <em>service identifier suffix</em>.
  *
+ * \note
+ * For interoperability reasons the class does not enforce the prefix prior
+ * to the actual \c serviceID to be exactly as defined in the UDA. However, you can call
+ * isValid(true) to check if the instance contains strictly valid information.
+ *
  * \headerfile hserviceid.h HServiceId
  *
- * \remark this class is not thread-safe.
+ * \remarks this class provides an assignment operator that is not thread-safe.
  *
  * \ingroup dataelements
  */
@@ -70,7 +76,8 @@ public:
     /*!
      * Constructs a new, empty instance.
      *
-     * Instance created by this constructor is not valid, i.e. isValid() will return false.
+     * Instance created by this constructor is not valid, i.e. isValid()
+     * will return false.
      *
      * \sa isValid
      */
@@ -80,14 +87,22 @@ public:
      * Constructs a new instance.
      *
      * \param serviceId specifies the contents of the object. If the provided
-     * argument is invalid, an empty instance is created. The parameter has to
-     * follow either of the formats:
+     * argument is invalid, an empty instance is created. For an object
+     * to be strictly valid the parameter has to follow either of the formats
+     * exactly:
      *
      * \li <c>urn:upnp-org:serviceId:serviceID</c> for service identifiers
      * belonging to a standard <em>service type</em>.
      *
      * \li <c>urn:domain-name:serviceId:serviceID</c> for service identifiers
      * belonging to a vendor defined <em>service type</em>.
+     *
+     * The postfix serviceID is the <em>service identifier suffix</em>.
+     *
+     * \note a valid object will be constructed when the specified string contains
+     * the following tokens separated by a colon:
+     * "urn", "domain-name", "some string" and "some string".
+     * Case sensitivity is forced only when checking for strict validity.
      *
      * \sa isValid()
      */
@@ -117,17 +132,23 @@ public:
     /*!
      * Indicates if the service identifier is properly defined.
      *
-     * \return true in case the service identifier is valid.
+     * \param strict specifies whether the contents of the object are checked
+     * for strict validity. Only an object that is strictly valid contains information
+     * as defined in the UDA.
+     *
+     * \return \e true in case the object is considered valid in terms
+     * of the requested strictness.
      */
-    bool isValid() const;
+    bool isValid(bool strict) const;
 
     /*!
-     * Indicates whether the service identifier belongs to a standard service type defined
-     * by the UPnP forum or to a vendor defined service.
+     * Indicates whether the service identifier belongs to a standard service
+     * type defined by the UPnP forum or to a vendor defined service.
      *
-     * \retval true in case the service identifier belongs to a standard service type defined by the UPnP forum.
-     * \retval false in case the service identifier belongs to a vendor defined service type or
-     * the object is invalid.
+     * \retval true in case the service identifier belongs to a standard service
+     * type defined by the UPnP forum.
+     * \retval false in case the service identifier belongs to a vendor
+     * defined service type or the object is invalid.
      *
      * \sa isValid()
      */

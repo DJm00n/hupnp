@@ -23,6 +23,7 @@
 #define HSID_H_
 
 #include <QUuid>
+#include <QString>
 
 //
 // !! Warning !!
@@ -39,44 +40,56 @@ namespace Upnp
 {
 
 //
-//
-//
+// Implementation note: this class cannot enforce the requirement of a valid UUID,
+// since there are UPnP software that do not generate and use valid UUIDs.
+// Because of this, the class "accepts" any string. However, validity can be checked
+// with the isValid(). **Do NOT change the semantics of this class**
 class HSid
 {
-friend quint32 qHash(const HSid &key);
+friend quint32 qHash(const HSid& key);
+friend bool operator==(const HSid&, const HSid&);
 
 private:
 
     QUuid m_value;
+    QString m_valueAsStr;
 
 public:
 
     HSid();
-    explicit HSid(const QUuid& sid);
-    explicit HSid(const QString& sid);
-    HSid         (const HSid& other);
+    explicit HSid(const QUuid&);
+    explicit HSid(const QString&);
+    HSid(const HSid&);
 
     ~HSid();
 
-    HSid& operator=(const HSid& other);
-    HSid& operator=(const QUuid& other);
-    HSid& operator=(const QString& other);
+    HSid& operator=(const HSid&);
+    HSid& operator=(const QUuid&);
+    HSid& operator=(const QString&);
 
     inline QUuid value() const
     {
         return m_value;
     }
 
-    QString toString() const;
-
-    inline bool isNull()const
+    inline QString toString() const
     {
-        return m_value.isNull();
+        return m_valueAsStr;
+    }
+
+    inline bool isValid()const
+    {
+        return !m_value.isNull();
+    }
+
+    inline bool isEmpty() const
+    {
+        return m_valueAsStr.isEmpty();
     }
 };
 
-bool operator==(const HSid& sid1, const HSid& sid2);
-bool operator!=(const HSid& sid1, const HSid& sid2);
+bool operator==(const HSid&, const HSid&);
+bool operator!=(const HSid&, const HSid&);
 
 quint32 qHash(const HSid& key);
 

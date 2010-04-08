@@ -47,7 +47,7 @@ bool notifyClient(
     const HSid& sid, quint32 seq)
 {
     HLOG2(H_AT, H_FUN, "__DEVICE HOST__: ");
-    Q_ASSERT(!sid.isNull());
+    Q_ASSERT(sid.isValid());
     Q_ASSERT(!msgBody.isEmpty() && !msgBody.isNull());
 
     if (mi.socket().state() != QTcpSocket::ConnectedState)

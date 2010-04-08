@@ -124,7 +124,7 @@ void HServiceSubscribtion::subscriptionTimeout()
 
     m_subscriptionTimer.stop();
 
-    if (m_sid.isNull())
+    if (m_sid.isEmpty())
     {
         subscribe();
     }
@@ -249,7 +249,7 @@ void HServiceSubscribtion::renewSubscription_done(HHttpAsyncOperation* op)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    Q_ASSERT(!m_sid.isNull());
+    Q_ASSERT(!m_sid.isEmpty());
     Q_ASSERT(m_currentOpType == Op_Renew);
 
     if (op->state() == HHttpAsyncOperation::Failed)
@@ -302,7 +302,7 @@ void HServiceSubscribtion::renewSubscription()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (m_currentOpType != Op_None || m_sid.isNull())
+    if (m_currentOpType != Op_None || m_sid.isEmpty())
     {
         return;
     }
@@ -341,7 +341,7 @@ void HServiceSubscribtion::resubscribe()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (m_sid.isNull())
+    if (m_sid.isEmpty())
     {
         subscribe();
     }
@@ -407,7 +407,7 @@ void HServiceSubscribtion::subscribe_done(HHttpAsyncOperation* op)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    Q_ASSERT(m_sid.isNull());
+    Q_ASSERT(m_sid.isEmpty());
     Q_ASSERT(m_currentOpType == Op_Subscribe);
 
     if (op->state() == HHttpAsyncOperation::Failed)
@@ -475,7 +475,7 @@ void HServiceSubscribtion::subscribe()
         return;
     }
 
-    if (!m_sid.isNull())
+    if (!m_sid.isEmpty())
     {
         HLOG_DBG("Ignoring subscription request, since subscription is already active");
         return;
@@ -577,7 +577,7 @@ void HServiceSubscribtion::unsubscribe_done(HHttpAsyncOperation* /*op*/)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    Q_ASSERT(!m_sid.isNull());
+    Q_ASSERT(!m_sid.isEmpty());
     Q_ASSERT(m_currentOpType == Op_Unsubscribe);
 
     HLOG_DBG(QString("Subscription to [%1] canceled").arg(

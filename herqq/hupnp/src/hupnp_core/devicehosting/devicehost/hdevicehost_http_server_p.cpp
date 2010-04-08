@@ -151,7 +151,7 @@ void DeviceHostHttpServer::incomingSubscriptionRequest(
     QUuid udn = extractUdn(sreq.eventUrl());
 
     HDeviceController* device =
-        !udn.isNull() ? m_deviceStorage.searchDeviceByUdn(udn) : 0;
+        !udn.isNull() ? m_deviceStorage.searchDeviceByUdn(HUdn(udn)) : 0;
 
     HServiceController* service = 0;
 
@@ -270,7 +270,7 @@ void DeviceHostHttpServer::incomingControlRequest(
     QUuid udn = extractUdn(invokeActionRequest.serviceUrl());
 
     HDeviceController* device =
-        !udn.isNull() ? m_deviceStorage.searchDeviceByUdn(udn) : 0;
+        !udn.isNull() ? m_deviceStorage.searchDeviceByUdn(HUdn(udn)) : 0;
 
     HServiceController* service = 0;
 
@@ -455,7 +455,8 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
         return;
     }
 
-    HDeviceController* device = m_deviceStorage.searchDeviceByUdn(searchedUdn);
+    HDeviceController* device =
+        m_deviceStorage.searchDeviceByUdn(HUdn(searchedUdn));
 
     if (!device)
     {

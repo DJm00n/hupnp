@@ -80,7 +80,8 @@ public: // methods
             return false;
         }
 
-        if (deviceType.type() != "device")
+        if (deviceType.type() != HResourceType::StandardDeviceType &&
+            deviceType.type() != HResourceType::VendorSpecifiedDeviceType)
         {
             return false;
         }

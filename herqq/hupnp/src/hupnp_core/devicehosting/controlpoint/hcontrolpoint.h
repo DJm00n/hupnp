@@ -337,7 +337,8 @@ private:
      * can be built the rootDeviceDiscovered() method will be called. By default
      * every new device is accepted and built accordingly.
      */
-    virtual bool acceptResourceAd(const HUsn& usn, const HEndpoint& source);
+    virtual bool acceptResourceAd(
+        const HResourceIdentifier& usn, const HEndpoint& source);
 
 protected:
 

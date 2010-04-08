@@ -21,34 +21,26 @@
 
 #include "hdiscovery_messages.h"
 
-#include "husn.h"
-#include "hresource_identifier.h"
+#include "./../dataelements/hresourcetype.h"
+#include "./../dataelements/hproduct_tokens.h"
+#include "./../dataelements/hresource_identifier.h"
 
 #include "./../socket/hendpoint.h"
 #include "./../../utils/hlogger_p.h"
-#include "./../dataelements/hproduct_tokens.h"
 
 #include <QHostAddress>
-#include <QTextStream>
-#include <QAtomicInt>
 #include <QMetaType>
 #include <QDateTime>
-#include <QObject>
 #include <QString>
 #include <QUrl>
 
 static bool registerMetaTypes()
 {
-    static QAtomicInt tester(0);
-
-    if (tester.testAndSetAcquire(0, 1))
-    {
-        qRegisterMetaType<Herqq::Upnp::HResourceAvailable>("Herqq::Upnp::HResourceAvailable");
-        qRegisterMetaType<Herqq::Upnp::HResourceUnavailable>("Herqq::Upnp::HResourceUnavailable");
-        qRegisterMetaType<Herqq::Upnp::HDiscoveryRequest>("Herqq::Upnp::HDiscoveryRequest");
-        qRegisterMetaType<Herqq::Upnp::HResourceUpdate>("Herqq::Upnp::HResourceUpdate");
-        qRegisterMetaType<Herqq::Upnp::HDiscoveryResponse>("Herqq::Upnp::HDiscoveryResponse");
-    }
+    qRegisterMetaType<Herqq::Upnp::HResourceAvailable>("Herqq::Upnp::HResourceAvailable");
+    qRegisterMetaType<Herqq::Upnp::HResourceUnavailable>("Herqq::Upnp::HResourceUnavailable");
+    qRegisterMetaType<Herqq::Upnp::HDiscoveryRequest>("Herqq::Upnp::HDiscoveryRequest");
+    qRegisterMetaType<Herqq::Upnp::HResourceUpdate>("Herqq::Upnp::HResourceUpdate");
+    qRegisterMetaType<Herqq::Upnp::HDiscoveryResponse>("Herqq::Upnp::HDiscoveryResponse");
 
     return true;
 }
@@ -61,15 +53,6 @@ namespace Herqq
 namespace Upnp
 {
 
-namespace
-{
-HEndpoint multicastEndpoint()
-{
-    static HEndpoint retVal(QHostAddress("239.255.255.250"), 1900);
-    return retVal;
-}
-}
-
 /*******************************************************************************
  * HResourceAvailablePrivate
  ******************************************************************************/
@@ -78,16 +61,16 @@ class HResourceAvailablePrivate
 public: // attributes
 
     HProductTokens m_serverTokens;
-    HUsn    m_usn;
-    QUrl    m_location;
-    qint32  m_cacheControlMaxAge;
-    qint32  m_bootId;
-    qint32  m_configId;
-    qint32  m_searchPort;
+    HResourceIdentifier m_usn;
+    QUrl   m_location;
+    qint32 m_cacheControlMaxAge;
+    qint32 m_bootId;
+    qint32 m_configId;
+    qint32 m_searchPort;
 
 public: // methods
 
-    HResourceAvailablePrivate ();
+    HResourceAvailablePrivate();
     ~HResourceAvailablePrivate();
 };
 
@@ -111,7 +94,7 @@ HResourceAvailable::HResourceAvailable() :
 
 HResourceAvailable::HResourceAvailable(
     quint32 cacheControlMaxAge, const QUrl& location,
-    const HProductTokens& serverTokens, const HUsn& usn,
+    const HProductTokens& serverTokens, const HResourceIdentifier& usn,
     qint32 bootId, qint32 configId, qint32 searchPort) :
         h_ptr(new HResourceAvailablePrivate())
 {
@@ -126,26 +109,26 @@ HResourceAvailable::HResourceAvailable(
         cacheControlMaxAge = 60* 60 * 24;
     }
 
-    if (!usn.isValid())
+    if (usn.type() == HResourceIdentifier::Undefined)
     {
-        HLOG_WARN("Invalid USN.");
+        HLOG_WARN("USN is not defined");
         return;
     }
 
     if (!location.isValid() || location.isEmpty())
     {
-        HLOG_WARN(QString("Invalid LOCATION header field: %1.").arg(
-            location.toString()));
+        HLOG_WARN(QString("Location is not defined"));
         return;
     }
 
     if (!serverTokens.isValid())
     {
-        HLOG_WARN_NONSTD(QString("Invalid server tokens: %1").arg(
-            serverTokens.toString()));
+        HLOG_WARN_NONSTD(QString("Server tokens are not defined"));
+        // although mandatory according to UDA, some UPnP software
+        // do not define this ==> cannot require it
     }
 
-    if (HProductToken::minorVersion(serverTokens.upnpToken()) > 0)
+    if (serverTokens.upnpToken().minorVersion() > 0)
     {
         if (bootId < 0 || configId < 0)
         {
@@ -178,10 +161,12 @@ HResourceAvailable::HResourceAvailable(const HResourceAvailable& other) :
 
 HResourceAvailable& HResourceAvailable::operator=(const HResourceAvailable& other)
 {
-    HResourceAvailablePrivate* newDptr = new HResourceAvailablePrivate(*other.h_ptr);
+    HResourceAvailablePrivate* newDptr =
+        new HResourceAvailablePrivate(*other.h_ptr);
 
     delete h_ptr;
     h_ptr = newDptr;
+
     return *this;
 }
 
@@ -190,10 +175,10 @@ HResourceAvailable::~HResourceAvailable()
     delete h_ptr;
 }
 
-bool HResourceAvailable::isValid() const
+bool HResourceAvailable::isValid(bool strict) const
 {
-    return h_ptr->m_usn.isValid();
-    // if the object is valid, the USN is valid
+    return (h_ptr->m_usn.type() != HResourceIdentifier::Undefined) &&
+           (strict ? h_ptr->m_serverTokens.isValid() : true);
 }
 
 HProductTokens HResourceAvailable::serverTokens() const
@@ -201,7 +186,7 @@ HProductTokens HResourceAvailable::serverTokens() const
     return h_ptr->m_serverTokens;
 }
 
-HUsn HResourceAvailable::usn() const
+HResourceIdentifier HResourceAvailable::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -231,44 +216,15 @@ qint32 HResourceAvailable::searchPort() const
     return h_ptr->m_searchPort;
 }
 
-QString HResourceAvailable::toString() const
-{
-    if (!isValid())
-    {
-        return "";
-    }
-
-    QString retVal;
-    QTextStream ts(&retVal);
-
-    ts << "NOTIFY * HTTP/1.1\r\n"
-       << "HOST: "                  << multicastEndpoint().toString() << "\r\n"
-       << "CACHE-CONTROL: max-age=" << cacheControlMaxAge() << "\r\n"
-       << "LOCATION: "              << location().toString() << "\r\n"
-       << "NT: "                    << usn().resource().toString() << "\r\n"
-       << "NTS: "                   << "ssdp:alive\r\n"
-       << "SERVER: "                << serverTokens().toString() << "\r\n"
-       << "USN: "                   << usn().toString() << "\r\n";
-
-    if (HProductToken::minorVersion(serverTokens().upnpToken()) > 0)
-    {
-        ts << "BOOTID.UPNP.ORG: "   << bootId()   << "\r\n"
-           << "CONFIGID.UPNP.ORG: " << configId() << "\r\n";
-
-        if (h_ptr->m_searchPort >= 0)
-        {
-            ts << "SEARCHPORT.UPNP.ORG: " << searchPort() << "\r\n";
-        }
-    }
-
-    ts << "\r\n";
-
-    return retVal;
-}
-
 bool operator==(const HResourceAvailable& obj1, const HResourceAvailable& obj2)
 {
-    return obj1.toString() == obj2.toString();
+    return obj1.h_ptr->m_serverTokens == obj2.h_ptr->m_serverTokens &&
+           obj1.h_ptr->m_usn          == obj2.h_ptr->m_usn &&
+           obj1.h_ptr->m_location     == obj2.h_ptr->m_location &&
+           obj1.h_ptr->m_cacheControlMaxAge == obj2.h_ptr->m_cacheControlMaxAge &&
+           obj1.h_ptr->m_bootId       == obj2.h_ptr->m_bootId &&
+           obj1.h_ptr->m_configId     == obj2.h_ptr->m_configId &&
+           obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort;
 }
 
 bool operator!=(const HResourceAvailable& obj1, const HResourceAvailable& obj2)
@@ -283,14 +239,14 @@ class HResourceUnavailablePrivate
 {
 public: // attributes
 
-    HUsn    m_usn;
-    qint32  m_bootId;
-    qint32  m_configId;
+    HResourceIdentifier m_usn;
+    qint32 m_bootId;
+    qint32 m_configId;
     HEndpoint m_sourceLocation;
 
 public: // methods
 
-    HResourceUnavailablePrivate ();
+    HResourceUnavailablePrivate();
     ~HResourceUnavailablePrivate();
 };
 
@@ -312,21 +268,21 @@ HResourceUnavailable::HResourceUnavailable() :
 }
 
 HResourceUnavailable::HResourceUnavailable(
-    const HUsn& usn, const HEndpoint& sourceLocation,
+    const HResourceIdentifier& usn, const HEndpoint& sourceLocation,
     qint32 bootId, qint32 configId) :
         h_ptr(new HResourceUnavailablePrivate())
 {
     HLOG(H_AT, H_FUN);
 
-    if (!usn.isValid())
+    if (usn.type() == HResourceIdentifier::Undefined)
     {
-        HLOG_WARN("Invalid USN.");
+        HLOG_WARN("USN is not defined");
         return;
     }
 
     if ((bootId < 0 && configId >= 0) || (configId < 0 && bootId >= 0))
     {
-        HLOG_WARN("If either bootId or configId is specified, they both must be >= 0.");
+        HLOG_WARN("If either bootId or configId is specified they both must be >= 0");
         return;
     }
 
@@ -349,7 +305,8 @@ HResourceUnavailable::HResourceUnavailable(const HResourceUnavailable& other) :
 HResourceUnavailable& HResourceUnavailable::operator=(
     const HResourceUnavailable& other)
 {
-    HResourceUnavailablePrivate* newDptr = new HResourceUnavailablePrivate(*other.h_ptr);
+    HResourceUnavailablePrivate* newDptr =
+        new HResourceUnavailablePrivate(*other.h_ptr);
 
     delete h_ptr;
     h_ptr = newDptr;
@@ -367,13 +324,14 @@ HEndpoint HResourceUnavailable::location() const
     return h_ptr->m_sourceLocation;
 }
 
-bool HResourceUnavailable::isValid() const
+bool HResourceUnavailable::isValid(bool strict) const
 {
-    return h_ptr->m_usn.isValid();
+    Q_UNUSED(strict)
+    return h_ptr->m_usn.type() != HResourceIdentifier::Undefined;
     // if the object is valid, the USN is valid
 }
 
-HUsn HResourceUnavailable::usn() const
+HResourceIdentifier HResourceUnavailable::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -388,36 +346,12 @@ qint32 HResourceUnavailable::configId() const
     return h_ptr->m_configId;
 }
 
-QString HResourceUnavailable::toString() const
-{
-    if (!isValid())
-    {
-        return "";
-    }
-
-    QString retVal;
-    QTextStream ts(&retVal);
-
-    ts << "NOTIFY * HTTP/1.1\r\n"
-       << "HOST: " << multicastEndpoint().toString()<< "\r\n"
-       << "NT: "   << usn().resource().toString() << "\r\n"
-       << "NTS: "  << "ssdp:byebye\r\n"
-       << "USN: "  << usn().toString() << "\r\n";
-
-    if (bootId() >= 0)
-    {
-        ts << "BOOTID.UPNP.ORG: "   << bootId  () << "\r\n"
-           << "CONFIGID.UPNP.ORG: " << configId() << "\r\n";
-    }
-
-    ts << "\r\n";
-
-    return retVal;
-}
-
 bool operator==(const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
 {
-    return obj1.toString() == obj2.toString();
+    return obj1.h_ptr->m_usn            == obj2.h_ptr->m_usn &&
+           obj1.h_ptr->m_sourceLocation == obj2.h_ptr->m_sourceLocation &&
+           obj1.h_ptr->m_bootId         == obj2.h_ptr->m_bootId &&
+           obj1.h_ptr->m_configId       == obj2.h_ptr->m_configId;
 }
 
 bool operator!=(const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
@@ -432,16 +366,16 @@ class HResourceUpdatePrivate
 {
 public: // attributes
 
-    HUsn    m_usn;
-    QUrl    m_location;
-    qint32  m_bootId;
-    qint32  m_configId;
-    qint32  m_nextBootId;
-    qint32  m_searchPort;
+    HResourceIdentifier m_usn;
+    QUrl   m_location;
+    qint32 m_bootId;
+    qint32 m_configId;
+    qint32 m_nextBootId;
+    qint32 m_searchPort;
 
 public: // methods
 
-    HResourceUpdatePrivate ();
+    HResourceUpdatePrivate();
     ~HResourceUpdatePrivate();
 };
 
@@ -464,21 +398,21 @@ HResourceUpdate::HResourceUpdate() :
 }
 
 HResourceUpdate::HResourceUpdate(
-    const QUrl& location, const HUsn& usn,
+    const QUrl& location, const HResourceIdentifier& usn,
     qint32 bootId, qint32 configId, qint32 nextBootId, qint32 searchPort) :
         h_ptr(new HResourceUpdatePrivate())
 {
     HLOG(H_AT, H_FUN);
 
-    if (!usn.isValid())
+    if (usn.type() == HResourceIdentifier::Undefined)
     {
-        HLOG_WARN("Invalid USN.");
+        HLOG_WARN("USN is not defined");
         return;
     }
 
     if (!location.isValid())
     {
-        HLOG_WARN("Invalid LOCATION header field.");
+        HLOG_WARN("Location is not defined");
         return;
     }
 
@@ -527,13 +461,14 @@ HResourceUpdate::~HResourceUpdate()
     delete h_ptr;
 }
 
-bool HResourceUpdate::isValid() const
+bool HResourceUpdate::isValid(bool strict) const
 {
-    return h_ptr->m_usn.isValid();
+    Q_UNUSED(strict)
+    return h_ptr->m_usn.type() != HResourceIdentifier::Undefined;
     // if the object is valid, the USN is valid
 }
 
-HUsn HResourceUpdate::usn() const
+HResourceIdentifier HResourceUpdate::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -563,43 +498,13 @@ qint32 HResourceUpdate::searchPort() const
     return h_ptr->m_searchPort;
 }
 
-QString HResourceUpdate::toString() const
-{
-    if (!isValid())
-    {
-        return "";
-    }
-
-    QString retVal;
-    QTextStream ts(&retVal);
-
-    ts << "NOTIFY * HTTP/1.1\r\n"
-       << "HOST: "                  << multicastEndpoint().toString() << "\r\n"
-       << "LOCATION: "              << location().toString ()      << "\r\n"
-       << "NT: "                    << usn().resource().toString() << "\r\n"
-       << "NTS: "                   << "ssdp:update\r\n"
-       << "USN: "                   << usn().toString() << "\r\n";
-
-    if (bootId() >= 0)
-    {
-        ts << "BOOTID.UPNP.ORG: "       << bootId()     << "\r\n"
-           << "CONFIGID.UPNP.ORG: "     << configId()   << "\r\n"
-           << "NEXTBOOTID.UPNP.ORG: "   << nextBootId() << "\r\n";
-
-        if (h_ptr->m_searchPort >= 0)
-        {
-            ts << "SEARCHPORT.UPNP.ORG: " << searchPort() << "\r\n";
-        }
-    }
-
-    ts << "\r\n";
-
-    return retVal;
-}
-
 bool operator==(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
 {
-    return obj1.toString() == obj2.toString();
+    return obj1.h_ptr->m_usn          == obj2.h_ptr->m_usn &&
+           obj1.h_ptr->m_location     == obj2.h_ptr->m_location &&
+           obj1.h_ptr->m_bootId       == obj2.h_ptr->m_bootId &&
+           obj1.h_ptr->m_configId     == obj2.h_ptr->m_configId &&
+           obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort;
 }
 
 bool operator!=(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
@@ -628,7 +533,7 @@ public: // methods
 
         if (st.type() == HResourceIdentifier::Undefined)
         {
-            HLOG_WARN("Invalid Search Target.");
+            HLOG_WARN("Search Target is not specified");
             return false;
         }
 
@@ -649,9 +554,9 @@ public: // methods
                 userAgent.toString()));
         }
 
-        m_st          = st;
-        m_mx          = mx;
-        m_userAgent   = userAgent;
+        m_st        = st;
+        m_mx        = mx;
+        m_userAgent = userAgent;
 
         return true;
     }
@@ -693,8 +598,9 @@ HDiscoveryRequest::~HDiscoveryRequest()
     delete h_ptr;
 }
 
-bool HDiscoveryRequest::isValid() const
+bool HDiscoveryRequest::isValid(bool strict) const
 {
+    Q_UNUSED(strict)
     return h_ptr->m_st.type() != HResourceIdentifier::Undefined;
     // if the object is valid, the ResourceIdentifier is defined ==> this is a good enough
     // test for validity
@@ -710,26 +616,6 @@ qint32 HDiscoveryRequest::mx() const
     return h_ptr->m_mx;
 }
 
-QString HDiscoveryRequest::toString() const
-{
-    if (!isValid())
-    {
-        return "";
-    }
-
-    QString retVal;
-    QTextStream out(&retVal);
-
-    out << "M-SEARCH * HTTP/1.1\r\n"
-        << "HOST: "       << multicastEndpoint().toString() << "\r\n"
-        << "MAN: "        << "\"ssdp:discover\"\r\n"
-        << "MX: "         << mx()                      << "\r\n"
-        << "ST: "         << searchTarget().toString() << "\r\n"
-        << "USER-AGENT: " << userAgent().toString()    << "\r\n\r\n";
-
-    return retVal;
-}
-
 HProductTokens HDiscoveryRequest::userAgent() const
 {
     return h_ptr->m_userAgent;
@@ -737,7 +623,9 @@ HProductTokens HDiscoveryRequest::userAgent() const
 
 bool operator==(const HDiscoveryRequest& obj1, const HDiscoveryRequest& obj2)
 {
-    return obj1.toString() == obj2.toString();
+    return obj1.h_ptr->m_mx        == obj2.h_ptr->m_mx &&
+           obj1.h_ptr->m_st        == obj2.h_ptr->m_st &&
+           obj1.h_ptr->m_userAgent == obj2.h_ptr->m_userAgent;
 }
 
 bool operator!=(const HDiscoveryRequest& obj1, const HDiscoveryRequest& obj2)
@@ -753,7 +641,7 @@ class HDiscoveryResponsePrivate
 public: // attributes
 
     HProductTokens m_serverTokens;
-    HUsn      m_usn;
+    HResourceIdentifier m_usn;
     QUrl      m_location;
     QDateTime m_date;
     qint32    m_cacheControlMaxAge;
@@ -781,7 +669,7 @@ HDiscoveryResponse::HDiscoveryResponse() :
 
 HDiscoveryResponse::HDiscoveryResponse(
     quint32 cacheControlMaxAge, const QDateTime& /*date*/, const QUrl& location,
-    const HProductTokens& serverTokens, const HUsn& usn,
+    const HProductTokens& serverTokens, const HResourceIdentifier& usn,
     qint32 bootId, qint32 configId, qint32 searchPort) :
         h_ptr(new HDiscoveryResponsePrivate())
 {
@@ -796,25 +684,25 @@ HDiscoveryResponse::HDiscoveryResponse(
         cacheControlMaxAge = 60* 60 * 24;
     }
 
-    if (!usn.isValid())
+    if (usn.type() == HResourceIdentifier::Undefined)
     {
-        HLOG_WARN("Invalid USN.");
+        HLOG_WARN("USN is not defined");
         return;
     }
 
     if (!location.isValid())
     {
-        HLOG_WARN("Invalid resource location.");
+        HLOG_WARN("Invalid resource location");
         return;
     }
 
     if (!serverTokens.isValid())
     {
-        HLOG_WARN_NONSTD(QString("Invalid server tokens: %1.").arg(
+        HLOG_WARN_NONSTD(QString("Invalid server tokens: %1").arg(
             serverTokens.toString()));
     }
 
-    if (HProductToken::minorVersion(serverTokens.upnpToken()) > 0)
+    if (serverTokens.upnpToken().minorVersion() > 0)
     {
         if (bootId < 0 || configId < 0)
         {
@@ -854,11 +742,10 @@ HDiscoveryResponse::~HDiscoveryResponse()
     delete h_ptr;
 }
 
-bool HDiscoveryResponse::isValid() const
+bool HDiscoveryResponse::isValid(bool strict) const
 {
-    return h_ptr->m_usn.isValid();
-    // if the object is valid, the USN is valid ==> this is a good enough
-    // test for validity
+    return (h_ptr->m_usn.type() != HResourceIdentifier::Undefined) &&
+           (strict ? h_ptr->m_serverTokens.isValid() : true);
 }
 
 HProductTokens HDiscoveryResponse::serverTokens() const
@@ -871,7 +758,7 @@ QDateTime HDiscoveryResponse::date() const
     return h_ptr->m_date;
 }
 
-HUsn HDiscoveryResponse::usn() const
+HResourceIdentifier HDiscoveryResponse::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -901,43 +788,16 @@ qint32 HDiscoveryResponse::searchPort() const
     return h_ptr->m_searchPort;
 }
 
-QString HDiscoveryResponse::toString() const
-{
-    if (!isValid())
-    {
-        return "";
-    }
-
-    QString retVal;
-    QTextStream out(&retVal);
-
-    out << "HTTP/1.1 200 OK\r\n"
-        << "CACHE-CONTROL: max-age=" << cacheControlMaxAge()  << "\r\n"
-        << "EXT:"                                             << "\r\n"
-        << "LOCATION: "              << location().toString() << "\r\n"
-        << "SERVER: "                << serverTokens().toString()   << "\r\n"
-        << "ST: "                    << usn().resource().toString() << "\r\n"
-        << "USN: "                   << usn().toString()      << "\r\n";
-
-    if (bootId() >= 0)
-    {
-        out << "BOOTID.UPNP.ORG: "   << bootId()   << "\r\n"
-            << "CONFIGID.UPNP.ORG: " << configId() <<"\r\n";
-
-        if (h_ptr->m_searchPort >= 0)
-        {
-            out << "SEARCHPORT.UPNP.ORG: " << searchPort() << "\r\n";
-        }
-    }
-
-    out << "\r\n";
-
-    return retVal;
-}
-
 bool operator==(const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)
 {
-    return obj1.toString() == obj2.toString();
+    return obj1.h_ptr->m_serverTokens == obj2.h_ptr->m_serverTokens &&
+           obj1.h_ptr->m_usn          == obj2.h_ptr->m_usn &&
+           obj1.h_ptr->m_location     == obj2.h_ptr->m_location &&
+           obj1.h_ptr->m_cacheControlMaxAge == obj2.h_ptr->m_cacheControlMaxAge &&
+           obj1.h_ptr->m_bootId       == obj2.h_ptr->m_bootId &&
+           obj1.h_ptr->m_configId     == obj2.h_ptr->m_configId &&
+           obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort &&
+           obj1.h_ptr->m_date         == obj2.h_ptr->m_date;
 }
 
 bool operator!=(const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)

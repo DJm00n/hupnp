@@ -978,7 +978,7 @@ QList<QUrl> HDevice::locations(bool includeDeviceDescriptionPostfix) const
     }
 
     QList<QUrl> retVal;
-    foreach(QUrl location, h_ptr->m_locations)
+    foreach(const QUrl& location, h_ptr->m_locations)
     {
         retVal.push_back(extractBaseUrl(location));
     }

@@ -41,7 +41,6 @@ namespace Upnp
  */
 
 class HUdn;
-class HUsn;
 class HAction;
 class HDevice;
 class HService;

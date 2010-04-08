@@ -57,36 +57,46 @@ public:
         QStringList tmp = arg.simplified().split(":");
         if (tmp.size() < 4)
         {
+            HLOG_WARN_NONSTD(
+                QString("Invalid service identifier [%1]").arg(arg));
+
             return;
         }
 
-        if (tmp[0] != "urn")
+        if (tmp[0].compare("urn", Qt::CaseInsensitive) != 0)
         {
+            HLOG_WARN_NONSTD(
+                QString("Invalid service identifier [%1]").arg(arg));
+
             return;
         }
 
-        if (tmp[1] != "upnp-org")
+        if (tmp[1].compare("upnp-org", Qt::CaseInsensitive) != 0)
         {
             tmp[1] = tmp[1].replace('.', '-');
-            if (tmp[1].isEmpty() || !tmp[1].contains('-'))
+            if (tmp[1].isEmpty())
             {
-                HLOG_WARN(QString(
-                    "Invalid service identifier [%1]: the URN is invalid").arg(
-                        arg));
+                HLOG_WARN_NONSTD(QString(
+                    "Invalid service identifier [%1]").arg(arg));
 
                 return;
             }
         }
 
-        if (tmp[2] != "serviceId")
+        bool warned = false;
+        if (tmp[2].compare("serviceId", Qt::CaseInsensitive) != 0)
         {
-            HLOG_WARN_NONSTD(QString("Invalid service identifier [%1]: .").arg(arg));
+            HLOG_WARN_NONSTD(QString("Invalid service identifier [%1]").arg(arg));
+            warned = true;
             // at least some Intel software fails to specify this right
         }
 
         if (tmp[3].isEmpty())
         {
-            HLOG_WARN(QString("Invalid service identifier [%1].").arg(arg));
+            if (!warned)
+            {
+                HLOG_WARN(QString("Invalid service identifier [%1]").arg(arg));
+            }
             return;
         }
 
@@ -136,14 +146,21 @@ HServiceId::~HServiceId()
     delete h_ptr;
 }
 
-bool HServiceId::isValid() const
+bool HServiceId::isValid(bool strict) const
 {
-    return !h_ptr->m_suffix.isEmpty();
+    if (!strict)
+    {
+        return !h_ptr->m_suffix.isEmpty();
+    }
+
+    return h_ptr->m_elements.size() >= 4 &&
+           h_ptr->m_elements[0] == "urn" &&
+           h_ptr->m_elements[2] == "serviceId";
 }
 
 bool HServiceId::isStandardType() const
 {
-    if (!isValid())
+    if (!isValid(false))
     {
         return false;
     }
@@ -153,7 +170,7 @@ bool HServiceId::isStandardType() const
 
 QString HServiceId::urn(bool completeUrn) const
 {
-    if (!isValid())
+    if (!isValid(false))
     {
         return QString();
     }
@@ -171,7 +188,7 @@ QString HServiceId::urn(bool completeUrn) const
 
 QString HServiceId::suffix() const
 {
-    if (!isValid())
+    if (!isValid(false))
     {
         return QString();
     }

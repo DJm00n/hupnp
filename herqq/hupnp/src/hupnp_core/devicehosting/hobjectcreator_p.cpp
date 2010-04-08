@@ -98,14 +98,15 @@ void HObjectCreator::initService(
                 toString(serviceDefinition)));
     }
 
-    if (!service->h_ptr->m_serviceId.isValid())
+    if (!service->h_ptr->m_serviceId.isValid(m_creationParameters.m_strictParsing))
     {
         throw HParseException(QString(
             "The service ID is invalid:\n%1").arg(toString(serviceDefinition)));
     }
 
     service->h_ptr->m_serviceType =
-        readElementValue("serviceType", serviceDefinition, &wasDefined);
+        HResourceType(
+            readElementValue("serviceType", serviceDefinition, &wasDefined));
 
     if (!wasDefined)
     {
@@ -817,9 +818,9 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
                 readElementValue("serviceId", serviceElement);
 
             HResourceType serviceType =
-                readElementValue("serviceType", serviceElement);
+                HResourceType(readElementValue("serviceType", serviceElement));
 
-            if (!serviceId.isValid())
+            if (!serviceId.isValid(m_creationParameters.m_strictParsing))
             {
                 throw InvalidServiceDescription(
                     QString("Service ID is invalid:\n%1.").arg(
@@ -885,7 +886,7 @@ QList<QUrl> generateLocations(const HUdn& udn, const QList<QUrl>& locations)
 
     QList<QUrl> retVal;
 
-    foreach(QUrl location, locations)
+    foreach(const QUrl& location, locations)
     {
         QString locStr = location.toString();
         if (!locStr.endsWith('/'))

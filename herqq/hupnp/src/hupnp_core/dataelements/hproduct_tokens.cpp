@@ -74,34 +74,34 @@ QString HProductToken::toString() const
     return QString("%1/%2").arg(m_token, m_productVersion);
 }
 
-bool HProductToken::isValidUpnpToken(const HProductToken& token)
+bool HProductToken::isValidUpnpToken()
 {
-    if (!token.isValid())
+    if (!isValid())
     {
         return false;
     }
 
-    if (token.token().compare("UPnP", Qt::CaseInsensitive) != 0)
+    if (token().compare("UPnP", Qt::CaseInsensitive) != 0)
     {
         return false;
     }
 
-    QString version = token.version();
+    QString vrs = version();
 
-    return (version.size() == 3    &&
-           (version[0]     == '1') && 
-            version[1]     == '.'  && 
-           (version[2] == '0' || version[2] == '1'));
+    return (vrs.size() == 3    &&
+           (vrs[0]     == '1') &&
+            vrs[1]     == '.'  &&
+           (vrs[2] == '0' || vrs[2] == '1'));
 }
 
-qint32 HProductToken::minorVersion(const HProductToken& token)
+qint32 HProductToken::minorVersion()
 {
-    if (!token.isValid())
+    if (!isValid())
     {
         return -1;
     }
 
-    QString tokenVersion = token.version();
+    QString tokenVersion = version();
 
     qint32 separatorIndex = tokenVersion.indexOf('.');
     if (separatorIndex < 0)
@@ -117,14 +117,14 @@ qint32 HProductToken::minorVersion(const HProductToken& token)
     return ok ? minTmp : -1;
 }
 
-qint32 HProductToken::majorVersion(const HProductToken& token)
+qint32 HProductToken::majorVersion()
 {
-    if (!token.isValid())
+    if (!isValid())
     {
         return -1;
     }
 
-    QString tokenVersion = token.version();
+    QString tokenVersion = version();
 
     bool ok = false;
     qint32 majTmp = -1;
@@ -216,8 +216,7 @@ private:
         // contained the UPnP token + we should inform the user if
         // non-std input was given.
 
-        if (productTokens.size() < 3 ||
-           !HProductToken::isValidUpnpToken(productTokens[1]))
+        if (productTokens.size() < 3 || !productTokens[1].isValidUpnpToken())
         {
             HLOG_WARN_NONSTD(QString(
                 "The specified token string [%1] is not formed according "
@@ -290,7 +289,7 @@ public:
                     m_originalTokenString.mid(slash,
                         nextDelim < 0 ? -1 : nextDelim-slash));
 
-                if (HProductToken::isValidUpnpToken(token))
+                if (token.isValidUpnpToken())
                 {
                     m_productTokens.push_back(token);
                 }

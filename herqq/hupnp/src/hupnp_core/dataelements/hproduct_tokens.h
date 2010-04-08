@@ -135,7 +135,7 @@ public:
      * \return \e true in case the provided token object represents a valid
      * \e UPnP \e token.
      */
-    static bool isValidUpnpToken(const HProductToken&);
+    bool isValidUpnpToken();
 
     /*!
      * Attempts to parse the \e version part of a product token to a major and
@@ -150,7 +150,7 @@ public:
      * if the specified token does not contain a minor version component that
      * can be represented as an integer.
      */
-    static qint32 minorVersion(const HProductToken&);
+    qint32 minorVersion();
 
     /*!
      * Attempts to parse the \e version part of a product token to a major and
@@ -167,7 +167,7 @@ public:
      * if the specified token does not contain a major version component that
      * can be represented as an integer.
      */
-    static qint32 majorVersion(const HProductToken&);
+    qint32 majorVersion();
 };
 
 /*!
@@ -248,7 +248,7 @@ public:
      *
      * \sa isValid(), isEmpty(), toString(), upnpToken()
      */
-    HProductTokens(const QString& arg);
+    explicit HProductTokens(const QString& arg);
 
     /*!
      * Creates a copy of the other object.

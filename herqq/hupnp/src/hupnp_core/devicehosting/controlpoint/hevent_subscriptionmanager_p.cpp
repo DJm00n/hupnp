@@ -86,7 +86,7 @@ HServiceSubscribtion* HEventSubscriptionManager::createSubscription(
             m_owner->m_loggingIdentifier,
             service,
             m_owner->m_server->rootUrl(),
-            HTimeout(m_owner->m_configuration->desiredSubscriptionTimeout()),
+            HTimeout(timeout),
             this);
 
     bool ok = connect(

@@ -58,7 +58,7 @@ class HSsdpPrivate;
  *
  * \ingroup ssdp
  *
- * \remark
+ * \remarks
  * \li this class requires an event loop for listening incoming messages
  * \li this class has thread-affinity, which mandates that the instances of this
  * class has to be used in the thread in which they are located at the time.
@@ -98,7 +98,7 @@ protected:
      *
      * \sa discoveryRequestReceived()
      */
-    virtual bool incomingDiscoveryRequest (
+    virtual bool incomingDiscoveryRequest(
         const HDiscoveryRequest& msg, const HEndpoint& source,
         const HEndpoint& destination);
 
@@ -179,7 +179,7 @@ public:
     /*!
      * Creates a new instance.
      *
-     * \param parent specifies the parent object.
+     * \param parent specifies the parent \c QObject.
      */
     HSsdp(QObject* parent=0);
 
@@ -267,7 +267,7 @@ public:
      * \retval false in case the instance could not be bound, or the instance
      * was already bound.
      *
-     * \remark \c %HSsdp has to be bound to receive messages of any type.
+     * \remarks \c %HSsdp has to be bound to receive messages of any type.
      */
     bool bind();
 
@@ -284,7 +284,7 @@ public:
      * \retval false in case the instance could not be bound, or the instance
      * was already bound.
      *
-     * \remark \c %HSsdp has to be bound to receive messages of any type.
+     * \remarks \c %HSsdp has to be bound to receive messages of any type.
      */
     bool bind(const QHostAddress& unicastAddress);
 
@@ -302,7 +302,8 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \retval 0 if send was successful.
+     * \return the number of messages sent, 0 in case no messages was sent or
+     * -1 in case the provided message is not valid.
      */
     qint32 announcePresence(const HResourceAvailable& msg, qint32 count = 1);
 
@@ -313,7 +314,8 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \retval 0 if send was successful.
+     * \return the number of messages sent, 0 in case no messages was sent or
+     * -1 in case the provided message is not valid.
      */
     qint32 announcePresence(const HResourceUnavailable& msg, qint32 count = 1);
 
@@ -324,7 +326,8 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \retval 0 if send was successful.
+     * \return the number of messages sent, 0 in case no messages was sent or
+     * -1 in case the provided message is not valid.
      */
     qint32 announceUpdate(const HResourceUpdate& msg, qint32 count = 1);
 
@@ -335,7 +338,8 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \retval 0 if send was successful.
+     * \return the number of messages sent, 0 in case no messages was sent or
+     * -1 in case the provided message is not valid.
      */
     qint32 sendDiscoveryRequest(const HDiscoveryRequest& msg, qint32 count = 1);
 
@@ -349,7 +353,8 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \retval 0 if send was successful.
+     * \return the number of messages sent, 0 in case no messages was sent or
+     * -1 in case the provided message is not valid.
      */
     qint32 sendDiscoveryResponse(
         const HEndpoint& receiver, const HDiscoveryResponse& msg,

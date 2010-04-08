@@ -30,14 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
+#include "hssdp.h"
 #include "./../general/hdefs_p.h"
 #include "./../socket/hendpoint.h"
 #include "./../socket/hmulticast_socket.h"
 
 #include "hdiscovery_messages.h"
 
-#include <QObject>
-#include <QUdpSocket>
 #include <QByteArray>
 
 class QUrl;
@@ -65,11 +64,12 @@ private:
 
     qint32 parseCacheControl(const QString& str);
     void checkHost(const QString& host);
-    HDiscoveryResponse parseDiscoveryResponse(const QHttpResponseHeader& hdr);
-    HDiscoveryRequest parseDiscoveryRequest(const QHttpRequestHeader& hdr);
-    HResourceAvailable parseDeviceAvailable(const QHttpRequestHeader& hdr);
+
+    HDiscoveryResponse   parseDiscoveryResponse(const QHttpResponseHeader& hdr);
+    HDiscoveryRequest    parseDiscoveryRequest (const QHttpRequestHeader& hdr);
+    HResourceAvailable   parseDeviceAvailable  (const QHttpRequestHeader& hdr);
     HResourceUnavailable parseDeviceUnavailable(const QHttpRequestHeader& hdr);
-    HResourceUpdate parseDeviceUpdate(const QHttpRequestHeader& hdr);
+    HResourceUpdate      parseDeviceUpdate     (const QHttpRequestHeader& hdr);
 
 public: // attributes
 
@@ -98,8 +98,8 @@ public: // methods
 
     void processResponse(const QString& msg, const HEndpoint& source);
 
-    void send(const QString& data);
-    void send(const QString& data, const HEndpoint& receiver);
+    bool send(const QByteArray& data);
+    bool send(const QByteArray& data, const HEndpoint& receiver);
 
     void messageReceived(
         const QString& msg, const HEndpoint& source,

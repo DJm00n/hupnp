@@ -1,6 +1,6 @@
 #ifndef H_RESOURCE_IDENTIFIER_
 #define H_RESOURCE_IDENTIFIER_
 
-#include "../src/hupnp_core/ssdp/hresource_identifier.h"
+#include "../src/hupnp_core/dataelements/hresource_identifier.h"
 
 #endif // H_RESOURCE_IDENTIFIER_

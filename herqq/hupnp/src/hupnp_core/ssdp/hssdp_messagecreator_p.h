@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTIMEOUT_H_
-#define HTIMEOUT_H_
+#ifndef HSSDP_MESSAGECREATOR_P_H_
+#define HSSDP_MESSAGECREATOR_P_H_
 
 //
 // !! Warning !!
@@ -30,9 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
-#include <QtGlobal>
-
-class QString;
+#include "./../general/hdefs_p.h"
+#include "./../general/hupnp_fwd.h"
 
 namespace Herqq
 {
@@ -43,42 +42,27 @@ namespace Upnp
 //
 //
 //
-class HTimeout
+class HSsdpMessageCreator
 {
-friend bool operator==(const HTimeout&, const HTimeout&);
+H_DISABLE_COPY(HSsdpMessageCreator)
 
 private:
 
-    qint32 m_value;
+    HSsdpMessageCreator();
+    ~HSsdpMessageCreator();
 
 public:
 
-    HTimeout();
-    explicit HTimeout(qint32);
-    explicit HTimeout(const QString&);
+    static QByteArray create(const HResourceUpdate&);
+    static QByteArray create(const HDiscoveryRequest&);
+    static QByteArray create(const HDiscoveryResponse&);
+    static QByteArray create(const HResourceAvailable&);
+    static QByteArray create(const HResourceUnavailable&);
 
-    ~HTimeout();
-
-    HTimeout& operator=(qint32);
-    HTimeout& operator=(const QString&);
-
-    inline qint32 value() const
-    {
-        return m_value;
-    }
-
-    QString toString() const;
-
-    inline bool isInfinite() const
-    {
-        return m_value == -1;
-    }
 };
 
-bool operator==(const HTimeout&, const HTimeout&);
-bool operator!=(const HTimeout&, const HTimeout&);
-
-}
 }
 
-#endif /* HTIMEOUT_H_ */
+}
+
+#endif /* HSSDP_MESSAGECREATOR_P_H_ */

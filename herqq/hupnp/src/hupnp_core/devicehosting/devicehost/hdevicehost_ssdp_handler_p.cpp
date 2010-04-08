@@ -20,20 +20,19 @@
  */
 
 #include "hdevicehost_ssdp_handler_p.h"
-
-#include "./../../ssdp/husn.h"
 #include "./../../ssdp/hssdp_p.h"
-#include "./../../ssdp/hresource_identifier.h"
 
 #include "./../../general/hupnp_global_p.h"
 
 #include "./../../dataelements/hudn.h"
 #include "./../../dataelements/hdeviceinfo.h"
 #include "./../../dataelements/hproduct_tokens.h"
+#include "./../../dataelements/hresource_identifier.h"
 
 #include "./../../../utils/hlogger_p.h"
 #include "./../../../utils/hsysutils_p.h"
 
+#include <QUuid>
 #include <QDateTime>
 
 namespace Herqq
@@ -63,14 +62,14 @@ void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    QUuid uuid = req.searchTarget().deviceUuid();
+    QUuid uuid = req.searchTarget().udn().value();
     if (uuid.isNull())
     {
         HLOG_DBG("Invalid device-UUID");
         return;
     }
 
-    HDeviceController* device = m_deviceStorage.searchDeviceByUdn(uuid);
+    HDeviceController* device = m_deviceStorage.searchDeviceByUdn(HUdn(uuid));
     if (!device)
     {
         HLOG_DBG(QString("No device with the specified UUID: [%1]").arg(
@@ -90,15 +89,13 @@ void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
         return;
     }
 
-    HUsn usn(device->m_device->deviceInfo().udn(), req.searchTarget());
-
     responses->push_back(
         HDiscoveryResponse(
             device->deviceTimeoutInSecs() * 2,
             QDateTime::currentDateTime(),
             location,
             herqqProductTokens(),
-            usn,
+            req.searchTarget(), // the searched usn
             device->deviceStatus()->bootId(),
             device->deviceStatus()->configId()));
 }
@@ -135,15 +132,13 @@ void DeviceHostSsdpHandler::processSearchRequest_deviceType(
             continue;
         }
 
-        HUsn usn(device->m_device->deviceInfo().udn(), req.searchTarget());
-
         responses->push_back(
             HDiscoveryResponse(
                 device->deviceTimeoutInSecs() * 2,
                 QDateTime::currentDateTime(),
                 location,
                 herqqProductTokens(),
-                usn,
+                req.searchTarget(),
                 device->deviceStatus()->bootId(),
                 device->deviceStatus()->configId()));
     }
@@ -184,8 +179,6 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
             continue;
         }
 
-        HUsn usn(device->deviceInfo().udn(), req.searchTarget());
-
         HDeviceController* dc =
             m_deviceStorage.searchDeviceByUdn(device->deviceInfo().udn());
 
@@ -197,7 +190,7 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
                 QDateTime::currentDateTime(),
                 location,
                 herqqProductTokens(),
-                usn,
+                req.searchTarget(),
                 dc->deviceStatus()->bootId(),
                 dc->deviceStatus()->configId()));
     }
@@ -215,7 +208,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
 
     HProductTokens pt = herqqProductTokens();
 
-    HUsn usn(deviceInfo.udn());
+    HResourceIdentifier usn(deviceInfo.udn());
 
     // device UDN
     responses->push_back(
@@ -225,7 +218,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
             device->deviceStatus()->bootId(),
             device->deviceStatus()->configId()));
 
-    usn.setResource(HResourceIdentifier(deviceInfo.deviceType()));
+    usn.setResourceType(deviceInfo.deviceType());
 
     // device type
     responses->push_back(
@@ -238,8 +231,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
     const QList<HServiceController*>* services = device->services();
     foreach(HServiceController* service, *services)
     {
-        usn.setResource(
-            HResourceIdentifier(service->m_service->serviceType().toString()));
+        usn.setResourceType(service->m_service->serviceType());
 
         responses->push_back(
             HDiscoveryResponse(
@@ -286,8 +278,7 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
             continue;
         }
 
-        HUsn usn(rootDevice->m_device->deviceInfo().udn(),
-                 HResourceIdentifier::getRootDeviceIdentifier());
+        HResourceIdentifier usn(rootDevice->m_device->deviceInfo().udn(),true);
 
         responses->push_back(
             HDiscoveryResponse(
@@ -352,8 +343,8 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
             continue;
         }
 
-        HUsn usn(rootDevice->m_device->deviceInfo().udn(),
-                 HResourceIdentifier::getRootDeviceIdentifier());
+        HResourceIdentifier usn(
+            rootDevice->m_device->deviceInfo().udn(), true);
 
         responses->push_back(
             HDiscoveryResponse(
@@ -378,7 +369,7 @@ bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
             processSearchRequest_AllDevices(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::RootDevice:
+        case HResourceIdentifier::RootDevices:
             processSearchRequest_RootDevice(msg, source, &responses);
             break;
 
@@ -386,13 +377,11 @@ bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
             processSearchRequest_specificDevice(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::StandardDeviceType:
-        case HResourceIdentifier::VendorSpecifiedDeviceType:
+        case HResourceIdentifier::DeviceType:
             processSearchRequest_deviceType(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::StandardServiceType:
-        case HResourceIdentifier::VendorSpecifiedServiceType:
+        case HResourceIdentifier::ServiceType:
             processSearchRequest_serviceType(msg, source, &responses);
             break;
 
