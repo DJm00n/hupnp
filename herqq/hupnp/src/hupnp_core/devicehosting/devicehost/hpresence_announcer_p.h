@@ -135,7 +135,8 @@ public:
     }
 
     ResourceUnavailableAnnouncement(
-        HDeviceController* device, const HResourceIdentifier& usn, const QUrl& location) :
+        HDeviceController* device, const HResourceIdentifier& usn,
+        const QUrl& location) :
             Announcement(device, usn, location)
     {
     }
@@ -188,8 +189,7 @@ public:
 
     template<typename AnnouncementType>
     void createAnnouncementMessagesForRootDevice(
-        HDeviceController* rootDevice,
-        QList<AnnouncementType>& announcements)
+        HDeviceController* rootDevice, QList<AnnouncementType>& announcements)
     {
         QList<QUrl> locations = rootDevice->m_device->locations(true);
         foreach(const QUrl& location, locations)
