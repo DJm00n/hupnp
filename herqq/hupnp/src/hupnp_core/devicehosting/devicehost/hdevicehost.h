@@ -240,7 +240,7 @@ private:
      * If any other value is returned, the initialization of the device host is
      * aborted with the error code returned by the derived class.
      *
-     * \remark the default implementation does nothing.
+     * \remarks the default implementation does nothing.
      *
      * \sa init()
      */
@@ -256,7 +256,7 @@ private:
      * private data structures but after it has stopped listening requests
      * from the network.
      *
-     * \remark the default implementation does nothing.
+     * \remarks the default implementation does nothing.
      *
      * \sa quit()
      */
@@ -272,13 +272,13 @@ private:
      *
      * \param source specifies the location where the subscription came.
      *
-     * \param renewal indicates the type of the subscription. The value is
+     * \param isNew indicates the type of the subscription. The value is
      * \e true in case the subscription is new and \e false in case the
      * subscription is a renewal to an existing subscription.
      *
      * \return \e true in case the subscription should be accepted.
      *
-     * \remark by default all subscriptions are accepted.
+     * \remarks by default all subscriptions are accepted.
      */
     virtual bool acceptSubscription(
         HService* targetService, const HEndpoint& source, bool isNew);
@@ -293,7 +293,7 @@ protected:
      * \return the configuration used to initialize the device host or null
      * in case the device host is not initialized.
      *
-     * \remark the returned object is not a copy and the ownership of the
+     * \remarks the returned object is not a copy and the ownership of the
      * object is not transferred.
      */
     const HDeviceHostConfiguration* configuration() const;

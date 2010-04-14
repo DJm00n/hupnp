@@ -20,14 +20,15 @@
  */
 
 #include "hdevicehost_ssdp_handler_p.h"
+
 #include "./../../ssdp/hssdp_p.h"
 
 #include "./../../general/hupnp_global_p.h"
 
 #include "./../../dataelements/hudn.h"
 #include "./../../dataelements/hdeviceinfo.h"
+#include "./../../dataelements/hdiscoverytype.h"
 #include "./../../dataelements/hproduct_tokens.h"
-#include "./../../dataelements/hresource_identifier.h"
 
 #include "./../../../utils/hlogger_p.h"
 #include "./../../../utils/hsysutils_p.h"
@@ -208,7 +209,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
 
     HProductTokens pt = herqqProductTokens();
 
-    HResourceIdentifier usn(deviceInfo.udn());
+    HDiscoveryType usn(deviceInfo.udn());
 
     // device UDN
     responses->push_back(
@@ -278,7 +279,7 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
             continue;
         }
 
-        HResourceIdentifier usn(rootDevice->m_device->deviceInfo().udn(),true);
+        HDiscoveryType usn(rootDevice->m_device->deviceInfo().udn(),true);
 
         responses->push_back(
             HDiscoveryResponse(
@@ -343,7 +344,7 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
             continue;
         }
 
-        HResourceIdentifier usn(
+        HDiscoveryType usn(
             rootDevice->m_device->deviceInfo().udn(), true);
 
         responses->push_back(
@@ -365,23 +366,23 @@ bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
     QList<HDiscoveryResponse> responses;
     switch (msg.searchTarget().type())
     {
-        case HResourceIdentifier::AllDevices:
+        case HDiscoveryType::All:
             processSearchRequest_AllDevices(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::RootDevices:
+        case HDiscoveryType::RootDevices:
             processSearchRequest_RootDevice(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::SpecificDevice:
+        case HDiscoveryType::SpecificDevice:
             processSearchRequest_specificDevice(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::DeviceType:
+        case HDiscoveryType::DeviceType:
             processSearchRequest_deviceType(msg, source, &responses);
             break;
 
-        case HResourceIdentifier::ServiceType:
+        case HDiscoveryType::ServiceType:
             processSearchRequest_serviceType(msg, source, &responses);
             break;
 

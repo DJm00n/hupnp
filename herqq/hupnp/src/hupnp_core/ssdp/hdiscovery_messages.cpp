@@ -22,8 +22,8 @@
 #include "hdiscovery_messages.h"
 
 #include "./../dataelements/hresourcetype.h"
+#include "./../dataelements/hdiscoverytype.h"
 #include "./../dataelements/hproduct_tokens.h"
-#include "./../dataelements/hresource_identifier.h"
 
 #include "./../socket/hendpoint.h"
 #include "./../../utils/hlogger_p.h"
@@ -61,7 +61,7 @@ class HResourceAvailablePrivate
 public: // attributes
 
     HProductTokens m_serverTokens;
-    HResourceIdentifier m_usn;
+    HDiscoveryType m_usn;
     QUrl   m_location;
     qint32 m_cacheControlMaxAge;
     qint32 m_bootId;
@@ -94,7 +94,7 @@ HResourceAvailable::HResourceAvailable() :
 
 HResourceAvailable::HResourceAvailable(
     quint32 cacheControlMaxAge, const QUrl& location,
-    const HProductTokens& serverTokens, const HResourceIdentifier& usn,
+    const HProductTokens& serverTokens, const HDiscoveryType& usn,
     qint32 bootId, qint32 configId, qint32 searchPort) :
         h_ptr(new HResourceAvailablePrivate())
 {
@@ -109,7 +109,7 @@ HResourceAvailable::HResourceAvailable(
         cacheControlMaxAge = 60* 60 * 24;
     }
 
-    if (usn.type() == HResourceIdentifier::Undefined)
+    if (usn.type() == HDiscoveryType::Undefined)
     {
         HLOG_WARN("USN is not defined");
         return;
@@ -177,7 +177,7 @@ HResourceAvailable::~HResourceAvailable()
 
 bool HResourceAvailable::isValid(bool strict) const
 {
-    return (h_ptr->m_usn.type() != HResourceIdentifier::Undefined) &&
+    return (h_ptr->m_usn.type() != HDiscoveryType::Undefined) &&
            (strict ? h_ptr->m_serverTokens.isValid() : true);
 }
 
@@ -186,7 +186,7 @@ HProductTokens HResourceAvailable::serverTokens() const
     return h_ptr->m_serverTokens;
 }
 
-HResourceIdentifier HResourceAvailable::usn() const
+HDiscoveryType HResourceAvailable::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -239,7 +239,7 @@ class HResourceUnavailablePrivate
 {
 public: // attributes
 
-    HResourceIdentifier m_usn;
+    HDiscoveryType m_usn;
     qint32 m_bootId;
     qint32 m_configId;
     HEndpoint m_sourceLocation;
@@ -268,13 +268,13 @@ HResourceUnavailable::HResourceUnavailable() :
 }
 
 HResourceUnavailable::HResourceUnavailable(
-    const HResourceIdentifier& usn, const HEndpoint& sourceLocation,
+    const HDiscoveryType& usn, const HEndpoint& sourceLocation,
     qint32 bootId, qint32 configId) :
         h_ptr(new HResourceUnavailablePrivate())
 {
     HLOG(H_AT, H_FUN);
 
-    if (usn.type() == HResourceIdentifier::Undefined)
+    if (usn.type() == HDiscoveryType::Undefined)
     {
         HLOG_WARN("USN is not defined");
         return;
@@ -327,11 +327,11 @@ HEndpoint HResourceUnavailable::location() const
 bool HResourceUnavailable::isValid(bool strict) const
 {
     Q_UNUSED(strict)
-    return h_ptr->m_usn.type() != HResourceIdentifier::Undefined;
+    return h_ptr->m_usn.type() != HDiscoveryType::Undefined;
     // if the object is valid, the USN is valid
 }
 
-HResourceIdentifier HResourceUnavailable::usn() const
+HDiscoveryType HResourceUnavailable::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -366,7 +366,7 @@ class HResourceUpdatePrivate
 {
 public: // attributes
 
-    HResourceIdentifier m_usn;
+    HDiscoveryType m_usn;
     QUrl   m_location;
     qint32 m_bootId;
     qint32 m_configId;
@@ -398,13 +398,13 @@ HResourceUpdate::HResourceUpdate() :
 }
 
 HResourceUpdate::HResourceUpdate(
-    const QUrl& location, const HResourceIdentifier& usn,
+    const QUrl& location, const HDiscoveryType& usn,
     qint32 bootId, qint32 configId, qint32 nextBootId, qint32 searchPort) :
         h_ptr(new HResourceUpdatePrivate())
 {
     HLOG(H_AT, H_FUN);
 
-    if (usn.type() == HResourceIdentifier::Undefined)
+    if (usn.type() == HDiscoveryType::Undefined)
     {
         HLOG_WARN("USN is not defined");
         return;
@@ -434,12 +434,12 @@ HResourceUpdate::HResourceUpdate(
         searchPort = -1;
     }
 
-    h_ptr->m_usn         = usn;
-    h_ptr->m_location    = location;
-    h_ptr->m_configId    = configId;
-    h_ptr->m_bootId      = bootId;
-    h_ptr->m_nextBootId  = nextBootId;
-    h_ptr->m_searchPort  = searchPort;
+    h_ptr->m_usn        = usn;
+    h_ptr->m_location   = location;
+    h_ptr->m_configId   = configId;
+    h_ptr->m_bootId     = bootId;
+    h_ptr->m_nextBootId = nextBootId;
+    h_ptr->m_searchPort = searchPort;
 }
 
 HResourceUpdate::HResourceUpdate(const HResourceUpdate& other) :
@@ -464,11 +464,11 @@ HResourceUpdate::~HResourceUpdate()
 bool HResourceUpdate::isValid(bool strict) const
 {
     Q_UNUSED(strict)
-    return h_ptr->m_usn.type() != HResourceIdentifier::Undefined;
+    return h_ptr->m_usn.type() != HDiscoveryType::Undefined;
     // if the object is valid, the USN is valid
 }
 
-HResourceIdentifier HResourceUpdate::usn() const
+HDiscoveryType HResourceUpdate::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -500,11 +500,11 @@ qint32 HResourceUpdate::searchPort() const
 
 bool operator==(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
 {
-    return obj1.h_ptr->m_usn          == obj2.h_ptr->m_usn &&
-           obj1.h_ptr->m_location     == obj2.h_ptr->m_location &&
-           obj1.h_ptr->m_bootId       == obj2.h_ptr->m_bootId &&
-           obj1.h_ptr->m_configId     == obj2.h_ptr->m_configId &&
-           obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort;
+    return obj1.h_ptr->m_usn        == obj2.h_ptr->m_usn &&
+           obj1.h_ptr->m_location   == obj2.h_ptr->m_location &&
+           obj1.h_ptr->m_bootId     == obj2.h_ptr->m_bootId &&
+           obj1.h_ptr->m_configId   == obj2.h_ptr->m_configId &&
+           obj1.h_ptr->m_searchPort == obj2.h_ptr->m_searchPort;
 }
 
 bool operator!=(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
@@ -519,19 +519,19 @@ class HDiscoveryRequestPrivate
 {
 public: // attributes
 
-    HResourceIdentifier m_st;
-    qint32              m_mx;
-    HProductTokens      m_userAgent;
+    HDiscoveryType m_st;
+    qint32    m_mx;
+    HProductTokens m_userAgent;
 
 public: // methods
 
     HDiscoveryRequestPrivate() : m_st(), m_mx(0), m_userAgent() {}
 
-    bool init(const HResourceIdentifier& st, qint32 mx, const HProductTokens& userAgent)
+    bool init(const HDiscoveryType& st, qint32 mx, const HProductTokens& userAgent)
     {
         HLOG(H_AT, H_FUN);
 
-        if (st.type() == HResourceIdentifier::Undefined)
+        if (st.type() == HDiscoveryType::Undefined)
         {
             HLOG_WARN("Search Target is not specified");
             return false;
@@ -571,7 +571,7 @@ HDiscoveryRequest::HDiscoveryRequest() :
 }
 
 HDiscoveryRequest::HDiscoveryRequest(
-    qint32 mx, const HResourceIdentifier& st, const HProductTokens& userAgent) :
+    qint32 mx, const HDiscoveryType& st, const HProductTokens& userAgent) :
         h_ptr(new HDiscoveryRequestPrivate())
 {
     h_ptr->init(st, mx, userAgent);
@@ -600,13 +600,11 @@ HDiscoveryRequest::~HDiscoveryRequest()
 
 bool HDiscoveryRequest::isValid(bool strict) const
 {
-    Q_UNUSED(strict)
-    return h_ptr->m_st.type() != HResourceIdentifier::Undefined;
-    // if the object is valid, the ResourceIdentifier is defined ==> this is a good enough
-    // test for validity
+    return (h_ptr->m_st.type() != HDiscoveryType::Undefined) &&
+           (strict ? h_ptr->m_userAgent.isValid() : true);
 }
 
-HResourceIdentifier HDiscoveryRequest::searchTarget() const
+HDiscoveryType HDiscoveryRequest::searchTarget() const
 {
     return h_ptr->m_st;
 }
@@ -641,7 +639,7 @@ class HDiscoveryResponsePrivate
 public: // attributes
 
     HProductTokens m_serverTokens;
-    HResourceIdentifier m_usn;
+    HDiscoveryType m_usn;
     QUrl      m_location;
     QDateTime m_date;
     qint32    m_cacheControlMaxAge;
@@ -669,7 +667,7 @@ HDiscoveryResponse::HDiscoveryResponse() :
 
 HDiscoveryResponse::HDiscoveryResponse(
     quint32 cacheControlMaxAge, const QDateTime& /*date*/, const QUrl& location,
-    const HProductTokens& serverTokens, const HResourceIdentifier& usn,
+    const HProductTokens& serverTokens, const HDiscoveryType& usn,
     qint32 bootId, qint32 configId, qint32 searchPort) :
         h_ptr(new HDiscoveryResponsePrivate())
 {
@@ -684,7 +682,7 @@ HDiscoveryResponse::HDiscoveryResponse(
         cacheControlMaxAge = 60* 60 * 24;
     }
 
-    if (usn.type() == HResourceIdentifier::Undefined)
+    if (usn.type() == HDiscoveryType::Undefined)
     {
         HLOG_WARN("USN is not defined");
         return;
@@ -744,7 +742,7 @@ HDiscoveryResponse::~HDiscoveryResponse()
 
 bool HDiscoveryResponse::isValid(bool strict) const
 {
-    return (h_ptr->m_usn.type() != HResourceIdentifier::Undefined) &&
+    return (h_ptr->m_usn.type() != HDiscoveryType::Undefined) &&
            (strict ? h_ptr->m_serverTokens.isValid() : true);
 }
 
@@ -758,7 +756,7 @@ QDateTime HDiscoveryResponse::date() const
     return h_ptr->m_date;
 }
 
-HResourceIdentifier HDiscoveryResponse::usn() const
+HDiscoveryType HDiscoveryResponse::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -796,8 +794,12 @@ bool operator==(const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)
            obj1.h_ptr->m_cacheControlMaxAge == obj2.h_ptr->m_cacheControlMaxAge &&
            obj1.h_ptr->m_bootId       == obj2.h_ptr->m_bootId &&
            obj1.h_ptr->m_configId     == obj2.h_ptr->m_configId &&
-           obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort &&
-           obj1.h_ptr->m_date         == obj2.h_ptr->m_date;
+           obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort;// &&
+           //obj1.h_ptr->m_date         == obj2.h_ptr->m_date;
+    // the date isn't used in comparison due to something that seems to be a bug
+    // in Qt. A datetime object created using the currentDateTime() function
+    // copy constructed to another datetime object seems to result a logically
+    // different object.
 }
 
 bool operator!=(const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)

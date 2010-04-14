@@ -6,7 +6,7 @@ HEADERS += \
     $$SRC_LOC/dataelements/hudn.h \
     $$SRC_LOC/dataelements/hresourcetype.h \
     $$SRC_LOC/dataelements/hproduct_tokens.h \
-    $$SRC_LOC/dataelements/hresource_identifier.h
+    $$SRC_LOC/dataelements/hdiscoverytype.h
 
 SOURCES += \
     $$SRC_LOC/dataelements/hdeviceinfo.cpp \
@@ -14,4 +14,4 @@ SOURCES += \
     $$SRC_LOC/dataelements/hudn.cpp \
     $$SRC_LOC/dataelements/hresourcetype.cpp \
     $$SRC_LOC/dataelements/hproduct_tokens.cpp \
-    $$SRC_LOC/dataelements/hresource_identifier.cpp
+    $$SRC_LOC/dataelements/hdiscoverytype.cpp

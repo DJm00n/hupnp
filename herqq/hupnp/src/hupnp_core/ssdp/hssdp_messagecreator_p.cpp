@@ -23,8 +23,8 @@
 #include "hdiscovery_messages.h"
 
 #include "./../dataelements/hresourcetype.h"
+#include "./../dataelements/hdiscoverytype.h"
 #include "./../dataelements/hproduct_tokens.h"
-#include "./../dataelements/hresource_identifier.h"
 
 #include "./../socket/hendpoint.h"
 #include "./../../utils/hlogger_p.h"
@@ -48,19 +48,18 @@ HEndpoint multicastEndpoint()
     return retVal;
 }
 
-QString getNt(const HResourceIdentifier& ri)
+QString getTarget(const HDiscoveryType& ri)
 {
     switch(ri.type())
     {
-        case HResourceIdentifier::Undefined:
-        case HResourceIdentifier::AllDevices:
+        case HDiscoveryType::Undefined:
             return "";
-
-        case HResourceIdentifier::RootDevices:
-        case HResourceIdentifier::SpecificDevice:
+        case HDiscoveryType::All:
+        case HDiscoveryType::RootDevices:
+        case HDiscoveryType::SpecificDevice:
             return ri.toString();
 
-        case HResourceIdentifier::SpecificRootDevice:
+        case HDiscoveryType::SpecificRootDevice:
             return "upnp:rootdevice";
 
         default:
@@ -92,7 +91,7 @@ QByteArray HSsdpMessageCreator::create(const HResourceUpdate& msg)
     ts << "NOTIFY * HTTP/1.1\r\n"
        << "HOST: "     << multicastEndpoint().toString()  << "\r\n"
        << "LOCATION: " << msg.location().toString()           << "\r\n"
-       << "NT: "       << getNt(msg.usn()) << "\r\n"
+       << "NT: "       << getTarget(msg.usn()) << "\r\n"
        << "NTS: "      << "ssdp:update\r\n"
        << "USN: "      << msg.usn().toString() << "\r\n";
 
@@ -127,7 +126,7 @@ QByteArray HSsdpMessageCreator::create(const HDiscoveryRequest& msg)
         << "HOST: "       << multicastEndpoint().toString() << "\r\n"
         << "MAN: "        << "\"ssdp:discover\"\r\n"
         << "MX: "         << msg.mx()                  << "\r\n"
-        << "ST: "         << getNt(msg.searchTarget()) << "\r\n"
+        << "ST: "         << getTarget(msg.searchTarget()) << "\r\n"
         << "USER-AGENT: " << msg.userAgent().toString()<< "\r\n\r\n";
 
     return retVal.toUtf8();
@@ -148,7 +147,7 @@ QByteArray HSsdpMessageCreator::create(const HDiscoveryResponse& msg)
         << "EXT:\r\n"
         << "LOCATION: "              << msg.location().toString() << "\r\n"
         << "SERVER: "                << msg.serverTokens().toString() << "\r\n"
-        << "ST: "                    << getNt(msg.usn()) << "\r\n"
+        << "ST: "                    << getTarget(msg.usn()) << "\r\n"
         << "USN: "                   << msg.usn().toString() << "\r\n";
 
     if (msg.bootId() >= 0)
@@ -181,7 +180,7 @@ QByteArray HSsdpMessageCreator::create(const HResourceAvailable& msg)
        << "HOST: "                  << multicastEndpoint().toString() << "\r\n"
        << "CACHE-CONTROL: max-age=" << msg.cacheControlMaxAge() << "\r\n"
        << "LOCATION: "              << msg.location().toString() << "\r\n"
-       << "NT: "                    << getNt(msg.usn()) << "\r\n"
+       << "NT: "                    << getTarget(msg.usn()) << "\r\n"
        << "NTS: "                   << "ssdp:alive\r\n"
        << "SERVER: "                << msg.serverTokens().toString() << "\r\n"
        << "USN: "                   << msg.usn().toString() << "\r\n";
@@ -214,7 +213,7 @@ QByteArray HSsdpMessageCreator::create(const HResourceUnavailable& msg)
 
     ts << "NOTIFY * HTTP/1.1\r\n"
        << "HOST: " << multicastEndpoint().toString()<< "\r\n"
-       << "NT: "   << getNt(msg.usn()) << "\r\n"
+       << "NT: "   << getTarget(msg.usn()) << "\r\n"
        << "NTS: "  << "ssdp:byebye\r\n"
        << "USN: "  << msg.usn().toString() << "\r\n";
 

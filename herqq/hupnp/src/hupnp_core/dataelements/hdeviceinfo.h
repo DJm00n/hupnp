@@ -42,11 +42,22 @@ class HDeviceInfoPrivate;
 /*!
  * \brief Class that represents device information found in a UPnP device description file.
  *
+ * A device description details a UPnP device. A device description specifies
+ * the services of a device, the embedded devices of a device and other information,
+ * such as the manufacturer, model name, serial number and the Unique Device Name
+ * that uniquely identifies a device.
+ *
+ * In HUPnP the UPnP services and embedded devices are part of the
+ * HUPnP's \ref devicemodel and because of that they are represented
+ * as objects, which ownership is always held by HUPnP.
+ * All the other information found in a device description is contained by
+ * an instance of this class.
+ *
  * \headerfile hdeviceinfo.h HDeviceInfo
  *
  * \ingroup dataelements
  *
- * \remark this class is not thread-safe.
+ * \remarks this class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HDeviceInfo
 {
@@ -62,6 +73,8 @@ public:
 
     /*!
      * Creates a new, empty instance.
+     *
+     * \sa isValid()
      */
     HDeviceInfo();
 
@@ -88,7 +101,7 @@ public:
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.
      *
-     * \remark in case any of the provided arguments does not meet the
+     * \remarks in case any of the provided arguments does not meet the
      * specified requirements, the created object is \e invalid.
      *
      * \sa isValid()
@@ -134,7 +147,8 @@ public:
      * or embedded. The specified UDN has to be valid.
      *
      * \param upc specifies the Universal Product Code, which is 12-digit,
-     * all-numeric code that identifies the consumer package. Managed by the Uniform Code Council.
+     * all-numeric code that identifies the consumer package.
+     * Managed by the Uniform Code Council.
      *
      * \param icons specifies the icons of the device, if any.
      *
@@ -144,7 +158,7 @@ public:
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.
      *
-     * \remark in case any of the provided arguments does not meet the
+     * \remarks in case any of the provided arguments does not meet the
      * specified requirements, the created object is \e invalid.
      *
      * \sa isValid()
@@ -407,7 +421,6 @@ H_UPNP_CORE_EXPORT bool operator==(const HDeviceInfo&, const HDeviceInfo&);
  * \relates HDeviceInfo
  */
 H_UPNP_CORE_EXPORT bool operator!=(const HDeviceInfo&, const HDeviceInfo&);
-
 
 }
 }

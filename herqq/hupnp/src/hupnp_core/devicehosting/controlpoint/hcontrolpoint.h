@@ -338,7 +338,7 @@ private:
      * every new device is accepted and built accordingly.
      */
     virtual bool acceptResourceAd(
-        const HResourceIdentifier& usn, const HEndpoint& source);
+        const HDiscoveryType& usn, const HEndpoint& source);
 
 protected:
 
@@ -608,7 +608,7 @@ public Q_SLOTS:
      * to the scan will not be considered as expired and no rootDeviceOffline()
      * will be sent consequently.
      */
-    //void scan(const Herqq::Upnp::HResourceIdentifier& resource);
+    //void scan(const Herqq::Upnp::HDiscoveryType& resource);
 
 Q_SIGNALS:
 

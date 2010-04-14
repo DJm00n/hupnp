@@ -226,7 +226,6 @@ public:
      *
      * \remarks an embedded device returns the same device description as
      * its root device.
-     *
      */
     QString deviceDescription() const;
 

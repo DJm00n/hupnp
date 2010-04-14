@@ -55,7 +55,7 @@ class HStateVariable;
 class HActionArgument;
 class HActionArguments;
 class HStateVariableEvent;
-class HResourceIdentifier;
+class HDiscoveryType;
 class HDeviceConfiguration;
 class HDeviceHostConfiguration;
 class HControlPointConfiguration;

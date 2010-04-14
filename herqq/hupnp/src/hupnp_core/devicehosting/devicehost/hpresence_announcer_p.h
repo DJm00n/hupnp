@@ -45,8 +45,8 @@
 
 #include "./../../dataelements/hudn.h"
 #include "./../../dataelements/hdeviceinfo.h"
+#include "./../../dataelements/hdiscoverytype.h"
 #include "./../../dataelements/hproduct_tokens.h"
-#include "./../../dataelements/hresource_identifier.h"
 
 #include <QUrl>
 
@@ -65,7 +65,7 @@ class Announcement
 protected:
 
     HDeviceController* m_device;
-    HResourceIdentifier m_usn;
+    HDiscoveryType m_usn;
     QUrl m_location;
 
 public:
@@ -75,12 +75,12 @@ public:
     }
 
     Announcement(
-        HDeviceController* device, const HResourceIdentifier& usn,
+        HDeviceController* device, const HDiscoveryType& usn,
         const QUrl& location) :
             m_device(device), m_usn(usn), m_location(location)
     {
         Q_ASSERT(m_device);
-        Q_ASSERT(m_usn.type() != HResourceIdentifier::Undefined);
+        Q_ASSERT(m_usn.type() != HDiscoveryType::Undefined);
         Q_ASSERT(m_location.isValid() && !m_location.isEmpty());
     }
 
@@ -102,7 +102,7 @@ public:
     }
 
     ResourceAvailableAnnouncement(
-        HDeviceController* device, const HResourceIdentifier& usn,
+        HDeviceController* device, const HDiscoveryType& usn,
         const QUrl& location) :
             Announcement(device, usn, location)
     {
@@ -135,7 +135,7 @@ public:
     }
 
     ResourceUnavailableAnnouncement(
-        HDeviceController* device, const HResourceIdentifier& usn,
+        HDeviceController* device, const HDiscoveryType& usn,
         const QUrl& location) :
             Announcement(device, usn, location)
     {
@@ -195,7 +195,7 @@ public:
         foreach(const QUrl& location, locations)
         {
             HUdn udn(rootDevice->m_device->deviceInfo().udn());
-            HResourceIdentifier usn(udn, true);
+            HDiscoveryType usn(udn, true);
 
             announcements.push_back(AnnouncementType(rootDevice, usn, location));
         }
@@ -214,7 +214,7 @@ public:
             HDeviceInfo deviceInfo = device->m_device->deviceInfo();
 
             HUdn udn = deviceInfo.udn();
-            HResourceIdentifier usn(udn);
+            HDiscoveryType usn(udn);
 
             // device UDN advertisement
             announcements.push_back(AnnouncementType(device, usn, location));

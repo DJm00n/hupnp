@@ -405,7 +405,8 @@ Q_SIGNALS:
      *
      * \param msg specifies the <em>device announcement</em> message.
      */
-    void resourceUnavailableReceived(const Herqq::Upnp::HResourceUnavailable& msg);
+    void resourceUnavailableReceived(
+        const Herqq::Upnp::HResourceUnavailable& msg);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(HSsdp::AllowedMessages)

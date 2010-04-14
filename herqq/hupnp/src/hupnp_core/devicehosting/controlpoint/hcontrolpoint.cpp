@@ -32,8 +32,8 @@
 #include "./../../datatypes/hdatatype_mappings_p.h"
 
 #include "./../../dataelements/hdeviceinfo.h"
+#include "./../../dataelements/hdiscoverytype.h"
 #include "./../../dataelements/hproduct_tokens.h"
-#include "./../../dataelements/hresource_identifier.h"
 
 #include "./../../http/hhttp_messagecreator_p.h"
 
@@ -621,7 +621,7 @@ HControlPoint::DeviceDiscoveryAction HControlPoint::acceptRootDevice(
 }
 
 bool HControlPoint::acceptResourceAd(
-    const HResourceIdentifier& /*usn*/, const HEndpoint& /*source*/)
+    const HDiscoveryType& /*usn*/, const HEndpoint& /*source*/)
 {
     return true;
 }
@@ -708,7 +708,7 @@ HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
         h_ptr->m_ssdp->sendDiscoveryRequest(
             HDiscoveryRequest(
                 1,
-                HResourceIdentifier::createRootDeviceIdentifier(),
+                HDiscoveryType::createDiscoveryTypeForRootDevices(),
                 herqqProductTokens()));
 
         h_ptr->setState(HAbstractHostPrivate::Initialized);
@@ -881,7 +881,7 @@ HControlPoint::ReturnCode HControlPoint::removeDevice(HDevice* rootDevice)
             Success : InvalidArgument;
 }
 
-//void HControlPoint::scan(const HResourceIdentifier& /*resource*/)
+//void HControlPoint::scan(const HDiscoveryType& /*resource*/)
 //{
 
 //}

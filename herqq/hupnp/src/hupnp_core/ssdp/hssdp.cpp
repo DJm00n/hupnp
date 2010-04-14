@@ -24,8 +24,8 @@
 #include "hdiscovery_messages.h"
 #include "hssdp_messagecreator_p.h"
 
+#include "./../dataelements/hdiscoverytype.h"
 #include "./../dataelements/hproduct_tokens.h"
-#include "./../dataelements/hresource_identifier.h"
 
 #include "./../socket/hendpoint.h"
 
@@ -240,7 +240,7 @@ HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(
         date,
         location,
         HProductTokens(server),
-        HResourceIdentifier(usn),
+        HDiscoveryType(usn),
         bootId,
         hdr.hasKey("CONFIGID.UPNP.ORG") ? configId : 0,
         // ^^ configid is optional even in UDA v1.1 ==> cannot provide -1
@@ -273,7 +273,7 @@ HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(
             QString("MAN header field is invalid: [%1].").arg(man));
     }
 
-    return HDiscoveryRequest(mx, HResourceIdentifier(st), HProductTokens(ua));
+    return HDiscoveryRequest(mx, HDiscoveryType(st), HProductTokens(ua));
 }
 
 HResourceAvailable HSsdpPrivate::parseDeviceAvailable(const QHttpRequestHeader& hdr)
@@ -315,7 +315,7 @@ HResourceAvailable HSsdpPrivate::parseDeviceAvailable(const QHttpRequestHeader& 
         maxAge,
         location,
         HProductTokens(server),
-        HResourceIdentifier(usn),
+        HDiscoveryType(usn),
         bootId,
         configId,
         searchPort);
@@ -346,7 +346,7 @@ HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(
     checkHost(host);
 
     return HResourceUnavailable(
-        HResourceIdentifier(usn), QUrl(), bootId, configId); // TODO
+        HDiscoveryType(usn), QUrl(), bootId, configId); // TODO
 }
 
 HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
@@ -389,7 +389,7 @@ HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
 
     return HResourceUpdate(
         location,
-        HResourceIdentifier(usn),
+        HDiscoveryType(usn),
         bootId,
         configId,
         nextBootId,
@@ -401,7 +401,7 @@ bool HSsdpPrivate::send(const QByteArray& data)
     qint64 retVal = m_unicastSocket.writeDatagram(
         data, multicastAddress(), multicastPort());
 
-    return retVal != data.size();
+    return retVal == data.size();
 }
 
 bool HSsdpPrivate::send(const QByteArray& data, const HEndpoint& receiver)
@@ -409,7 +409,7 @@ bool HSsdpPrivate::send(const QByteArray& data, const HEndpoint& receiver)
     qint64 retVal = m_unicastSocket.writeDatagram(
         data, receiver.hostAddress(), receiver.portNumber());
 
-    return retVal != data.size();
+    return retVal == data.size();
 }
 
 void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)

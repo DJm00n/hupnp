@@ -35,8 +35,8 @@ namespace Upnp
 {
 
 class HEndpoint;
+class HDiscoveryType;
 class HProductTokens;
-class HResourceIdentifier;
 class HResourceAvailablePrivate;
 
 /*!
@@ -44,7 +44,7 @@ class HResourceAvailablePrivate;
  *
  * According to the UDA, <em>When a device is added to the network,
  * it MUST multicast discovery messages to advertise its root device, any embedded devices,
- * and any services</em>. In HUPnP, this class represents such an advertisement.
+ * and any services</em>. In HUPnP this class represents such an advertisement.
  *
  * Usually, you create instances of this class to be sent by the Herqq::Upnp::HSsdp,
  * or you receive instances of this class from the Herqq::Upnp::HSsdp.
@@ -93,8 +93,8 @@ public:
      * \note Although server tokens are mandatory according to the UDA,
      * this is not enforced by this class for interoperability reasons.
      *
-     * \param usn specifies the Unique Service Name. The created object is invalid
-     * if the provided USN is invalid.
+     * \param usn specifies the Unique Service Name. The created object is valid
+     * only if the provided USN is valid.
      *
      * \param bootId specifies the \c BOOTID.UPNP.ORG header value. Note that
      * this is mandatory in UDA v1.1, whereas it is not specified at all in
@@ -113,8 +113,8 @@ public:
      * This parameter is optional.
      *
      * \remarks
-     * \li if cacheControlMaxAge is smaller than 5, it it set to 5 or if it is
-     * larger than 60 * 60 * 24 (a day in seconds), it is set to a day measured in seconds.
+     * \li if cacheControlMaxAge is smaller than 5 it it set to 5, or if it is
+     * larger than 60 * 60 * 24 (a day in seconds) it is set to a day measured in seconds.
      *
      * \li if searchPort is smaller than 49152 or larger than 65535 it is set to -1.
      * The range is specified in UDA v1.1.
@@ -125,7 +125,7 @@ public:
         quint32        cacheControlMaxAge,
         const QUrl&    location,
         const HProductTokens& serverTokens,
-        const HResourceIdentifier& usn,
+        const HDiscoveryType& usn,
         qint32         bootId = -1,
         qint32         configId = -1,
         qint32         searchPort = -1);
@@ -183,33 +183,36 @@ public:
     /*!
      * Returns the Unique Service Name.
      *
-     * USN identifies a unique \e device or \e service instance.
+     * The Unique Service Name identifies a unique \e device or \e service instance.
      *
      * \return the Unique Service Name. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
      */
-    HResourceIdentifier usn() const;
+    HDiscoveryType usn() const;
 
     /*!
      * Returns the number of seconds the advertisement is valid.
      *
-     * \return the number of seconds the advertisement is valid.
+     * \return the number of seconds the advertisement is valid. If the object
+     * is valid the return value is never smaller than 5.
      */
     qint32 cacheControlMaxAge() const;
 
     /*!
      * Returns the value of \c BOOTID.UPNP.ORG.
      *
-     * \return the value of \c BOOTID.UPNP.ORG.
+     * \return the value of \c BOOTID.UPNP.ORG. If the value is not
+     * specified -1 is returned.
      */
     qint32 bootId() const;
 
     /*!
      * Returns the value of \c CONFIGID.UPNP.ORG.
      *
-     * \return the value of \c CONFIGID.UPNP.ORG.
+     * \return the value of \c CONFIGID.UPNP.ORG. If the value is not
+     * specified -1 is returned.
      */
     qint32 configId() const;
 
@@ -217,7 +220,7 @@ public:
      * Returns the value of \c SEARCHPORT.UPNP.ORG header field.
      *
      * \return the value of \c SEARCHPORT.UPNP.ORG header field. If the value is not
-     * specified upon construction of the object -1 is returned.
+     * specified -1 is returned.
      */
     qint32 searchPort() const;
 };
@@ -252,7 +255,7 @@ class HResourceUnavailablePrivate;
  * corresponding to each of the ssdp:alive messages it multicasted that have not
  * already expired</em>. In HUPnP this class represents such a message.
  *
- * Usually, you create instances of this class to be sent by the Herqq::Upnp::HSsdp,
+ * Usually you create instances of this class to be sent by the Herqq::Upnp::HSsdp,
  * or you receive instances of this class from the Herqq::Upnp::HSsdp.
  *
  * \headerfile hdiscovery_messages.h HResourceUnavailable
@@ -301,7 +304,7 @@ public:
      * \sa isValid()
      */
     HResourceUnavailable(
-        const HResourceIdentifier& usn, const HEndpoint& sourceLocation,
+        const HDiscoveryType& usn, const HEndpoint& sourceLocation,
         qint32 bootId = -1, qint32 configId = -1);
 
     /*!
@@ -318,8 +321,6 @@ public:
      * Assigns the contents of the other to this.
      *
      * \return a reference to this object.
-     *
-     * \remarks this method is not thread-safe.
      */
     HResourceUnavailable& operator=(const HResourceUnavailable&);
 
@@ -338,34 +339,35 @@ public:
     /*!
      * Returns the Unique Service Name.
      *
-     * USN identifies a unique \e device or \e service instance.
+     * The Unique Service Name identifies a unique \e device or \e service instance.
      *
      * \return the Unique Service Name. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
      */
-    HResourceIdentifier usn() const;
+    HDiscoveryType usn() const;
 
     /*!
      * Returns the value of \c BOOTID.UPNP.ORG.
      *
-     * \return the value of \c BOOTID.UPNP.ORG.
+     * \return the value of \c BOOTID.UPNP.ORG. If the value is not
+     * specified -1 is returned.
      */
     qint32 bootId() const;
 
     /*!
      * Returns the value of \c CONFIGID.UPNP.ORG.
      *
-     * \return the value of \c CONFIGID.UPNP.ORG.
+     * \return the value of \c CONFIGID.UPNP.ORG. If the value is not
+     * specified -1 is returned.
      */
     qint32 configId() const;
 
     /*!
-     * Returns the location of the device that went offline.
+     * Returns the IP endpoint of the device that went offline.
      *
-     * \return the location of the device that went offline. This is the URL from where
-     * the device description could be retrieved when the device was online.
+     * \return the IP endpoint of the device that went offline.
      */
     HEndpoint location() const;
 };
@@ -454,7 +456,7 @@ public:
      * This is specified in the UDA v1.1.
      */
     HResourceUpdate(
-        const QUrl& location, const HResourceIdentifier& usn,
+        const QUrl& location, const HDiscoveryType& usn,
         qint32 bootId = -1, qint32 configId = -1, qint32 nextBootId  = -1,
         qint32 searchPort = -1);
 
@@ -503,12 +505,13 @@ public:
      *
      * \return the Unique Service Name.
      */
-    HResourceIdentifier usn() const;
+    HDiscoveryType usn() const;
 
     /*!
      * Returns the value of \c BOOTID.UPNP.ORG.
      *
      * \return the value of \c BOOTID.UPNP.ORG.
+     * If the value is not specified -1 is returned.
      */
     qint32 bootId() const;
 
@@ -516,19 +519,21 @@ public:
      * Returns the value of \c CONFIGID.UPNP.ORG.
      *
      * \return the value of \c CONFIGID.UPNP.ORG.
+     * If the value is not specified -1 is returned.
      */
     qint32 configId() const;
 
     /*!
      * \return
+     * If the value is not specified -1 is returned.
      */
     qint32 nextBootId() const;
 
     /*!
      * Returns the value of \c SEARCHPORT.UPNP.ORG header field.
      *
-     * \return the value of \c SEARCHPORT.UPNP.ORG header field. If the value is not
-     * specified upon construction of the object -1 is returned.
+     * \return the value of \c SEARCHPORT.UPNP.ORG header field.
+     * If the value is not specified -1 is returned.
      */
     qint32 searchPort() const;
 };
@@ -599,16 +604,14 @@ public:
      * the created object will be invalid.
      *
      * \param userAgent specifies information about the requester.
-     * If the object is invalid, the created object will be invalid.
      *
-     * \remark if mx is smaller than 1, it is set to 1. If mx is larger than 5, it
+     * \remarks if mx is smaller than 1 it is set to 1. If mx is larger than 5 it
      * it set to 5.
      *
      * \sa isValid(), mx(), searchTarget(), userAgent()
      */
     HDiscoveryRequest(
-        qint32 mx, const HResourceIdentifier& resource,
-        const HProductTokens& userAgent);
+        qint32 mx, const HDiscoveryType& resource, const HProductTokens& userAgent);
 
     /*!
      * Destroys the instance.
@@ -616,12 +619,12 @@ public:
     ~HDiscoveryRequest();
 
     /*!
-     * Copy constructor. Makes a deep copy.
+     * Copy constructor.
      */
     HDiscoveryRequest(const HDiscoveryRequest&);
 
     /*!
-     * Assigns the contents of the other to this. Makes a deep copy.
+     * Assigns the contents of the other to this.
      *
      * \return a reference to this.
      */
@@ -644,14 +647,15 @@ public:
      *
      * \return the Search Target of the request.
      */
-    HResourceIdentifier searchTarget() const;
+    HDiscoveryType searchTarget() const;
 
     /*!
      * Returns the maximum wait time in seconds.
      *
      * According to UDA,
      * <em>Device responses SHOULD be delayed a random duration between 0 and
-     * this many seconds to balance load for the control point when it processes responses</em>.
+     * this many seconds to balance load for the control point when it
+     * processes responses</em>.
      *
      * \return the maximum wait time in seconds.
      */
@@ -738,24 +742,27 @@ public:
      * UPnP version 1.1 or later, \c bootId and \c configId have to be properly defined.
      * Otherwise the created object will be invalid.
      *
-     * \param usn specifies the Unique Service Name. If the USN is valid, the created
-     * object will be invalid as well.
+     * \note Although server tokens are mandatory according to the UDA,
+     * this is not enforced by this class for interoperability reasons.
+     *
+     * \param usn specifies the Unique Service Name. The created object is valid
+     * only if the provided USN is valid.
      *
      * \param bootId specifies the \c BOOTID.UPNP.ORG header value. Note that
      * this is mandatory in UDA v1.1, whereas it is not specified at all in
-     * UDA v1.0. Because of this, the class requires a valid value (>= 0) only in case
-     * the mandatory \c serverTokens identify UPnP v1.1 or later.
+     * UDA v1.0. Because of this the class requires a valid value (>= 0) only in case
+     * the \c serverTokens identify UPnP v1.1 or later.
      *
      * \param configId specifies the \c CONFIGID.UPNP.ORG header value. Note that
      * this is mandatory in UDA v1.1, whereas it is not specified at all in
      * UDA v1.0. Because of this, the class requires a valid value (>= 0) only in case
-     * the mandatory \c serverTokens identify UPnP v1.1 or later.
+     * the \c serverTokens identify UPnP v1.1 or later.
      *
      * \param searchPort specifies the \c SEARCHPORT.UPNP.ORG header value. Note that
      * this is optional in UDA v1.1, whereas it is not specified at all in UDA v1.0.
      * If specified, this is the port at which the device must listen for unicast
      * \c M-SEARCH messages. Otherwise the port is the default \c 1900.
-     * This parameter is always optional.
+     * This parameter is optional.
      *
      * \remarks
      * \li if cacheControlMaxAge is smaller than 5, it it set to 5 or if it is
@@ -771,7 +778,7 @@ public:
         const QDateTime& date,
         const QUrl& location,
         const HProductTokens& serverTokens,
-        const HResourceIdentifier& usn,
+        const HDiscoveryType& usn,
         qint32 bootId = -1,
         qint32 configId = 0,
         qint32 searchPort = -1);
@@ -822,14 +829,14 @@ public:
     /*!
      * Returns the Unique Service Name.
      *
-     * USN identifies a unique \e device or \e service instance.
+     * The Unique Service Name identifies a unique \e device or \e service instance.
      *
-     * \return the Unique Service Name. The returned object is if this
+     * \return the Unique Service Name. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
      */
-    HResourceIdentifier usn() const;
+    HDiscoveryType usn() const;
 
     /*!
      * Returns the location of the announced device.
@@ -853,6 +860,7 @@ public:
      * Returns the value of \c BOOTID.UPNP.ORG.
      *
      * \return the value of \c BOOTID.UPNP.ORG.
+     * If the value is not specified -1 is returned.
      */
     qint32 bootId() const;
 
@@ -860,14 +868,15 @@ public:
      * Returns the value of \c CONFIGID.UPNP.ORG.
      *
      * \return the value of \c CONFIGID.UPNP.ORG.
+     * If the value is not specified -1 is returned.
      */
     qint32 configId() const;
 
     /*!
      * Returns the value of \c SEARCHPORT.UPNP.ORG header field.
      *
-     * \return the value of \c SEARCHPORT.UPNP.ORG header field. If the value is not
-     * specified upon construction of the object, -1 is returned.
+     * \return the value of \c SEARCHPORT.UPNP.ORG header field.
+     * If the value is not specified -1 is returned.
      */
     qint32 searchPort() const;
 };

@@ -19,7 +19,7 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hresource_identifier.h"
+#include "hdiscoverytype.h"
 
 #include "./../dataelements/hudn.h"
 #include "./../dataelements/hresourcetype.h"
@@ -36,13 +36,13 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HResourceIdentifierPrivate
+ * HDiscoveryTypePrivate
  ******************************************************************************/
-class HResourceIdentifierPrivate
+class HDiscoveryTypePrivate
 {
 public:
 
-    HResourceIdentifier::Type m_type;
+    HDiscoveryType::Type m_type;
     QString       m_contents;
 
     HUdn          m_udn;
@@ -50,8 +50,8 @@ public:
 
 public:
 
-    HResourceIdentifierPrivate() :
-        m_type(HResourceIdentifier::Undefined), m_contents(), m_udn(),
+    HDiscoveryTypePrivate() :
+        m_type(HDiscoveryType::Undefined), m_contents(), m_udn(),
         m_resourceType()
     {
     }
@@ -90,7 +90,7 @@ public:
             else
             {
                 m_udn = udn;
-                m_type = HResourceIdentifier::SpecificDevice;
+                m_type = HDiscoveryType::SpecificDevice;
                 m_contents = udn.toString();
                 return true;
             }
@@ -107,7 +107,7 @@ public:
         {
             if (parsed[0] == "ssdp" && parsed[1] == "all")
             {
-                m_type = HResourceIdentifier::AllDevices;
+                m_type = HDiscoveryType::All;
                 m_contents = "ssdp:all";
                 return true;
             }
@@ -119,12 +119,12 @@ public:
 
             if (m_udn.isValid())
             {
-                m_type = HResourceIdentifier::SpecificRootDevice;
+                m_type = HDiscoveryType::SpecificRootDevice;
                 m_contents = QString("%1::upnp:rootdevice").arg(udn.toString());
             }
             else
             {
-                m_type = HResourceIdentifier::RootDevices;
+                m_type = HDiscoveryType::RootDevices;
                 m_contents = "upnp:rootdevice";
             }
             return true;
@@ -135,7 +135,7 @@ public:
             if (udn.isValid())
             {
                 m_udn = udn;
-                m_type = HResourceIdentifier::SpecificDevice;
+                m_type = HDiscoveryType::SpecificDevice;
                 m_contents = udn.toString();
                 return true;
             }
@@ -148,8 +148,8 @@ public:
             if (m_udn.isValid())
             {
                 m_type = resourceType.isDeviceType() ?
-                     HResourceIdentifier::SpecificDeviceWithType :
-                     HResourceIdentifier::SpecificServiceWithType;
+                     HDiscoveryType::SpecificDeviceWithType :
+                     HDiscoveryType::SpecificServiceWithType;
 
                 m_contents = QString("%1::%2").arg(
                     udn.toString(), resourceType.toString());
@@ -157,8 +157,8 @@ public:
             else
             {
                 m_type = resourceType.isDeviceType() ?
-                     HResourceIdentifier::DeviceType :
-                     HResourceIdentifier::ServiceType;
+                     HDiscoveryType::DeviceType :
+                     HDiscoveryType::ServiceType;
 
                 m_contents = QString("%1").arg(resourceType.toString());
             }
@@ -178,19 +178,19 @@ public:
             {
             case HResourceType::Undefined:
                 m_udn = udn;
-                m_type = HResourceIdentifier::SpecificDevice;
+                m_type = HDiscoveryType::SpecificDevice;
                 m_resourceType = rt;
                 m_contents = udn.toString();
                 return;
 
             case HResourceType::StandardDeviceType:
             case HResourceType::VendorSpecifiedDeviceType:
-                m_type = HResourceIdentifier::SpecificDeviceWithType;
+                m_type = HDiscoveryType::SpecificDeviceWithType;
                 break;
 
             case HResourceType::StandardServiceType:
             case HResourceType::VendorSpecifiedServiceType:
-                m_type = HResourceIdentifier::SpecificServiceWithType;
+                m_type = HDiscoveryType::SpecificServiceWithType;
                 break;
 
             default:
@@ -205,19 +205,19 @@ public:
             {
             case HResourceType::Undefined:
                 m_udn = udn;
-                m_type = HResourceIdentifier::Undefined;
+                m_type = HDiscoveryType::Undefined;
                 m_resourceType = rt;
                 m_contents = QString();
                 return;
 
             case HResourceType::StandardDeviceType:
             case HResourceType::VendorSpecifiedDeviceType:
-                m_type = HResourceIdentifier::DeviceType;
+                m_type = HDiscoveryType::DeviceType;
                 break;
 
             case HResourceType::StandardServiceType:
             case HResourceType::VendorSpecifiedServiceType:
-                m_type = HResourceIdentifier::ServiceType;
+                m_type = HDiscoveryType::ServiceType;
                 break;
 
             default:
@@ -233,27 +233,27 @@ public:
 };
 
 /*******************************************************************************
- * HResourceIdentifier
+ * HDiscoveryType
  ******************************************************************************/
-HResourceIdentifier::HResourceIdentifier() :
-    h_ptr(new HResourceIdentifierPrivate())
+HDiscoveryType::HDiscoveryType() :
+    h_ptr(new HDiscoveryTypePrivate())
 {
 }
 
-HResourceIdentifier::HResourceIdentifier(const HUdn& udn, bool isRootDevice) :
-    h_ptr(new HResourceIdentifierPrivate())
+HDiscoveryType::HDiscoveryType(const HUdn& udn, bool isRootDevice) :
+    h_ptr(new HDiscoveryTypePrivate())
 {
     if (udn.isValid())
     {
         if (isRootDevice)
         {
-            h_ptr->m_type = HResourceIdentifier::SpecificRootDevice;
+            h_ptr->m_type = HDiscoveryType::SpecificRootDevice;
             h_ptr->m_contents =
                 QString("%1::upnp:rootdevice").arg(udn.toString());
         }
         else
         {
-            h_ptr->m_type = HResourceIdentifier::SpecificDevice;
+            h_ptr->m_type = HDiscoveryType::SpecificDevice;
             h_ptr->m_contents = udn.toString();
         }
 
@@ -261,21 +261,21 @@ HResourceIdentifier::HResourceIdentifier(const HUdn& udn, bool isRootDevice) :
     }
 }
 
-HResourceIdentifier::HResourceIdentifier(const HResourceType& resourceType) :
-    h_ptr(new HResourceIdentifierPrivate())
+HDiscoveryType::HDiscoveryType(const HResourceType& resourceType) :
+    h_ptr(new HDiscoveryTypePrivate())
 {
     if (h_ptr->parse(resourceType))
     {
         h_ptr->m_contents = resourceType.toString();
         h_ptr->m_type = resourceType.isDeviceType() ?
-            HResourceIdentifier::DeviceType :
-            HResourceIdentifier::ServiceType;
+            HDiscoveryType::DeviceType :
+            HDiscoveryType::ServiceType;
     }
 }
 
-HResourceIdentifier::HResourceIdentifier(
+HDiscoveryType::HDiscoveryType(
     const HUdn& udn, const HResourceType& resourceType) :
-        h_ptr(new HResourceIdentifierPrivate())
+        h_ptr(new HDiscoveryTypePrivate())
 {
     if (h_ptr->parse(resourceType) && udn.isValid())
     {
@@ -284,32 +284,32 @@ HResourceIdentifier::HResourceIdentifier(
             QString("%1::%2").arg(udn.toString(), resourceType.toString());
 
         h_ptr->m_type = resourceType.isDeviceType() ?
-            HResourceIdentifier::SpecificDeviceWithType :
-            HResourceIdentifier::SpecificServiceWithType;
+            HDiscoveryType::SpecificDeviceWithType :
+            HDiscoveryType::SpecificServiceWithType;
     }
 }
 
-HResourceIdentifier::HResourceIdentifier(const QString& resource) :
-    h_ptr(new HResourceIdentifierPrivate())
+HDiscoveryType::HDiscoveryType(const QString& resource) :
+    h_ptr(new HDiscoveryTypePrivate())
 {
     h_ptr->parse(resource);
 }
 
-HResourceIdentifier::~HResourceIdentifier()
+HDiscoveryType::~HDiscoveryType()
 {
     delete h_ptr;
 }
 
-HResourceIdentifier::HResourceIdentifier(const HResourceIdentifier& other) :
-    h_ptr(new HResourceIdentifierPrivate(*other.h_ptr))
+HDiscoveryType::HDiscoveryType(const HDiscoveryType& other) :
+    h_ptr(new HDiscoveryTypePrivate(*other.h_ptr))
 {
 }
 
-HResourceIdentifier& HResourceIdentifier::operator=(
-    const HResourceIdentifier& other)
+HDiscoveryType& HDiscoveryType::operator=(
+    const HDiscoveryType& other)
 {
-    HResourceIdentifierPrivate* newHptr =
-        new HResourceIdentifierPrivate(*other.h_ptr);
+    HDiscoveryTypePrivate* newHptr =
+        new HDiscoveryTypePrivate(*other.h_ptr);
 
     delete h_ptr;
     h_ptr = newHptr;
@@ -317,54 +317,54 @@ HResourceIdentifier& HResourceIdentifier::operator=(
     return *this;
 }
 
-HResourceIdentifier::Type HResourceIdentifier::type() const
+HDiscoveryType::Type HDiscoveryType::type() const
 {
     return h_ptr->m_type;
 }
 
-HUdn HResourceIdentifier::udn() const
+HUdn HDiscoveryType::udn() const
 {
     return h_ptr->m_udn;
 }
 
-void HResourceIdentifier::setUdn(const HUdn& udn)
+void HDiscoveryType::setUdn(const HUdn& udn)
 {
     h_ptr->setState(udn, h_ptr->m_resourceType);
 }
 
-HResourceType HResourceIdentifier::resourceType() const
+HResourceType HDiscoveryType::resourceType() const
 {
     return h_ptr->m_resourceType;
 }
 
-void HResourceIdentifier::setResourceType(const HResourceType& resource)
+void HDiscoveryType::setResourceType(const HResourceType& resource)
 {
     h_ptr->setState(h_ptr->m_udn, resource);
 }
 
-QString HResourceIdentifier::toString() const
+QString HDiscoveryType::toString() const
 {
     return h_ptr->m_contents;
 }
 
-HResourceIdentifier HResourceIdentifier::createRootDeviceIdentifier()
+HDiscoveryType HDiscoveryType::createDiscoveryTypeForRootDevices()
 {
-    static HResourceIdentifier retVal("upnp:rootdevice");
+    static HDiscoveryType retVal("upnp:rootdevice");
     return retVal;
 }
 
-HResourceIdentifier HResourceIdentifier::createAllDevicesIdentifier()
+HDiscoveryType HDiscoveryType::createDiscoveryTypeForAllResources()
 {
-    static HResourceIdentifier retVal("ssdp:all");
+    static HDiscoveryType retVal("ssdp:all");
     return retVal;
 }
 
-bool operator==(const HResourceIdentifier& obj1, const HResourceIdentifier& obj2)
+bool operator==(const HDiscoveryType& obj1, const HDiscoveryType& obj2)
 {
     return obj1.h_ptr->m_contents == obj2.h_ptr->m_contents;
 }
 
-bool operator!=(const HResourceIdentifier& obj1, const HResourceIdentifier& obj2)
+bool operator!=(const HDiscoveryType& obj1, const HDiscoveryType& obj2)
 {
     return !(obj1 == obj2);
 }

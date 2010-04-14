@@ -41,7 +41,7 @@ class HServiceIdPrivate;
  * the following format within services defined by the UPnP Forum:
  * \verbatim urn:upnp-org:serviceId:serviceID \endverbatim
  *
- * In the above format, only the tailing \e serviceID varies.
+ * In the above format only the tailing \e serviceID varies.
  * Every service identifier of a standard service type has to begin with
  * <c>urn:upnp-org:serviceId:</c>.
  *
@@ -87,7 +87,7 @@ public:
      * Constructs a new instance.
      *
      * \param serviceId specifies the contents of the object. If the provided
-     * argument is invalid, an empty instance is created. For an object
+     * argument is invalid an empty instance is created. For an object
      * to be strictly valid the parameter has to follow either of the formats
      * exactly:
      *
