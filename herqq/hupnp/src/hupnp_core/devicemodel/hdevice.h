@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_DEVICE_H_
-#define HUPNP_DEVICE_H_
+#ifndef HDEVICE_H_
+#define HDEVICE_H_
 
 #include "./../general/hdefs_p.h"
 #include "./../general/hupnp_fwd.h"
@@ -280,4 +280,4 @@ public:
 }
 }
 
-#endif /* HUPNP_DEVICE_H_ */
+#endif /* HDEVICE_H_ */

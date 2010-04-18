@@ -211,10 +211,9 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
 
     m_deviceHost = new HDeviceHost(this);
 
-    QString err;
-    if (m_deviceHost->init(initParams, &err) != HDeviceHost::Success)
+    if (!m_deviceHost->init(initParams))
     {
-        qWarning() << err;
+        qWarning() << m_deviceHost->errorDescription();
         Q_ASSERT(false);
         return;
     }

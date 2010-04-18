@@ -37,6 +37,10 @@
 #include <QDomNodeList>
 #include <QHostAddress>
 
+#if defined(Q_OS_LINUX)
+#include <sys/utsname.h>
+#endif
+
 /*!
  * \namespace Herqq The main namespace of Herqq libraries. This namespace contains
  * the global enumerations, typedefs, functions and classes that are used
@@ -94,6 +98,83 @@ QString toString(const QDomElement& e)
     e.save(ts, 0);
 
     return buf;
+}
+
+/*******************************************************************************
+ * HSysInfo
+ *******************************************************************************/
+QScopedPointer<HSysInfo> HSysInfo::s_instance;
+QMutex HSysInfo::s_initMutex;
+
+HSysInfo::HSysInfo()
+{
+    createProductTokens();
+}
+
+HSysInfo::~HSysInfo()
+{
+}
+
+void HSysInfo::createProductTokens()
+{
+#if defined(Q_OS_WIN)
+    QString server = "MicrosoftWindows/";
+    switch(QSysInfo::WindowsVersion)
+    {
+    case QSysInfo::WV_2000:
+        server.append("5.0");
+        break;
+    case QSysInfo::WV_XP:
+        server.append("5.1");
+        break;
+    case QSysInfo::WV_2003:
+        server.append("5.2");
+        break;
+    case QSysInfo::WV_VISTA:
+        server.append("6.0");
+        break;
+    case QSysInfo::WV_WINDOWS7:
+        server.append("6.1");
+        break;
+    default:
+        server.append("-1");
+    }
+#elif defined(Q_OS_DARWIN)
+    QString server = "AppleMacOSX/";
+    switch(QSysInfo::MacintoshVersion)
+    {
+    case QSysInfo::MV_10_3:
+        server.append("10.3");
+        break;
+    case QSysInfo::MV_10_4:
+        server.append("10.4");
+        break;
+    case QSysInfo::MV_10_5:
+        server.append("10.5");
+        break;
+    case QSysInfo::MV_10_6:
+        server.append("10.6");
+        break;
+    default:
+        server.append("-1");
+    }
+#elif defined(Q_OS_LINUX)
+    QString server;
+    struct utsname sysinfo;
+    if (!uname(&sysinfo))
+    {
+        server = QString("%1/%2").arg(sysinfo.sysname, sysinfo.release);
+    }
+    else
+    {
+        server = "Undefined/-1";
+    }
+#else
+    QString server = "Undefined/-1";
+#endif
+
+    m_productTokens.reset(
+        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.5").arg(server)));
 }
 
 void verifySpecVersion(const QDomElement& rootElement)
@@ -169,41 +250,6 @@ QString verifyName(const QString& name)
     }
 
     return tmp;
-}
-
-HProductTokens herqqProductTokens()
-{
-#if defined(Q_OS_WIN)
-    QString server = "MicrosoftWindows/";
-    switch(QSysInfo::WindowsVersion)
-    {
-    case QSysInfo::WV_2000:
-        server.append("5.0");
-        break;
-    case QSysInfo::WV_XP:
-        server.append("5.1");
-        break;
-    case QSysInfo::WV_2003:
-        server.append("5.2");
-        break;
-    case QSysInfo::WV_VISTA:
-        server.append("6.0");
-        break;
-    case QSysInfo::WV_WINDOWS7:
-        server.append("6.1");
-        break;
-    default:
-        server.append("-1");
-    }
-#elif defined(Q_OS_DARWIN)
-    QString server = "AppleMacOSX/10";
-#elif defined(Q_OS_LINUX)
-    QString server = "Linux/2.6";
-#else
-    QString server = "Undefined/-1";
-#endif
-
-    return HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.5").arg(server));
 }
 
 QString urlsAsStr(const QList<QUrl>& urls)

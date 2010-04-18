@@ -139,6 +139,8 @@ bool HServicePrivate::updateVariables(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
+    QMutexLocker lock(&m_updateMutex);
+
     // before modifying anything, it is better to be sure that the incoming
     // data is valid and can be set completely.
     for (int i = 0; i < variables.size(); ++i)
@@ -165,20 +167,37 @@ bool HServicePrivate::updateVariables(
         }
     }
 
-    QMutexLocker lock(&m_updateMutex);
+    bool changed = false;
     m_eventsEnabled = false;
     for (int i = 0; i < variables.size(); ++i)
     {
         HStateVariableController* stateVar =
             m_stateVariables.value(variables[i].first);
 
-        stateVar->setValue(convertToRightVariantType(
+        Q_ASSERT(stateVar);
+
+        bool ok = stateVar->setValue(convertToRightVariantType(
             variables[i].second, stateVar->m_stateVariable->dataType()));
+
+        if (ok)
+        {
+            changed = true;
+        }
+        else
+        {
+            // this is not too severe and should not be a warning. most often
+            // this situation is caused by a new value being equal to the old
+            // value
+
+            HLOG_DBG(QString(
+                "Failed to set the value of state variable: [%1] to [%2]").arg(
+                    stateVar->m_stateVariable->name(), variables[i].second));
+        }
     }
     m_eventsEnabled = true;
     lock.unlock();
 
-    if (sendEvent && m_evented)
+    if (changed && sendEvent && m_evented)
     {
         emit q_ptr->stateChanged(q_ptr);
     }

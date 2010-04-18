@@ -209,7 +209,8 @@ HAbstractHostPrivate::HAbstractHostPrivate(
         m_deviceStorage(0),
         m_threadPool(new QThreadPool()),
         m_initializationStatus(0),
-        m_sharedActionInvokers()
+        m_sharedActionInvokers(),
+        m_lastErrorDescription()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 

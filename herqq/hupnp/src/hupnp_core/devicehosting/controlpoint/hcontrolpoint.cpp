@@ -144,7 +144,8 @@ HControlPointPrivate::HControlPointPrivate() :
             m_ssdp(0),
             m_server(0),
             m_eventSubscriber(0),
-            m_deviceCreationMutex()
+            m_deviceCreationMutex(),
+            m_lastError(HControlPoint::UndefinedError)
 {
 }
 
@@ -226,7 +227,8 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
         return;
     }
 
-    if (q_ptr->acceptRootDevice(newRootDevice->m_device) == HControlPoint::Ignore)
+    if (q_ptr->acceptRootDevice(newRootDevice->m_device) ==
+        HControlPoint::IgnoreDevice)
     {
         HLOG_DBG(QString("Device [%1] rejected").arg(
             newRootDevice->m_device->deviceInfo().udn().toString()));
@@ -280,7 +282,7 @@ void HControlPointPrivate::deviceExpired(HDeviceController* source)
     if (source->isTimedout(HDeviceController::All))
     {
         source->deviceStatus()->setOnline(false);
-        m_eventSubscriber->cancel(source->m_device, true, false);
+        m_eventSubscriber->cancel(source->m_device, VisitThisRecursively, false);
         lock.unlock();
 
         emit q_ptr->rootDeviceOffline(source->m_device);
@@ -329,7 +331,7 @@ bool HControlPointPrivate::processDeviceOffline(
     Q_ASSERT(root);
 
     root->deviceStatus()->setOnline(false);
-    m_eventSubscriber->cancel(root->m_device, true, false);
+    m_eventSubscriber->cancel(root->m_device, VisitThisRecursively, false);
     emit q_ptr->rootDeviceOffline(root->m_device);
 
     return true;
@@ -396,7 +398,7 @@ bool HControlPointPrivate::processDeviceDiscovery(
         return true;
     }
 
-    if (!q_ptr->acceptResourceAd(msg.usn(), source))
+    if (!q_ptr->acceptResource(msg.usn(), source))
     {
         HLOG_DBG(QString("Resource advertisement [%1] rejected").arg(
             msg.usn().toString()));
@@ -438,7 +440,7 @@ void HControlPointPrivate::processDeviceOnline(
     bool subscribe = false;
     switch(actionToTake)
     {
-    case HControlPoint::Ignore:
+    case HControlPoint::IgnoreDevice:
 
         HLOG_DBG(QString("Discarding device with UDN %1").arg(
             device->m_device->deviceInfo().udn().toString()));
@@ -447,14 +449,14 @@ void HControlPointPrivate::processDeviceOnline(
         else { m_deviceStorage->removeRootDevice(device); }
         break;
 
-    case HControlPoint::AddOnly:
+    case HControlPoint::AddDevice:
         break;
 
-    case HControlPoint::AddAndFollowConfiguration:
+    case HControlPoint::AddDevice_SubscribeEventsIfConfigured:
         subscribe = m_configuration->subscribeToEvents();
         break;
 
-    case HControlPoint::AddAndSubscribeToAll:
+    case HControlPoint::AddDevice_SubscribeAllEvents:
         subscribe = true;
         break;
 
@@ -472,7 +474,7 @@ void HControlPointPrivate::processDeviceOnline(
         if (subscribe)
         {
             m_eventSubscriber->subscribe(
-                device->m_device, true,
+                device->m_device, VisitThisRecursively,
                 m_configuration->desiredSubscriptionTimeout());
         }
     }
@@ -526,7 +528,7 @@ void HControlPointPrivate::doClear()
 
     Q_ASSERT(state() == Exiting);
 
-    m_http->shutdown(false);
+    m_http->shutdown();
     // this will tell the http handler that operations should quit as
     // soon as possible.
 
@@ -603,10 +605,10 @@ HControlPoint::~HControlPoint()
     delete h_ptr;
 }
 
-HControlPoint::ReturnCode HControlPoint::doInit()
+bool HControlPoint::doInit()
 {
     // the default implementation does nothing.
-    return Success;
+    return true;
 }
 
 void HControlPoint::doQuit()
@@ -617,10 +619,10 @@ void HControlPoint::doQuit()
 HControlPoint::DeviceDiscoveryAction HControlPoint::acceptRootDevice(
     HDevice* /*device*/)
 {
-    return AddAndFollowConfiguration;
+    return AddDevice_SubscribeEventsIfConfigured;
 }
 
-bool HControlPoint::acceptResourceAd(
+bool HControlPoint::acceptResource(
     const HDiscoveryType& /*usn*/, const HEndpoint& /*source*/)
 {
     return true;
@@ -631,7 +633,15 @@ const HControlPointConfiguration* HControlPoint::configuration() const
     return h_ptr->m_configuration.data();
 }
 
-HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
+void HControlPoint::setError(ControlPointError error, const QString& errorStr)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    h_ptr->m_lastError = error;
+    h_ptr->m_lastErrorDescription = errorStr;
+}
+
+bool HControlPoint::init()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
@@ -642,13 +652,16 @@ HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
 
     if (h_ptr->state() == HAbstractHostPrivate::Initialized)
     {
-        return AlreadyInitialized;
+        setError(
+            AlreadyInitializedError,
+            tr("The control point is already initialized"));
+
+        return false;
     }
 
     Q_ASSERT(h_ptr->state() == HAbstractHostPrivate::Uninitialized);
 
-    QString error;
-    ReturnCode rc = Success;
+    bool ok = true;
     try
     {
         h_ptr->setState(HAbstractHostPrivate::Initializing);
@@ -685,67 +698,80 @@ HControlPoint::ReturnCode HControlPoint::init(QString* errorString)
         h_ptr->m_http.reset(new HHttpHandler(h_ptr->m_loggingIdentifier));
         h_ptr->m_server = new ControlPointHttpServer(h_ptr);
 
-        rc = doInit();
-        if (rc != Success)
+        if (!doInit())
         {
+            // it is assumed that the derived class filled the error and
+            // error description
+            ok = false;
             goto end;
         }
 
         if (!h_ptr->m_server->listen())
         {
-            rc = CommunicationsError;
+            setError(CommunicationsError, tr("Failed to start HTTP server"));
+            ok = false;
             goto end;
         }
 
         if (!h_ptr->m_ssdp->bind())
         {
-            rc = CommunicationsError;
+            setError(CommunicationsError, tr("Failed to start SSDP"));
+            ok = false;
             goto end;
         }
 
-        HLOG_DBG("Searching for UPnP devices...");
+        if (h_ptr->m_configuration->performInitialDiscovery())
+        {
+            HLOG_DBG("Searching for UPnP devices");
 
-        h_ptr->m_ssdp->sendDiscoveryRequest(
-            HDiscoveryRequest(
-                1,
-                HDiscoveryType::createDiscoveryTypeForRootDevices(),
-                herqqProductTokens()));
+            h_ptr->m_ssdp->sendDiscoveryRequest(
+                HDiscoveryRequest(
+                    1,
+                    HDiscoveryType::createDiscoveryTypeForRootDevices(),
+                    HSysInfo::instance().herqqProductTokens()));
+        }
+        else
+        {
+            HLOG_DBG("Omitting initial device discovery as configured");
+        }
 
         h_ptr->setState(HAbstractHostPrivate::Initialized);
     }
     catch(HSocketException& ex)
     {
-        error = ex.reason();
-        rc = CommunicationsError;
+        setError(CommunicationsError, ex.reason());
+        ok = false;
     }
     catch(HException& ex)
     {
-        error = ex.reason();
-        rc = UndefinedFailure;
+        setError(UndefinedError, ex.reason());
+        ok = false;
     }
 
 end:
 
-    if (rc != Success)
+    if (!ok)
     {
-        HLOG_WARN(error);
-
-        if (errorString)
-        {
-            *errorString = error;
-        }
-
         h_ptr->setState(HAbstractHostPrivate::Exiting);
         h_ptr->clear();
 
         HLOG_INFO("ControlPoint initialization failed.");
-
-        return rc;
+        return false;
     }
 
+    setError(UndefinedError, "");
     HLOG_INFO("ControlPoint initialized.");
+    return true;
+}
 
-    return rc;
+HControlPoint::ControlPointError HControlPoint::error() const
+{
+    return h_ptr->m_lastError;
+}
+
+QString HControlPoint::errorDescription() const
+{
+    return h_ptr->m_lastErrorDescription;
 }
 
 void HControlPoint::quit()
@@ -804,69 +830,200 @@ HDevice* HControlPoint::rootDevice(const HUdn& udn) const
         h_ptr->m_deviceStorage->searchDeviceByUdn(udn)->m_device : 0;
 }
 
-HControlPoint::ReturnCode HControlPoint::subscribeEvents(
-    HDevice* device, bool recursive)
+bool HControlPoint::subscribeEvents(HDevice* device, DeviceVisitType visitType)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    if (!device)
+    if (!isStarted())
     {
-        return InvalidArgument;
+        setError(NotInitializedError, tr("The control point is not initialized"));
+        return false;
+    }
+    else if (!device)
+    {
+        setError(InvalidArgumentError, tr("Null pointer error"));
+        return false;
+    }
+    else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
+                device->deviceInfo().udn()))
+    {
+        setError(InvalidArgumentError,
+            tr("The specified device was not found in this control point"));
+
+        return false;
     }
 
-    h_ptr->m_eventSubscriber->subscribe(
-        device, recursive, h_ptr->m_configuration->desiredSubscriptionTimeout());
+    bool ok =
+        h_ptr->m_eventSubscriber->subscribe(
+            device, visitType,
+            h_ptr->m_configuration->desiredSubscriptionTimeout());
 
-    return Success;
-}
-
-HControlPoint::ReturnCode HControlPoint::subscribeEvents(HService* service)
-{
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    if (!service)
+    if (!ok)
     {
-        return InvalidArgument;
+        setError(
+            InvalidArgumentError,
+            tr("Could not subscribe to any of the services contained by the device; "
+               "The device may not have services or none of them are evented, or "
+               "there is active subscription to every one of them already"));
+
+        return false;
     }
 
-    return h_ptr->m_eventSubscriber->subscribe(
-        service, h_ptr->m_configuration->desiredSubscriptionTimeout()) ?
-            Success : InvalidArgument;;
+    return true;
 }
 
-HControlPoint::ReturnCode HControlPoint::cancelEvents(
-    HDevice* device, bool recursive)
+bool HControlPoint::subscribeEvents(HService* service)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    if (!device)
+    if (!isStarted())
     {
-        return InvalidArgument;
+        setError(NotInitializedError, tr("The control point is not initialized"));
+        return false;
+    }
+    else if (!service)
+    {
+        setError(InvalidArgumentError, tr("Null pointer error"));
+        return false;
+    }
+    else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
+                service->parentDevice()->deviceInfo().udn()))
+    {
+        setError(InvalidArgumentError,
+            tr("The specified service was not found in this control point"));
+
+        return false;
     }
 
-    return h_ptr->m_eventSubscriber->cancel(
-        device, recursive, true) ? Success : InvalidArgument;
-}
+    HEventSubscriptionManager::SubscriptionResult res =
+        h_ptr->m_eventSubscriber->subscribe(
+            service, h_ptr->m_configuration->desiredSubscriptionTimeout());
 
-HControlPoint::ReturnCode HControlPoint::cancelEvents(HService* service)
-{
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    if (!service)
+    switch(res)
     {
-        return InvalidArgument;
+    case HEventSubscriptionManager::Sub_Success:
+        return true;
+
+    case HEventSubscriptionManager::Sub_AlreadySubscribed:
+        setError(
+            InvalidArgumentError,
+            tr("Already subscribed to the specified service"));
+
+        break;
+
+    case HEventSubscriptionManager::Sub_Failed_NotEvented:
+        setError(
+            InvalidArgumentError,
+            tr("The specified service is not evented"));
+
+        break;
+
+    default:
+        Q_ASSERT(false);
     }
 
-    return h_ptr->m_eventSubscriber->cancel(service, true) ? Success : InvalidArgument;
+    return false;
 }
 
-HControlPoint::ReturnCode HControlPoint::removeDevice(HDevice* rootDevice)
+HControlPoint::SubscriptionStatus HControlPoint::subscriptionStatus(
+    const HService* service) const
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    if (!rootDevice || rootDevice->parentDevice())
+    return static_cast<HControlPoint::SubscriptionStatus>(
+        h_ptr->m_eventSubscriber->subscriptionStatus(service));
+}
+
+bool HControlPoint::cancelEvents(HDevice* device, DeviceVisitType visitType)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
     {
-        return InvalidArgument;
+        setError(NotInitializedError, tr("The control point is not initialized"));
+        return false;
+    }
+    else if (!device)
+    {
+        setError(InvalidArgumentError, tr("Null pointer error"));
+        return false;
+    }
+    else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
+                device->deviceInfo().udn()))
+    {
+        setError(
+            InvalidArgumentError,
+            tr("The specified device was not found in this control point"));
+
+        return false;
+    }
+
+    if (h_ptr->m_eventSubscriber->cancel(device, visitType, true))
+    {
+        return true;
+    }
+
+    setError(
+        InvalidArgumentError,
+        tr("No active subscriptions to any of the services contained by the device"));
+
+    return false;
+}
+
+bool HControlPoint::cancelEvents(HService* service)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        setError(NotInitializedError, tr("The control point is not initialized"));
+        return false;
+    }
+    else if (!service)
+    {
+        setError(InvalidArgumentError, tr("Null pointer error"));
+        return false;
+    }
+    else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
+                service->parentDevice()->deviceInfo().udn()))
+    {
+        setError(
+            InvalidArgumentError,
+            tr("The specified service was not found in this control point"));
+
+        return false;
+    }
+
+    if (h_ptr->m_eventSubscriber->cancel(service, true))
+    {
+        return true;
+    }
+
+    setError(
+        InvalidArgumentError,
+        tr("No active subscription to the specified service"));
+
+    return false;
+}
+
+bool HControlPoint::removeDevice(HDevice* rootDevice)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        setError(NotInitializedError, tr("The control point is not initialized"));
+        return false;
+    }
+    else if (!rootDevice)
+    {
+        setError(InvalidArgumentError, tr("Null pointer error"));
+        return false;
+    }
+    else if (rootDevice->parentDevice())
+    {
+        setError(InvalidArgumentError, tr("Cannot remove embedded devices"));
+        return false;
     }
 
     Q_ASSERT(thread() == QThread::currentThread());
@@ -877,14 +1034,49 @@ HControlPoint::ReturnCode HControlPoint::removeDevice(HDevice* rootDevice)
     h_ptr->m_eventSubscriber->remove(rootDevice, true);
     // TODO should send unsubscription to the UPnP device?
 
-    return h_ptr->m_deviceStorage->removeRootDevice(controller) ?
-            Success : InvalidArgument;
+    HDeviceInfo info(rootDevice->deviceInfo());
+    if (h_ptr->m_deviceStorage->removeRootDevice(controller))
+    {
+        emit rootDeviceRemoved(info);
+        return true;
+    }
+
+    setError(
+        InvalidArgumentError,
+        tr("The device was not found in this control point"));
+
+    return false;
 }
 
-//void HControlPoint::scan(const HDiscoveryType& /*resource*/)
-//{
+bool HControlPoint::scan(const HDiscoveryType& discoveryType, qint32 count)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-//}
+    if (!isStarted())
+    {
+        setError(NotInitializedError, tr("The control point is not initialized"));
+        return false;
+    }
+    else if (discoveryType.type() == HDiscoveryType::Undefined)
+    {
+        setError(InvalidArgumentError, tr("Discovery type was undefined"));
+        return false;
+    }
+    else if (count <= 0)
+    {
+        setError(
+            InvalidArgumentError,
+            tr("The number of messages has to be greater than zero"));
+
+        return false;
+    }
+
+    qint32 messagesSent = h_ptr->m_ssdp->sendDiscoveryRequest(
+        HDiscoveryRequest(
+            1, discoveryType, HSysInfo::instance().herqqProductTokens()), count);
+
+    return messagesSent == count;
+}
 
 }
 }

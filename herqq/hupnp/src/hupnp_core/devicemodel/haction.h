@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_ACTION_H_
-#define HUPNP_ACTION_H_
+#ifndef HACTION_H_
+#define HACTION_H_
 
 #include "./../general/hdefs_p.h"
 #include "./../general/hupnp_fwd.h"
@@ -563,4 +563,4 @@ Q_SIGNALS:
 }
 }
 
-#endif /* HUPNP_ACTION_H_ */
+#endif /* HACTION_H_ */

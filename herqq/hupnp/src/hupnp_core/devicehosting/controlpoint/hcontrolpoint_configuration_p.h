@@ -49,6 +49,7 @@ public: // attributes
     HDeviceCreator m_deviceCreator;
     bool m_subscribeToEvents;
     qint32 m_desiredSubscriptionTimeout;
+    bool m_performInitialDiscovery;
 
 public: // methods
 

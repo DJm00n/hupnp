@@ -23,7 +23,8 @@
 #define HEVENT_SUBSCRIPTIONMANAGER_P_H_
 
 #include "hevent_subscription_p.h"
-#include "../../general/hupnp_fwd.h"
+#include "./../../general/hupnp_fwd.h"
+#include "./../../general/hupnp_global.h"
 
 #include <QList>
 #include <QHash>
@@ -54,19 +55,19 @@ private:
 
     HControlPointPrivate* m_owner;
 
-    QHash<QUuid, HServiceSubscribtion*> m_subscribtionsByUuid;
-    QHash<HUdn, QList<HServiceSubscribtion*>* > m_subscriptionsByUdn;
-    QMutex m_subscribtionsMutex;
+    QHash<QUuid, HEventSubscription*> m_subscribtionsByUuid;
+    QHash<HUdn, QList<HEventSubscription*>* > m_subscriptionsByUdn;
+    mutable QMutex m_subscribtionsMutex;
 
 private:
 
-    HServiceSubscribtion* createSubscription(HServiceController*, qint32 timeout);
+    HEventSubscription* createSubscription(HServiceController*, qint32 timeout);
 
 public Q_SLOTS:
 
-    void subscribed_slot(HServiceSubscribtion*);
-    void subscriptionFailed_slot(HServiceSubscribtion*);
-    void unsubscribed(HServiceSubscribtion*);
+    void subscribed_slot(HEventSubscription*);
+    void subscriptionFailed_slot(HEventSubscription*);
+    void unsubscribed(HEventSubscription*);
 
 Q_SIGNALS:
 
@@ -86,12 +87,14 @@ public:
         Sub_Failed_NotEvented = 2,
     };
 
-    void subscribe(HDevice*, bool recursive, qint32 timeout);
+    bool subscribe(HDevice*, DeviceVisitType, qint32 timeout);
     SubscriptionResult subscribe(HService*, qint32 timeout);
+
+    HEventSubscription::SubscriptionStatus subscriptionStatus(const HService*) const;
 
     // the unsubscribe flag specifies whether to send unsubscription to the UPnP device
     // if not, the subscription is just reset to default state (in which it does nothing)
-    bool cancel(HDevice*, bool recursive, bool unsubscribe);
+    bool cancel(HDevice*, DeviceVisitType, bool unsubscribe);
     bool cancel(HService*, bool unsubscribe);
     void cancelAll(qint32 msecsToWait);
 

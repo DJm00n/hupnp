@@ -172,7 +172,7 @@ public:
     /*!
      * Specifies return values that some of the methods of the class may return.
      */
-    enum ReturnCode
+    enum DeviceHostError
     {
         /*!
          * Return value signifying general failure.
@@ -181,35 +181,30 @@ public:
          * an operation could not be successfully completed, but the exact
          * cause for the error could not be determined.
          */
-        UndefinedFailure = -1,
-
-        /*!
-         *  Return value used to indicate that an operation succeeded.
-         */
-        Success = 0,
+        UndefinedError = -1,
 
         /*!
          * Return value signifying that the device host is already successfully
          * initialized.
          */
-        AlreadyInitialized = 1,
+        AlreadyInitializedError = 1,
 
         /*!
          * Return value signifying that the provided host configuration was incorrect.
          */
-        InvalidConfiguration = 2,
+        InvalidConfigurationError = 2,
 
         /*!
          * Return value signifying that a provided device description document
          * was invalid.
          */
-        InvalidDeviceDescription = 3,
+        InvalidDeviceDescriptionError = 3,
 
         /*!
          * Return value signifying that a provided service description document
          * was invalid.
          */
-        InvalidServiceDescription = 4,
+        InvalidServiceDescriptionError = 4,
 
         /*!
          * Return value used to indicate one or more more problems in communications
@@ -244,7 +239,7 @@ private:
      *
      * \sa init()
      */
-    virtual ReturnCode doInit();
+    virtual bool doInit();
 
     /*!
      * Performs the de-initialization of a derived class.
@@ -298,6 +293,16 @@ protected:
      */
     const HDeviceHostConfiguration* configuration() const;
 
+    /*!
+     * Sets the type and description of the last occurred error.
+     *
+     * \param error specifies the error type
+     * \param errorDescr specifies a human readable description of the error
+     *
+     * \sa error(), errorDescription()
+     */
+    void setError(DeviceHostError error, const QString& errorDescr);
+
 public:
 
     /*!
@@ -319,26 +324,40 @@ public:
      * object has to contain at least one device configuration.
      *
      * \param errorString will contain a textual error description
-     * in case the call failed and a pointer to a valid \c QString object was specified by the caller.
+     * in case the call failed and a pointer to a valid \c QString object was
+     * specified by the caller.
      *
      * \retval HDeviceHost::Success when the host was successfully started.
      *
-     * \retval HDeviceHost::AlreadyInitialized when the host has already been successfully started.
+     * \retval HDeviceHost::AlreadyInitialized when the host has already been
+     * successfully started.
      *
-     * \retval HDeviceHost::InvalidConfiguration when the provided initialization parameters
-     * contained one or more erroneous values, such as missing an \c HDeviceCreator.
+     * \retval HDeviceHost::InvalidConfiguration when the provided initialization
+     * parameters contained one or more erroneous values, such as
+     * missing an \c HDeviceCreator.
      *
-     * \retval HDeviceHost::InvalidDeviceDescription when the provided device description file
-     * is invalid.
+     * \retval HDeviceHost::InvalidDeviceDescription when the provided device
+     * description file is invalid.
      *
-     * \retval HDeviceHost::InvalidServiceDescription when the provided service description file
-     * is invalid.
+     * \retval HDeviceHost::InvalidServiceDescription when the provided service
+     * description file is invalid.
      *
-     * \retval HDeviceHost::UndefinedFailure in case some other initialization error occurred.
+     * \retval HDeviceHost::UndefinedFailure in case some other initialization
+     * error occurred.
      */
-    ReturnCode init(
-        const Herqq::Upnp::HDeviceHostConfiguration& configuration,
-        QString* errorString = 0);
+    bool init(const Herqq::Upnp::HDeviceHostConfiguration& configuration);
+
+    /*!
+     * Returns the type of the last error occurred.
+     * \return the type of the last error occurred.
+     */
+    DeviceHostError error() const;
+
+    /*!
+     * Returns a human readable description of the last error occurred.
+     * \return a human readable description of the last error occurred.
+     */
+    QString errorDescription() const;
 
     /*!
      * Indicates whether or not the host is successfully started.

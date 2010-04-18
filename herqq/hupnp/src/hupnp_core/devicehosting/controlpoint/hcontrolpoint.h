@@ -22,8 +22,7 @@
 #ifndef HCONTROL_POINT_H_
 #define HCONTROL_POINT_H_
 
-#include "./../../general/hdefs_p.h"
-#include "./../../general/hupnp_fwd.h"
+#include "./../../general/hupnp_global.h"
 
 #include <QObject>
 
@@ -172,96 +171,139 @@ H_DECLARE_PRIVATE(HControlPoint)
 protected:
 
     /*!
-     * Specifies what to do when a device has been discovered.
+     * This enum specifies the action to take when a device has been discovered.
      *
      * \note a discovered device may be a new device or a device that is already
      * in the control of the control point. This is the case when a device
-     * goes offline, is not removed from the control point and later
-     * comes back online.
+     * goes offline, but it is not removed from the control point and later it
+     * comes back online with the same UPnP configuration
+     * (see UDA for more information about a UPnP device configuration).
      *
      * \sa acceptRootDevice()
      */
     enum DeviceDiscoveryAction
     {
         /*!
+         * Ignores the device.
+         *
          * In case the discovered device is a new device
          * this value instructs the control point to ignore and delete it.
          *
          * In case the discovered device is already in the control of the control
          * point this value instructs the control point to remove and delete it.
          */
-        Ignore = 0,
+        IgnoreDevice = 0,
 
         /*!
+         * Adds a new device into the control point and retains an existing device
+         * in the control point.
+         *
          * In case the discovered device is a new device the new device is
-         * added into the %HControlPoint. Otherwise nothing is done.
-         * This value instructs the control point not to subscribe to events.
+         * added into the %HControlPoint Otherwise the device is already in
+         * the control point and nothing is done.
+         *
+         * The control point will not subscribe to events.
          */
-        AddOnly = 1,
+        AddDevice = 1,
 
         /*!
+         * Adds the device into the control point and subscribes to evented services
+         * according to the configuration of the control point.
+         *
          * In case the discovered device is a new device the new device is
-         * added into the %HControlPoint. Furthermore, this value instructs the
-         * control point to check the possibly provided configuration to
-         * decide whether to subscribe to events.
+         * added into the %HControlPoint. Otherwise the device is already in
+         * the control point.
+         *
+         * The control point determines whether to subscribe to events based on
+         * its configuration. Default configuration instructs the control point
+         * to subscribe to all events. The default is action is the same if no
+         * configuration was provided.
          */
-        AddAndFollowConfiguration = 2,
+        AddDevice_SubscribeEventsIfConfigured = 2,
 
         /*!
+         * Adds the device into the control point and subscribes to all
+         * evented services.
+         *
          * In case the discovered device is a new device the new device is
-         * added into the %HControlPoint. In addition, this value instructs
-         * the control point to subscribe to to all events of all services contained
-         * by the device.
+         * added into the %HControlPoint. Otherwise the device is already in
+         * the control point.
+         *
+         * The control points subscribes to all evented services contained by the
+         * device and its embedded devices.
          */
-        AddAndSubscribeToAll = 3
+        AddDevice_SubscribeAllEvents = 3
     };
 
 public:
 
     /*!
-     * This enum specifies the return values the methods of
-     * \c %HControlPoint can return.
+     * This enum specifies return values for various methods of
+     * \c %HControlPoint may return.
      */
-    enum ReturnCode
+    enum ControlPointError
     {
         /*!
-         * Return value signifying general failure.
+         * General failure or no error.
          *
-         * This return code is used when
-         * an operation could not be successfully completed, but the exact
-         * cause for the error could not be determined.
+         * This error code is used to indicate that either:
+         * \li the exact cause for an operation error could not be determined or
+         * \li no error has occurred.
          */
-        UndefinedFailure = -1,
+        UndefinedError = 0,
 
         /*!
-         * Return value signifying success.
+         * Control point is not initialized.
          *
-         * This return code is used when an operation was successfully completed.
-         */
-        Success = 0,
-
-        /*!
-         * Return value indicating error in networking.
-         *
-         * This return code is used, for instance, when the
-         * HTTP server or SSDP module could not be initialized.
-         */
-        CommunicationsError = 1,
-
-        /*!
-         * Return value signifying that the control point is already successfully
+         * This error code is used to indicate that the control point has not been
          * initialized.
-         *
-         * This return code is used when init() is called after the control point
-         * has already been successfully initialized.
          */
-        AlreadyInitialized = 2,
+        NotInitializedError,
 
         /*!
-         * Return value used to indicate that a method was called with an invalid
-         * argument and the call was aborted.
+         * Control point is already initialized.
+         *
+         * This error code is used to indicate that the control point is already
+         * initialized.
          */
-        InvalidArgument = 3
+        AlreadyInitializedError,
+
+        /*!
+         * Networking error.
+         *
+         * This error code is used to indicate that an error occurred in some
+         * networking component, such as in HTTP server or in SSDP module.
+         */
+        CommunicationsError,
+
+        /*!
+         * Argument error.
+         *
+         * This error code is used to indicate that a member function
+         * was called with an invalid argument and the call was aborted.
+         */
+        InvalidArgumentError
+    };
+
+    /*!
+     *
+     */
+    enum SubscriptionStatus
+    {
+        /*!
+         *
+         */
+        Subscription_Unsubscribed = 0,
+
+        /*!
+         *
+         */
+        Subscription_Subscribing,
+
+        /*!
+         *
+         */
+        Subscription_Subscribed
     };
 
     /*!
@@ -287,26 +329,26 @@ private:
      * derived class.
      *
      * \return HControlPoint::Success if and only if the initialization succeeded.
-     * If any other value is returned, the initialization of the device host is
+     * If any other value is returned, the initialization of the control point is
      * aborted with the error code returned by the derived class.
      *
-     * \remark the default implementation does nothing.
+     * \remarks the default implementation does nothing.
      *
      * \sa init()
      */
-    virtual ReturnCode doInit();
+    virtual bool doInit();
 
     /*!
      * Performs the de-initialization of a derived class.
      *
-     * Since it is possible to shutdown a device host without actually destroying
+     * Since it is possible to shutdown a control point without actually destroying
      * the instance by calling quit(), derived classes have the possibility to
      * perform their own de-initialization procedure by overriding this method.
      * This method is called \b before the \c %HControlPoint cleans its
      * private data structures but after it has stopped listening requests
      * from the network.
      *
-     * \remark the default implementation does nothing.
+     * \remarks the default implementation does nothing.
      *
      * \sa quit()
      */
@@ -319,8 +361,8 @@ private:
      * added to the control of this control point.
      *
      * \return \e true when the discovered device should be added to the control
-     * of the instance. Return false and the device will be ignored. By default
-     * every discovered and successfully built device will be added.
+     * of the instance. Return false and the device will be deleted.
+     * By default every discovered and successfully built device will be added.
      */
     virtual DeviceDiscoveryAction acceptRootDevice(HDevice* device);
 
@@ -330,14 +372,36 @@ private:
      *
      * Override this method in case you want to control which devices get built.
      *
-     * \param usn specifies the advertised resource
+     * Every UPnP \e resource belongs to a UPnP device tree, and every \e advertisement
+     * and \e notification of a \e resource contains all the information needed
+     * to build a full model of the device tree. An \e advertisement
+     * is sent by a UPnP device to advertise itself, its embedded devices or
+     * any of the services contained within the device tree. A \e notification
+     * is the response from a UPnP device to a discovery sent by a control point.
+     *
+     * If an advertisement or a notification is received that identifies a resource
+     * belonging to a device that is currently not in the control of this control point,
+     * this method is called. If you accept the specified resource the
+     * control point will retrieve all the information from the target UPnP device
+     * to build a device model of the device tree the UPnP device represents.
+     *
+     * \note once you have accepted a resource from a particular UPnP device,
+     * this method will not be called again for other resource advertisements or
+     * notifications of that UPnP device. On the other hand, if you do not accept
+     * a resource and the same UPnP device sends another
+     * notification or advertisement this method will be called again.
+     *
+     * \param usn contains information about the resource
      * \param source specifies the source of the advertisement.
      *
-     * \return \e true when the device should be built in full. If the device
-     * can be built the rootDeviceDiscovered() method will be called. By default
-     * every new device is accepted and built accordingly.
+     * \return \e true when the resource is accepted and a device model should
+     * be built for the UPnP device that sent the notification / advertisement.
+     * If the device is built successfully the acceptRootDevice() will be called
+     * and you can decide whether you want to add the newly built device into the
+     * control of this control point. By default every new device is accepted,
+     * built and added into the control of this instance accordingly.
      */
-    virtual bool acceptResourceAd(
+    virtual bool acceptResource(
         const HDiscoveryType& usn, const HEndpoint& source);
 
 protected:
@@ -354,13 +418,26 @@ protected:
     /*!
      * Returns the configuration used to initialize the control point.
      *
-     * \return the configuration used to initialize the control point or null
-     * in case no configuration was provided.
+     * \return the configuration used to initialize the control point.
      *
-     * \remark the returned object is not a copy and the ownership of the
+     * \note If no configuration was provided by the user during object
+     * construction the control point creates a default configuration and uses that.
+     * Hence, this method always returns a pointer to a valid object.
+     *
+     * \remarks the returned object is not a copy and the ownership of the
      * object is not transferred.
      */
     const HControlPointConfiguration* configuration() const;
+
+    /*!
+     * Sets the type and description of the last occurred error.
+     *
+     * \param error specifies the error type
+     * \param errorDescr specifies a human readable description of the error
+     *
+     * \sa error(), errorDescription()
+     */
+    void setError(ControlPointError error, const QString& errorDescr);
 
 public:
 
@@ -369,7 +446,8 @@ public:
      *
      * \param initParams specifies parameters that can be used to modify the
      * default behavior of the control point instance. This parameter is optional
-     * and does not have to be provided.
+     * and does not have to be provided. If it is not provided the control point
+     * instance creates a default configuration.
      *
      * \param parent specifies the parent \c QObject, if any.
      */
@@ -383,18 +461,19 @@ public:
      * destroys all of its child objects. You should discard any pointers retrieved
      * from the control point to prevent accidental dereference.
      *
-     * \remark An \c %HControlPoint instance has to be destroyed in the thread
+     * \remarks An \c %HControlPoint instance has to be destroyed in the thread
      * in which it is located.
      */
     virtual ~HControlPoint();
 
     /*!
-     * Initializes the control point and searches for devices currently available.
+     * Initializes the control point.
      *
      * This has to be called for the control point to start
      * monitoring the network for UPnP devices. To stop an initialized control point
-     * instance from listening network events, you can call quit() or delete
-     * the object.
+     * instance from listening network events you can call quit() or delete
+     * the object. In addition, by default the instance will perform a device
+     * discovery. You can override this using HControlPointConfiguration.
      *
      * \param errorString is a pointer to a \c QString, which will contain an error
      * description in case the initialization failed for some reason.
@@ -402,9 +481,9 @@ public:
      *
      * \retval HControlPoint::Success when the control point was successfully started.
      *
-     * \retval HControlPoint::AlreadyInitialized when the control point has already been successfully started.
-     * In this case nothing is changed and the control point continues to operate
-     * normally.
+     * \retval HControlPoint::AlreadyInitialized when the control point has
+     * already been successfully started. In this case nothing is changed
+     * and the control point continues to operate normally.
      *
      * \retval HControlPoint::CommunicationsError in case the instance couldn't
      * initialize the required networking resources.
@@ -414,7 +493,19 @@ public:
      *
      * \sa quit()
      */
-    ReturnCode init(QString* errorString = 0);
+    bool init();
+
+    /*!
+     * Returns the type of the last error occurred.
+     * \return the type of the last error occurred.
+     */
+    ControlPointError error() const;
+
+    /*!
+     * Returns a human readable description of the last error occurred.
+     * \return a human readable description of the last error occurred.
+     */
+    QString errorDescription() const;
 
     /*!
      * Indicates whether or not the host is successfully started.
@@ -469,18 +560,19 @@ public:
      * or the specified device is not a root device. In this case the
      * specified device object is not deleted.
      */
-    ReturnCode removeDevice(HDevice* rootDevice);
+    bool removeDevice(HDevice* rootDevice);
 
     /*!
-     * Subscribes to events of every service contained by the device.
+     * Subscribes to events of the specified services contained by the
+     * specified device.
      *
-     * Any services which events are already subscribed are skipped.
+     * You can use this method to subscribe to events of multiple evented services
+     * contained by the specified device at once.
      *
      * \param device specifies the device that contains the services, which
      * events are subscribed.
      *
-     * \param recursive specifies whether to subscribe to all services of all
-     * embedded devices as well.
+     * \param visitType specifies the services to which, events are subscribed.
      *
      * \retval HControlPoint::Success in case the subscriptions were successfully
      * dispatched. Note, \b any subscription may still fail. You can connect to
@@ -491,16 +583,16 @@ public:
      * is null or it does not belong to a device held by the control point.
      *
      * \remarks
+     * - services which events are already subscribed to are skipped.
      * - the method returns immediately. Every successful subscription results
      * in subscriptionSucceeded() signal sent. Every failed subscription results in
      * subscriptionFailed() signal sent.
      * - every subscription is maintained until:
      *     - an error occurs
      *     - it is explicitly canceled
-     *
      * This means that every subscription is automatically renewed before expiration.
      */
-    ReturnCode subscribeEvents(HDevice* device, bool recursive = true);
+    bool subscribeEvents(HDevice* device, DeviceVisitType visitType);
 
     /*!
      * Subscribes to the events of the service.
@@ -527,7 +619,23 @@ public:
      *
      * This means that a subscription is automatically renewed before expiration.
      */
-    ReturnCode subscribeEvents(HService* service);
+    bool subscribeEvents(HService* service);
+
+    /*!
+     * Checks if there exists a subscription to the events of the specified service.
+     *
+     * \param service specifies the service to be checked.
+     *
+     * \retval Unsubscribed when the service is not evented or there is no
+     * active susbcription or subscription attempt going on to the specified service.
+     *
+     * \retval Subscribing when the service is evented and an subscription
+     * attempt is being made to the specified service.
+     *
+     * \retval Subscribed when there exists an active subscription to the
+     * specified service.
+     */
+    SubscriptionStatus subscriptionStatus(const HService* service) const;
 
     /*!
      * Cancels the event subscriptions of every service contained by the device.
@@ -537,8 +645,7 @@ public:
      * \param device specifies the device that contains the services, which
      * subscriptions are canceled.
      *
-     * \param recursive specifies whether to cancel all subscriptions of all
-     * embedded devices as well.
+     * \param visitType specifies the services, which subscriptions are canceled.
      *
      * \retval HControlPoint::Success in case the subscription cancellation requests
      * were successfully dispatched. Note, this does not mean that the cancellations
@@ -551,7 +658,7 @@ public:
      *
      * \remarks this method returns immediately.
      */
-    ReturnCode cancelEvents(HDevice* device, bool recursive = true);
+    bool cancelEvents(HDevice* device, DeviceVisitType visitType);
 
     /*!
      * Cancels the event subscription of the service.
@@ -570,7 +677,32 @@ public:
      *
      * \remarks this method returns immediately.
      */
-    ReturnCode cancelEvents(HService* service);
+    bool cancelEvents(HService* service);
+
+    /*!
+     * Scans the network for resources of interest.
+     *
+     * Using the default configuration the %HControlPoint automatically searches
+     * and adds every device it finds. In that case the device list of
+     * %HControlPoint usually reflects the UPnP device status of the network.
+     * However, there are situations where you may want to explicitly ask
+     * the %HControlPoint to update its status and you can call this method
+     * to do that.
+     *
+     * \param discoveryType specifies the type of the discovery to perform.
+     * \param count specifies how many times the discovery should be performed.
+     * The number translates directly to the number of SSDP messages send. The
+     * default is 1.
+     *
+     * \remarks
+     * \li as a result of this call there may be any number of rootDeviceOnline()
+     * signals emitted as a consequence of newly found devices.
+     * \li the call will not affect the expiration of existing devices.
+     * More specifically, any device that does not respond
+     * to the scan will not be considered as expired and no rootDeviceOffline()
+     * will be sent consequently.
+     */
+    bool scan(const Herqq::Upnp::HDiscoveryType& discoveryType, qint32 count = 1);
 
 public Q_SLOTS:
 
@@ -588,27 +720,6 @@ public Q_SLOTS:
      * \sa init()
      */
     void quit();
-
-    /*!
-     * Scans the network for resources of interest.
-     *
-     * Using the default configuration the %HControlPoint automatically searches
-     * and adds every device it finds. In that case the device list of
-     * %HControlPoint usually reflects the UPnP device status of the network.
-     * However, there are situations where you may want to explicitly ask
-     * the %HControlPoint to update its status.
-     *
-     * \param resource specifies the resource or resources to be searched.
-     *
-     * \remarks
-     * \li as a result of this call there may be any number of rootDeviceOnline()
-     * signals emitted as a consequence of newly found devices.
-     * \li the call will not affect the expiration of existing devices.
-     * More specifically, any device or resource in general that does not respond
-     * to the scan will not be considered as expired and no rootDeviceOffline()
-     * will be sent consequently.
-     */
-    //void scan(const Herqq::Upnp::HDiscoveryType& resource);
 
 Q_SIGNALS:
 
@@ -704,6 +815,17 @@ Q_SIGNALS:
      * \param device is the device that has been invalidated.
      */
     void rootDeviceInvalidated(Herqq::Upnp::HDevice* device);
+
+    /*!
+     * This signal is emitted when a root device has been removed from the control
+     * of this control point and deleted.
+     *
+     * \param deviceInfo specifies information about the device that was removed
+     * and deleted.
+     *
+     * \sa rootDeviceOffline()
+     */
+    void rootDeviceRemoved(const Herqq::Upnp::HDeviceInfo& deviceInfo);
 
     /*!
      * This signal is emitted when a run-time error has occurred.

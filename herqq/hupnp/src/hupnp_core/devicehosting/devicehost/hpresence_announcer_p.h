@@ -110,7 +110,7 @@ public:
 
     HResourceAvailable operator()() const
     {
-        HProductTokens pt = herqqProductTokens();
+        HProductTokens pt = HSysInfo::instance().herqqProductTokens();
 
         return HResourceAvailable(
             m_device->deviceTimeoutInSecs() * 2,

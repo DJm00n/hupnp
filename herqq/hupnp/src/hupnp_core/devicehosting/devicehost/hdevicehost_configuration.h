@@ -93,7 +93,7 @@ public:
      *
      * \return a deep copy of the instance.
      *
-     * \remark
+     * \remarks
      * \li you should override this in derived classes. Failing
      * to override this will result in invalid clones being made of derived classes
      * that introduce new member variables.
@@ -102,27 +102,14 @@ public:
     HDeviceConfiguration* clone() const;
 
     /*!
-     * Sets the maximum age of presence announcements and discovery responses
-     * in seconds.
-     *
-     * \param maxAge specifies the maximum age of presence announcements
-     * and discovery messages. If a value smaller than 5 is specified,
-     * the max age is set to 5. If positive value larger than a day is specified,
-     * the max age is set to a day (60*60*24). The default is 1800 seconds,
-     * which equals to 30 minutes.
-     *
-     * \attention the UDA instructs this value to be at least 30 minutes.
-     */
-    void setCacheControlMaxAge(quint32 maxAge=1800);
-
-    /*!
      * Sets the path to the UPnP device description.
      *
      * \param pathToDeviceDescription specifies the path to the UPnP device description.
      *
-     * \return \e true if the path points to an existing file.
+     * \return \e true if the path points to an existing file and the path
+     * was successfully set.
      *
-     * \remark that the device description file is not validated in anyway. The
+     * \remarks that the device description file is not validated in anyway. The
      * method only checks the existence of the provided file. The device description
      * validation occurs during the initialization of the HDeviceHost.
      */
@@ -136,13 +123,30 @@ public:
     QString pathToDeviceDescription() const;
 
     /*!
-     * Returns the maximum age of presence announcements and discovery responses in seconds.
+     * Sets the maximum age of presence announcements and discovery responses
+     * in seconds.
      *
-     * If the cache control max age has not been explicitly set, the return value is 1800.
+     * \param maxAge specifies the maximum age of presence announcements
+     * and discovery messages. If a value smaller than 5 is specified,
+     * the max age is set to 5. If positive value larger than a day is specified,
+     * the max age is set to a day (60*60*24). The default is 1800 seconds,
+     * which equals to 30 minutes.
      *
-     * \return the maximum age of presence announcements and discovery responses in seconds.
+     * \attention the UDA instructs this value to be at least 30 minutes.
      */
-    quint32 cacheControlMaxAge() const;
+    void setCacheControlMaxAge(qint32 maxAge=1800);
+
+    /*!
+     * Returns the maximum age of presence announcements and discovery
+     * responses in seconds.
+     *
+     * If the cache control max age has not been explicitly set,
+     * the return value is 1800.
+     *
+     * \return the maximum age of presence announcements and discovery
+     * responses in seconds.
+     */
+    qint32 cacheControlMaxAge() const;
 
     /*!
      * Returns the callable entity that is used to create HDevice instances.
@@ -158,8 +162,10 @@ public:
      *
      * In any case, your callable entity must be:
      *   - copyable by value
-     *   - callable by the operator(), with single argument of const Herqq::Upnp::HDeviceInfo& deviceInfo
-     *   and that returns a pointer to a heap allocated instance of Herqq::Upnp::HDevice*.
+     *   - callable by the operator(), with single argument of
+     *   const Herqq::Upnp::HDeviceInfo& deviceInfo
+     *   and that returns a pointer to a heap allocated instance of
+     *   Herqq::Upnp::HDevice*.
      *
      * In other words, the signature is
      * Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo&);
@@ -235,25 +241,30 @@ public:
      * \param deviceCreator specifies the callable entity that is used to
      * create HDevice instances.
      *
-     * \remark
+     * \return \e true in case the provided device creator is valid and it was
+     * successfully set.
+     *
+     * \remarks
      *
      * \li The objects your device creator creates will be deallocated by the Herqq
-     * library when the objects are no longer needed. Do NOT store them or delete them manually.
+     * library when the objects are no longer needed. Do NOT store them or delete
+     * them manually.
      *
      * \li The device creator has to be set for every device to be hosted,
      * unlike with control points.
      */
-    void setDeviceCreator(HDeviceCreator deviceCreator);
+    bool setDeviceCreator(HDeviceCreator deviceCreator);
 
     /*!
      * Indicates whether or not the object contains the necessary details
-     * for hosting a HDevice class in a HDeviceHost.
+     * for hosting an HDevice class in a HDeviceHost.
      *
      * \retval true in case the object contains the necessary details
-     * for hosting a HDevice class in a HDeviceHost.
+     * for hosting an HDevice class in a HDeviceHost.
      *
      * \retval false otherwise. In this case, the initialization of HDeviceHost
-     * cannot succeed.
+     * cannot succeed. Make sure you have set the device creator and path to
+     * a device description file.
      */
     bool isValid() const;
 };
@@ -282,7 +293,7 @@ private:
     /*!
      * Creates a clone of the object.
      *
-     * \remark you should override this in derived classes. Failing
+     * \remarks you should override this in derived classes. Failing
      * to override this will result in invalid clones being made of derived classes
      * that introduce new member variables.
      */
@@ -311,7 +322,7 @@ public:
      *
      * \return a deep copy of the instance.
      *
-     * \remark
+     * \remarks
      * \li you should override this in derived classes. Failing
      * to override this will result in invalid clones being made of derived classes
      * that introduce new member variables.
@@ -328,41 +339,49 @@ public:
      * \return \e true in case the configuration was added. A configuration
      * that is invalid, i.e. HDeviceConfiguration::isValid() returns false will
      * not be added and \e false is returned.
-     *
-     * \remark a copy of the provided argument is added, not the provided const
-     * reference.
      */
     bool add(const HDeviceConfiguration& deviceConfiguration);
 
     /*!
      * Returns the currently stored device configurations.
      *
-     * \return the currently stored device configurations.
+     * \return the currently stored device configurations. The returned list
+     * contains pointers to const device configuration objects this instance
+     * owns. The ownership of the objects is not transferred. You
+     * should \b never delete these, as that would eventually result in double
+     * deletion.
      */
-    QList<HDeviceConfiguration*> deviceConfigurations() const;
+    QList<const HDeviceConfiguration*> deviceConfigurations() const;
 
     /*!
-     * Indicates how many times the device host sends each individual advertisement / announcement.
+     * Indicates how many times the device host sends each individual
+     * advertisement / announcement.
      *
      * The default value is 2.
      *
-     * \return how many times the device host sends each individual advertisement / announcement.
+     * \return how many times the device host sends each individual
+     * advertisement / announcement.
      *
      * \sa setIndividualAdvertisementCount()
      */
-    quint32 individualAdvertisementCount() const;
+    qint32 individualAdvertisementCount() const;
 
     /*!
-     * Specifies how many times the device host sends each individual advertisement / announcement.
+     * Specifies how many times the device host sends each individual
+     * advertisement / announcement.
      *
      * By default, each advertisement is sent twice.
      *
-     * \remark this is a low-level detail, which you shouldn't modify unless you
+     * \param count specifies how many times the device host sends each individual
+     * advertisement / announcement. If the provided value is smaller than 1 the
+     * advertisement count is set to 1.
+     *
+     * \remarks this is a low-level detail, which you shouldn't modify unless you
      * know what you are doing.
      *
      * \sa individualAdvertisementCount()
      */
-    void setIndividualAdvertisementCount(quint32);
+    void setIndividualAdvertisementCount(qint32 count);
 
     /*!
      * Returns the timeout the device host uses for subscriptions.
@@ -372,6 +391,9 @@ public:
      * set to a day.
      *
      * \return the timeout in seconds the device host uses for subscriptions.
+     *
+     * \remarks this is a low-level detail, which you shouldn't modify unless you
+     * know what you are doing.
      *
      * \sa setSubscriptionExpirationTimeout()
      */

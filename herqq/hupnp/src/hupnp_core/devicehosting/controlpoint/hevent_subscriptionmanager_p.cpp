@@ -48,7 +48,7 @@ HEventSubscriptionManager::~HEventSubscriptionManager()
     removeAll();
 }
 
-void HEventSubscriptionManager::subscribed_slot(HServiceSubscribtion* sub)
+void HEventSubscriptionManager::subscribed_slot(HEventSubscription* sub)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(sub);
@@ -56,7 +56,7 @@ void HEventSubscriptionManager::subscribed_slot(HServiceSubscribtion* sub)
     emit subscribed(sub->service()->m_service);
 }
 
-void HEventSubscriptionManager::subscriptionFailed_slot(HServiceSubscribtion* sub)
+void HEventSubscriptionManager::subscriptionFailed_slot(HEventSubscription* sub)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(sub);
@@ -66,7 +66,7 @@ void HEventSubscriptionManager::subscriptionFailed_slot(HServiceSubscribtion* su
     emit subscriptionFailed(service);
 }
 
-void HEventSubscriptionManager::unsubscribed(HServiceSubscribtion* sub)
+void HEventSubscriptionManager::unsubscribed(HEventSubscription* sub)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(sub);
@@ -74,15 +74,15 @@ void HEventSubscriptionManager::unsubscribed(HServiceSubscribtion* sub)
     emit unsubscribed(sub->service()->m_service);
 }
 
-HServiceSubscribtion* HEventSubscriptionManager::createSubscription(
+HEventSubscription* HEventSubscriptionManager::createSubscription(
     HServiceController* service, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
     Q_ASSERT(thread() == QThread::currentThread());
 
-    HServiceSubscribtion* subscription =
-        new HServiceSubscribtion(
+    HEventSubscription* subscription =
+        new HEventSubscription(
             m_owner->m_loggingIdentifier,
             service,
             m_owner->m_server->rootUrl(),
@@ -91,52 +91,66 @@ HServiceSubscribtion* HEventSubscriptionManager::createSubscription(
 
     bool ok = connect(
         subscription,
-        SIGNAL(subscribed(HServiceSubscribtion*)),
+        SIGNAL(subscribed(HEventSubscription*)),
         this,
-        SLOT(subscribed_slot(HServiceSubscribtion*)));
+        SLOT(subscribed_slot(HEventSubscription*)));
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 
     ok = connect(
         subscription,
-        SIGNAL(subscriptionFailed(HServiceSubscribtion*)),
+        SIGNAL(subscriptionFailed(HEventSubscription*)),
         this,
-        SLOT(subscriptionFailed_slot(HServiceSubscribtion*)));
+        SLOT(subscriptionFailed_slot(HEventSubscription*)));
 
     Q_ASSERT(ok);
 
     ok = connect(
-        subscription, SIGNAL(unsubscribed(HServiceSubscribtion*)),
-        this, SLOT(unsubscribed(HServiceSubscribtion*)));
+        subscription, SIGNAL(unsubscribed(HEventSubscription*)),
+        this, SLOT(unsubscribed(HEventSubscription*)));
 
     Q_ASSERT(ok);
 
     return subscription;
 }
 
-void HEventSubscriptionManager::subscribe(
-    HDevice* device, bool recursive, qint32 timeout)
+bool HEventSubscriptionManager::subscribe(
+    HDevice* device, DeviceVisitType visitType, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(device);
 
+    bool ok = false;
     HServiceList services = device->services();
     foreach(HService* service, services)
     {
         if (service->isEvented())
         {
-            subscribe(service, timeout);
+            if (subscribe(service, timeout) == Sub_Success)
+            {
+                ok = true;
+            }
         }
     }
 
-    if (recursive)
+    if (visitType == VisitThisAndDirectChildren ||
+        visitType == VisitThisRecursively)
     {
         HDeviceList devices = device->embeddedDevices();
         foreach(HDevice* embDevice, devices)
         {
-            subscribe(embDevice, recursive, timeout);
+            DeviceVisitType visitTypeForChildren =
+                visitType == VisitThisRecursively ?
+                    VisitThisRecursively : VisitThisOnly;
+
+            if (subscribe(embDevice, visitTypeForChildren, timeout) && !ok)
+            {
+                ok = true;
+            }
         }
     }
+
+    return ok;
 }
 
 HEventSubscriptionManager::SubscriptionResult
@@ -158,22 +172,22 @@ HEventSubscriptionManager::SubscriptionResult
 
     HUdn deviceUdn = service->parentDevice()->deviceInfo().udn();
 
-    QList<HServiceSubscribtion*>* subs = m_subscriptionsByUdn.value(deviceUdn);
+    QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(deviceUdn);
 
     if (!subs)
     {
-        subs = new QList<HServiceSubscribtion*>();
+        subs = new QList<HEventSubscription*>();
         goto end;
     }
     else
     {
-        QList<HServiceSubscribtion*>::iterator it = subs->begin();
+        QList<HEventSubscription*>::iterator it = subs->begin();
         for(; it != subs->end(); ++it)
         {
-            HServiceSubscribtion* sub = (*it);
+            HEventSubscription* sub = (*it);
             if (sub->service()->m_service == service)
             {
-                if (sub->isSubscribed())
+                if (sub->subscriptionStatus() == HEventSubscription::Status_Subscribed)
                 {
                     HLOG_WARN(QString("Subscription to service [%1] exists").arg(
                         service->serviceId().toString()));
@@ -193,7 +207,7 @@ end:
 
     HServiceController* sc = static_cast<HServiceController*>(service->parent());
 
-    HServiceSubscribtion* sub = createSubscription(sc, timeout);
+    HEventSubscription* sub = createSubscription(sc, timeout);
     m_subscribtionsByUuid.insert(sub->id(), sub);
     m_subscriptionsByUdn.insert(deviceUdn, subs);
     subs->append(sub);
@@ -205,8 +219,39 @@ end:
     return Sub_Success;
 }
 
+HEventSubscription::SubscriptionStatus
+    HEventSubscriptionManager::subscriptionStatus(const HService* service) const
+{
+    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
+    Q_ASSERT(service);
+
+    HUdn udn = service->parentDevice()->deviceInfo().udn();
+
+    QMutexLocker locker(&m_subscribtionsMutex);
+
+    QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(udn);
+
+    if (!subs)
+    {
+        return HEventSubscription::Status_Unsubscribed;
+    }
+
+    QList<HEventSubscription*>::iterator it = subs->begin();
+    for(; it != subs->end(); ++it)
+    {
+        HEventSubscription* sub = (*it);
+
+        if (sub->service()->m_service == service)
+        {
+            return sub->subscriptionStatus();
+        }
+    }
+
+    return HEventSubscription::Status_Unsubscribed;
+}
+
 bool HEventSubscriptionManager::cancel(
-    HDevice* device, bool recursive, bool unsubscribe)
+    HDevice* device, DeviceVisitType visitType, bool unsubscribe)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(device);
@@ -216,14 +261,14 @@ bool HEventSubscriptionManager::cancel(
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
-    QList<HServiceSubscribtion*>* subs = m_subscriptionsByUdn.value(udn);
+    QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(udn);
 
     if (!subs)
     {
         return false;
     }
 
-    QList<HServiceSubscribtion*>::iterator it = subs->begin();
+    QList<HEventSubscription*>::iterator it = subs->begin();
     for(; it != subs->end(); ++it)
     {
         if (unsubscribe)
@@ -236,12 +281,17 @@ bool HEventSubscriptionManager::cancel(
         }
     }
 
-    if (recursive)
+    if (visitType == VisitThisAndDirectChildren ||
+        visitType == VisitThisRecursively)
     {
         HDeviceList devices = device->embeddedDevices();
         foreach(HDevice* embDevice, devices)
         {
-            cancel(embDevice, recursive, unsubscribe);
+            DeviceVisitType visitTypeForChildren =
+                visitType == VisitThisRecursively ?
+                    VisitThisRecursively : VisitThisOnly;
+
+            cancel(embDevice, visitTypeForChildren, unsubscribe);
         }
     }
 
@@ -258,17 +308,17 @@ bool HEventSubscriptionManager::remove(HDevice* device, bool recursive)
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
-    QList<HServiceSubscribtion*>* subs = m_subscriptionsByUdn.value(udn);
+    QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(udn);
 
     if (!subs)
     {
         return false;
     }
 
-    QList<HServiceSubscribtion*>::iterator it = subs->begin();
+    QList<HEventSubscription*>::iterator it = subs->begin();
     for(; it != subs->end(); ++it)
     {
-        HServiceSubscribtion* sub = (*it);
+        HEventSubscription* sub = (*it);
         m_subscribtionsByUuid.remove(sub->id());
         delete sub;
     }
@@ -300,17 +350,17 @@ bool HEventSubscriptionManager::cancel(HService* service, bool unsubscribe)
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
-    QList<HServiceSubscribtion*>* subs = m_subscriptionsByUdn.value(udn);
+    QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(udn);
 
     if (!subs)
     {
         return false;
     }
 
-    QList<HServiceSubscribtion*>::iterator it = subs->begin();
+    QList<HEventSubscription*>::iterator it = subs->begin();
     for(; it != subs->end(); ++it)
     {
-        HServiceSubscribtion* sub = (*it);
+        HEventSubscription* sub = (*it);
 
         if (sub->service()->m_service != service)
         {
@@ -344,17 +394,17 @@ bool HEventSubscriptionManager::remove(HService* service)
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
-    QList<HServiceSubscribtion*>* subs = m_subscriptionsByUdn.value(udn);
+    QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(udn);
 
     if (!subs)
     {
         return false;
     }
 
-    QList<HServiceSubscribtion*>::iterator it = subs->begin();
+    QList<HEventSubscription*>::iterator it = subs->begin();
     for(; it != subs->end(); ++it)
     {
-        HServiceSubscribtion* sub = (*it);
+        HEventSubscription* sub = (*it);
 
         if (sub->service()->m_service != service)
         {
@@ -384,7 +434,7 @@ void HEventSubscriptionManager::cancelAll(qint32 msecsToWait)
 
     QMutexLocker lock(&m_subscribtionsMutex);
 
-    QHash<QUuid, HServiceSubscribtion*>::iterator it =
+    QHash<QUuid, HEventSubscription*>::iterator it =
         m_subscribtionsByUuid.begin();
 
     for(; it != m_subscribtionsByUuid.end(); ++it)
@@ -413,7 +463,7 @@ bool HEventSubscriptionManager::onNotify(
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     QMutexLocker lock(&m_subscribtionsMutex);
 
-    HServiceSubscribtion* sub = m_subscribtionsByUuid.value(id);
+    HEventSubscription* sub = m_subscribtionsByUuid.value(id);
     if (!sub)
     {
         HLOG_WARN(QString(
@@ -423,18 +473,8 @@ bool HEventSubscriptionManager::onNotify(
 
         return false;
     }
-    else if (!sub->isSubscribed())
-    {
-        HLOG_WARN(QString(
-            "Ignoring notification [seq: %1] sent to cancelled subscription: [%2].").arg(
-                QString::number(req.seq()), id.toString()));
 
-        return false;
-    }
-
-    sub->onNotify(mi, req);
-
-    return true;
+    return sub->onNotify(mi, req);
 }
 
 }

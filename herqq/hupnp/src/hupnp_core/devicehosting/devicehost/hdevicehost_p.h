@@ -30,6 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
+#include "./hdevicehost.h"
 #include "./../habstracthost_p.h"
 
 #include <QAtomicInt>
@@ -86,6 +87,8 @@ public: // attributes
     //
 
     HDeviceHost* q_ptr;
+
+    HDeviceHost::DeviceHostError m_lastError;
 
 public Q_SLOTS:
 

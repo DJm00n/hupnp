@@ -178,6 +178,8 @@ public:
     QMutex m_deviceCreationMutex;
     //
 
+    HControlPoint::ControlPointError m_lastError;
+
     HControlPointPrivate();
     virtual ~HControlPointPrivate();
 

@@ -77,30 +77,8 @@ public:
 
 private:
 
-    class Counter
-    {
-    H_DISABLE_COPY(Counter)
-    private:
-
-        QAtomicInt& m_counter;
-
-    public:
-
-        Counter(QAtomicInt& counter) : m_counter(counter)
-        {
-            m_counter.ref();
-        }
-
-        ~Counter()
-        {
-            m_counter.deref();
-        }
-
-    };
-
     const QByteArray m_loggingIdentifier;
     QAtomicInt m_shuttingDown;
-    QAtomicInt m_callsInProgress;
 
 private:
 
@@ -119,7 +97,7 @@ public:
     HHttpHandler (const QByteArray& loggingIdentifier);
     ~HHttpHandler();
 
-    void shutdown(bool wait = false);
+    void shutdown();
 
     ReturnValue send(MessagingInfo&, StatusCode);
     ReturnValue send(MessagingInfo&, const QByteArray& data, StatusCode,

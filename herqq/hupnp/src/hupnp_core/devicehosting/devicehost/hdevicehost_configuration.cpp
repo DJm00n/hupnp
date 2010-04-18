@@ -84,9 +84,9 @@ bool HDeviceConfiguration::setPathToDeviceDescription(
     return true;
 }
 
-void HDeviceConfiguration::setCacheControlMaxAge(quint32 maxAgeInSecs)
+void HDeviceConfiguration::setCacheControlMaxAge(qint32 maxAgeInSecs)
 {
-    static const quint32 max = 60*60*24;
+    static const qint32 max = 60*60*24;
 
     if (maxAgeInSecs < 5)
     {
@@ -100,7 +100,7 @@ void HDeviceConfiguration::setCacheControlMaxAge(quint32 maxAgeInSecs)
     h_ptr->m_cacheControlMaxAgeInSecs = maxAgeInSecs;
 }
 
-quint32 HDeviceConfiguration::cacheControlMaxAge() const
+qint32 HDeviceConfiguration::cacheControlMaxAge() const
 {
     return h_ptr->m_cacheControlMaxAgeInSecs;
 }
@@ -110,10 +110,15 @@ HDeviceCreator HDeviceConfiguration::deviceCreator() const
     return h_ptr->m_deviceCreator;
 }
 
-void HDeviceConfiguration::setDeviceCreator(
-    HDeviceCreator deviceCreator)
+bool HDeviceConfiguration::setDeviceCreator(HDeviceCreator deviceCreator)
 {
+    if (!deviceCreator)
+    {
+        return false;
+    }
+
     h_ptr->m_deviceCreator = deviceCreator;
+    return true;
 }
 
 bool HDeviceConfiguration::isValid() const
@@ -155,7 +160,7 @@ HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
     HDeviceHostConfiguration* newClone = doClone();
     if (!newClone) { return 0; }
 
-    foreach(HDeviceConfiguration* arg, h_ptr->m_collection)
+    foreach(const HDeviceConfiguration* arg, h_ptr->m_collection)
     {
         newClone->add(*arg);
     }
@@ -183,18 +188,23 @@ bool HDeviceHostConfiguration::add(const HDeviceConfiguration& arg)
     return false;
 }
 
-QList<HDeviceConfiguration*> HDeviceHostConfiguration::deviceConfigurations() const
+QList<const HDeviceConfiguration*> HDeviceHostConfiguration::deviceConfigurations() const
 {
     return h_ptr->m_collection;
 }
 
-quint32 HDeviceHostConfiguration::individualAdvertisementCount() const
+qint32 HDeviceHostConfiguration::individualAdvertisementCount() const
 {
     return h_ptr->m_individualAdvertisementCount;
 }
 
-void HDeviceHostConfiguration::setIndividualAdvertisementCount(quint32 arg)
+void HDeviceHostConfiguration::setIndividualAdvertisementCount(qint32 arg)
 {
+    if (arg < 1)
+    {
+        arg = 1;
+    }
+
     h_ptr->m_individualAdvertisementCount = arg;
 }
 

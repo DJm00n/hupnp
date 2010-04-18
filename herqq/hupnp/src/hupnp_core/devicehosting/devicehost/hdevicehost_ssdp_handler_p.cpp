@@ -95,7 +95,7 @@ void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
             device->deviceTimeoutInSecs() * 2,
             QDateTime::currentDateTime(),
             location,
-            herqqProductTokens(),
+            HSysInfo::instance().herqqProductTokens(),
             req.searchTarget(), // the searched usn
             device->deviceStatus()->bootId(),
             device->deviceStatus()->configId()));
@@ -138,7 +138,7 @@ void DeviceHostSsdpHandler::processSearchRequest_deviceType(
                 device->deviceTimeoutInSecs() * 2,
                 QDateTime::currentDateTime(),
                 location,
-                herqqProductTokens(),
+                HSysInfo::instance().herqqProductTokens(),
                 req.searchTarget(),
                 device->deviceStatus()->bootId(),
                 device->deviceStatus()->configId()));
@@ -190,7 +190,7 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
                 dc->deviceTimeoutInSecs() * 2,
                 QDateTime::currentDateTime(),
                 location,
-                herqqProductTokens(),
+                HSysInfo::instance().herqqProductTokens(),
                 req.searchTarget(),
                 dc->deviceStatus()->bootId(),
                 dc->deviceStatus()->configId()));
@@ -207,7 +207,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
 
     HDeviceInfo deviceInfo = device->m_device->deviceInfo();
 
-    HProductTokens pt = herqqProductTokens();
+    HProductTokens pt = HSysInfo::instance().herqqProductTokens();
 
     HDiscoveryType usn(deviceInfo.udn());
 
@@ -256,7 +256,7 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     Q_ASSERT(responses);
 
-    HProductTokens pt = herqqProductTokens();
+    HProductTokens pt = HSysInfo::instance().herqqProductTokens();
 
     QList<HDeviceController*> rootDevices =
         m_deviceStorage.rootDeviceControllers();
@@ -351,7 +351,9 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
             HDiscoveryResponse(
                 rootDevice->deviceTimeoutInSecs() * 2,
                 QDateTime::currentDateTime(),
-                location, herqqProductTokens(), usn,
+                location,
+                HSysInfo::instance().herqqProductTokens(),
+                usn,
                 rootDevice->deviceStatus()->bootId(),
                 rootDevice->deviceStatus()->configId()));
     }

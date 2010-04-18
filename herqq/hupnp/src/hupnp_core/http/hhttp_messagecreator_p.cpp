@@ -165,7 +165,7 @@ QByteArray HHttpMessageCreator::createResponse(
         break;
 
     default:
-        ;
+        Q_ASSERT(false);
     }
 
     QHttpResponseHeader responseHdr(statusCode, reasonPhrase);

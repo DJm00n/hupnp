@@ -808,7 +808,7 @@ namespace
 template<class Msg>
 qint32 send(HSsdpPrivate* hptr, const Msg& msg, qint32 count)
 {
-    if (!msg.isValid(true))
+    if (!msg.isValid(true) || count < 0)
     {
         return -1;
     }

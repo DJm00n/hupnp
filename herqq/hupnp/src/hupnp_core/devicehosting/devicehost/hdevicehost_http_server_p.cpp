@@ -219,7 +219,11 @@ void DeviceHostHttpServer::incomingSubscriptionRequest(
         return;
     }
 
-    SubscribeResponse response(rc->sid(), herqqProductTokens(), rc->timeout());
+    SubscribeResponse response(
+        rc->sid(),
+        HSysInfo::instance().herqqProductTokens(),
+        rc->timeout());
+
     m_httpHandler.send(mi, response);
 
     if (!service->m_service->isEvented() || sreq.isRenewal())

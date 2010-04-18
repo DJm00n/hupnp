@@ -40,9 +40,9 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HServiceSubscribtion definition
+ * HEventSubscription definition
  ******************************************************************************/
-HServiceSubscribtion::HServiceSubscribtion(
+HEventSubscription::HEventSubscription(
     const QByteArray& loggingIdentifier, HServiceController* service,
     const QUrl& serverRootUrl, const HTimeout& desiredTimeout, QObject* parent) :
         QObject(parent),
@@ -113,12 +113,12 @@ HServiceSubscribtion::HServiceSubscribtion(
     Q_ASSERT(ok);
 }
 
-HServiceSubscribtion::~HServiceSubscribtion()
+HEventSubscription::~HEventSubscription()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
-void HServiceSubscribtion::subscriptionTimeout()
+void HEventSubscription::subscriptionTimeout()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -134,13 +134,13 @@ void HServiceSubscribtion::subscriptionTimeout()
     }
 }
 
-void HServiceSubscribtion::announcementTimeout()
+void HEventSubscription::announcementTimeout()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     m_announcementTimedOut = true;
 }
 
-void HServiceSubscribtion::resetSubscription()
+void HEventSubscription::resetSubscription()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -160,7 +160,7 @@ void HServiceSubscribtion::resetSubscription()
     }
 }
 
-void HServiceSubscribtion::runNextOp()
+void HEventSubscription::runNextOp()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -186,7 +186,7 @@ void HServiceSubscribtion::runNextOp()
     };
 }
 
-void HServiceSubscribtion::connected()
+void HEventSubscription::connected()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -200,7 +200,7 @@ void HServiceSubscribtion::connected()
     runNextOp();
 }
 
-void HServiceSubscribtion::msgIoComplete(HHttpAsyncOperation* op)
+void HEventSubscription::msgIoComplete(HHttpAsyncOperation* op)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -245,7 +245,7 @@ void HServiceSubscribtion::msgIoComplete(HHttpAsyncOperation* op)
     }
 }
 
-void HServiceSubscribtion::renewSubscription_done(HHttpAsyncOperation* op)
+void HEventSubscription::renewSubscription_done(HHttpAsyncOperation* op)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -298,7 +298,7 @@ void HServiceSubscribtion::renewSubscription_done(HHttpAsyncOperation* op)
     }
 }
 
-void HServiceSubscribtion::renewSubscription()
+void HEventSubscription::renewSubscription()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -337,7 +337,7 @@ void HServiceSubscribtion::renewSubscription()
     }
 }
 
-void HServiceSubscribtion::resubscribe()
+void HEventSubscription::resubscribe()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -351,7 +351,7 @@ void HServiceSubscribtion::resubscribe()
     }
 }
 
-void HServiceSubscribtion::error(QAbstractSocket::SocketError /*err*/)
+void HEventSubscription::error(QAbstractSocket::SocketError /*err*/)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -374,7 +374,7 @@ void HServiceSubscribtion::error(QAbstractSocket::SocketError /*err*/)
     connectToDevice();
 }
 
-bool HServiceSubscribtion::connectToDevice(qint32 msecsToWait)
+bool HEventSubscription::connectToDevice(qint32 msecsToWait)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -403,7 +403,7 @@ bool HServiceSubscribtion::connectToDevice(qint32 msecsToWait)
     return m_socket.state() == QAbstractSocket::ConnectedState;
 }
 
-void HServiceSubscribtion::subscribe_done(HHttpAsyncOperation* op)
+void HEventSubscription::subscribe_done(HHttpAsyncOperation* op)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -448,7 +448,7 @@ void HServiceSubscribtion::subscribe_done(HHttpAsyncOperation* op)
     emit subscribed(this);
 }
 
-void HServiceSubscribtion::subscribe()
+void HEventSubscription::subscribe()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -495,7 +495,7 @@ void HServiceSubscribtion::subscribe()
 
     SubscribeRequest req(
         m_eventUrl,
-        herqqProductTokens(),
+        HSysInfo::instance().herqqProductTokens(),
         m_serverRootUrl.toString().append("/").append(
             m_randomIdentifier.toString().remove('{').remove('}')),
         m_desiredTimeout);
@@ -515,15 +515,14 @@ void HServiceSubscribtion::subscribe()
     }
 }
 
-void HServiceSubscribtion::onNotify(
-    MessagingInfo& mi, const NotifyRequest& req)
+bool HEventSubscription::onNotify(MessagingInfo& mi, const NotifyRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (!isSubscribed())
+    if (!m_subscribed)
     {
         HLOG_WARN("Ignoring notify: subscription inactive.");
-        return;
+        return false;
     }
 
     HLOG_DBG(QString("Processing notification [sid: %1, seq: %2].").arg(
@@ -537,7 +536,7 @@ void HServiceSubscribtion::onNotify(
 
         mi.setKeepAlive(false);
         http.send(mi, PreconditionFailed);
-        return;
+        return false;
     }
 
     QMutexLocker locker(&m_seqLock);
@@ -553,7 +552,7 @@ void HServiceSubscribtion::onNotify(
         // expected. UDA instructs to re-subscribe in this scenario.
 
         emit resubscribeRequired_();
-        return;
+        return false;
     }
 
     if (m_service->updateVariables(req.variables(), m_seq > 0))
@@ -564,16 +563,18 @@ void HServiceSubscribtion::onNotify(
 
         ++m_seq;
         http.send(mi, Ok);
+
+        return true;
     }
-    else
-    {
-        HLOG_WARN(QString("Notify failed. State variable(s) were not updated."));
-        mi.setKeepAlive(false);
-        http.send(mi, InternalServerError);
-    }
+
+    HLOG_WARN(QString("Notify failed. State variable(s) were not updated."));
+    mi.setKeepAlive(false);
+    http.send(mi, InternalServerError);
+
+    return false;
 }
 
-void HServiceSubscribtion::unsubscribe_done(HHttpAsyncOperation* /*op*/)
+void HEventSubscription::unsubscribe_done(HHttpAsyncOperation* /*op*/)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -587,7 +588,7 @@ void HServiceSubscribtion::unsubscribe_done(HHttpAsyncOperation* /*op*/)
     emit unsubscribed(this);
 }
 
-void HServiceSubscribtion::unsubscribe(qint32 msecsToWait)
+void HEventSubscription::unsubscribe(qint32 msecsToWait)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -649,6 +650,22 @@ void HServiceSubscribtion::unsubscribe(qint32 msecsToWait)
         resetSubscription();
         emit unsubscribed(this);
     }
+}
+
+HEventSubscription::SubscriptionStatus HEventSubscription::subscriptionStatus() const
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    if (m_subscribed)
+    {
+        return Status_Subscribed;
+    }
+
+    if (m_currentOpType == Op_Subscribe || m_currentOpType == Op_Renew)
+    {
+        return Status_Subscribing;
+    }
+
+    return Status_Unsubscribed;
 }
 
 }

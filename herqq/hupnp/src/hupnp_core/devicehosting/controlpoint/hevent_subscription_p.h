@@ -53,18 +53,18 @@ namespace Upnp
 class MessagingInfo;
 class HServiceController;
 class HHttpAsyncOperation;
-class HServiceSubscribtion;
+class HEventSubscription;
 class HControlPointPrivate;
 
 //
 // This class represents and maintains a subscription to a service instantiated on the
 // device host (server) side.
 //
-class HServiceSubscribtion :
+class HEventSubscription :
     public QObject
 {
 Q_OBJECT
-H_DISABLE_COPY(HServiceSubscribtion)
+H_DISABLE_COPY(HEventSubscription)
 friend class RenewSubscription;
 friend class Unsubscribe;
 
@@ -162,23 +162,30 @@ private:
 
 Q_SIGNALS:
 
-    void subscribed(HServiceSubscribtion*);
-    void subscriptionFailed(HServiceSubscribtion*);
-    void unsubscribed(HServiceSubscribtion*);
+    void subscribed(HEventSubscription*);
+    void subscriptionFailed(HEventSubscription*);
+    void unsubscribed(HEventSubscription*);
 
     void resubscribeRequired_();
     // private signal
 
 public:
 
-    HServiceSubscribtion(
+    enum SubscriptionStatus
+    {
+        Status_Unsubscribed = 0,
+        Status_Subscribing,
+        Status_Subscribed
+    };
+
+    HEventSubscription(
         const QByteArray& loggingIdentifier,
         HServiceController* service,
         const QUrl& serverRootUrl,
         const HTimeout& desiredTimeout,
         QObject* parent = 0);
 
-    virtual ~HServiceSubscribtion();
+    virtual ~HEventSubscription();
 
     inline QUuid id() const { return m_randomIdentifier ; }
     inline HServiceController* service() const { return m_service; }
@@ -186,12 +193,9 @@ public:
     void subscribe();
     void unsubscribe(qint32 msecsToWait=0);
     void resetSubscription();
-    void onNotify(MessagingInfo&, const NotifyRequest&);
+    bool onNotify(MessagingInfo&, const NotifyRequest&);
 
-    inline bool isSubscribed() const
-    {
-        return m_subscribed;
-    }
+    SubscriptionStatus subscriptionStatus() const;
 };
 
 

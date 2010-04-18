@@ -118,6 +118,21 @@ public:
     qint32 desiredSubscriptionTimeout() const;
 
     /*!
+     * Indicates whether the control point should perform discovery upon
+     * initialization.
+     *
+     * \return \e true in case the the control point should perform discovery upon
+     * initialization. This is the default value.
+     *
+     * \remarks if the discovery is not performed the control point will be
+     * unaware of UPnP devices that are already active in the network until they
+     * re-advertise themselves.
+     *
+     * \as setPerformInitialDiscovery()
+     */
+    bool performInitialDiscovery() const;
+
+    /*!
      * Sets the callable entity that is used to create HDevice instances.
      *
      * Setting the device creator is useful when you want to create the
@@ -203,8 +218,9 @@ public:
     void setDeviceCreator(HDeviceCreator deviceCreator);
 
     /*!
-     * Sets whether to automatically subscribe to all events on all services
-     * of a device when a new device is added into the control of an HControlPoint.
+     * Defines whether a control point should automatically subscribe to all
+     * events on all services of a device when a new device is added
+     * into the control of an HControlPoint.
      *
      * \param subscribeAutomatically when \e true an HControlPoint instance
      * should by default subscribe to all events of all services of a newly added
@@ -226,6 +242,21 @@ public:
      * \sa desiredSubscriptionTimeout()
      */
     void setDesiredSubscriptionTimeout(qint32 timeout);
+
+    /*!
+     * Defines whether the control point should perform discovery upon
+     * initialization.
+     *
+     * \param arg when \e true an HControlPoint instance will perform discovery
+     * when it is initialized. This is the default.
+     *
+     * \remarks if the discovery is not performed the control point will be
+     * unaware of UPnP devices that are already active in the network until they
+     * re-advertise themselves.
+     *
+     * \as performInitialDiscovery()
+     */
+    void setPerformInitialDiscovery(bool arg);
 };
 
 }

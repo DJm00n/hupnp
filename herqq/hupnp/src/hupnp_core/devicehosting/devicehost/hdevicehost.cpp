@@ -59,7 +59,9 @@ HDeviceHostPrivate::HDeviceHostPrivate() :
             m_httpServer         (0),
             m_activeRequestCount (0),
             m_eventNotifier      (0),
-            m_presenceAnnouncer  (0)
+            m_presenceAnnouncer  (0),
+            q_ptr(0),
+            m_lastError(HDeviceHost::UndefinedError)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     srand(time(0));
@@ -88,9 +90,10 @@ void HDeviceHostPrivate::createRootDevices()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QList<HDeviceConfiguration*> diParams = m_initParams->deviceConfigurations();
+    QList<const HDeviceConfiguration*> diParams =
+        m_initParams->deviceConfigurations();
 
-    foreach(HDeviceConfiguration* deviceInitParams, diParams)
+    foreach(const HDeviceConfiguration* deviceInitParams, diParams)
     {
         QString baseDir =
             extractBaseUrl(deviceInitParams->pathToDeviceDescription());
@@ -213,7 +216,7 @@ void HDeviceHostPrivate::doClear()
     // shut down.
 
     m_httpServer->close(false);
-    m_http->shutdown(false);
+    m_http->shutdown();
 
     // At this point SSDP and HTTP are closed and no further requests can come in.
     // However, no objects have been deleted and the derived class can safely access
@@ -265,10 +268,10 @@ HDeviceHost::~HDeviceHost()
     delete h_ptr;
 }
 
-HDeviceHost::ReturnCode HDeviceHost::doInit()
+bool HDeviceHost::doInit()
 {
     // default implementation does nothing
-    return Success;
+    return true;
 }
 
 void HDeviceHost::doQuit()
@@ -287,8 +290,15 @@ const HDeviceHostConfiguration* HDeviceHost::configuration() const
     return h_ptr->m_initParams.data();
 }
 
-HDeviceHost::ReturnCode HDeviceHost::init(
-    const HDeviceHostConfiguration& initParams, QString* errorString)
+void HDeviceHost::setError(DeviceHostError error, const QString& errorStr)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    h_ptr->m_lastError = error;
+    h_ptr->m_lastErrorDescription = errorStr;
+}
+
+bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
@@ -299,23 +309,23 @@ HDeviceHost::ReturnCode HDeviceHost::init(
 
     if (h_ptr->state() == HAbstractHostPrivate::Initialized)
     {
-        return AlreadyInitialized;
+        setError(AlreadyInitializedError,
+            tr("The device host is already initialized"));
+
+        return false;
     }
 
     Q_ASSERT(h_ptr->state() == HAbstractHostPrivate::Uninitialized);
 
     if (initParams.isEmpty())
     {
-        if (errorString)
-        {
-            *errorString = QString("No UPnP device configuration provided.");
-        }
+        setError(InvalidConfigurationError,
+            tr("No UPnP device configuration provided"));
 
-        return InvalidConfiguration;
+        return false;
     }
 
-    QString error;
-    ReturnCode rc = Success;
+    bool ok = false;
     try
     {
         h_ptr->setState(HAbstractHostPrivate::Initializing);
@@ -340,15 +350,8 @@ HDeviceHost::ReturnCode HDeviceHost::init(
 
         if (!h_ptr->m_httpServer->listen())
         {
-            QString err = QString("Could not start the HTTP server.");
-
-            if (errorString)
-            {
-                *errorString = err;
-            }
-
-            HLOG_WARN(QString("DeviceHost initialization failed: [%1]").arg(err));
-            rc = UndefinedFailure;
+            QString err = QString("Failed to initialize HTTP server");
+            setError(CommunicationsError, err);
         }
         else
         {
@@ -360,22 +363,23 @@ HDeviceHost::ReturnCode HDeviceHost::init(
 
             if (!h_ptr->m_ssdp->bind())
             {
-                throw HSocketException("Failed to initialize SSDP.");
+                throw HSocketException(tr("Failed to initialize SSDP"));
             }
 
             h_ptr->m_presenceAnnouncer.reset(
                 new PresenceAnnouncer(
-                    h_ptr->m_ssdp.data(), h_ptr->m_initParams->individualAdvertisementCount()));
+                    h_ptr->m_ssdp.data(),
+                    h_ptr->m_initParams->individualAdvertisementCount()));
 
             // allow the derived classes to perform their initialization routines
             // before the hosted devices are announced to the network and timers
             // are started. In addition, at this time no HTTP or SSDP requests
             // are served.
 
-            rc = doInit();
+            ok = doInit();
             // continue only if the derived class succeeded in initializing itself
 
-            if (rc == Success)
+            if (ok)
             {
                 h_ptr->m_presenceAnnouncer->announce<ResourceAvailableAnnouncement>(
                     h_ptr->m_deviceStorage->rootDeviceControllers());
@@ -388,43 +392,44 @@ HDeviceHost::ReturnCode HDeviceHost::init(
     }
     catch(Herqq::Upnp::InvalidDeviceDescription& ex)
     {
-        error = ex.reason();
-        rc = InvalidDeviceDescription;
+        setError(InvalidDeviceDescriptionError, ex.reason());
     }
     catch(Herqq::Upnp::InvalidServiceDescription& ex)
     {
-        error = ex.reason();
-        rc = InvalidServiceDescription;
+        setError(InvalidServiceDescriptionError, ex.reason());
     }
     catch(HSocketException& ex)
     {
-        error = ex.reason();
-        rc = CommunicationsError;
+        setError(CommunicationsError, ex.reason());
     }
     catch(HException& ex)
     {
-        error = ex.reason();
-        rc = UndefinedFailure;
+        setError(UndefinedError, ex.reason());
     }
 
-    if (rc != Success)
+    if (!ok)
     {
-        HLOG_WARN(QString("DeviceHost initialization failed: [%1]").arg(error));
+        HLOG_WARN(tr("DeviceHost initialization failed"));
 
         h_ptr->setState(HAbstractHostPrivate::Exiting);
         h_ptr->clear();
 
-        if (errorString)
-        {
-            *errorString = error;
-        }
-
-        return rc;
+        return false;
     }
 
     HLOG_INFO("DeviceHost initialized.");
 
-    return rc;
+    return true;
+}
+
+HDeviceHost::DeviceHostError HDeviceHost::error() const
+{
+    return h_ptr->m_lastError;
+}
+
+QString HDeviceHost::errorDescription() const
+{
+    return h_ptr->m_lastErrorDescription;
 }
 
 void HDeviceHost::quit()

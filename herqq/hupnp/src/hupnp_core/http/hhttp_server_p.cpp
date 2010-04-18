@@ -91,7 +91,7 @@ HHttpServer::HHttpServer(
             m_chunkedInfo()
 {
     m_threadPool->setParent(this);
-    m_threadPool->setMaxThreadCount(25);
+    m_threadPool->setMaxThreadCount(100);
 }
 
 HHttpServer::~HHttpServer()
@@ -497,7 +497,8 @@ void HHttpServer::close(bool wait)
 
     Q_ASSERT_X(
         thread() == QThread::currentThread(), H_AT,
-            "The HTTP Server has to be shutdown in the thread in which it is currently located.");
+            "The HTTP Server has to be shutdown in the thread in which "
+            "it is currently located.");
 
     m_exiting = true;
 
@@ -506,7 +507,7 @@ void HHttpServer::close(bool wait)
         m_server.close();
     }
 
-    m_httpHandler.shutdown(wait);
+    m_httpHandler.shutdown();
 
     if (wait)
     {

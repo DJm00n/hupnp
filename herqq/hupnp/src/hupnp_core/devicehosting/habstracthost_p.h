@@ -93,6 +93,9 @@ public: // attributes
     // map for holding an asynchronous action invoker for each device tree
     // (hence, "shared")
 
+    QString m_lastErrorDescription;
+    // description of the error that occurred last
+
     enum InitState
     {
         Exiting = -1,

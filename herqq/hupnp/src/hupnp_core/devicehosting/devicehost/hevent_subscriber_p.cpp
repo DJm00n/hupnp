@@ -140,6 +140,7 @@ bool ServiceEventSubscriber::connectToHost()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
+    Q_ASSERT(QThread::currentThread() == m_socket->thread());
     Q_ASSERT(m_socket.data());
 
     QTcpSocket::SocketState state = m_socket->state();
@@ -153,8 +154,6 @@ bool ServiceEventSubscriber::connectToHost()
         return false;
     }
 
-    Q_ASSERT(QThread::currentThread() == m_socket->thread());
-
     m_socket->connectToHost(m_location.host(), m_location.port());
 
     return false;
@@ -167,9 +166,11 @@ void ServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
     if (operation->state() == HHttpAsyncOperation::Failed)
     {
         HLOG_WARN(QString(
-            "Could not send notify [seq: %1, sid: %2] to host @ [%3].").arg(
-                QString::number(m_seq), m_sid.toString(),
-                m_location.toString()));
+            "Notification [seq: %1, sid: %2] to host @ [%3] failed: %4.").arg(
+                QString::number(m_seq-1),
+                m_sid.toString(),
+                m_location.toString(),
+                operation->messagingInfo()->lastErrorDescription()));
     }
     else
     {
@@ -179,6 +180,12 @@ void ServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
     }
 
     operation->deleteLater();
+
+    m_messagesToSend.dequeue();
+    if (!m_messagesToSend.isEmpty())
+    {
+        send();
+    }
 }
 
 void ServiceEventSubscriber::send()
@@ -190,11 +197,12 @@ void ServiceEventSubscriber::send()
         return;
     }
 
-    QByteArray message = m_messagesToSend.dequeue();
+    QByteArray message = m_messagesToSend.head();
     qint32 seq = m_seq.fetchAndAddOrdered(1);
 
-    MessagingInfo* mi = new MessagingInfo(*m_socket, true, 30000);
-    // timeout mandated by the UDA v 1.1
+    MessagingInfo* mi = new MessagingInfo(*m_socket, true, 10000);
+    // timeout specified by UDA v 1.1 is 30 seconds, but that seems absurd
+    // in this context. however, if this causes problems change it back.
 
     NotifyRequest req(m_location, m_sid, seq, message);
 
@@ -269,9 +277,15 @@ void ServiceEventSubscriber::renew(const HTimeout& newTimeout)
 void ServiceEventSubscriber::notify(const QByteArray& msgBody)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(QThread::currentThread() == thread());
 
     m_messagesToSend.enqueue(msgBody);
-    emit send_sig();
+    if (m_messagesToSend.size() <= 1)
+    {
+        // if there's more messages to send the sending process is active and
+        // this message is enqueued to be sent once it's turn comes
+        send();
+    }
 }
 
 bool ServiceEventSubscriber::initialNotify(
@@ -283,7 +297,8 @@ bool ServiceEventSubscriber::initialNotify(
 
     if (!mi)
     {
-        notify(msg);
+        m_messagesToSend.enqueue(msg);
+        emit send_sig();
         return true;
     }
 

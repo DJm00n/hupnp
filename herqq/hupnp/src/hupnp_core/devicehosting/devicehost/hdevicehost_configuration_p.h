@@ -50,7 +50,7 @@ class HDeviceConfigurationPrivate
 public: // attributes
 
     QString        m_pathToDeviceDescriptor;
-    quint32        m_cacheControlMaxAgeInSecs;
+    qint32         m_cacheControlMaxAgeInSecs;
     HDeviceCreator m_deviceCreator;
 
 public: // methods
@@ -67,10 +67,10 @@ H_DISABLE_COPY(HDeviceHostConfigurationPrivate)
 
 public:
 
-    QList<HDeviceConfiguration*> m_collection;
+    QList<const HDeviceConfiguration*> m_collection;
     // configurations for each device to be hosted.
 
-    quint32 m_individualAdvertisementCount;
+    qint32 m_individualAdvertisementCount;
     // how many times each announcement / advertisement is sent
 
     qint32 m_subscriptionExpirationTimeout;

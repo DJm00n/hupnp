@@ -33,9 +33,12 @@
 class QDomElement;
 
 #include <QUrl>
+#include <QMutex>
 #include <QString>
 #include <QTcpSocket>
+#include <QMutexLocker>
 #include <QHostAddress>
+#include <QScopedPointer>
 
 namespace Herqq
 {
@@ -44,6 +47,50 @@ namespace Upnp
 {
 
 class HProductTokens;
+
+//
+//
+//
+class HSysInfo
+{
+
+private:
+
+    HSysInfo();
+
+    static QScopedPointer<HSysInfo> s_instance;
+    static QMutex s_initMutex;
+
+    QScopedPointer<HProductTokens> m_productTokens;
+
+
+    void createProductTokens();
+
+public:
+
+    ~HSysInfo();
+
+    inline static HSysInfo& instance()
+    {
+        QMutexLocker lock(&s_initMutex);
+
+        if (s_instance)
+        {
+            return *s_instance;
+        }
+
+        s_instance.reset(new HSysInfo());
+        return *s_instance;
+    }
+
+    //
+    //
+    //
+    inline const HProductTokens& herqqProductTokens()
+    {
+        return *m_productTokens;
+    }
+};
 
 //
 //
@@ -72,11 +119,6 @@ qint32 readConfigId(const QDomElement& rootElement);
 //
 //
 QString verifyName(const QString& name);
-
-//
-//
-//
-HProductTokens herqqProductTokens();
 
 //
 // Returns the provided URLs as a string following format "#N URL\n",

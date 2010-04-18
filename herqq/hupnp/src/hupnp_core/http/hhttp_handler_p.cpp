@@ -42,49 +42,22 @@ namespace Herqq
 namespace Upnp
 {
 
-
-namespace
-{
-class Sleeper : private QThread
-{
-public:
-
-    static void msleep(qint32 msecs)
-    {
-        QThread::msleep(msecs);
-    }
-};
-}
-
 /*******************************************************************************
  * HHttpHandler
  ******************************************************************************/
 HHttpHandler::HHttpHandler(const QByteArray& loggingIdentifier) :
-    m_loggingIdentifier(loggingIdentifier), m_shuttingDown(0), m_callsInProgress(0)
+    m_loggingIdentifier(loggingIdentifier), m_shuttingDown(0)
 {
 }
 
 HHttpHandler::~HHttpHandler()
 {
-    shutdown(true);
 }
 
-void HHttpHandler::shutdown(bool wait)
+void HHttpHandler::shutdown()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
     m_shuttingDown = 1;
-    while(wait)
-    {
-        if (m_callsInProgress > 0)
-        {
-            Sleeper::msleep(1);
-        }
-        else
-        {
-            break;
-        }
-    }
 }
 
 HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
@@ -340,8 +313,6 @@ template<typename Header>
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, Header& hdr, QByteArray* body)
 {
-    Counter cnt(m_callsInProgress);
-
     QByteArray headerData;
     QTime stopWatch; stopWatch.start();
     for(;;)
@@ -460,8 +431,6 @@ HHttpHandler::ReturnValue HHttpHandler::sendBlob(
     MessagingInfo& mi, const QByteArray& data)
 {
     Q_ASSERT(!data.isEmpty());
-    Counter cnt(m_callsInProgress);
-
     QHostAddress peer = mi.socket().peerAddress();
 
     qint64 bytesWritten   = 0, index = 0;
@@ -522,8 +491,6 @@ HHttpHandler::ReturnValue HHttpHandler::sendChunked(
 {
     Q_ASSERT(!data.isEmpty());
     Q_ASSERT(mi.chunkedInfo().m_maxChunkSize > 0);
-
-    Counter cnt(m_callsInProgress);
 
     QHostAddress peer = mi.socket().peerAddress();
 

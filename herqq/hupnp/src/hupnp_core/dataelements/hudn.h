@@ -72,7 +72,7 @@ public:
      *
      * \sa isValid
      */
-    explicit HUdn(const QUuid& value);
+    HUdn(const QUuid& value);
 
     /*!
      * Constructs a new instance based on the provided value.
@@ -88,7 +88,7 @@ public:
      *
      * \sa isValid
      */
-    explicit HUdn(const QString& value);
+    HUdn(const QString& value);
 
     /*!
      * Destroys the instance.
