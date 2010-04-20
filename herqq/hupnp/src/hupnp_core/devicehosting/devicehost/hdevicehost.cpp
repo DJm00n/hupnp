@@ -228,7 +228,7 @@ void HDeviceHostPrivate::doClear()
 
     m_eventNotifier->shutdown();
 
-    while(m_httpServer->activeClientCount() != 0 ||
+    while(m_httpServer->activeClientCount() > 0 ||
           m_threadPool->activeThreadCount() > 0)
     {
         // as long as there are requests being processed, we cannot go

@@ -56,8 +56,8 @@ HActionInvokeProxyConnection::HActionInvokeProxyConnection(
             m_actionName(action->name()),
             m_inArgs(action->inputArguments()),
             m_outArgs(action->outputArguments()),
-            m_sock(new QTcpSocket(this)),
             m_http(new HHttpAsyncHandler(loggingIdentifier, this)),
+            m_sock(new QTcpSocket(this)),
             m_loggingIdentifier(loggingIdentifier),
             m_locations(),
             m_iNextLocationToTry(0),
@@ -138,7 +138,8 @@ bool HActionInvokeProxyConnection::connectToHost()
     {
         return true;
     }
-    else if (state == QTcpSocket::ConnectingState)
+    else if (state == QTcpSocket::ConnectingState ||
+             state == QTcpSocket::HostLookupState)
     {
         return false;
     }

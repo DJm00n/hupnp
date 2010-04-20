@@ -567,12 +567,7 @@ void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
         done_(Internal_Failed);
         return;
     }
-
-    QByteArray remainingData = m_mi->socket().readAll();
-    m_dataRead.append(remainingData);
-    m_dataToRead -= remainingData.size();
-
-    if (m_dataToRead > 0)
+    else if (m_dataToRead > 0)
     {
         m_mi->setLastErrorDescription(
             "remote host closed connection before all data could be read");
@@ -580,8 +575,7 @@ void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
         done_(Internal_Failed);
         return;
     }
-
-    if (m_state == Internal_ReadingHeader)
+    else if (m_state == Internal_ReadingHeader)
     {
         if (m_dataRead.size() <= 0)
         {

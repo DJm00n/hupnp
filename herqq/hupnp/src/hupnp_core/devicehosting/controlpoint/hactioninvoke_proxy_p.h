@@ -89,18 +89,18 @@ private:
     QString m_actionName;
     // the name of the *real* action we are trying to invoke (at the device side)
 
-    HActionArguments  m_inArgs;
+    HActionArguments m_inArgs;
     // used to validate the user-provided arguments going to the real action
 
     HActionArguments m_outArgs;
     // used to validate the arguments coming from the real action.
 
-    QScopedPointer<QTcpSocket> m_sock;
-    // persistent socket for communication
-
     QScopedPointer<HHttpAsyncHandler> m_http;
     // object that enables easier asynchronous invocation over http using
     // the event loop
+
+    QScopedPointer<QTcpSocket> m_sock;
+    // persistent socket for communication
 
     const QByteArray m_loggingIdentifier;
 

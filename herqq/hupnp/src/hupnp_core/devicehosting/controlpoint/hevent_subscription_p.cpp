@@ -61,7 +61,7 @@ HEventSubscription::HEventSubscription(
             m_service(service),
             m_serverRootUrl(serverRootUrl),
             m_http(loggingIdentifier, this),
-            m_socket(),
+            m_socket(this),
             m_currentOpType(Op_None),
             m_nextOpType(Op_None),
             m_subscribed(false)
@@ -384,6 +384,11 @@ bool HEventSubscription::connectToDevice(qint32 msecsToWait)
     if (m_socket.state() == QTcpSocket::ConnectedState)
     {
         return true;
+    }
+    else if (m_socket.state() == QTcpSocket::ConnectingState ||
+             m_socket.state() == QTcpSocket::HostLookupState)
+    {
+        return false;
     }
 
     QUrl lastLoc = m_deviceLocations[m_nextLocationToTry];

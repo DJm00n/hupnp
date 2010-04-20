@@ -149,7 +149,8 @@ bool ServiceEventSubscriber::connectToHost()
     {
         return true;
     }
-    else if (state == QTcpSocket::ConnectingState)
+    else if (state == QTcpSocket::ConnectingState ||
+             state == QTcpSocket::HostLookupState)
     {
         return false;
     }
@@ -192,7 +193,7 @@ void ServiceEventSubscriber::send()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (m_messagesToSend.isEmpty() || !connectToHost())
+    if (m_messagesToSend.isEmpty() || !connectToHost() || !m_socket->isValid())
     {
         return;
     }
