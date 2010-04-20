@@ -153,14 +153,6 @@ QImage DataRetriever::retrieveIcon(const QUrl& deviceLocation, const QUrl& iconU
         "Attempting to retrieve icon [%1] from: [%2]").arg(
             iconUrl.toString(), deviceLocation.toString()));
 
-    QString iconUrlAsStr = iconUrl.toString();
-    if (iconUrlAsStr.startsWith('/'))
-    {
-        HLOG_WARN_NONSTD(QString(
-            "Icon URL [%1] should be relative, not absolute. [UDA, section 2.3]").arg(
-                iconUrlAsStr));
-    }
-
     QByteArray data = retrieveData(deviceLocation, iconUrl, true);
 
     QImage image;

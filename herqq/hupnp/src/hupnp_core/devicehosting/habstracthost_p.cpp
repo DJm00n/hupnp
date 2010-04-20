@@ -128,10 +128,15 @@ static bool test = registerMetaTypes();
  *     // this functor is used to create types that represent UPnP devices found
  *     // in the device description.
        //
- *     // note, the creator can also be a free or a member function
+ *     // note, the creator can also be a normal or a member function
  *
  *     Herqq::Upnp::HDeviceHost* deviceHost = new HDeviceHost();
- *     deviceHost->init(deviceConf);
+ *     if (!deviceHost->init(deviceConf))
+ *     {
+ *         // the initialization failed. perhaps something should be done?
+ *         // call error() to check the type of the error and errorDescription()
+ *         // to get a human-readable description of the error.
+ *     }
  *
  *     return deviceHost;
  * }
@@ -169,14 +174,19 @@ static bool test = registerMetaTypes();
  *     // to use your custom HDevice types that provide some custom
  *     // functionality / API perhaps.
  *     //
- *     // note, the creator can also be a free or a member function
+ *     // note, the creator can also be a normal or a member function
  *
  *     Herqq::Upnp::HControlPoint* controlPoint =
- *         new HControlPoint(controlPointConf);
+ *         new HControlPoint(&controlPointConf);
  *     // note, the control point configuration is optional and usually you don't
  *     // need to provide one.
  *
- *     controlPoint->init();
+ *     if (!controlPoint->init())
+ *     {
+ *         // the initialization failed. perhaps something should be done?
+ *         // call error() to check the type of the error and errorDescription()
+ *         // to get a human-readable description of the error.
+ *     }
  *
  *     return controlPoint;
  * }
@@ -185,10 +195,11 @@ static bool test = registerMetaTypes();
  * \endcode
  *
  * You do \b not have to provide any configuration to an \c HControlPoint.
- * An \c HControlPoint is perfectly usable without it. Nevertheless,
- * by providing configuration you have the option to decide what \c HDevice types
- * and \c HService types are actually created when the \c HControlPoint builds its object
- * model for a discovered device.
+ * An \c HControlPoint is perfectly usable without it, but you can use
+ * a configuration to modify the behavior of it.
+ * Furthermore, by providing configuration you have the option to decide what
+ * \c HDevice types and \c HService types are actually created when an
+ * \c HControlPoint instance builds its object model for a discovered device.
  *
  * \sa Herqq::Upnp::HDeviceHost, Herqq::Upnp::HControlPoint, devicemodel
  */

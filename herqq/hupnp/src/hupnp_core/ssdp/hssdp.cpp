@@ -87,7 +87,7 @@
  * of Herqq::Upnp::HResourceAvailable will fail and consequenlty, the \c %HSsdp will
  * not send anything.
  *
- * Receiving messages is almost as simple. You can use the class directly, in which
+ * Receiving messages is almost as simple. You can use the class directly in which
  * case you have to connect to the exposed signals. For instance, to receive signals
  * when <em>resource available</em> messages are received, you should do:
  *
@@ -109,7 +109,7 @@
  * \endcode
  *
  * Note the used signature with the SIGNAL and SLOT macros. You can also derive
- * from \c %HSsdp, in which case you can override the various \c protected \c virtual
+ * from \c %HSsdp in which case you can override the various \c protected \c virtual
  * methods that will be called upon message reception.
  *
  * \attention

@@ -54,7 +54,7 @@ class HReadableStateVariable;
  * In a way, a UPnP state variable is an abstraction to a member variable, since it is
  * always contained within a UPnP service.
  *
- * A state variable can be \em evented, in which case it notifies interested listeners
+ * A state variable can be \em evented in which case it notifies interested listeners
  * of changes in its value. You can see if a state variable is evented by calling
  * eventingType() and you can connect to the signal valueChanged() to be notified
  * when the value of the state variable changes. Note, however, that only evented

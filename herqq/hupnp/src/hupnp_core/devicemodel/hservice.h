@@ -109,7 +109,7 @@ class HServiceController;
  *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getStatus);
  *
  *     // the above binds member functions to the specified action names.
- *     // however, you could also use free functions and functors
+ *     // however, you could also use normal functions and functors
  *
  *     return retVal;
  * }
@@ -122,7 +122,7 @@ class HServiceController;
  * every action name found in the service's description file has to have an implementation
  * bound and returned by the createActions(). The above example uses member functions
  * as arguments to Herqq::Upnp::HActionInvoke, but you can use other <em>callable entities</em> as well,
- * such as free functions and functors.
+ * such as normal functions and functors.
  *
  * Once set up properly, it is these callable entities that are called whenever
  * the corresponding actions are invoked.

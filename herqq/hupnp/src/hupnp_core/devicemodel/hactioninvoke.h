@@ -44,7 +44,7 @@ class HActionArguments;
  * This is a type definition for a <em>callable entity</em> that is used
  * for HAction invocation.
  *
- * You can create \c %HActionInvoke objects using free functions, functors and
+ * You can create \c %HActionInvoke objects using normal functions, functors and
  * member functions that follow the signature of
  *
  * <tt>
@@ -55,7 +55,7 @@ class HActionArguments;
  * </tt>
  *
  * The following example demonstrates how you can instantiate the \c %HActionInvoke
- * for a free function, functor and a member function.
+ * for a normal function, functor and a member function.
  *
  * \code
  *

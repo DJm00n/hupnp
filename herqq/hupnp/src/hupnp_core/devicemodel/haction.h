@@ -41,7 +41,7 @@ namespace Upnp
  * This is a type definition for a <em>callable entity</em> that is used
  * as a callback for signaling the completion of an HAction invocation.
  *
- * You can create \c %HActionInvokeCallback objects using free functions, functors and
+ * You can create \c %HActionInvokeCallback objects using normal functions, functors and
  * member functions that follow the signature of
  *
  * <tt>
@@ -62,7 +62,7 @@ namespace Upnp
  * \li \b true indicates that the HAction should sent the corresponding event.
  *
  * The following example demonstrates how you can instantiate the \c %HActionInvokeCallback
- * for a free function, functor and a member function.
+ * for a normal function, functor and a member function.
  *
  * \code
  *
@@ -520,7 +520,7 @@ public:
      *
      * \param inArgs specifies the input arguments for the action.
      * \param outArgs specifies a pointer to an object created by the user.
-     * This can be null, in which case the output arguments will not be set
+     * This can be null in which case the output arguments will not be set
      * even if the action has output arguments. If the parameter is specified
      * and the action has output arguments, the values of the arguments will be set accordingly.
      * If the action doesn't have output arguments, the parameter is ignored.

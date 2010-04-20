@@ -82,7 +82,7 @@ class HDeviceController;
  * <h2>Sub-classing</h2>
  *
  * Sub-classing an \c %HDevice is simple. All you need to do is override the
- * HDevice::createServices() method, in which you create objects of service types according
+ * HDevice::createServices() method in which you create objects of service types according
  * to the device's device description file.
  *
  * As an example, consider the following snippet in which is shown the

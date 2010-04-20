@@ -113,9 +113,12 @@ class HDeviceHostPrivate;
  *
  *     deviceConf.setDeviceCreator(deviceCreator);
  *
- *     if (m_deviceHost->init(deviceConf) != Herqq::Upnp::HDeviceHost::Success)
+ *     if (!m_deviceHost->init(deviceConf))
  *     {
  *         // the initialization failed, perhaps you should do something?
+ *         // for starters, you can call error() to check the error type and
+ *         // errorDescription() for a human-readable description of
+ *         // the error that occurred.
  *         return;
  *     }
  *
@@ -141,6 +144,13 @@ class HDeviceHostPrivate;
  * that takes in a HDeviceConfiguration object. This is exploited in the example above,
  * since we are not interested in hosting multiple HDevice instances in the same host and
  * we are not interested in modifying the default behavior of the \c %HDeviceHost.
+ * -# The example above uses an \c %HDeviceHost instance to host a single UPnP root
+ * device, but the same host could be used to host multiple UPnP root devices.
+ * Certainly you can create multiple \c %HDeviceHost instances that each host a single
+ * root HDevice within a thread, even sharing an event loop.
+ * However, using a single \c %HDeviceHost for multiple root HDevice instances
+ * reduces resource usage in various ways and makes all the configured UPnP
+ * root devices accessible to you from the same \c %HDeviceHost instance.
  *
  * \remarks
  *
@@ -210,8 +220,8 @@ public:
          * Return value used to indicate one or more more problems in communications
          * layer.
          *
-         * For instance, perhaps the HTTP server could not be started or SSDP
-         * listener could not be initialized.
+         * For instance, perhaps the HTTP server or could the SSDP listener
+         * could not be initialized.
          */
         CommunicationsError = 5
     };
@@ -221,19 +231,20 @@ private:
     /*!
      * Performs the initialization of a derived class.
      *
-     * The \c %HDeviceHost uses two-phase initialization, in which the user
+     * The \c %HDeviceHost uses two-phase initialization in which the user
      * first constructs an instance and then calls init() in order to ready
      * the object for use. This method is called by the \c %HDeviceHost
      * during its private initialization after all the private data structures
-     * are constructed but before any network activity. At this point, no HTTP
+     * are constructed, but before any network operations are performed. At this point no HTTP
      * or SSDP requests are served.
      *
      * You can override this method to perform any further initialization of a derived
      * class.
      *
-     * \return HDeviceHost::Success if and only if the initialization succeeded.
-     * If any other value is returned, the initialization of the device host is
-     * aborted with the error code returned by the derived class.
+     * \return \e true if and only if the initialization succeeded.
+     * If \e false is returned the initialization of the device host is
+     * aborted. In addition, it is advised that you call setError()
+     * before returning.
      *
      * \remarks the default implementation does nothing.
      *
@@ -246,7 +257,7 @@ private:
      *
      * Since it is possible to shutdown a device host without actually destroying the
      * instance by calling quit(), derived classes have the possibility to
-     * perform their own de-initialization procedure by overriding this method.
+     * run their own shutdown procedure by overriding this method.
      * This method is called \b before the \c %HDeviceHost cleans its
      * private data structures but after it has stopped listening requests
      * from the network.
@@ -289,12 +300,12 @@ protected:
      * in case the device host is not initialized.
      *
      * \remarks the returned object is not a copy and the ownership of the
-     * object is not transferred.
+     * object is not transferred. Do \b not delete it.
      */
     const HDeviceHostConfiguration* configuration() const;
 
     /*!
-     * Sets the type and description of the last occurred error.
+     * Sets the type and description of the last error occurred.
      *
      * \param error specifies the error type
      * \param errorDescr specifies a human readable description of the error
@@ -323,29 +334,13 @@ public:
      * \param configuration specifies the configuration for the instance. The
      * object has to contain at least one device configuration.
      *
-     * \param errorString will contain a textual error description
-     * in case the call failed and a pointer to a valid \c QString object was
-     * specified by the caller.
+     * \return \e true if the initialization of the device host succeeded.
+     * If \e false is returned you can call error() to get the type of the error,
+     * and you can call errorDescription() to get a human-readable description of the error.
      *
-     * \retval HDeviceHost::Success when the host was successfully started.
-     *
-     * \retval HDeviceHost::AlreadyInitialized when the host has already been
-     * successfully started.
-     *
-     * \retval HDeviceHost::InvalidConfiguration when the provided initialization
-     * parameters contained one or more erroneous values, such as
-     * missing an \c HDeviceCreator.
-     *
-     * \retval HDeviceHost::InvalidDeviceDescription when the provided device
-     * description file is invalid.
-     *
-     * \retval HDeviceHost::InvalidServiceDescription when the provided service
-     * description file is invalid.
-     *
-     * \retval HDeviceHost::UndefinedFailure in case some other initialization
-     * error occurred.
+     * \sa quit()
      */
-    bool init(const Herqq::Upnp::HDeviceHostConfiguration& configuration);
+    bool init(const HDeviceHostConfiguration& configuration);
 
     /*!
      * Returns the type of the last error occurred.
@@ -372,11 +367,11 @@ public:
      * The returned list contains pointers to root HDevice objects that are currently
      * hosted by this instance.
      *
-     * \return a list of pointers to HDevice objects that are currently managed
+     * \return a list of pointers to root HDevice objects that are currently managed
      * by the device host.
      *
      * \warning the returned HDevice instances will be deleted when the
-     * device host is being destroyed. However, do not delete
+     * device host is being destroyed. However, do \b not delete
      * the device objects directly. The ownership of an HDevice is \b never transferred.
      */
     HDeviceList rootDevices() const;
@@ -386,12 +381,12 @@ public:
      *
      * \param udn specifies the Unique Device Name of the desired root device.
      *
-     * \return the root device with the specified Unique Device Name or a
+     * \return the root device with the specified Unique Device Name, or a
      * null pointer in case no currently managed root device has the
      * specified UDN.
      *
      * \warning the returned device will be deleted when the
-     * device host is being destroyed. However, do not delete
+     * device host is being destroyed. However, do \b not delete
      * the device object directly. The ownership of an HDevice is \b never transferred.
      */
     HDevice* rootDevice(const HUdn& udn) const;

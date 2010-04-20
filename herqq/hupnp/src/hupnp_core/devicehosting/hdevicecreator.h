@@ -39,7 +39,7 @@ namespace Upnp
  * This is a type definition for a <em>callable entity</em> that is used
  * to create HDevice instances.
  *
- * You can create \c %HDeviceCreator objects using free functions, functors and
+ * You can create \c %HDeviceCreator objects using normal functions, functors and
  * member functions that follow the signature of
  *
  * <tt>
@@ -49,7 +49,7 @@ namespace Upnp
  * </tt>
  *
  * The following example demonstrates how you can instantiate the \c %HDeviceCreator
- * for a free function, functor and a member function.
+ * for a normal function, functor and a member function.
  *
  * \code
  *

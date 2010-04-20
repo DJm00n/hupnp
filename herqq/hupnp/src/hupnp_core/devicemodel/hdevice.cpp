@@ -43,13 +43,14 @@
  * of your domain, rather than to the details of UPnP. However, not everything
  * can be hidden and some UPnP knowledge is required to fully understand
  * the system mechanics and the terms used in this documentation. To fill such
- * gaps, you can check the aforementioned UDA specification and other documents
+ * gaps you can check the aforementioned UDA specification and other documents
  * available at the <a href="http://www.upnp.org/resources/documents.asp">UPnP Forum</a>.
  *
  * HUPnP is tightly integrated into the <a href="http://qt.nokia.com/">Qt Framework</a> and
- * follows closely the very same design principles and programming practices Qt follows. You will
- * get the most out of HUPnP by using it alongside with Qt. You can use HUPnP
- * from other environments as well, assuming the appropriate Qt headers and libraries are available.
+ * follows closely the very same design principles and programming practices Qt
+ * follows. You will get the most out of HUPnP by using it alongside with Qt.
+ * You can use HUPnP from other environments as well, assuming the appropriate
+ * Qt headers and libraries are available.
  *
  * \section settingup Setting Up
  *
@@ -78,10 +79,10 @@
  * for shared libraries. In addition, your compiler
  * must be aware of the HUPnP includes, which can be found in the \c include
  * directory. It is very important that you do \b not directly include anything that
- * is not found in the \c include directory. In any case, once your compiler finds the HUPnP includes and your
- * linker finds the HUPnP shared library, you are good to go.
- * \attention You do \b not need to include the QtSoap includes. HUPnP does not expose
- * the types declared in QtSoap.
+ * is not found in the \c include directory. In any case, once your compiler
+ * finds the HUPnP includes and your linker finds the HUPnP shared library,
+ * you are good to go. \attention You do \b not need to include the QtSoap includes.
+ * HUPnP does not expose the types declared in QtSoap.
  *
  * \section importantnotes Important notes
  *
@@ -90,8 +91,8 @@
  * \subsection include \#include
  *
  * HUPnP follows similar include pattern to that of Qt. When you want to use a
- * a class in HUPnP, you have to use \verbatim #include <HClassName> \endverbatim where <c>HClassName</c>
- * matches the name of the class you wish to use exactly.
+ * a class in HUPnP, you have to use \verbatim #include <HClassName> \endverbatim
+ * where <c>HClassName</c> matches the name of the class you wish to use exactly.
  *
  * \subsection memorymanagement Memory management
  *
@@ -128,8 +129,8 @@
  *
  * \li \ref builddevice_tutorial shows how to build your own UPnP device using
  * HUPnP.
- * \li The API documentation of Herqq::Upnp::HControlPoint shows how to discover and use UPnP devices
- * on the network.
+ * \li The API documentation of Herqq::Upnp::HControlPoint shows how to discover
+ * and use UPnP devices on the network.
  * \li The API documentation of Herqq::Upnp::HDeviceHost shows how to host a Herqq::Upnp::HDevice.
  * This is how you setup a UPnP device to be found and used by UPnP control points.
  *
@@ -152,7 +153,7 @@
  * The main four components of the UPnP device model are
  * <em>a device</em> (Herqq::Upnp::HDevice), <em>a service</em> (Herqq::Upnp::HService),
  * <em>a state variable</em> (Herqq::Upnp::HStateVariable) <em>and an action</em> (Herqq::Upnp::HAction).
- * These four components form a type of a tree, in which devices and services
+ * These four components form a type of a tree in which devices and services
  * are contained by devices, and state variables and actions are contained by services.
  * This is called the <em>device tree</em>. A device tree has a \e root \e device,
  * which is a UPnP device that has no parent, but may contain other UPnP devices.
@@ -350,7 +351,7 @@
  *
  * The above description is the standard service description for the
  * \b SwitchPower:1 without any vendor specific declarations. For more information
- * about description documents, see UDA specification, sections 2.3 and 2.5.
+ * about description documents, see the UDA specification, sections 2.3 and 2.5.
  *
  * \section creatingclasses Creating the necessary HUPnP classes
  *
@@ -442,6 +443,11 @@
  *
  *   retVal[HResourceType("urn:schemas-upnp-org:service:SwitchPower:1")] =
  *       new MySwitchPowerService();
+ *
+ *  // This maps the UPnP service type "urn:schemas-upnp-org:service:SwitchPower:1"
+ *  // defined in the device description file to our custom C++ type.
+ *  // You have to map each UPnP service type found in your device description file
+ *  // to a C++ type derived from Herqq::Upnp::HService.
  *
  *   return retVal;
  * }
@@ -671,7 +677,7 @@
  * - HUPnP allows direct access to the hosted \c HDevice and \c HService classes,
  * which means you can interact with your classes \b while they are being hosted.
  * Custom \c HDevice and \c HService interfaces may be beneficial if you intend
- * to directly interact with them.
+ * to interact directly with them.
  *
  * - The type behind an Herqq::Upnp::HActionInvoke can hold any <em>callable entity</em>, such
  * as a normal function, functor or a member function.

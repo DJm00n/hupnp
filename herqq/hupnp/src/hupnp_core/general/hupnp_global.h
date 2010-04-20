@@ -100,7 +100,7 @@ enum LogLevel
  * This enumeration specifies how a device tree should be traversed given a
  * starting node.
  *
- * HUPnP \ref devicemodel is organized into a tree, in which there's a root HDevice
+ * HUPnP \ref devicemodel is organized into a tree in which there's a root HDevice
  * and it may contain embedded HDevices as its children and they may contain
  * embedded HDevices as their children recursively.
  *
@@ -146,7 +146,7 @@ void H_UPNP_CORE_EXPORT SetLoggingLevel(LogLevel level);
  * However, deviations from the specifications and standards are unfortunate and such
  * \b errors should be fixed.
  *
- * Regardless, you may not want to be notified about these warnings, in which
+ * Regardless, you may not want to be notified about these warnings in which
  * case you can specifically disable all the warnings that relate to non-standard
  * behavior.
  *
