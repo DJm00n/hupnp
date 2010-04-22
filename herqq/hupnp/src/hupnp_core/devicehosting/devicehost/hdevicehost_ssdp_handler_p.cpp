@@ -43,6 +43,35 @@ namespace Upnp
 {
 
 /*******************************************************************************
+ * HDelayedWriter
+ ******************************************************************************/
+HDelayedWriter::HDelayedWriter(
+    DeviceHostSsdpHandler& ssdp,
+    const QList<HDiscoveryResponse>& responses,
+    const HEndpoint& source,
+    qint32 msecs) :
+        QObject(&ssdp),
+            m_ssdp(ssdp), m_responses(responses), m_source(source), m_msecs(msecs)
+{
+}
+
+void HDelayedWriter::timerEvent(QTimerEvent*)
+{
+    foreach(const HDiscoveryResponse& resp, m_responses)
+    {
+        qint32 count = m_ssdp.sendDiscoveryResponse(m_source, resp);
+        Q_ASSERT(count >= 0); Q_UNUSED(count)
+    }
+
+    emit sent();
+}
+
+void HDelayedWriter::run()
+{
+   startTimer(m_msecs);
+}
+
+/*******************************************************************************
  * DeviceHostSsdpHandler
  ******************************************************************************/
 DeviceHostSsdpHandler::DeviceHostSsdpHandler(
@@ -57,26 +86,29 @@ DeviceHostSsdpHandler::~DeviceHostSsdpHandler()
 {
 }
 
-void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
+bool DeviceHostSsdpHandler::processSearchRequest_specificDevice(
     const HDiscoveryRequest& req, const HEndpoint& source,
     QList<HDiscoveryResponse>* responses)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    QUuid uuid = req.searchTarget().udn().value();
+    HDiscoveryType st = req.searchTarget();
+    QUuid uuid = st.udn().value();
     if (uuid.isNull())
     {
-        HLOG_DBG("Invalid device-UUID");
-        return;
+        HLOG_DBG(QString("Invalid device-UUID: [%1]").arg(st.udn().toString()));
+        return false;
     }
 
-    HDeviceController* device = m_deviceStorage.searchDeviceByUdn(HUdn(uuid));
+    const HDeviceController* device =
+        m_deviceStorage.searchDeviceByUdn(HUdn(uuid));
+
     if (!device)
     {
         HLOG_DBG(QString("No device with the specified UUID: [%1]").arg(
             uuid.toString()));
 
-        return;
+        return false;
     }
 
     QUrl location;
@@ -87,7 +119,7 @@ void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
             "available on the interface that has address: [%2]").arg(
                 uuid.toString(), source.toString()));
 
-        return;
+        return false;
     }
 
     responses->push_back(
@@ -96,34 +128,38 @@ void DeviceHostSsdpHandler::processSearchRequest_specificDevice(
             QDateTime::currentDateTime(),
             location,
             HSysInfo::instance().herqqProductTokens(),
-            req.searchTarget(), // the searched usn
+            st, // the searched usn
             device->deviceStatus()->bootId(),
             device->deviceStatus()->configId()));
+
+    return true;
 }
 
-void DeviceHostSsdpHandler::processSearchRequest_deviceType(
+bool DeviceHostSsdpHandler::processSearchRequest_deviceType(
     const HDiscoveryRequest& req, const HEndpoint& source,
     QList<HDiscoveryResponse>* responses)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
+    HDiscoveryType st = req.searchTarget();
+
     QList<HDeviceController*> foundDevices =
-        m_deviceStorage.searchDevicesByDeviceType(
-            req.searchTarget().resourceType(), false);
+        m_deviceStorage.searchDevicesByDeviceType(st.resourceType(), false);
 
     if (!foundDevices.size())
     {
         HLOG_DBG(QString("No devices match the specified type: [%1]").arg(
-            req.searchTarget().resourceType().toString()));
+            st.resourceType().toString()));
 
-        return;
+        return false;
     }
 
-    foreach(HDeviceController* device, foundDevices)
+    qint32 prevSize = responses->size();
+    foreach(const HDeviceController* device, foundDevices)
     {
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(
-            device->m_device, source, &location))
+                device->m_device, source, &location))
         {
             HLOG_DBG(QString(
                 "Found a matching device, but it is not "
@@ -133,38 +169,45 @@ void DeviceHostSsdpHandler::processSearchRequest_deviceType(
             continue;
         }
 
+        st.setUdn(device->m_device->deviceInfo().udn());
+
         responses->push_back(
             HDiscoveryResponse(
                 device->deviceTimeoutInSecs() * 2,
                 QDateTime::currentDateTime(),
                 location,
                 HSysInfo::instance().herqqProductTokens(),
-                req.searchTarget(),
+                st,
                 device->deviceStatus()->bootId(),
                 device->deviceStatus()->configId()));
     }
+
+    return responses->size() > prevSize;
 }
 
-void DeviceHostSsdpHandler::processSearchRequest_serviceType(
+bool DeviceHostSsdpHandler::processSearchRequest_serviceType(
     const HDiscoveryRequest& req, const HEndpoint& source,
     QList<HDiscoveryResponse>* responses)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
+    HDiscoveryType st = req.searchTarget();
+
     QList<HServiceController*> foundServices =
         m_deviceStorage.searchServicesByServiceType(
-            req.searchTarget().resourceType(), false);
+            st.resourceType(), false);
 
     if (!foundServices.size())
     {
        HLOG_DBG(QString(
            "No services match the specified type: [%1]").arg(
-               req.searchTarget().resourceType().toString()));
+               st.resourceType().toString()));
 
-       return;
+       return false;
     }
 
-    foreach(HServiceController* service, foundServices)
+    qint32 prevSize = responses->size();
+    foreach(const HServiceController* service, foundServices)
     {
         const HDevice* device = service->m_service->parentDevice();
         Q_ASSERT(device);
@@ -180,10 +223,14 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
             continue;
         }
 
-        HDeviceController* dc =
-            m_deviceStorage.searchDeviceByUdn(device->deviceInfo().udn());
+        HDeviceInfo deviceInfo = device->deviceInfo();
+
+        const HDeviceController* dc =
+            m_deviceStorage.searchDeviceByUdn(deviceInfo.udn());
 
         Q_ASSERT(dc);
+
+        st.setUdn(deviceInfo.udn());
 
         responses->push_back(
             HDiscoveryResponse(
@@ -191,33 +238,33 @@ void DeviceHostSsdpHandler::processSearchRequest_serviceType(
                 QDateTime::currentDateTime(),
                 location,
                 HSysInfo::instance().herqqProductTokens(),
-                req.searchTarget(),
+                st,
                 dc->deviceStatus()->bootId(),
                 dc->deviceStatus()->configId()));
     }
+
+    return responses->size() > prevSize;
 }
 
 void DeviceHostSsdpHandler::processSearchRequest(
-    HDeviceController* device, const QUrl& location,
+    const HDeviceController* device, const QUrl& location,
     QList<HDiscoveryResponse>* responses)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     Q_ASSERT(device);
 
     HDeviceInfo deviceInfo = device->m_device->deviceInfo();
-
     HProductTokens pt = HSysInfo::instance().herqqProductTokens();
-
     HDiscoveryType usn(deviceInfo.udn());
+    const HDeviceStatus* deviceStatus = device->deviceStatus();
 
     // device UDN
     responses->push_back(
         HDiscoveryResponse(
             device->deviceTimeoutInSecs() * 2,
             QDateTime::currentDateTime(), location, pt, usn,
-            device->deviceStatus()->bootId(),
-            device->deviceStatus()->configId()));
+            deviceStatus->bootId(),
+            deviceStatus->configId()));
 
     usn.setResourceType(deviceInfo.deviceType());
 
@@ -226,11 +273,11 @@ void DeviceHostSsdpHandler::processSearchRequest(
         HDiscoveryResponse(
             device->deviceTimeoutInSecs() * 2,
             QDateTime::currentDateTime(), location, pt, usn,
-            device->deviceStatus()->bootId(),
-            device->deviceStatus()->configId()));
+            deviceStatus->bootId(),
+            deviceStatus->configId()));
 
     const QList<HServiceController*>* services = device->services();
-    foreach(HServiceController* service, *services)
+    foreach(const HServiceController* service, *services)
     {
         usn.setResourceType(service->m_service->serviceType());
 
@@ -238,18 +285,18 @@ void DeviceHostSsdpHandler::processSearchRequest(
             HDiscoveryResponse(
                 device->deviceTimeoutInSecs() * 2,
                 QDateTime::currentDateTime(), location, pt, usn,
-                device->deviceStatus()->bootId(),
-                device->deviceStatus()->configId()));
+                deviceStatus->bootId(),
+                deviceStatus->configId()));
     }
 
     const QList<HDeviceController*>* devices = device->embeddedDevices();
-    foreach(HDeviceController* embeddedDevice, *devices)
+    foreach(const HDeviceController* embeddedDevice, *devices)
     {
         processSearchRequest(embeddedDevice, location, responses);
     }
 }
 
-void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
+bool DeviceHostSsdpHandler::processSearchRequest_AllDevices(
     const HDiscoveryRequest& /*req*/, const HEndpoint& source,
     QList<HDiscoveryResponse>* responses)
 {
@@ -261,11 +308,8 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
     QList<HDeviceController*> rootDevices =
         m_deviceStorage.rootDeviceControllers();
 
-    HLOG_DBG(QString(
-        "Received search request for all devices from: [%1].").arg(
-            source.hostAddress().toString()));
-
-    foreach(HDeviceController* rootDevice, rootDevices)
+    qint32 prevSize = responses->size();
+    foreach(const HDeviceController* rootDevice, rootDevices)
     {
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(
@@ -279,7 +323,7 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
             continue;
         }
 
-        HDiscoveryType usn(rootDevice->m_device->deviceInfo().udn(),true);
+        HDiscoveryType usn(rootDevice->m_device->deviceInfo().udn(), true);
 
         responses->push_back(
             HDiscoveryResponse(
@@ -294,14 +338,14 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
         processSearchRequest(rootDevice, location, responses);
 
         const QList<HDeviceController*>* devices = rootDevice->embeddedDevices();
-        foreach(HDeviceController* embeddedDevice, *devices)
+        foreach(const HDeviceController* embeddedDevice, *devices)
         {
             if (!m_deviceStorage.searchValidLocation(
                 embeddedDevice->m_device, source, &location))
             {
-                // highly uncommon, but possible; the root device is "active" on the network interface
-                // to which the request came, but at least one of its embedded
-                // devices is not.
+                // highly uncommon, but possible; the root device is "active"
+                // on the network interface to which the request came,
+                // but at least one of its embedded devices is not.
 
                 HLOG_DBG(QString(
                     "Skipping an embedded device that is not "
@@ -314,9 +358,11 @@ void DeviceHostSsdpHandler::processSearchRequest_AllDevices(
             processSearchRequest(embeddedDevice, location, responses);
         }
     }
+
+    return responses->size() > prevSize;
 }
 
-void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
+bool DeviceHostSsdpHandler::processSearchRequest_RootDevice(
     const HDiscoveryRequest& /*req*/, const HEndpoint& source,
     QList<HDiscoveryResponse>* responses)
 {
@@ -326,15 +372,12 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
     QList<HDeviceController*> rootDevices =
         m_deviceStorage.rootDeviceControllers();
 
-    HLOG_DBG(QString(
-        "Received search request for root devices from: [%1].").arg(
-            source.toString()));
-
-    foreach(HDeviceController* rootDevice, rootDevices)
+    qint32 prevSize = responses->size();
+    foreach(const HDeviceController* rootDevice, rootDevices)
     {
         QUrl location;
         if (!m_deviceStorage.searchValidLocation(
-            rootDevice->m_device, source, &location))
+                rootDevice->m_device, source, &location))
         {
             HLOG_DBG(QString(
                 "Found a root device, but it is not "
@@ -357,49 +400,75 @@ void DeviceHostSsdpHandler::processSearchRequest_RootDevice(
                 rootDevice->deviceStatus()->bootId(),
                 rootDevice->deviceStatus()->configId()));
     }
+
+    return responses->size() > prevSize;
 }
 
 bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
     const HDiscoveryRequest& msg, const HEndpoint& source,
     const HEndpoint& destination)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
+    HLOG_DBG(QString("Received discovery request for [%1] from [%2]").arg(
+        msg.searchTarget().toString(), source.toString()));
+
+    bool ok = false;
     QList<HDiscoveryResponse> responses;
     switch (msg.searchTarget().type())
     {
         case HDiscoveryType::All:
-            processSearchRequest_AllDevices(msg, source, &responses);
+            ok = processSearchRequest_AllDevices(msg, source, &responses);
             break;
 
         case HDiscoveryType::RootDevices:
-            processSearchRequest_RootDevice(msg, source, &responses);
+            ok = processSearchRequest_RootDevice(msg, source, &responses);
             break;
 
         case HDiscoveryType::SpecificDevice:
-            processSearchRequest_specificDevice(msg, source, &responses);
+            ok = processSearchRequest_specificDevice(msg, source, &responses);
             break;
 
         case HDiscoveryType::DeviceType:
-            processSearchRequest_deviceType(msg, source, &responses);
+            ok = processSearchRequest_deviceType(msg, source, &responses);
             break;
 
         case HDiscoveryType::ServiceType:
-            processSearchRequest_serviceType(msg, source, &responses);
+            ok = processSearchRequest_serviceType(msg, source, &responses);
             break;
 
         default:
             return true;
     }
 
-    if (destination.isMulticast())
+    if (ok)
     {
-        HSysUtils::msleep((rand() % msg.mx()) * 1000); // TODO
-    }
+        if (destination.isMulticast())
+        {
+            HDelayedWriter* writer =
+                new HDelayedWriter(
+                    *this, responses, source, (rand() % msg.mx()) * 1000);
 
-    foreach (HDiscoveryResponse resp, responses)
+            bool ok =
+                connect(writer, SIGNAL(sent()), writer, SLOT(deleteLater()));
+
+            Q_ASSERT(ok); Q_UNUSED(ok)
+
+            writer->run();
+        }
+        else
+        {
+            foreach (const HDiscoveryResponse& resp, responses)
+            {
+                qint32 count = sendDiscoveryResponse(source, resp);
+                Q_ASSERT(count >= 0);
+            }
+        }
+    }
+    else
     {
-        sendDiscoveryResponse(source, resp);
+        HLOG_DBG(QString("No resources found for discovery request [%1] from [%2]").arg(
+            msg.searchTarget().toString(), source.toString()));
     }
 
     return true;

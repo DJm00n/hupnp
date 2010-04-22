@@ -796,9 +796,7 @@ void HSsdp::multicastMessageReceived()
 
     QString msg(QString::fromUtf8(buf, read));
     HEndpoint source(ha, port);
-    HEndpoint destination(
-        h_ptr->m_multicastSocket.localAddress(),
-        h_ptr->m_multicastSocket.localPort());
+    HEndpoint destination(multicastAddress(), multicastPort());
 
     h_ptr->messageReceived(msg, source, destination);
 }
@@ -808,6 +806,7 @@ namespace
 template<class Msg>
 qint32 send(HSsdpPrivate* hptr, const Msg& msg, qint32 count)
 {
+    HLOG(H_AT, H_FUN);
     if (!msg.isValid(true) || count < 0)
     {
         return -1;
@@ -816,7 +815,9 @@ qint32 send(HSsdpPrivate* hptr, const Msg& msg, qint32 count)
     qint32 sent = 0;
     for (qint32 i = 0; i < count; ++i)
     {
-        if (hptr->send(HSsdpMessageCreator::create(msg)))
+        QByteArray data = HSsdpMessageCreator::create(msg);
+        Q_ASSERT(!data.isEmpty());
+        if (hptr->send(data))
         {
             ++sent;
         }
@@ -829,7 +830,8 @@ template<class Msg>
 qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver,
             qint32 count)
 {
-    if (!msg.isValid(true))
+    HLOG(H_AT, H_FUN);
+    if (!msg.isValid(true) || count < 0)
     {
         return -1;
     }
@@ -837,7 +839,9 @@ qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver,
     qint32 sent = 0;
     for (qint32 i = 0; i < count; ++i)
     {
-        if (hptr->send(HSsdpMessageCreator::create(msg), receiver))
+        QByteArray data = HSsdpMessageCreator::create(msg);
+        Q_ASSERT(!data.isEmpty());
+        if (hptr->send(data, receiver))
         {
             ++sent;
         }

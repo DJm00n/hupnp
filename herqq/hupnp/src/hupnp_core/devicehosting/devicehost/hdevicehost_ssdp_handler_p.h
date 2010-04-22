@@ -43,6 +43,42 @@ namespace Herqq
 namespace Upnp
 {
 
+class DeviceHostSsdpHandler;
+
+//
+//
+//
+class HDelayedWriter :
+    public QObject
+{
+Q_OBJECT
+
+private:
+
+    DeviceHostSsdpHandler& m_ssdp;
+    QList<HDiscoveryResponse> m_responses;
+    HEndpoint m_source;
+    qint32 m_msecs;
+
+protected:
+
+    void timerEvent(QTimerEvent*);
+
+public:
+
+    HDelayedWriter(
+        DeviceHostSsdpHandler&,
+        const QList<HDiscoveryResponse>&,
+        const HEndpoint& source,
+        qint32 msecs);
+
+    void run();
+
+Q_SIGNALS:
+
+    void sent();
+};
+
 //
 //
 //
@@ -58,26 +94,26 @@ private:
 private:
 
     void processSearchRequest(
-        HDeviceController* device, const QUrl& location,
+        const HDeviceController* device, const QUrl& location,
         QList<HDiscoveryResponse>* responses);
 
-    void processSearchRequest_AllDevices(
+    bool processSearchRequest_AllDevices(
         const HDiscoveryRequest& req, const HEndpoint& source,
         QList<HDiscoveryResponse>* responses);
 
-    void processSearchRequest_RootDevice(
+    bool processSearchRequest_RootDevice(
         const HDiscoveryRequest& req, const HEndpoint& source,
         QList<HDiscoveryResponse>* responses);
 
-    void processSearchRequest_specificDevice(
+    bool processSearchRequest_specificDevice(
         const HDiscoveryRequest& req, const HEndpoint& source,
         QList<HDiscoveryResponse>* responses);
 
-    void processSearchRequest_deviceType(
+    bool processSearchRequest_deviceType(
         const HDiscoveryRequest& req, const HEndpoint& source,
         QList<HDiscoveryResponse>* responses);
 
-    void processSearchRequest_serviceType(
+    bool processSearchRequest_serviceType(
         const HDiscoveryRequest& req, const HEndpoint& source,
         QList<HDiscoveryResponse>* responses);
 
@@ -101,8 +137,8 @@ protected:
 public:
 
     DeviceHostSsdpHandler(
-        const QByteArray& loggingIdentifier,
-        DeviceStorage&, QObject* parent = 0);
+        const QByteArray& loggingIdentifier, DeviceStorage&,
+        QObject* parent = 0);
 
     virtual ~DeviceHostSsdpHandler();
 };

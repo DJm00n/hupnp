@@ -605,8 +605,14 @@ public:
      *
      * \param userAgent specifies information about the requester.
      *
-     * \remarks if mx is smaller than 1 it is set to 1. If mx is larger than 5 it
-     * it set to 5.
+     * \remarks
+     * - if userAgent identifies a UPnP v1.1 requester:
+     *   - if mx is smaller than 1 it is set to 1 and
+     *   - if mx is larger than 5 it it set to 5.
+     * - if userAgent does not specify UPnP version (it always should however) or
+     * the userAgent identifies a UPnP v1.0 requester:
+     *   - if mx is smaller than 0 it is set to 0 and
+     *   - if mx is larger than 120 it it set to 120.
      *
      * \sa isValid(), mx(), searchTarget(), userAgent()
      */

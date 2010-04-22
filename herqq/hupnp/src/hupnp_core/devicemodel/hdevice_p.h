@@ -181,14 +181,14 @@ public:
         return m_device->h_ptr->m_parent;
     }
 
-    inline HDeviceController* rootDevice()
+    inline HDeviceController* rootDevice() const
     {
-        HDeviceController* root = this;
+        HDeviceController* root = const_cast<HDeviceController*>(this);
         while (root->parentDevice()) { root = root->parentDevice(); }
         return root;
     }
 
-    inline HDeviceStatus* deviceStatus()
+    inline HDeviceStatus* deviceStatus() const
     {
         if (!parentDevice()) { return m_deviceStatus.data(); }
         return rootDevice()->deviceStatus();

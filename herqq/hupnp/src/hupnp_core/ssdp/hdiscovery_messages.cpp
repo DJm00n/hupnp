@@ -21,6 +21,7 @@
 
 #include "hdiscovery_messages.h"
 
+#include "./../dataelements/hudn.h"
 #include "./../dataelements/hresourcetype.h"
 #include "./../dataelements/hdiscoverytype.h"
 #include "./../dataelements/hproduct_tokens.h"
@@ -537,21 +538,47 @@ public: // methods
             return false;
         }
 
-        if (mx < 1)
-        {
-            HLOG_WARN("MX cannot be smaller than 1.");
-            return false;
-        }
-        else if (mx > 5)
-        {
-            HLOG_WARN("MX is larger than 5, setting it to 5.");
-            mx = 5; // UDA instructs to treat MX values larger than 5 as 5
-        }
-
+        bool treatAsUpnp1_0 = true;
         if (!userAgent.isValid())
         {
             HLOG_WARN_NONSTD(QString("Invalid user agent: [%1]").arg(
                 userAgent.toString()));
+        }
+        else if (userAgent.upnpToken().minorVersion() >= 1)
+        {
+            treatAsUpnp1_0 = false;
+        }
+
+        if (treatAsUpnp1_0)
+        {
+            if (mx < 0)
+            {
+                HLOG_WARN("MX cannot be negative");
+                return false;
+            }
+            else if (mx < 1)
+            {
+                HLOG_WARN("MX should be between 1 and 120 inclusive");
+            }
+            else if (mx > 120)
+            {
+                HLOG_WARN("MX should be between 1 and 120 inclusive, using 120");
+                mx = 120;
+                // UDA 1.0 instructs to treat MX values larger than 120 as 120
+            }
+        }
+        else
+        {
+            if (mx < 1)
+            {
+                HLOG_WARN("MX cannot be smaller than 1");
+                return false;
+            }
+            else if (mx > 5)
+            {
+                HLOG_WARN("MX should be less than 5 inclusive, setting it to 5");
+                mx = 5; // UDA 1.1 instructs to treat MX values larger than 5 as 5
+            }
         }
 
         m_st        = st;
@@ -684,7 +711,13 @@ HDiscoveryResponse::HDiscoveryResponse(
 
     if (usn.type() == HDiscoveryType::Undefined)
     {
-        HLOG_WARN("USN is not defined");
+        HLOG_WARN("Unique Service Name (USN) is not defined");
+        return;
+    }
+    else if (!usn.udn().isValid())
+    {
+        HLOG_WARN(QString("Unique Service Name (USN) is missing the "
+            "Unique Device Name (UDN): [%1]").arg(usn.toString()));
         return;
     }
 
