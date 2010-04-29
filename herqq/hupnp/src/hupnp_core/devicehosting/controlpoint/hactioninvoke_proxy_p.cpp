@@ -221,6 +221,9 @@ void HActionInvokeProxyConnection::invocationDone(qint32 rc)
 
 void HActionInvokeProxyConnection::send()
 {
+    QtSoapNamespaces::instance().registerNamespace(
+        "u", m_service->serviceType().toString());
+
     // 1) create the remote method call request
     QtSoapMessage soapMsg;
     soapMsg.setMethod(

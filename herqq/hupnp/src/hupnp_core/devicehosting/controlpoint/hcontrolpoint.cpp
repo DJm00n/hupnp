@@ -228,7 +228,7 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
     }
 
     if (q_ptr->acceptRootDevice(newRootDevice->m_device) ==
-        HControlPoint::IgnoreDevice)
+            HControlPoint::IgnoreDevice)
     {
         HLOG_DBG(QString("Device [%1] rejected").arg(
             newRootDevice->m_device->deviceInfo().udn().toString()));
@@ -446,7 +446,6 @@ void HControlPointPrivate::processDeviceOnline(
             device->m_device->deviceInfo().udn().toString()));
 
         if (newDevice) { delete device; device = 0; }
-        else { m_deviceStorage->removeRootDevice(device); }
         break;
 
     case HControlPoint::AddDevice:

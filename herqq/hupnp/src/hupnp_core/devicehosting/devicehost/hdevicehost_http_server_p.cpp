@@ -379,6 +379,9 @@ void DeviceHostHttpServer::incomingControlRequest(
             return;
         }
 
+        QtSoapNamespaces::instance().registerNamespace(
+            "u", service->m_service->serviceType().toString());
+
         QtSoapMessage soapResponse;
         soapResponse.setMethod(QtSoapQName(
             QString("%1%2").arg(action->m_action->name(), "Response"),
