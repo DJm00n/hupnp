@@ -21,7 +21,7 @@
 
 #include "hproduct_tokens.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QRegExp>
 #include <QVector>

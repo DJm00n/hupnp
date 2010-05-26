@@ -1,0 +1,6 @@
+#ifndef H_DEVICEPROXY_
+#define H_DEVICEPROXY_
+
+#include "../src/hupnp_core/devicemodel/hdeviceproxy.h"
+
+#endif // H_DEVICEPROXY_

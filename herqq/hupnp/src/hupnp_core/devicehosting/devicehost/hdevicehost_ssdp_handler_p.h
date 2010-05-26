@@ -30,10 +30,10 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../hdevicestorage_p.h"
+#include "../hdevicestorage_p.h"
 
-#include "./../../ssdp/hssdp.h"
-#include "./../../ssdp/hdiscovery_messages.h"
+#include "../../ssdp/hssdp.h"
+#include "../../ssdp/hdiscovery_messages.h"
 
 #include <QList>
 
@@ -94,45 +94,33 @@ private:
 private:
 
     void processSearchRequest(
-        const HDeviceController* device, const QUrl& location,
-        QList<HDiscoveryResponse>* responses);
+        const HDeviceController*, const QUrl& deviceLocation,
+        QList<HDiscoveryResponse>*);
 
     bool processSearchRequest_AllDevices(
-        const HDiscoveryRequest& req, const HEndpoint& source,
-        QList<HDiscoveryResponse>* responses);
+        const HDiscoveryRequest&, const HEndpoint&,
+        QList<HDiscoveryResponse>*);
 
     bool processSearchRequest_RootDevice(
-        const HDiscoveryRequest& req, const HEndpoint& source,
-        QList<HDiscoveryResponse>* responses);
+        const HDiscoveryRequest&, const HEndpoint&,
+        QList<HDiscoveryResponse>*);
 
     bool processSearchRequest_specificDevice(
-        const HDiscoveryRequest& req, const HEndpoint& source,
-        QList<HDiscoveryResponse>* responses);
+        const HDiscoveryRequest&, const HEndpoint&,
+        QList<HDiscoveryResponse>*);
 
     bool processSearchRequest_deviceType(
-        const HDiscoveryRequest& req, const HEndpoint& source,
-        QList<HDiscoveryResponse>* responses);
+        const HDiscoveryRequest&, const HEndpoint&,
+        QList<HDiscoveryResponse>*);
 
     bool processSearchRequest_serviceType(
-        const HDiscoveryRequest& req, const HEndpoint& source,
-        QList<HDiscoveryResponse>* responses);
+        const HDiscoveryRequest&, const HEndpoint&,
+        QList<HDiscoveryResponse>*);
 
 protected:
 
-    virtual bool incomingDiscoveryRequest (
-        const Herqq::Upnp::HDiscoveryRequest& msg,
-        const HEndpoint& source,
-        const HEndpoint& destination);
-
-    virtual bool incomingDiscoveryResponse(
-        const Herqq::Upnp::HDiscoveryResponse& msg,
-        const HEndpoint& source);
-
-    virtual bool incomingDeviceAvailableAnnouncement(
-        const Herqq::Upnp::HResourceAvailable& msg);
-
-    virtual bool incomingDeviceUnavailableAnnouncement(
-        const Herqq::Upnp::HResourceUnavailable& msg);
+    virtual bool incomingDiscoveryRequest(
+        const HDiscoveryRequest&, const HEndpoint&, DiscoveryRequestMethod);
 
 public:
 

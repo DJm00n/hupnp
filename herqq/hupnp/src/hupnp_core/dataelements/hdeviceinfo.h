@@ -22,8 +22,8 @@
 #ifndef HDEVICEINFO_H_
 #define HDEVICEINFO_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
 
 #include <QPair>
 

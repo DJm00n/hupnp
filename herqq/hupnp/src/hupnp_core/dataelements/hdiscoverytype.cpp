@@ -21,10 +21,10 @@
 
 #include "hdiscoverytype.h"
 
-#include "./../dataelements/hudn.h"
-#include "./../dataelements/hresourcetype.h"
+#include "../dataelements/hudn.h"
+#include "../dataelements/hresourcetype.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QString>
 #include <QStringList>

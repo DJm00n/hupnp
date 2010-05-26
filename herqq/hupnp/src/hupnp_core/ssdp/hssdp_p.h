@@ -31,9 +31,9 @@
 //
 
 #include "hssdp.h"
-#include "./../general/hdefs_p.h"
-#include "./../socket/hendpoint.h"
-#include "./../socket/hmulticast_socket.h"
+#include "../general/hdefs_p.h"
+#include "../socket/hendpoint.h"
+#include "../socket/hmulticast_socket.h"
 
 #include "hdiscovery_messages.h"
 
@@ -71,14 +71,16 @@ private:
     HResourceUnavailable parseDeviceUnavailable(const QHttpRequestHeader& hdr);
     HResourceUpdate      parseDeviceUpdate     (const QHttpRequestHeader& hdr);
 
+    void clear();
+
 public: // attributes
 
     QByteArray m_loggingIdentifier;
 
-    Herqq::Upnp::HMulticastSocket m_multicastSocket;
+    HMulticastSocket* m_multicastSocket;
     // for listening multicast messages
 
-    QUdpSocket m_unicastSocket;
+    QUdpSocket* m_unicastSocket;
     // for sending datagrams and listening messages directed to this instance
 
     HSsdp* q_ptr;
@@ -87,10 +89,17 @@ public: // attributes
 
 public: // methods
 
-    HSsdpPrivate(const QByteArray& loggingIdentifier = QByteArray());
+    HSsdpPrivate(
+        HSsdp* qptr, const QByteArray& loggingIdentifier = QByteArray());
+
     ~HSsdpPrivate();
 
-    bool init(const QHostAddress& addressToBind, HSsdp* qptr);
+    bool init(const QHostAddress& addressToBind);
+
+    inline bool isInitialized() const
+    {
+        return m_unicastSocket && m_multicastSocket;
+    }
 
     void processNotify(const QString& msg, const HEndpoint& source);
     void processSearch(const QString& msg, const HEndpoint& source,
@@ -98,12 +107,9 @@ public: // methods
 
     void processResponse(const QString& msg, const HEndpoint& source);
 
-    bool send(const QByteArray& data);
     bool send(const QByteArray& data, const HEndpoint& receiver);
 
-    void messageReceived(
-        const QString& msg, const HEndpoint& source,
-        const HEndpoint& destination);
+    void messageReceived(QUdpSocket*, const HEndpoint* = 0);
 };
 
 }

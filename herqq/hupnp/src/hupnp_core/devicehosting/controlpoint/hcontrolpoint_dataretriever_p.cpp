@@ -21,13 +21,13 @@
 
 #include "hcontrolpoint_dataretriever_p.h"
 
-#include "./../hdevicehosting_exceptions_p.h"
+#include "../hdevicehosting_exceptions_p.h"
 
-#include "./../../http/hhttp_handler_p.h"
-#include "./../../http/hhttp_messaginginfo_p.h"
+#include "../../http/hhttp_handler_p.h"
+#include "../../http/hhttp_messaginginfo_p.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../general/hupnp_global_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../general/hupnp_global_p.h"
 
 #include <QUrl>
 #include <QImage>
@@ -42,13 +42,13 @@ namespace Herqq
 namespace Upnp
 {
 
-DataRetriever::DataRetriever(
+HDataRetriever::HDataRetriever(
     const QByteArray& loggingId, HHttpHandler& http) :
         m_loggingIdentifier(loggingId), m_http(http)
 {
 }
 
-QByteArray DataRetriever::retrieveData(
+QByteArray HDataRetriever::retrieveData(
     const QUrl& baseUrl, const QUrl& query, bool processAbsoluteUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -122,7 +122,7 @@ QByteArray DataRetriever::retrieveData(
     return body;
 }
 
-QDomDocument DataRetriever::retrieveServiceDescription(
+QDomDocument HDataRetriever::retrieveServiceDescription(
     const QUrl& deviceLocation, const QUrl& scpdUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -145,7 +145,8 @@ QDomDocument DataRetriever::retrieveServiceDescription(
     return dd;
 }
 
-QImage DataRetriever::retrieveIcon(const QUrl& deviceLocation, const QUrl& iconUrl)
+QImage HDataRetriever::retrieveIcon(
+    const QUrl& deviceLocation, const QUrl& iconUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -165,7 +166,8 @@ QImage DataRetriever::retrieveIcon(const QUrl& deviceLocation, const QUrl& iconU
     return image;
 }
 
-QDomDocument DataRetriever::retrieveDeviceDescription(const QUrl& deviceLocation)
+QDomDocument HDataRetriever::retrieveDeviceDescription(
+    const QUrl& deviceLocation)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 

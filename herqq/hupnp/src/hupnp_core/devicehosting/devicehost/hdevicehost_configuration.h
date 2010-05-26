@@ -22,10 +22,11 @@
 #ifndef HDEVICEHOST_CONFIGURATION_H_
 #define HDEVICEHOST_CONFIGURATION_H_
 
-#include "./../../general/hdefs_p.h"
-#include "./../hdevicecreator.h"
+#include "../../general/hdefs_p.h"
+#include "../hdevicecreator.h"
 
 class QString;
+class QHostAddress;
 
 template<typename T>
 class QList;
@@ -70,7 +71,7 @@ private:
     /*!
      * Creates a clone of the object.
      *
-     * \remark you should override this in derived classes. Failing
+     * \remarks you should override this in derived classes. Failing
      * to override this will result in invalid clones being made of derived classes
      * that introduce new member variables.
      */
@@ -94,9 +95,6 @@ public:
      * \return a deep copy of the instance.
      *
      * \remarks
-     * \li you should override this in derived classes. Failing
-     * to override this will result in invalid clones being made of derived classes
-     * that introduce new member variables.
      * \li the ownership of the returned object is transferred to the caller.
      */
     HDeviceConfiguration* clone() const;
@@ -246,14 +244,13 @@ public:
      *
      * \remarks
      *
-     * \li The objects your device creator creates will be deallocated by the Herqq
-     * library when the objects are no longer needed. Do NOT store them or delete
+     * \li The objects your device creator creates will be deallocated by HUPnP
+     * when the objects are no longer needed. Do NOT store them or delete
      * them manually.
      *
-     * \li The device creator has to be set for every device to be hosted,
-     * unlike with control points.
+     * \li The device creator has to be set for every device to be hosted.
      */
-    bool setDeviceCreator(HDeviceCreator deviceCreator);
+    bool setDeviceCreator(const HDeviceCreator& deviceCreator);
 
     /*!
      * Indicates whether or not the object contains the necessary details
@@ -300,6 +297,15 @@ private:
     virtual HDeviceHostConfiguration* doClone() const;
 
 public:
+
+    /*!
+     * todo
+     */
+    /*enum ThreadingModel
+    {
+        SingleThreaded,
+        MultiThreaded
+    };*/
 
     /*!
      * Creates a new, empty instance.
@@ -367,6 +373,17 @@ public:
     qint32 individualAdvertisementCount() const;
 
     /*!
+     * Returns the network addresses a device host should use in its
+     * operations.
+     *
+     * \return the network addresses a device host should use in its
+     * operations.
+     *
+     * \sa setNetworkAddressesToUse()
+     */
+    QList<QHostAddress> networkAddressesToUse() const;
+
+    /*!
      * Specifies how many times the device host sends each individual
      * advertisement / announcement.
      *
@@ -400,6 +417,11 @@ public:
     qint32 subscriptionExpirationTimeout() const;
 
     /*!
+     * todo
+     */
+    //ThreadingModel threadingModel() const;
+
+    /*!
      * Specifies the timeout the device host uses for subscriptions.
      *
      * The default value is zero, which means that the device host honors the
@@ -419,6 +441,22 @@ public:
      * \sa subscriptionExpirationTimeout()
      */
     void setSubscriptionExpirationTimeout(qint32 timeout);
+
+    /*!
+     * Defines the network addresses the device host should use in its
+     * operations.
+     *
+     * \param addresses specifies the network addresses the device host
+     * should use in its operations.
+     *
+     * \sa networkAddressesToUse()
+     */
+    bool setNetworkAddressesToUse(const QList<QHostAddress>& addresses);
+
+    /*!
+     *todo
+     */
+    //void setThreadingModel(ThreadingModel arg);
 
     /*!
      * Indicates if the instance contains any device configurations.

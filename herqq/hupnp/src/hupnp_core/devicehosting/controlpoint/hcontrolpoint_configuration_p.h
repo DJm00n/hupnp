@@ -22,9 +22,6 @@
 #ifndef HCONTROLPOINT_CONFIGURATION_P_H_
 #define HCONTROLPOINT_CONFIGURATION_P_H_
 
-#include "./../hdevicecreator.h"
-#include "./../../../utils/hglobal.h"
-
 //
 // !! Warning !!
 //
@@ -33,6 +30,11 @@
 // change or the file may be removed without of notice.
 //
 
+#include "hdeviceproxy_creator.h"
+#include "../../../utils/hglobal.h"
+
+#include <QHostAddress>
+
 namespace Herqq
 {
 
@@ -40,21 +42,39 @@ namespace Upnp
 {
 
 //
+//
+//
+class HProxyCreator
+{
+public:
+
+    HProxyCreator();
+
+    HDeviceProxy* operator()(const HDeviceInfo&) const;
+    HServiceProxy* operator()(const HResourceType&) const;
+};
+
+//
 // Implementation details of HControlPointConfiguration class
 //
 class H_UPNP_CORE_EXPORT HControlPointConfigurationPrivate
 {
+H_DISABLE_COPY(HControlPointConfigurationPrivate)
+
 public: // attributes
 
-    HDeviceCreator m_deviceCreator;
+    HDeviceProxyCreator m_deviceCreator;
     bool m_subscribeToEvents;
     qint32 m_desiredSubscriptionTimeout;
-    bool m_performInitialDiscovery;
+    bool m_autoDiscovery;
+    QList<QHostAddress> m_networkAddresses;
 
 public: // methods
 
     HControlPointConfigurationPrivate();
     virtual ~HControlPointConfigurationPrivate();
+
+    virtual HControlPointConfigurationPrivate* clone() const;
 };
 
 }

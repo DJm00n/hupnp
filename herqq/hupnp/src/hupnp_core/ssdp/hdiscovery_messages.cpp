@@ -21,13 +21,13 @@
 
 #include "hdiscovery_messages.h"
 
-#include "./../dataelements/hudn.h"
-#include "./../dataelements/hresourcetype.h"
-#include "./../dataelements/hdiscoverytype.h"
-#include "./../dataelements/hproduct_tokens.h"
+#include "../dataelements/hudn.h"
+#include "../dataelements/hresourcetype.h"
+#include "../dataelements/hdiscoverytype.h"
+#include "../dataelements/hproduct_tokens.h"
 
-#include "./../socket/hendpoint.h"
-#include "./../../utils/hlogger_p.h"
+#include "../socket/hendpoint.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QHostAddress>
 #include <QMetaType>
@@ -269,7 +269,7 @@ HResourceUnavailable::HResourceUnavailable() :
 }
 
 HResourceUnavailable::HResourceUnavailable(
-    const HDiscoveryType& usn, const HEndpoint& sourceLocation,
+    const HDiscoveryType& usn,
     qint32 bootId, qint32 configId) :
         h_ptr(new HResourceUnavailablePrivate())
 {
@@ -292,10 +292,9 @@ HResourceUnavailable::HResourceUnavailable(
         bootId = -1; configId = -1;
     }
 
-    h_ptr->m_usn            = usn;
-    h_ptr->m_configId       = configId;
-    h_ptr->m_bootId         = bootId;
-    h_ptr->m_sourceLocation = sourceLocation;
+    h_ptr->m_usn      = usn;
+    h_ptr->m_configId = configId;
+    h_ptr->m_bootId   = bootId;
 }
 
 HResourceUnavailable::HResourceUnavailable(const HResourceUnavailable& other) :
@@ -350,7 +349,6 @@ qint32 HResourceUnavailable::configId() const
 bool operator==(const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
 {
     return obj1.h_ptr->m_usn            == obj2.h_ptr->m_usn &&
-           obj1.h_ptr->m_sourceLocation == obj2.h_ptr->m_sourceLocation &&
            obj1.h_ptr->m_bootId         == obj2.h_ptr->m_bootId &&
            obj1.h_ptr->m_configId       == obj2.h_ptr->m_configId;
 }

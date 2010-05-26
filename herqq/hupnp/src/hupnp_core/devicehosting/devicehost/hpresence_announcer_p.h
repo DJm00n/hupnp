@@ -30,23 +30,23 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../general/hupnp_global_p.h"
+#include "../../general/hupnp_global_p.h"
 
-#include "./../../devicemodel/hdevice.h"
-#include "./../../devicemodel/hdevice_p.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/hdevice_p.h"
 
-#include "./../../devicemodel/hservice.h"
-#include "./../../devicemodel/hservice_p.h"
+#include "../../devicemodel/hservice.h"
+#include "../../devicemodel/hservice_p.h"
 
-#include "./../../socket/hendpoint.h"
+#include "../../socket/hendpoint.h"
 
-#include "./../../ssdp/hssdp.h"
-#include "./../../ssdp/hdiscovery_messages.h"
+#include "../../ssdp/hssdp.h"
+#include "../../ssdp/hdiscovery_messages.h"
 
-#include "./../../dataelements/hudn.h"
-#include "./../../dataelements/hdeviceinfo.h"
-#include "./../../dataelements/hdiscoverytype.h"
-#include "./../../dataelements/hproduct_tokens.h"
+#include "../../dataelements/hudn.h"
+#include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hdiscoverytype.h"
+#include "../../dataelements/hproduct_tokens.h"
 
 #include <QUrl>
 
@@ -145,7 +145,6 @@ public:
     {
         return HResourceUnavailable(
             m_usn,
-            m_location,
             m_device->deviceStatus()->bootId(),
             m_device->deviceStatus()->configId());
     }
@@ -158,15 +157,15 @@ class PresenceAnnouncer
 {
 private:
 
-    HSsdp* m_ssdp;
+    QList<DeviceHostSsdpHandler*> m_ssdps;
     quint32 m_advertisementCount;
 
 public:
 
-    PresenceAnnouncer (HSsdp* ssdp, quint32 advertisementCount) :
-        m_ssdp(ssdp), m_advertisementCount(advertisementCount)
+    PresenceAnnouncer(
+        const QList<DeviceHostSsdpHandler*>& ssdps, quint32 advertisementCount) :
+            m_ssdps(ssdps), m_advertisementCount(advertisementCount)
     {
-        Q_ASSERT(m_ssdp);
         Q_ASSERT(m_advertisementCount > 0);
     }
 
@@ -191,7 +190,7 @@ public:
     void createAnnouncementMessagesForRootDevice(
         HDeviceController* rootDevice, QList<AnnouncementType>& announcements)
     {
-        QList<QUrl> locations = rootDevice->m_device->locations(true);
+        QList<QUrl> locations = rootDevice->m_device->locations();
         foreach(const QUrl& location, locations)
         {
             HUdn udn(rootDevice->m_device->deviceInfo().udn());
@@ -208,7 +207,7 @@ public:
     void createAnnouncementMessagesForEmbeddedDevice(
         HDeviceController* device, QList<AnnouncementType>& announcements)
     {
-        QList<QUrl> locations = device->m_device->locations(true);
+        QList<QUrl> locations = device->m_device->locations();
         foreach(const QUrl& location, locations)
         {
             HDeviceInfo deviceInfo = device->m_device->deviceInfo();
@@ -244,9 +243,12 @@ public:
     {
         for (quint32 i = 0; i < m_advertisementCount; ++i)
         {
-            foreach(const AnnouncementType& at, announcements)
+            foreach(HSsdp* ssdp, m_ssdps)
             {
-                m_ssdp->announcePresence(at());
+                foreach(const AnnouncementType& at, announcements)
+                {
+                    ssdp->announcePresence(at());
+                }
             }
         }
     }

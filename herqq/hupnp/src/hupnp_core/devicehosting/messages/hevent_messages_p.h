@@ -34,7 +34,7 @@
 #include "hsid_p.h"
 #include "htimeout_p.h"
 
-#include "./../../dataelements/hproduct_tokens.h"
+#include "../../dataelements/hproduct_tokens.h"
 
 #include <QUrl>
 #include <QList>

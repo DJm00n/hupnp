@@ -30,20 +30,16 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../general/hdefs_p.h"
-#include "./../messages/hevent_messages_p.h"
-#include "./../../http/hhttp_asynchandler_p.h"
+#include "../../general/hdefs_p.h"
+#include "../messages/hevent_messages_p.h"
+#include "../../http/hhttp_asynchandler_p.h"
 
 #include <QQueue>
 #include <QTimer>
-#include <QMutex>
 #include <QObject>
-#include <QRunnable>
-#include <QWaitCondition>
 
 class QByteArray;
 class QTcpSocket;
-class QThreadPool;
 
 namespace Herqq
 {

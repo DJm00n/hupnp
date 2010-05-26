@@ -26,6 +26,7 @@
 #include "i_dataholder.h"
 
 #include <HUpnp>
+#include <HAsyncOp>
 
 #include <QHash>
 #include <QString>
@@ -53,12 +54,12 @@ private:
     QHash<QString, IDataHolder*> m_inputWidgets;
 
     void setupArgumentWidgets();
-    IDataHolder* createDataHolder(Herqq::Upnp::HStateVariable* stateVar);
+    IDataHolder* createDataHolder(Herqq::Upnp::HStateVariable*);
 
 public:
 
     explicit InvokeActionDialog(
-        Herqq::Upnp::HAction* action, QWidget* parent = 0);
+        Herqq::Upnp::HAction*, QWidget* parent = 0);
 
     virtual ~InvokeActionDialog();
 
@@ -73,7 +74,7 @@ protected:
 private slots:
 
     void on_invokeButton_clicked();
-    void invokeComplete(const QUuid& invokeId);
+    void invokeComplete(Herqq::Upnp::HAsyncOp);
 };
 
 #endif // INVOKEACTIONDIALOG_H

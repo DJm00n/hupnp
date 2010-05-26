@@ -53,19 +53,16 @@ InvokeActionDialog::InvokeActionDialog(
     setupArgumentWidgets();
 
     bool ok = connect(
-        action, SIGNAL(invokeComplete(QUuid)),
-        this, SLOT(invokeComplete(QUuid)));
+        action, SIGNAL(invokeComplete(Herqq::Upnp::HAsyncOp)),
+        this, SLOT(invokeComplete(Herqq::Upnp::HAsyncOp)));
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
-void InvokeActionDialog::invokeComplete(const QUuid& invokeId)
+void InvokeActionDialog::invokeComplete(HAsyncOp invokeOp)
 {
-    qint32 rc = 0;
     HActionArguments outArgs;
-    m_action->waitForInvoke(invokeId, &rc, &outArgs);
-
-    if (rc == HAction::Success())
+    if (m_action->waitForInvoke(&invokeOp, &outArgs))
     {
         for(qint32 i = 0; i < outArgs.size(); ++i)
         {
@@ -79,7 +76,8 @@ void InvokeActionDialog::invokeComplete(const QUuid& invokeId)
         QMessageBox msgBox;
 
         msgBox.setText(QString("Action invocation [id: %1] failed: %2").arg(
-            invokeId.toString(), HAction::errorCodeToString(rc)));
+            invokeOp.id().toString(),
+            HAction::errorCodeToString(invokeOp.returnValue())));
 
         msgBox.exec();
     }

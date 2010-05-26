@@ -30,12 +30,14 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../general/hdefs_p.h"
-#include "./../socket/hendpoint.h"
-#include "./../devicemodel/hdevice.h"
-#include "./../devicemodel/hdevice_p.h"
-#include "./../devicemodel/hservice.h"
-#include "./../devicemodel/hservice_p.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_global.h"
+
+#include "../socket/hendpoint.h"
+#include "../devicemodel/hdevice.h"
+#include "../devicemodel/hdevice_p.h"
+#include "../devicemodel/hservice.h"
+#include "../devicemodel/hservice_p.h"
 
 #include <QUrl>
 #include <QPair>
@@ -84,13 +86,15 @@ public: // instance methods
     void addRootDevice   (HDeviceController* root);
     bool removeRootDevice(HDeviceController* root);
 
-    HDeviceController* searchDeviceByUdn(const HUdn& udn) const;
+    HDeviceController* searchDeviceByUdn(
+        const HUdn&, HDevice::TargetDeviceType = HDevice::RootDevices) const;
 
     QList<HDeviceController*> searchDevicesByDeviceType(
-        const HResourceType& deviceType, bool exactMatch = true) const;
+        const HResourceType& deviceType, HResourceType::VersionMatch, 
+        HDevice::TargetDeviceType) const;
 
     QList<HServiceController*> searchServicesByServiceType(
-        const HResourceType& serviceType, bool exactMatch = true) const;
+        const HResourceType& serviceType, HResourceType::VersionMatch) const;
 
     HServiceController* searchServiceByScpdUrl(
         HDeviceController* device, const QUrl& scpdUrl) const;
@@ -110,7 +114,8 @@ public: // instance methods
     HServiceController* searchServiceByEventUrl(
         const QUrl& eventUrl) const;
 
-    HDeviceList rootDevices() const;
+    QList<HDevice*> rootDevices() const;
+    QList<HDeviceProxy*> rootDeviceProxies() const;
 
     QList<HDeviceController*> rootDeviceControllers() const;
 

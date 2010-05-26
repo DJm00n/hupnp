@@ -21,7 +21,7 @@
 
 #include "hserviceid.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QString>
 #include <QStringList>

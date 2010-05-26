@@ -23,8 +23,8 @@
 #define UPNP_EVENT_CONNECTORS_H_
 
 #include "hupnp_fwd.h"
-#include "./../../utils/hglobal.h"
-#include "./../../utils/hfunctor.h"
+#include "../../utils/hglobal.h"
+#include "../../utils/hfunctor.h"
 
 #include <QObject>
 

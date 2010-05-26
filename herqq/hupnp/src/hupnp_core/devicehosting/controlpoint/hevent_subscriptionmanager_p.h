@@ -23,8 +23,9 @@
 #define HEVENT_SUBSCRIPTIONMANAGER_P_H_
 
 #include "hevent_subscription_p.h"
-#include "./../../general/hupnp_fwd.h"
-#include "./../../general/hupnp_global.h"
+#include "../../general/hupnp_fwd.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../general/hupnp_global.h"
 
 #include <QList>
 #include <QHash>
@@ -62,6 +63,9 @@ private:
 private:
 
     HEventSubscription* createSubscription(HServiceController*, qint32 timeout);
+    QUrl getSuitableHttpServerRootUrl(const QList<QUrl>& deviceLocations);
+    // attempts to figure out the most suitable HTTP server URL for one of the
+    // device locations specified
 
 public Q_SLOTS:
 
@@ -71,9 +75,9 @@ public Q_SLOTS:
 
 Q_SIGNALS:
 
-    void subscribed(Herqq::Upnp::HService*);
-    void subscriptionFailed(Herqq::Upnp::HService*);
-    void unsubscribed(Herqq::Upnp::HService*);
+    void subscribed(Herqq::Upnp::HServiceProxy*);
+    void subscriptionFailed(Herqq::Upnp::HServiceProxy*);
+    void unsubscribed(Herqq::Upnp::HServiceProxy*);
 
 public:
 
@@ -87,19 +91,20 @@ public:
         Sub_Failed_NotEvented = 2,
     };
 
-    bool subscribe(HDevice*, DeviceVisitType, qint32 timeout);
-    SubscriptionResult subscribe(HService*, qint32 timeout);
+    bool subscribe(HDeviceProxy*, HDevice::DeviceVisitType, qint32 timeout);
+    SubscriptionResult subscribe(HServiceProxy*, qint32 timeout);
 
-    HEventSubscription::SubscriptionStatus subscriptionStatus(const HService*) const;
+    HEventSubscription::SubscriptionStatus subscriptionStatus(
+        const HServiceProxy*) const;
 
     // the unsubscribe flag specifies whether to send unsubscription to the UPnP device
     // if not, the subscription is just reset to default state (in which it does nothing)
-    bool cancel(HDevice*, DeviceVisitType, bool unsubscribe);
-    bool cancel(HService*, bool unsubscribe);
+    bool cancel(HDeviceProxy*, HDevice::DeviceVisitType, bool unsubscribe);
+    bool cancel(HServiceProxy*, bool unsubscribe);
     void cancelAll(qint32 msecsToWait);
 
-    bool remove(HDevice*, bool recursive);
-    bool remove(HService*);
+    bool remove(HDeviceProxy*, bool recursive);
+    bool remove(HServiceProxy*);
     void removeAll();
 
     bool onNotify(const QUuid& id, MessagingInfo& mi, const NotifyRequest& req);

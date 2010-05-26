@@ -30,9 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../general/hdefs_p.h"
-#include "./../../dataelements/hudn.h"
-#include "./../../devicemodel/hdevice_p.h"
+#include "../../general/hdefs_p.h"
+#include "../../dataelements/hudn.h"
+#include "../../devicemodel/hdevice_p.h"
 
 #include <QList>
 #include <QObject>
@@ -71,7 +71,6 @@ private:
     QScopedPointer<HDeviceController> m_createdDevice;
 
     const HUdn m_udn;
-    const QUrl m_location;
     const qint32 m_cacheControlMaxAge;
 
 public:
@@ -80,10 +79,15 @@ public:
 
     template<typename Msg>
     DeviceBuildTask(HControlPointPrivate* owner, const Msg& msg) :
-        m_owner(owner), m_completionValue(-1), m_errorString(),
-        m_createdDevice(0), m_udn(msg.usn().udn()), m_location(msg.location()),
-        m_cacheControlMaxAge(msg.cacheControlMaxAge()), m_locations()
+            m_owner(owner),
+            m_completionValue(-1),
+            m_errorString(),
+            m_createdDevice(0),
+            m_udn(msg.usn().udn()),
+            m_cacheControlMaxAge(msg.cacheControlMaxAge()),
+            m_locations()
     {
+        m_locations.append(msg.location());
     }
 
     virtual ~DeviceBuildTask();
@@ -139,6 +143,7 @@ public:
             }
 
             QList<QUrl>::const_iterator ci2 = (*ci)->m_locations.constBegin();
+
             for(; ci2 != (*ci)->m_locations.constEnd(); ++ci2)
             {
                 if (*ci2 == msg.location())

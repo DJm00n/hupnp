@@ -21,17 +21,17 @@
 
 #include "habstracthost_p.h"
 
-#include "./../devicemodel/hdevice.h"
-#include "./../devicemodel/hservice.h"
-#include "./../devicemodel/hdevice_p.h"
-#include "./../devicemodel/haction_p.h"
-#include "./../devicemodel/hservice_p.h"
-#include "./../dataelements/hdeviceinfo.h"
+#include "../devicemodel/hdevice.h"
+#include "../devicemodel/hservice.h"
+#include "../devicemodel/hdevice_p.h"
+#include "../devicemodel/haction_p.h"
+#include "../devicemodel/hservice_p.h"
+#include "../dataelements/hdeviceinfo.h"
 
-#include "./../dataelements/hudn.h"
-#include "./../dataelements/hresourcetype.h"
+#include "../dataelements/hudn.h"
+#include "../dataelements/hresourcetype.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QImage>
 #include <QMetaType>
@@ -51,8 +51,8 @@ static bool test = registerMetaTypes();
 /*!
  * \defgroup devicehosting Device Hosting
  *
- * \brief This page explains the concept of device hosts, which encapsulate the technical
- * details of UPnP networking.
+ * \brief This page explains the concept of device hosts, which encapsulate the
+ * technical details of UPnP networking.
  *
  * \section notesaboutdesign A few notes about the design
  *
@@ -62,33 +62,35 @@ static bool test = registerMetaTypes();
  * device hosts provide the technical foundation for the UPnP networking. They
  * encapsulate and implement the protocols the UPnP Device Architecture
  * specification details. The device model, on the other hand, is about the logical
- * structure of the UPnP core concepts, which is clearly independent of the technical details
- * of communication. Because of this, the same device model structure should be usable
- * everywhere and with HUPnP, it is.
+ * structure of the UPnP core concepts, which is clearly independent of the
+ * technical details of communication. Because of this HUPnP uses the same
+ * device model both at the server and client side.
  *
  * HUPnP introduces two types of "hosts".
  * \li The Herqq::Upnp::HDeviceHost is the class
  * that enables a UPnP device to be published for UPnP control points to use.
- * \li The Herqq::Upnp::HControlPoint is the class that enables the discovery and use
- * of UPnP devices that are available on the network.
+ * \li The Herqq::Upnp::HControlPoint is the class that enables the discovery
+ * and use of UPnP devices that are available on the network.
  *
  * The difference between these two classes is important to notice.
- * You could picture an \c HDeviceHost as a server and an \c HControlPoint as a client.
- * Regardless, they both use and expose an identical \ref devicemodel. If you publish
- * a Herqq::Upnp::HDevice using \c HDeviceHost you can retrieve the device
- * and use it in process. In addition, the published device is simultaneously usable
- * over the network. This enables any UPnP control point, such as the \c HControlPoint
- * to discover it and use it.
+ * You could picture an \c HDeviceHost as a server and an \c HControlPoint as a
+ * client. The \c HDeviceHost \e publishes instances of \c HDevice for
+ * UPnP control points to use and the \c HControlPoint \e uses instances of
+ * \c HDevice to communicate with UPnP devices. But as implied,
+ * they both use and expose the HUPnP \ref devicemodel.
  *
- * When an \c HControlPoint notices
- * a UPnP device on the network it attempts to build an object model for that device.
- * If the device is hosted by an \c HDeviceHost the \c HControlPoint will build almost identical
- * device model compared to the model the \c HDeviceHost uses. The fact that some of the calls
- * on the device model retrieved from \c HControlPoint go over the network to the \em real
- * UPnP device is completely abstracted. In other words, if given a pointer
- * to an \c HDevice instance, you cannot tell if the \c HDevice is from
- * an \c HControlPoint or from an \c HDeviceHost. The HUPnP API does not
- * provide that information directly.
+ * \note While a Herqq::Upnp::HDevice published by a \c HDeviceHost is always
+ * usable by UPnP control points over the network, the same device can also
+ * be accesed and used simultaneously in process.
+ * See Herqq::Upnp::HDeviceHost for more information.
+ *
+ * When an \c HControlPoint discovers a UPnP device on the network
+ * it attempts to build an object model for that device.
+ * If the device is hosted by an \c HDeviceHost the \c HControlPoint will build
+ * almost identical device model compared to the model the \c HDeviceHost uses.
+ * The fact that some of the calls to the objects of the device model retrieved
+ * from \c HControlPoint go over the network to the \em real
+ * UPnP device is completely abstracted.
  *
  * \section basicuse Basic use
  *
@@ -127,7 +129,7 @@ static bool test = registerMetaTypes();
  *     deviceConf.setDeviceCreator(mydeviceCreatorFunctor);
  *     // this functor is used to create types that represent UPnP devices found
  *     // in the device description.
-       //
+ *     //
  *     // note, the creator can also be a normal or a member function
  *
  *     Herqq::Upnp::HDeviceHost* deviceHost = new HDeviceHost();

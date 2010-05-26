@@ -24,10 +24,11 @@
 
 #include "hdefs_p.h"
 
-#include "./../dataelements/hproduct_tokens.h"
+#include "../socket/hendpoint.h"
+#include "../dataelements/hproduct_tokens.h"
 
-#include "./../../utils/hlogger_p.h"
-#include "./../../utils/hexceptions_p.h"
+#include "../../utils/hlogger_p.h"
+#include "../../utils/hexceptions_p.h"
 
 #include <QUrl>
 #include <QString>
@@ -36,6 +37,7 @@
 #include <QDomElement>
 #include <QDomNodeList>
 #include <QHostAddress>
+#include <QNetworkInterface>
 
 #if defined(Q_OS_LINUX)
 #include <sys/utsname.h>
@@ -56,9 +58,9 @@ namespace Herqq
 namespace Upnp
 {
 
-void SetLoggingLevel(LogLevel level)
+void SetLoggingLevel(HLogLevel level)
 {
-    HLogger::setTraceLevel(static_cast<HLogger::LogLevel>(level));
+    HLogger::setTraceLevel(static_cast<HLogger::HLogLevel>(level));
 }
 
 void EnableNonStdBehaviourWarnings(bool arg)
@@ -109,6 +111,7 @@ QMutex HSysInfo::s_initMutex;
 HSysInfo::HSysInfo()
 {
     createProductTokens();
+    createLocalNetworks();
 }
 
 HSysInfo::~HSysInfo()
@@ -175,6 +178,82 @@ void HSysInfo::createProductTokens()
 
     m_productTokens.reset(
         new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.5").arg(server)));
+}
+
+void HSysInfo::createLocalNetworks()
+{
+    foreach(const QNetworkInterface& iface, QNetworkInterface::allInterfaces())
+    {
+        QList<QNetworkAddressEntry> entries = iface.addressEntries();
+        foreach(const QNetworkAddressEntry& entry, entries)
+        {
+            QHostAddress ha = entry.ip();
+            if (ha.protocol() != QAbstractSocket::IPv4Protocol)
+            {
+                continue;
+            }
+
+            quint32 nm = entry.netmask().toIPv4Address();
+            m_localNetworks.append(qMakePair(ha.toIPv4Address() & nm, nm));
+        }
+    }
+}
+
+bool HSysInfo::localNetwork(const QHostAddress& ha, quint32* retVal) const
+{
+    Q_ASSERT(retVal);
+
+    QList<QPair<quint32, quint32> >::const_iterator ci;
+    for(ci = m_localNetworks.begin(); ci != m_localNetworks.end(); ++ci)
+    {
+        if ((ha.toIPv4Address() & ci->second) == ci->first)
+        {
+            *retVal = ci->first;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool HSysInfo::isLocalAddress(const QHostAddress& ha) const
+{
+    quint32 tmp;
+    return localNetwork(ha, &tmp);
+}
+
+bool HSysInfo::areLocalAddresses(const QList<QHostAddress>& addresses) const
+{
+    QList<QHostAddress> localAddresses = QNetworkInterface::allAddresses();
+    foreach(const QHostAddress& ha, addresses)
+    {
+        bool matched = false;
+        foreach(const QHostAddress& localAddress, localAddresses)
+        {
+            if (localAddress == ha)
+            {
+                matched = true;
+                break;
+            }
+        }
+
+        if (!matched)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+HEndpoints convertHostAddressesToEndpoints(const QList<QHostAddress>& addrs)
+{
+    HEndpoints retVal;
+    foreach(const QHostAddress& ha, addrs)
+    {
+        retVal.append(HEndpoint(ha));
+    }
+    return retVal;
 }
 
 void verifySpecVersion(const QDomElement& rootElement)

@@ -30,15 +30,15 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../general/hupnp_fwd.h"
+#include "../general/hupnp_fwd.h"
 
 #include "haction.h"
 #include "hservice.h"
 #include "hstatevariable.h"
 #include "hstatevariable_p.h"
 
-#include "./../dataelements/hserviceid.h"
-#include "./../dataelements/hresourcetype.h"
+#include "../dataelements/hserviceid.h"
+#include "../dataelements/hresourcetype.h"
 
 #include <QUrl>
 #include <QHash>
@@ -71,7 +71,11 @@ H_DISABLE_COPY(HServiceController)
 
 public:
 
-    HService* m_service;
+    union
+    {
+        HService* m_service;
+        HServiceProxy* m_serviceProxy;
+    };
 
     HServiceController(HService* service);
     virtual ~HServiceController();
@@ -89,8 +93,8 @@ public:
 //
 class H_UPNP_CORE_EXPORT HServicePrivate
 {
-H_DISABLE_COPY(HServicePrivate)
 H_DECLARE_PUBLIC(HService)
+H_DISABLE_COPY(HServicePrivate)
 
 public: // attributes
 

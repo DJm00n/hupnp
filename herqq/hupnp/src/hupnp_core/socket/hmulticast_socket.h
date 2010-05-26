@@ -22,7 +22,7 @@
 #ifndef MULTICAST_SOCKET_H_
 #define MULTICAST_SOCKET_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include <QUdpSocket>
 
@@ -70,26 +70,58 @@ public:
     /*!
      * Attempts to joins into the specified multicast group address.
      *
-     * \param address specifies the multicast address to be joined.
+     * \param groupAddress specifies the multicast group address.
      *
      * \retval true in case the operation succeeded.
      *
      * \retval false in case the operation failed. For instance,
      * this happens when the socket is not bound to a port.
      */
-    bool joinMulticastGroup(const QHostAddress& address);
+    bool joinMulticastGroup(const QHostAddress& groupAddress);
+
+    /*!
+     * Attempts to joins into the specified multicast group address using
+     * the specified local address.
+     *
+     * \param groupAddress specifies the multicast group address.
+     * \param localAddress specifies the local addresses from which the join
+     * message is sent.
+     *
+     * \retval true in case the operation succeeded.
+     *
+     * \retval false in case the operation failed. For instance,
+     * this happens when the socket is not bound to a port.
+     */
+    bool joinMulticastGroup(
+        const QHostAddress& groupAddress, const QHostAddress& localAddress);
 
     /*!
      * Attempts to leave from the specified multicast group address.
      *
-     * \param address specifies the multicast address from where to leave.
+     * \param groupAddress specifies the multicast group address.
      *
      * \retval true in case the operation succeeded.
      *
      * \retval false in case the operation failed. For example, this happens
      * when the socket has not joined to the specified multicast address.
      */
-    bool leaveMulticastGroup(const QHostAddress& address);
+    bool leaveMulticastGroup(const QHostAddress& groupAddress);
+
+    /*!
+     * Attempts to leave from the specified multicast group address using the
+     * specified local address.
+     *
+     * \param groupAddress specifies the multicast group address.
+     * \param localAddress specifies the local addresses from which the leave
+     * message is sent.
+     *
+     * \retval true in case the operation succeeded.
+     *
+     * \retval false in case the operation failed. For example, this happens
+     * when the socket has not joined to the specified multicast address.
+     */
+    bool leaveMulticastGroup(
+        const QHostAddress& groupAddress, const QHostAddress& localAddress);
 
     /*!
      * Attempts to set the Time To Live attribute for each message.
@@ -109,18 +141,6 @@ public:
      * \return \e true in case the operation succeeded.
      */
     bool bind(quint16 port = 0);
-
-    /*!
-     * Attempts to bind the socket into the specified port and address
-     * using BindMode flags that are suitable for a multicast socket.
-     *
-     * \param addressToBind specifies the address to which to bind.
-     *
-     * \param port specifies the port to which to bind.
-     *
-     * \return \e true in case the operation succeeded.
-     */
-    bool bind(const QHostAddress& addressToBind, quint16 port = 0);
 };
 
 }

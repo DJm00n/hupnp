@@ -20,6 +20,7 @@
  */
 
 #include "hendpoint.h"
+#include "../../utils/hmisc_utils_p.h"
 
 #include <QMetaType>
 
@@ -91,7 +92,7 @@ HEndpoint::~HEndpoint()
 
 bool HEndpoint::isMulticast() const
 {
-    qint32 ipaddr = m_hostAddress.toIPv4Address();
+    quint32 ipaddr = m_hostAddress.toIPv4Address();
     return ((ipaddr & 0xe0000000) == 0xe0000000) ||
            ((ipaddr & 0xe8000000) == 0xe8000000) ||
            ((ipaddr & 0xef000000) == 0xef000000);
@@ -112,6 +113,12 @@ bool operator==(const HEndpoint& ep1, const HEndpoint& ep2)
 bool operator!=(const HEndpoint& ep1, const HEndpoint& ep2)
 {
     return !(ep1 == ep2);
+}
+
+quint32 qHash(const HEndpoint& key)
+{
+    quint32 tmp = key.m_hostAddress.toIPv4Address() ^ key.portNumber();
+    return hash(reinterpret_cast<char*>(&tmp), sizeof(tmp));
 }
 
 }

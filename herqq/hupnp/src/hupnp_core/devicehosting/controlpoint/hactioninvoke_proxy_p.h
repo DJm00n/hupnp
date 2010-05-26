@@ -30,9 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../general/hupnp_fwd.h"
-#include "./../../http/hhttp_asynchandler_p.h"
-#include "./../../devicemodel/hactionarguments.h"
+#include "../../general/hupnp_fwd.h"
+#include "../../http/hhttp_asynchandler_p.h"
+#include "../../devicemodel/hactionarguments.h"
 
 #include <QUrl>
 #include <QMutex>
@@ -162,8 +162,7 @@ public:
     HActionInvokeProxy(const QByteArray& loggingIdentifier, HAction* action);
 
     int operator()(
-        const HActionArguments& inArgs,
-        HActionArguments* outArgs);
+        const HActionArguments& inArgs, HActionArguments* outArgs);
 };
 
 }

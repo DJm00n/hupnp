@@ -30,8 +30,10 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../general/hdefs_p.h"
-#include "./../hdevicecreator.h"
+#include "../../general/hdefs_p.h"
+#include "hdeviceproxy_creator.h"
+
+class QHostAddress;
 
 namespace Herqq
 {
@@ -50,12 +52,23 @@ class HControlPointConfigurationPrivate;
  *
  * \sa HControlPoint::init()
  *
- * \remark this class is not thread-safe.
+ * \remarks this class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HControlPointConfiguration
 {
 H_DISABLE_COPY(HControlPointConfiguration)
 friend class HControlPoint;
+
+private:
+
+    /*!
+     * Creates a clone of the object.
+     *
+     * \remarks you should override this in derived classes. Failing
+     * to override this will result in invalid clones being made of derived classes
+     * that introduce new member variables.
+     */
+    virtual HControlPointConfiguration* doClone() const;
 
 protected:
 
@@ -77,21 +90,23 @@ public:
     /*!
      * Returns a deep copy of the instance.
      *
-     * \return a deep copy of the instance. The ownership of the returned object
-     * is transferred to the caller. Remember to delete the object.
+     * \return a deep copy of the instance.
      *
-     * \remark most often you should override this in derived classes.
+     * \remarks
+     * \li the ownership of the returned object is transferred to the caller.
      */
-    virtual HControlPointConfiguration* clone() const;
+    HControlPointConfiguration* clone() const;
 
     /*!
-     * Returns the user-defined callable entity that is used to create HDevice instances.
+     * Returns the user-defined callable entity that is used to create
+     * HDeviceProxy instances.
      *
-     * \return the user-defined callable entity that is used to create HDevice instances.
+     * \return the user-defined callable entity that is used to create
+     * HDeviceProxy instances.
      *
      * \sa setDeviceCreator()
      */
-    HDeviceCreator deviceCreator() const;
+    HDeviceProxyCreator deviceCreator() const;
 
     /*!
      * Indicates whether to automatically subscribe to all events on all services
@@ -128,31 +143,40 @@ public:
      * unaware of UPnP devices that are already active in the network until they
      * re-advertise themselves.
      *
-     * \as setPerformInitialDiscovery()
+     * \sa setPerformInitialDiscovery()
      */
-    bool performInitialDiscovery() const;
+    bool autoDiscovery() const;
 
     /*!
-     * Sets the callable entity that is used to create HDevice instances.
+     * Returns the network addresses a control point should use in its
+     * operations.
+     *
+     * \return the network addresses a control point should use in its
+     * operations.
+     *
+     * \sa setNetworkAddressesToUse()
+     */
+    QList<QHostAddress> networkAddressesToUse() const;
+
+    /*!
+     * Sets the callable entity that is used to create HDeviceProxy instances.
      *
      * Setting the device creator is useful when you want to create the
-     * types that will be used later as HDevice instances. Perhaps you have created
-     * HDevice types to be run on HDeviceHost and you want to use
-     * the same custom types on a \c %HControlPoint. However, <b>this
+     * types that will be used later as HDeviceProxy instances. However, <b>this
      * is purely optional</b>. If the device creator is not set, \c %HControlPoint
-     * will create and use default types. As implied, usually custom types provide
+     * will create and use default types. Most often custom types provide
      * value only when the custom types contain additional functionality, finer-grained
      * API or something else that the base classes of \ref devicemodel do not.
      *
      * In any case, your callable entity must be:
      *   - copyable by value
-     *   - callable with a signature <c>Herqq::Upnp::HDevice* function_name(const Herqq::Upnp::HDeviceInfo&);</c>
+     *   - callable with a signature <c>Herqq::Upnp::HDeviceProxy* function_name(const Herqq::Upnp::HDeviceInfo&);</c>
      *
      * Note, the return value must be a pointer to a heap allocated instance of
-     * Herqq::Upnp::HDevice* and the ownership of the created device will be
+     * Herqq::Upnp::HDeviceProxy* and the ownership of the created device will be
      * transferred to the \c %HControlPoint after returning.
      *
-     * From this follows, that the device creator can be a:
+     * From this follows that the device creator can be a:
      *
      * \li functor,
      * \li function pointer or
@@ -161,11 +185,27 @@ public:
      * For example, if your callable entity is a functor, it could
      * look something like the following:
      *
+     * \code
+     *
+     * class MyProxyCreator
+     * {
+     *     public:
+     *         MyProxyCreator();
+     *         ~MyProxyCreator();
+     *
+     *         HDeviceProxy* operator()(const Herqq::Upnp::HDeviceInfo&) const
+     *         {
+     *             return new MyProxyClass();
+     *         }
+     * };
+     *
+     * \endcode
+     *
      * and you could call the method as follows:
      *
      * \code
      *
-     * setDeviceCreator(Creator());
+     * setDeviceCreator(MyProxyCreator());
      *
      * \endcode
      *
@@ -177,7 +217,7 @@ public:
      * class MyClass
      * {
      * private:
-     *    Herqq:Upnp::HDevice* createMyDevice(const Herqq::Upnp::HDeviceInfo&);
+     *    Herqq:Upnp::HDeviceProxy* createMyDevice(const Herqq::Upnp::HDeviceInfo&);
      *
      * public:
      *     MyClass();
@@ -206,16 +246,17 @@ public:
      * \li the way you could set the device creator.
      *
      * \param deviceCreator specifies the callable entity that is used to
-     * create HDevice instances.
+     * create HDeviceProxy instances.
      *
-     * \remark the objects your device creator creates will be deallocated by the Herqq
-     * library when the objects are no longer needed. Do NOT store them or delete them manually.
+     * \remarks the objects your device creator creates will be deallocated by
+     * the HUPnP library when the objects are no longer needed.
+     * Do NOT store them or delete them manually.
      *
-     * \remark setting a device creator is optional and unless you really want
-     * to define custom HDevice types to be used, you should not set this
-     * at all. This is different with device hosts.
+     * \remarks setting a device creator is optional and unless you really want
+     * to define custom HDeviceProxy types to be used, you should not set this
+     * at all.
      */
-    void setDeviceCreator(HDeviceCreator deviceCreator);
+    bool setDeviceCreator(const HDeviceProxyCreator& deviceCreator);
 
     /*!
      * Defines whether a control point should automatically subscribe to all
@@ -254,9 +295,23 @@ public:
      * unaware of UPnP devices that are already active in the network until they
      * re-advertise themselves.
      *
-     * \as performInitialDiscovery()
+     * \sa performInitialDiscovery()
      */
-    void setPerformInitialDiscovery(bool arg);
+    void setAutoDiscovery(bool arg);
+
+    /*!
+     * Defines the network addresses the control point should use in its
+     * operations.
+     *
+     * \param addresses specifies the network addresses the control point
+     * should use in its operations.
+     *
+     * \return \e true in case the provided addresses are valid and can be
+     * used.
+     *
+     * \sa networkAddressesToUse()
+     */
+    bool setNetworkAddressesToUse(const QList<QHostAddress>& addresses);
 };
 
 }

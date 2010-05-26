@@ -39,7 +39,7 @@ namespace Upnp
  /*!
  * This enumeration specifies the logging levels that can be used with the device host.
  */
-enum LogLevel
+enum HLogLevel
 {
     /*!
      * No logs are generated.
@@ -97,36 +97,6 @@ enum LogLevel
 };
 
 /*!
- * This enumeration specifies how a device tree should be traversed given a
- * starting node.
- *
- * HUPnP \ref devicemodel is organized into a tree in which there's a root HDevice
- * and it may contain embedded HDevices as its children and they may contain
- * embedded HDevices as their children recursively.
- *
- * This enumeration is used to specify how a device and its children are traversed.
- */
-enum DeviceVisitType
-{
-    /*!
-     * This value is used to indicate that only the HDevice in question is visited.
-     */
-    VisitThisOnly = 0,
-
-    /*!
-     * This value is used to indicate that this HDevice and its embedded HDevices
-     * are visited.
-     */
-    VisitThisAndDirectChildren,
-
-    /*!
-     * This value is used to indicate that this HDevice and all of its child
-     * devices are visited recursively.
-     */
-    VisitThisRecursively
-};
-
-/*!
  * Sets the logging level the HUPnP should use.
  *
  * \param level specifies the desired logging level.
@@ -135,7 +105,7 @@ enum DeviceVisitType
  * \li The new logging level will take effect immediately.
  * \li The function is thread-safe.
  */
-void H_UPNP_CORE_EXPORT SetLoggingLevel(LogLevel level);
+void H_UPNP_CORE_EXPORT SetLoggingLevel(HLogLevel level);
 
 /*!
  * Enables / disables warnings that relate to non-standard behavior discovered

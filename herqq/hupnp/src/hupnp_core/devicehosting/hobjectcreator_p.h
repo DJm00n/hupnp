@@ -31,12 +31,14 @@
 //
 
 #include "hdevicecreator.h"
+#include "controlpoint/hdeviceproxy_creator.h"
 
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
-#include "./../../utils/hfunctor.h"
-#include "./../devicemodel/hservice.h"
-#include "./../devicemodel/hactionarguments.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
+
+#include "../../utils/hfunctor.h"
+#include "../devicemodel/hservice.h"
+#include "../devicemodel/hactionarguments.h"
 
 #include <QUrl>
 #include <QList>
@@ -64,7 +66,7 @@ class HStateVariableController;
 //
 //
 typedef Functor<
-    Herqq::Upnp::HActionInvoke, H_TYPELIST_1(HAction*)> ActionInvokeCreator;
+    HActionInvoke, H_TYPELIST_1(HAction*)> ActionInvokeCreator;
 
 //
 //
@@ -75,7 +77,8 @@ typedef Functor<QDomDocument, H_TYPELIST_2(const QUrl&, const QUrl&)>
 //
 //
 //
-typedef Functor<QImage, H_TYPELIST_2(const QUrl&, const QUrl&)> IconFetcher;
+typedef Functor<QImage, H_TYPELIST_2(const QUrl&, const QUrl&)>
+    IconFetcher;
 
 //
 // A class that contains information for the creation of HUPnP's device model
@@ -84,23 +87,25 @@ typedef Functor<QImage, H_TYPELIST_2(const QUrl&, const QUrl&)> IconFetcher;
 //
 class HObjectCreationParameters
 {
+H_DISABLE_COPY(HObjectCreationParameters)
+
 public:
 
     HObjectCreationParameters();
+    virtual ~HObjectCreationParameters();
+    virtual HObjectCreationParameters* createType() const = 0;
+    virtual HDevice* createDevice(const HDeviceInfo&) = 0;
 
-    QDomDocument   m_deviceDescription;
-    QList<QUrl>    m_deviceLocations;
-    HDeviceCreator m_deviceCreator;
+    virtual HObjectCreationParameters* clone() const;
+    virtual HDevice* createDefaultDevice(const HDeviceInfo&);
+    virtual HService* createDefaultService(const HResourceType&);
+
+    QDomDocument m_deviceDescription;
+    QList<QUrl> m_deviceLocations;
 
     ActionInvokeCreator m_actionInvokeCreator;
     // provides the possibility to intercept (and override) the user defined
     // action invocations
-
-    bool m_createDefaultObjects;
-    // provides the possibility to create a UPnP device tree of default
-    // device and service types (HDefaultDevice & HDefaultService).
-    // This is especially useful with control points that cannot rely on user's
-    // knowledge regarding the encountered device and service types.
 
     ServiceDescriptionFetcher m_serviceDescriptionFetcher;
     // provides the possibility of defining how the service description is
@@ -124,6 +129,58 @@ public:
 };
 
 //
+//
+//
+class HDeviceHostObjectCreationParameters :
+    public HObjectCreationParameters
+{
+H_DISABLE_COPY(HDeviceHostObjectCreationParameters)
+
+public:
+
+    HDeviceCreator m_deviceCreator;
+
+    HDeviceHostObjectCreationParameters();
+
+    virtual HDeviceHostObjectCreationParameters* createType() const;
+    virtual HDevice* createDevice(const HDeviceInfo&);
+
+    virtual HDeviceHostObjectCreationParameters* clone() const;
+    virtual HDevice* createDefaultDevice(const HDeviceInfo&);
+    virtual HService* createDefaultService(const HResourceType&);
+};
+
+//
+//
+//
+typedef Functor<HServiceProxy*, H_TYPELIST_1(const HResourceType&)>
+    HServiceProxyCreator;
+
+//
+//
+//
+class HControlPointObjectCreationParameters :
+    public HObjectCreationParameters
+{
+H_DISABLE_COPY(HControlPointObjectCreationParameters)
+
+public:
+
+    HControlPointObjectCreationParameters();
+
+    HDeviceProxyCreator m_deviceCreator;
+    HDeviceProxyCreator m_defaultDeviceCreator;
+    HServiceProxyCreator m_defaultServiceCreator;
+
+    virtual HControlPointObjectCreationParameters* createType() const;
+    virtual HDevice* createDevice(const HDeviceInfo&);
+
+    virtual HControlPointObjectCreationParameters* clone() const;
+    virtual HDevice* createDefaultDevice(const HDeviceInfo&);
+    virtual HService* createDefaultService(const HResourceType&);
+};
+
+//
 // The class that creates the HUPnP's device model from description files
 //
 class HObjectCreator
@@ -132,7 +189,7 @@ H_DISABLE_COPY(HObjectCreator)
 
 private:
 
-    HObjectCreationParameters m_creationParameters;
+    QScopedPointer<HObjectCreationParameters> m_creationParameters;
 
 private:
 

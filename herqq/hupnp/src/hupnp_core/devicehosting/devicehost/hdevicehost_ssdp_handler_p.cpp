@@ -21,17 +21,17 @@
 
 #include "hdevicehost_ssdp_handler_p.h"
 
-#include "./../../ssdp/hssdp_p.h"
+#include "../../ssdp/hssdp_p.h"
 
-#include "./../../general/hupnp_global_p.h"
+#include "../../general/hupnp_global_p.h"
 
-#include "./../../dataelements/hudn.h"
-#include "./../../dataelements/hdeviceinfo.h"
-#include "./../../dataelements/hdiscoverytype.h"
-#include "./../../dataelements/hproduct_tokens.h"
+#include "../../dataelements/hudn.h"
+#include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hdiscoverytype.h"
+#include "../../dataelements/hproduct_tokens.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../../utils/hsysutils_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../../utils/hsysutils_p.h"
 
 #include <QUuid>
 #include <QDateTime>
@@ -59,7 +59,7 @@ void HDelayedWriter::timerEvent(QTimerEvent*)
 {
     foreach(const HDiscoveryResponse& resp, m_responses)
     {
-        qint32 count = m_ssdp.sendDiscoveryResponse(m_source, resp);
+        qint32 count = m_ssdp.sendDiscoveryResponse(resp, m_source);
         Q_ASSERT(count >= 0); Q_UNUSED(count)
     }
 
@@ -144,7 +144,10 @@ bool DeviceHostSsdpHandler::processSearchRequest_deviceType(
     HDiscoveryType st = req.searchTarget();
 
     QList<HDeviceController*> foundDevices =
-        m_deviceStorage.searchDevicesByDeviceType(st.resourceType(), false);
+        m_deviceStorage.searchDevicesByDeviceType(
+            st.resourceType(),
+            HResourceType::InclusiveVersionMatch,
+            HDevice::AllDevices);
 
     if (!foundDevices.size())
     {
@@ -195,7 +198,8 @@ bool DeviceHostSsdpHandler::processSearchRequest_serviceType(
 
     QList<HServiceController*> foundServices =
         m_deviceStorage.searchServicesByServiceType(
-            st.resourceType(), false);
+            st.resourceType(),
+            HResourceType::InclusiveVersionMatch);
 
     if (!foundServices.size())
     {
@@ -406,7 +410,7 @@ bool DeviceHostSsdpHandler::processSearchRequest_RootDevice(
 
 bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
     const HDiscoveryRequest& msg, const HEndpoint& source,
-    const HEndpoint& destination)
+    DiscoveryRequestMethod requestType)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
@@ -443,7 +447,7 @@ bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
 
     if (ok)
     {
-        if (destination.isMulticast())
+        if (requestType == MulticastDiscovery)
         {
             HDelayedWriter* writer =
                 new HDelayedWriter(
@@ -460,36 +464,18 @@ bool DeviceHostSsdpHandler::incomingDiscoveryRequest(
         {
             foreach (const HDiscoveryResponse& resp, responses)
             {
-                qint32 count = sendDiscoveryResponse(source, resp);
-                Q_ASSERT(count >= 0);
+                qint32 count = sendDiscoveryResponse(resp, source);
+                Q_ASSERT(count >= 0); Q_UNUSED(count)
             }
         }
     }
     else
     {
-        HLOG_DBG(QString("No resources found for discovery request [%1] from [%2]").arg(
-            msg.searchTarget().toString(), source.toString()));
+        HLOG_DBG(QString(
+            "No resources found for discovery request [%1] from [%2]").arg(
+                msg.searchTarget().toString(), source.toString()));
     }
 
-    return true;
-}
-
-bool DeviceHostSsdpHandler::incomingDiscoveryResponse(
-    const Herqq::Upnp::HDiscoveryResponse& /*msg*/,
-    const HEndpoint& /*source*/)
-{
-    return true;
-}
-
-bool DeviceHostSsdpHandler::incomingDeviceAvailableAnnouncement(
-    const Herqq::Upnp::HResourceAvailable& /*msg*/)
-{
-    return true;
-}
-
-bool DeviceHostSsdpHandler::incomingDeviceUnavailableAnnouncement(
-    const Herqq::Upnp::HResourceUnavailable& /*msg*/)
-{
     return true;
 }
 

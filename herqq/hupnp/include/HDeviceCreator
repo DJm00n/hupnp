@@ -1,6 +1,6 @@
-#ifndef H_DEVICE_CREATOR_
-#define H_DEVICE_CREATOR_
+#ifndef H_DEVICECREATOR_
+#define H_DEVICECREATOR_
 
 #include "../src/hupnp_core/devicehosting/hdevicecreator.h"
 
-#endif // H_UPNPDEVICE_H_
+#endif // H_DEVICECREATOR_

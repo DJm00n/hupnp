@@ -22,8 +22,8 @@
 #ifndef HSSDP_H_
 #define HSSDP_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
 
 #include <QObject>
 
@@ -37,7 +37,6 @@ namespace Herqq
 namespace Upnp
 {
 
-class HEndpoint;
 class HSsdpPrivate;
 
 /*!
@@ -70,10 +69,30 @@ Q_OBJECT
 H_DISABLE_COPY(HSsdp)
 H_DECLARE_PRIVATE(HSsdp)
 
+public:
+
+    /*!
+     * This enumeration specifies the different discovery methods the 
+     * HSsdp class can run.
+     */
+    enum DiscoveryRequestMethod
+    {
+        /*!
+         * This is the default multicast discovery supported both UDA v1.0 and 
+         * UDA v1.1.
+         */
+        MulticastDiscovery,
+
+        /*!
+         * The unicast discovery specified in UDA v1.1.
+         */
+        UnicastDiscovery
+    };
+
 private Q_SLOTS:
 
+    void unicastMessageReceived();
     void multicastMessageReceived();
-    void unicastMessageReceived  ();
 
 protected:
 
@@ -89,6 +108,9 @@ protected:
      * to the discoveryRequestReceived() signal.
      *
      * \param msg specifies the incoming message.
+     * \param source specifies the source TCP/IP endpoint that sent the
+     * message.
+     * \param requestType specifies the type of the incoming discovery request.
      *
      * \retval true in case the message was handled successfully and the
      * discoveryRequestReceived() signal should not be sent.
@@ -100,7 +122,7 @@ protected:
      */
     virtual bool incomingDiscoveryRequest(
         const HDiscoveryRequest& msg, const HEndpoint& source,
-        const HEndpoint& destination);
+        DiscoveryRequestMethod requestType);
 
     /*!
      * This method is called immediately after receiving a discovery response.
@@ -108,6 +130,8 @@ protected:
      * to the discoveryResponseReceived() signal.
      *
      * \param msg specifies the incoming message.
+     * \param source specifies the source TCP/IP endpoint that sent the
+     * message.
      *
      * \retval true in case the message was handled successfully and the
      * discoveryResponseReceived() signal should not be sent.
@@ -126,6 +150,8 @@ protected:
      * to the discoveryRequestReceived() signal.
      *
      * \param msg specifies the incoming message.
+     * \param source specifies the source TCP/IP endpoint that sent the
+     * message.
      *
      * \retval true in case the message was handled successfully and the
      * resourceAvailableReceived() signal should not be sent.
@@ -136,7 +162,7 @@ protected:
      * \sa resourceAvailableReceived()
      */
     virtual bool incomingDeviceAvailableAnnouncement(
-        const HResourceAvailable& msg);
+        const HResourceAvailable& msg, const HEndpoint& source);
 
     /*!
      * This method is called immediately after receiving a device unavailable announcement.
@@ -144,6 +170,8 @@ protected:
      * to the resourceUnavailableReceived() signal.
      *
      * \param msg specifies the incoming message.
+     * \param source specifies the source TCP/IP endpoint that sent the
+     * message.
      *
      * \retval true in case the message was handled successfully and the
      * resourceUnavailableReceived() signal should not be sent.
@@ -154,7 +182,7 @@ protected:
      * \sa resourceUnavailableReceived()
      */
     virtual bool incomingDeviceUnavailableAnnouncement(
-        const HResourceUnavailable& msg);
+        const HResourceUnavailable& msg, const HEndpoint& source);
 
     /*!
      * This method is called immediately after receiving a device update announcement.
@@ -162,6 +190,8 @@ protected:
      * to the deviceUpdateRecieved() signal.
      *
      * \param msg specifies the incoming message.
+     * \param source specifies the source TCP/IP endpoint that sent the
+     * message.
      *
      * \retval true in case the message was handled successfully and the
      * deviceUpdateRecieved() signal should not be sent.
@@ -172,7 +202,7 @@ protected:
      * \sa deviceUpdateRecieved()
      */
     virtual bool incomingDeviceUpdateAnnouncement(
-        const HResourceUpdate& msg);
+        const HResourceUpdate& msg, const HEndpoint& source);
 
 public:
 
@@ -259,21 +289,21 @@ public:
 
     /*!
      * Sets the instance to listen the network for SSDP messages and and attempts to
-     * bind the unicast socket of the instance to the address of the first
+     * init the unicast socket of the instance to the address of the first
      * found network address that is up and that is not loopback. If no such
-     * interface is found, the loopback address is used.
+     * interface is found the loopback address is used.
      *
      * \retval true in case the instances was successfully bound to some address.
-     * \retval false in case the instance could not be bound, or the instance
+     * \retval false in case the instance could not be bound or the instance
      * was already bound.
      *
      * \remarks \c %HSsdp has to be bound to receive messages of any type.
      */
-    bool bind();
+    bool init();
 
     /*!
      * Sets the instance to listen the network for SSDP messages and attempts to
-     * bind the unicast socket of the instance to the specified address.
+     * init a unicast socket of the instance to the specified address.
      *
      * \param unicastAddress specifies the address that should be used for
      * unicast messaging.
@@ -281,17 +311,26 @@ public:
      * \retval true in case the instance was successfully bound to the
      * specified address.
      *
-     * \retval false in case the instance could not be bound, or the instance
-     * was already bound.
+     * \retval false in case the instance could not be bound or the instance
+     * was already bound to the specified address.
      *
      * \remarks \c %HSsdp has to be bound to receive messages of any type.
      */
-    bool bind(const QHostAddress& unicastAddress);
+    bool init(const QHostAddress& unicastAddress);
 
     /*!
-     * Returns the end point that is used for unicast communication.
+     * Indicates if the instance is bound to listen for messages using one
+     * or more network interfaces.
      *
-     * \return the end point that is used for unicast communication.
+     * \return \e true in case the instance is bound to listen for messages
+     * using one or more network interfaces.
+     */
+    bool isInitialized() const;
+
+    /*!
+     * Returns the UDP endpoint that is used for unicast communication.
+     *
+     * \return the UDP endpoint that is used for unicast communication.
      */
     HEndpoint unicastEndpoint() const;
 
@@ -334,6 +373,9 @@ public:
     /*!
      * Sends the specified discovery request.
      *
+     * Sends the specified discovery request to a multicast address
+     * 239.255.255.250.
+     *
      * \param msg specifies the announcement to send.
      * \param count specifies how many times the announcement is send.
      * The default is 1.
@@ -343,12 +385,30 @@ public:
      */
     qint32 sendDiscoveryRequest(const HDiscoveryRequest& msg, qint32 count = 1);
 
+     /*!
+     * Sends the specified discovery request.
+     *
+     * Sends the specified discovery request to a specified address. The
+     * address can be an unicast address or a multicast address.
+     *
+     * \param msg specifies the announcement to send.
+     * \param destination specifies the target UDP endpoint of the message.
+     * \param count specifies how many times the announcement is send.
+     * The default is 1.
+     *
+     * \return the number of messages sent, 0 in case no messages was sent or
+     * -1 in case the provided message or the destination is not valid.
+     */
+    qint32 sendDiscoveryRequest(
+        const HDiscoveryRequest& msg, const HEndpoint& destination,
+        qint32 count = 1);
+
     /*!
      * Sends the specified discovery response.
      *
-     * \param receiver specifies the target of the response.
-     *
      * \param msg specifies the announcement to send.
+     *
+     * \param destination specifies the target of the response.
      *
      * \param count specifies how many times the announcement is send.
      * The default is 1.
@@ -357,7 +417,7 @@ public:
      * -1 in case the provided message is not valid.
      */
     qint32 sendDiscoveryResponse(
-        const HEndpoint& receiver, const HDiscoveryResponse& msg,
+        const HDiscoveryResponse& msg, const HEndpoint& destination,
         qint32 count = 1);
 
 ////
@@ -369,12 +429,12 @@ Q_SIGNALS:
      *
      * \param msg specifies the received <em>discovery request</em> message.
      * \param source specifies the location where the message came.
-     * \param destination specifies the target location of the message.
+     * \param requestType specifies the type of the incoming discovery request.
      */
     void discoveryRequestReceived(
         const Herqq::Upnp::HDiscoveryRequest& msg,
         const Herqq::Upnp::HEndpoint& source,
-        const Herqq::Upnp::HEndpoint& destination);
+        Herqq::Upnp::HSsdp::DiscoveryRequestMethod requestType);
 
     /*!
      * This signal is emitted when a <em>discovery response</em> is received.
@@ -390,23 +450,31 @@ Q_SIGNALS:
      * This signal is emitted when a <em>device announcement</em> is received.
      *
      * \param msg specifies the <em>device announcement</em> message.
+     * \param source specifies the location where the message came.
      */
-    void resourceAvailableReceived(const Herqq::Upnp::HResourceAvailable& msg);
+    void resourceAvailableReceived(
+        const Herqq::Upnp::HResourceAvailable& msg,
+        const Herqq::Upnp::HEndpoint& source);
 
     /*!
      * This signal is emitted when a <em>device update</em> is received.
      *
      * \param msg specifies the <em>device update</em> message.
+     * \param source specifies the location where the message came.
      */
-    void deviceUpdateReceived(const Herqq::Upnp::HResourceUpdate& msg);
+    void deviceUpdateReceived(
+        const Herqq::Upnp::HResourceUpdate& msg,
+        const Herqq::Upnp::HEndpoint& source);
 
     /*!
      * This signal is emitted when a <em>device announcement</em> is received.
      *
      * \param msg specifies the <em>device announcement</em> message.
+     * \param source specifies the location where the message came.
      */
     void resourceUnavailableReceived(
-        const Herqq::Upnp::HResourceUnavailable& msg);
+        const Herqq::Upnp::HResourceUnavailable& msg,
+        const Herqq::Upnp::HEndpoint& source);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(HSsdp::AllowedMessages)

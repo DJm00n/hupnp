@@ -30,6 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
+#include "../general/hupnp_global.h"
+
 #include "haction.h"
 #include "hactioninvoke.h"
 #include "hactionarguments.h"
@@ -73,25 +75,25 @@ friend class HActionPrivate;
 
         HActionPrivate* m_action;
         HActionArguments m_iargs;
-        QUuid m_invokeId;
+        HAsyncOp m_invokeId;
         QWaitCondition m_waitCond;
         HActionArguments m_outArgs;
-        qint32 m_rc;
 
         QAtomicInt m_hasListener;
 
+        volatile bool m_completed;
+
     public:
 
-        Invocation(HActionPrivate*, const HActionArguments&, const QUuid&);
+        Invocation(HActionPrivate*, const HActionArguments&);
         virtual void run();
 
-        inline bool isCompleted() { return m_rc != 0x0fffffff; }
+        inline bool isCompleted() { return m_completed; }
     };
 
 private:
 
     QThreadPool* m_threadPool;
-    qint32 m_actionCount;
 
 public:
 
@@ -135,13 +137,13 @@ friend class HSharedActionInvoker::Invocation;
 
 private:
 
-    void onActionInvocationComplete(const QUuid& invokeId, qint32 rc);
+    void onActionInvocationComplete(const HAsyncOp& invokeId);
 
-    HAction::InvocationWaitReturnValue waitForInvocation(
-        const QUuid& invokeId, qint32* rc, qint32 timeout, HActionArguments*);
+    bool waitForInvocation(
+        HAsyncOp* waitResult, HActionArguments* outArgs);
 
-    QUuid invoke(const HActionArguments& inArgs);
-    QUuid invoke(const HActionArguments&, const HActionInvokeCallback&);
+    HAsyncOp invoke(const HActionArguments& inArgs);
+    HAsyncOp invoke(const HActionArguments&, const HActionInvokeCallback&);
 
 public:
 

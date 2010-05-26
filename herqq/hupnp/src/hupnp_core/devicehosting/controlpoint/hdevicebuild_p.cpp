@@ -23,9 +23,9 @@
 #include "hevent_subscription_p.h"
 #include "hcontrolpoint_p.h"
 
-#include "./../../devicemodel/hdevice.h"
-#include "./../../devicemodel/hservice_p.h"
-#include "./../../../utils/hlogger_p.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/hservice_p.h"
+#include "../../../utils/hlogger_p.h"
 
 namespace Herqq
 {
@@ -60,7 +60,7 @@ void DeviceBuildTask::run()
     try
     {
         QScopedPointer<HDeviceController> device(
-            m_owner->buildDevice(m_location, m_cacheControlMaxAge));
+            m_owner->buildDevice(m_locations[0], m_cacheControlMaxAge));
 
         // the returned device is a fully built root device containing every
         // embedded device and service advertised in the device and service descriptions

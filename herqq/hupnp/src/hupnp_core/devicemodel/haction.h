@@ -22,11 +22,12 @@
 #ifndef HACTION_H_
 #define HACTION_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
-#include "./../../utils/hfunctor.h"
+#include "hasyncop.h"
+#include "hactioninvoke_callback.h"
 
-struct QUuid;
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
+
 class QString;
 
 #include <QObject>
@@ -37,83 +38,6 @@ namespace Herqq
 namespace Upnp
 {
 
-/*!
- * This is a type definition for a <em>callable entity</em> that is used
- * as a callback for signaling the completion of an HAction invocation.
- *
- * You can create \c %HActionInvokeCallback objects using normal functions, functors and
- * member functions that follow the signature of
- *
- * <tt>
- *
- * bool function(const QUuid&, qint32, const HActionArguments&);
- *
- * </tt>
- *
- * <h3>Parameters</h3>
- * \li The first parameter is the ID of the asynchronous action invocation.
- * \li The second parameter is the return value of the action invocation.
- * \li The third parameter specifies the output arguments of the action invocation, which may be empty.
- *
- * <h3>Return value</h3>
- * The return value indicates if the invoked HAction should emit an
- * HAction::invokeComplete() or HAction::invokeFailed() signal depending on the
- * outcome of the invocation after the callback has returned.
- * \li \b true indicates that the HAction should sent the corresponding event.
- *
- * The following example demonstrates how you can instantiate the \c %HActionInvokeCallback
- * for a normal function, functor and a member function.
- *
- * \code
- *
- * #include <HAction>
- *
- * #include "myclass.h" // your code that contains declaration for MyClass
- *
- * namespace
- * {
- * bool freefun(const QUuid&, qint32, const HActionArguments&)
- * {
- *     return true;
- * }
- *
- * class MyFunctor
- * {
- * public:
- *     bool operator()(const QUuid&, qint32, const HActionArguments&)
- *     {
- *         return true;
- *     }
- * };
- * }
- *
- * bool MyClass::memfun(const QUuid&, qint32, const HActionArguments&)
- * {
- *     return true;
- * }
- *
- * void MyClass::example()
- * {
- *     Herqq::Upnp::HActionInvokeCallback usingFreeFunction(freefun);
- *
- *     MyFunctor myfunc;
- *     Herqq::Upnp::HActionInvokeCallback usingFunctor(myfunc);
- *
- *     Herqq::Upnp::HActionInvokeCallback usingMemberFunction(this, &MyClass::memfun);
- * }
- *
- * \endcode
- *
- * You can test if the object can be invoked simply by issuing
- * <tt>if (actionInvokeCallbackObject) { ... } </tt>
- *
- * \headerfile haction.h HActionInvokeCallback
- *
- * \ingroup devicemodel
- */
-typedef Functor<bool, H_TYPELIST_1(const QUuid&)> HActionInvokeCallback;
-
-class HService;
 class HObjectCreator;
 class HActionPrivate;
 class HActionController;
@@ -153,7 +77,7 @@ class HActionController;
  * \warning you should \b never perform a synchronous invocation from a thread
  * in which the \c %HAction to be invoked resides, since this may cause a dead-lock.
  *
- * \remark
+ * \remarks
  * \li the methods introduced in this class are thread-safe, although the
  * base class is largely not.
  */
@@ -184,9 +108,18 @@ private:
 public:
 
     /*!
+     * \brief Action invocation succeeded.
+     *
      * Action invocation succeeded.
      */
     inline static qint32 Success() { return 0; }
+
+    /*!
+     * \brief Action invocation failed due to the action lacking an implementation.
+     *
+     * Action invocation failed due to the action lacking an implementation.
+     */
+    inline static qint32 NotImplemented() { return 0xffffffff; }
 
     /*!
      * Action invocation failed due to:
@@ -197,6 +130,8 @@ public:
     inline static qint32 InvalidArgs() { return 402; }
 
     /*!
+     * \brief Action invocation failed due to an invalid argument value.
+     *
      * Action invocation failed due to an invalid argument value.
      */
     inline static qint32 ArgumentValueInvalid() { return 600; }
@@ -238,11 +173,15 @@ public:
     inline static qint32 StringArgumentTooLong() { return 605; }
 
     /*!
+     * \brief The current state of the service prevents the action invocation.
+     *
      * The current state of the service prevents the action invocation.
      */
     inline static qint32 ActionFailed() { return 501; }
 
     /*!
+     * \brief Action invocation failed, but the exact cause could not be determined.
+     *
      * Action invocation failed, but the exact cause could not be determined.
      */
     inline static qint32 UndefinedFailure() { return 0xf0000000; }
@@ -359,7 +298,7 @@ public:
      *
      * \sa waitForInvoke(), invoke(), inputArguments()
      */
-    QUuid beginInvoke(const HActionArguments& inArgs);
+    HAsyncOp beginInvoke(const HActionArguments& inArgs);
 
     /*!
      * Schedules the action to be invoked.
@@ -403,7 +342,7 @@ public:
      * you have to call waitForInvoke() providing this ID to retrieve
      * the result of the action invocation.
      *
-     * \remark
+     * \remarks
      * \li the completion callback is always called, even if you have called
      * waitForInvoke()
      * \li waitForInvoke() with a proper ID will complete before
@@ -411,37 +350,9 @@ public:
      *
      * \sa waitForInvoke(), invoke(), inputArguments()
      */
-    QUuid beginInvoke(
+    HAsyncOp beginInvoke(
         const HActionArguments& inArgs,
         const HActionInvokeCallback& completionCallback);
-
-    /*!
-     * This enum specifies the values the waitForInvocationComplete() method
-     * may return.
-     */
-    enum InvocationWaitReturnValue
-    {
-        /*!
-         * The invocation successfully completed before the specified timeout.
-         */
-        WaitSuccess = 0,
-
-        /*!
-         * The specified timeout elapsed before the invocation was completed.
-         */
-        WaitTimeout = 1,
-
-        /*!
-         * The specified invocation ID is invalid.
-         */
-        WaitInvalidInvocationId = 2,
-
-        /*!
-         * The result of the action invocation can be waited by a single listener
-         * and the action invocation in question already has a listener.
-         */
-        WaitListenerRegisteredAlready = 3
-    };
 
     /*!
      * Waits for the completion of an asynchronous action invocation started
@@ -465,14 +376,9 @@ public:
      * invocationId. The results of the action invocation are stored until a
      * call is made.
      *
-     * \param invocationId specifies the action invocation previously started by
-     * beginInvoke(). If the invocationId is invalid, the method returns immediately with
+     * \param op specifies the action invocation previously started by
+     * beginInvoke(). If the parameter is invalid, the method returns immediately with
      * an error code.
-     *
-     * \param returnCode specifies a pointer to a 4 byte int that will contain
-     * the return code of the action invocation. Note, this has nothing to do
-     * with the return value of this method, which only indicates if the wait
-     * was successful.
      *
      * \param outArgs specifies a pointer to a HActionArguments
      * object that the user has created, or null, in case the output arguments
@@ -481,20 +387,12 @@ public:
      * the object will contain the output arguments of the action invocation.
      * If the action has no output arguments, the parameter is ignored.
      *
-     * \param timeout specifies how long the method waits for the specified action
-     * invocation to complete. A negative value (the default is -1) means that the
-     * wait will never timeout.
-     *
      * \return value indicates whether the invocation successfully completed
      * before the timeout.
      *
      * \sa beginInvoke(), outputArguments()
      */
-    InvocationWaitReturnValue waitForInvoke(
-        QUuid invocationId,
-        qint32* returnCode,
-        HActionArguments* outArgs = 0,
-        qint32 timeout = -1);
+    bool waitForInvoke(HAsyncOp* op, HActionArguments* outArgs = 0);
 
     /*!
      * Invokes the action synchronously.
@@ -528,14 +426,13 @@ public:
      * \retval 0 indicates success. Any other value indicates that an error
      * occurred.
      *
-     * \remark You should never call this method from the thread in which the
+     * \remarks You should never call this method from the thread in which the
      * \c %HAction lives, since this may result in a dead-lock.
      *
      * \sa beginInvoke(), waitForInvoke(), inputArguments(), outputArguments()
      */
     qint32 invoke(
-        const HActionArguments& inArgs,
-        HActionArguments* outArgs = 0);
+        const HActionArguments& inArgs, HActionArguments* outArgs = 0);
 
     /*!
      * Returns a string representation of the specified error code.
@@ -557,7 +454,7 @@ Q_SIGNALS:
      *
      * \param invocationId specifies the ID of the invocation that completed.
      */
-    void invokeComplete(const QUuid& invocationId);
+    void invokeComplete(Herqq::Upnp::HAsyncOp invocationId);
 };
 
 }

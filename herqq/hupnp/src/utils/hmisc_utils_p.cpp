@@ -21,6 +21,9 @@
 
 #include "hmisc_utils_p.h"
 
+#include <QHostAddress>
+#include <QNetworkInterface>
+
 namespace Herqq
 {
 
@@ -36,6 +39,30 @@ unsigned long hash(const char *str, int n)
     }
 
     return hash_value;
+}
+
+QHostAddress findBindableHostAddress()
+{
+    QHostAddress address = QHostAddress::LocalHost;
+    foreach (const QNetworkInterface& iface, QNetworkInterface::allInterfaces())
+    {
+        if (iface.flags() & QNetworkInterface::IsUp &&
+          !(iface.flags() & QNetworkInterface::IsLoopBack))
+        {
+            QList<QNetworkAddressEntry> entries = iface.addressEntries();
+            foreach(const QNetworkAddressEntry& entry, entries)
+            {
+                if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol)
+                {
+                    address = entry.ip();
+                    goto end;
+                }
+            }
+        }
+    }
+
+end:
+    return address;
 }
 
 }

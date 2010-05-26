@@ -23,9 +23,9 @@
 #include "hdevice_p.h"
 #include "hservice_p.h"
 
-#include "./../../utils/hlogger_p.h"
-#include "./../general/hupnp_global_p.h"
-#include "./../dataelements/hdeviceinfo.h"
+#include "../../utils/hlogger_p.h"
+#include "../general/hupnp_global_p.h"
+#include "../dataelements/hdeviceinfo.h"
 
 #include <QString>
 
@@ -152,12 +152,34 @@
  *
  * The main four components of the UPnP device model are
  * <em>a device</em> (Herqq::Upnp::HDevice), <em>a service</em> (Herqq::Upnp::HService),
- * <em>a state variable</em> (Herqq::Upnp::HStateVariable) <em>and an action</em> (Herqq::Upnp::HAction).
- * These four components form a type of a tree in which devices and services
- * are contained by devices, and state variables and actions are contained by services.
- * This is called the <em>device tree</em>. A device tree has a \e root \e device,
+ * <em>a state variable</em> (Herqq::Upnp::HStateVariable) <em>and an action</em>
+ * (Herqq::Upnp::HAction). These four components form a type of a tree in which
+ * devices and services are contained by devices, and state variables
+ * and actions are contained by services. This is called the <em>device tree</em>.
+ * A device tree has a \e root \e device,
  * which is a UPnP device that has no parent, but may contain other UPnP devices.
  * These contained devices are called <em>embedded devices</em>.
+ *
+ * \subsection The API differences between client and server sides
+ *
+ * The HUPnP device model is largely the same at the server client sides.
+ * That is, whether you are writing a custom UPnP device or
+ * trying to interact with a UPnP device found in the network, you will be
+ * interacting with the HUPnP device model similarly. The most notable difference
+ * is that whereas at server side you will be interacting with classes derived
+ * directly from the main four components (\c HDevice, \c HService, \c HAction and
+ * \c HStateVariable), at client side you will be interacting with devices and
+ * services derived from Herqq::Upnp::HDeviceProxy and Herqq::Upnp::HServiceProxy.
+ *
+ * The \c HDeviceProxy is an \c HDevice and the \c HServiceProxy is an \c HService.
+ * They both provide some additional methods not found in their base classes, but
+ * otherwise their usage is identical. The reason the client side introduces the
+ * proxy classes is tied to the very nature of client-server architecture;
+ * the server side usually contains the business logic, whereas the client side
+ * only invokes it. Put in HUPnP terms, a server side \c HDevice often contains
+ * code that is undesired at client-side and vice versa. Furthermore, the model is
+ * clearer when the design makes the difference explicit and as such the model
+ * clearly separates the different code bases of server-side and client-side.
  *
  * \subsection lifetime_and_ownership The lifetime and ownership of objects
  *
@@ -185,8 +207,8 @@
  *
  * The device model is <em>location independent</em>, which in essence means that the
  * device model is almost always used the same way. That is, if you have a pointer to
- * any of the components of the device model, you use it the same way regardless
- * of whether you got the pointer directly or indirectly from a
+ * any of the components of the device model, you use the object the same way
+ * regardless of whether you got the pointer directly or indirectly from a
  * Herqq::Upnp::HDeviceHost or a Herqq::Upnp::HControlPoint. There is one exception
  * to the rule and it will be discussed in the section concerning the state
  * variables.
@@ -198,7 +220,8 @@
  * root device you can interact with any of its
  * embedded devices, services, state variables and actions until:
  * - you explicitly request an \c HDevice be deleted,
- * - shut down the owner of a device tree, such as \c HControlPoint or \c HDeviceHost
+ * - shut down the owner of a device tree, such as \c HControlPoint or
+ * \c HDeviceHost.
  *
  * See the corresponding classes for more information concerning their use.
  *
@@ -221,10 +244,8 @@
  * depends of the service type in which the state variable is defined.
  *
  * As described previously, HUPnP uses the same device model everywhere.
- * That is, there are no specific device classes for UPnP devices found by
- * \e control \e points and device classes hosted by \e device \e hosts and the same goes for
- * UPnP services, actions and state variables. There are only \c HDevice,
- * \c HService, \c HAction and \c HStateVariable. Perhaps the most significant benefit
+ * That is, the same fundamental core classes are used both at the server and
+ * client sides. Perhaps the most significant benefit
  * of this is that it provides <em>uniform API</em> regardless of the type of use.
  * In turn, uniform API calls for simplicity and re-usability, since there is only
  * one class structure to be learned and used on both server and client side programming.
@@ -822,8 +843,7 @@ bool HDeviceController::isTimedout(SearchCriteria searchCriteria) const
 
 namespace
 {
-bool shouldAdd(
-    const HDevice* device, const QUrl& location)
+bool shouldAdd(const HDevice* device, const QUrl& location)
 {
     Q_ASSERT(!device->parentDevice());
 
@@ -842,10 +862,8 @@ bool shouldAdd(
 }
 }
 
-void HDeviceController::addLocation(const QUrl& location)
+bool HDeviceController::addLocation(const QUrl& location)
 {
-    HLOG(H_AT, H_FUN);
-
     Q_ASSERT(!m_device->parentDevice());
     // embedded devices always query the parent device for locations
 
@@ -853,8 +871,10 @@ void HDeviceController::addLocation(const QUrl& location)
     if (shouldAdd(m_device, location))
     {
         m_device->h_ptr->m_locations.push_back(location);
+        return true;
     }
-    lock.unlock();
+
+    return false;
 }
 
 void HDeviceController::addLocations(const QList<QUrl>& locations)
@@ -907,52 +927,25 @@ HDevice::~HDevice()
     delete h_ptr;
 }
 
-const HDevice* HDevice::parentDevice() const
+void HDevice::finalizeInit()
+{
+    // intentionally empty
+}
+
+HDevice* HDevice::parentDevice() const
 {
     return h_ptr->m_parent ? h_ptr->m_parent->m_device : 0;
 }
 
-const HDevice* HDevice::rootDevice() const
+HDevice* HDevice::rootDevice() const
 {
-    const HDevice* root = this;
+    HDevice* root = const_cast<HDevice*>(this);
     while(root->h_ptr->m_parent)
     {
         root = root->h_ptr->m_parent->m_device;
     }
 
     return root;
-}
-
-QString HDevice::deviceDescription() const
-{
-    return h_ptr->m_deviceDescription.toString();
-}
-
-HDeviceInfo HDevice::deviceInfo() const
-{
-    return *h_ptr->m_upnpDeviceInfo;
-}
-
-HDeviceList HDevice::embeddedDevices() const
-{
-    HDeviceList retVal;
-    foreach(HDeviceController* dc, h_ptr->m_embeddedDevices)
-    {
-        retVal.push_back(dc->m_device);
-    }
-
-    return retVal;
-}
-
-HServiceList HDevice::services() const
-{
-    HServiceList retVal;
-    foreach(HServiceController* sc, h_ptr->m_services)
-    {
-        retVal.push_back(sc->m_service);
-    }
-
-    return retVal;
 }
 
 HService* HDevice::serviceById(const HServiceId& serviceId) const
@@ -968,25 +961,74 @@ HService* HDevice::serviceById(const HServiceId& serviceId) const
     return 0;
 }
 
-QList<QUrl> HDevice::locations(bool includeDeviceDescriptionPostfix) const
+HServices HDevice::services() const
+{
+    HServices retVal;
+    foreach(HServiceController* sc, h_ptr->m_services)
+    {
+        retVal.push_back(sc->m_service);
+    }
+
+    return retVal;
+}
+
+HServices HDevice::servicesByType(
+    const HResourceType& type, HResourceType::VersionMatch versionMatch) const
+{
+    if (!type.isValid())
+    {
+        return HServices();
+    }
+
+    HServices retVal;
+    foreach(HServiceController* sc, h_ptr->m_services)
+    {
+        if (sc->m_service->serviceType().compare(type, versionMatch))
+        {
+            retVal.push_back(sc->m_service);
+        }
+    }
+
+    return retVal;
+}
+
+HDevices HDevice::embeddedDevices() const
+{
+    HDevices retVal;
+    foreach(HDeviceController* dc, h_ptr->m_embeddedDevices)
+    {
+        retVal.push_back(dc->m_device);
+    }
+
+    return retVal;
+}
+
+HDeviceInfo HDevice::deviceInfo() const
+{
+    return *h_ptr->m_upnpDeviceInfo;
+}
+
+QString HDevice::deviceDescription() const
+{
+    return h_ptr->m_deviceDescription.toString();
+}
+
+QList<QUrl> HDevice::locations(LocationUrlType urlType) const
 {
     if (h_ptr->m_parent)
     {
         // the root device "defines" the locations and they are the same for each
         // embedded device.
-        return h_ptr->m_parent->m_device->locations(includeDeviceDescriptionPostfix);
+        return h_ptr->m_parent->m_device->locations(urlType);
     }
 
     QMutexLocker lock(&h_ptr->m_locationsMutex);
-    if (includeDeviceDescriptionPostfix)
-    {
-        return h_ptr->m_locations;
-    }
 
     QList<QUrl> retVal;
-    foreach(const QUrl& location, h_ptr->m_locations)
+    QList<QUrl>::const_iterator ci;
+    for(ci = h_ptr->m_locations.begin(); ci != h_ptr->m_locations.end(); ++ci)
     {
-        retVal.push_back(extractBaseUrl(location));
+        retVal.push_back(urlType == AbsoluteUrl ? *ci : extractBaseUrl(*ci));
     }
 
     return retVal;

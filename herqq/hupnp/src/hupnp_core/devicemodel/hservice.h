@@ -23,8 +23,8 @@
 #define HSERVICE_H_
 
 #include "hactioninvoke.h"
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
 
 #include <QList>
 #include <QHash>
@@ -57,10 +57,10 @@ class HServiceController;
  * <h2>Using the class</h2>
  *
  * You can retrieve the containing device, the \em parent \em device, using parentDevice().
- * You can retrieve all the actions the service contains by calling actions() or
- * if you know the name of the action, you can call the actionByName(). Similarly,
+ * You can retrieve all the actions the service contains by calling actions(), or
+ * if you know the name of the action you can call the actionByName(). Similarly,
  * you can retrieve all the state variables the service contains by calling
- * stateVariables() or if you know the name of the state variable, you can call
+ * stateVariables(), or if you know the name of the state variable you can call
  * stateVariableByName().
  *
  * The class exposes all the details in the device description concerning a
@@ -81,13 +81,14 @@ class HServiceController;
  *
  * <h2>Sub-classing</h2>
  *
- * In case you have written your own HDevice that exposes UPnP services, you need
- * to write corresponding \c %HService classes, which you instantiate in your
- * HDevice::createServices() method.
+ * In case you have written your own server-side HDevice that exposes UPnP
+ * services, you need to write corresponding \c %HService classes,
+ * which you instantiate in your HDevice::createServices() method.
  *
- * However, writing a custom \c %HService is simple, since you are required to implement
+ * Writing a custom \c %HService is simple, since you are required to implement
  * createActions() only. This is the place where you plug-in the functionality
- * of your UPnP device and it is done as UPnP actions found in your UPnP services.
+ * of your UPnP device by providing the implementations of the UPnP actions
+ * defined in your service description documents.
  *
  * Consider an example:
  *
@@ -167,7 +168,7 @@ private:
      * Every descendant has to override this.
      *
      * This method is called once when the device is being initialized by the
-     * managing device host.
+     * host that is managing this instance.
      *
      * \return the actions that this \c %HService exposes.
      *
@@ -177,6 +178,31 @@ private:
      * of the containing service object. However, you cannot delete them.
      */
     virtual HActionMap createActions() = 0;
+
+    /*!
+     * Provides an opportunity to do post-construction initialization routines
+     * in derived classes.
+     *
+     * As \c %HService is part of the HUPnP's \ref devicemodel
+     * the object creation process is driven by HUPnP. At the time
+     * of instantiation of a descendant \c %HService the base \c %HService
+     * sub-object is not yet fully set up. In other words, at that time
+     * it is not guaranteed that every private or protected member of a
+     * \c %HService is set to its "final" value that is used once the object
+     * is fully initialized and ready to be used.
+     *
+     * Because of the above, descendants of
+     * \c %HService should not reference or rely on values of \c %HService at
+     * the time of construction. If the initialization of a \c %HService
+     * descendant needs to do things that rely on \c %HService being fully
+     * set up, you can override this method. This method is called \b once
+     * right after the base \c %HService is fully initialized.
+     *
+     * \note It is advisable to keep the constructors of the descendants of
+     * \c %HService small and fast, and do more involved initialization routines
+     * here.
+     */
+    virtual void finalizeInit();
 
 protected:
 
@@ -198,9 +224,6 @@ public:
 
     /*!
      * Destroys the instance.
-     *
-     * An \c %HService is always destroyed by the containing HDevice when it
-     * is being deleted. You should never destroy an \c %HService.
      */
     virtual ~HService() = 0;
 
@@ -266,8 +289,11 @@ public:
      * Returns the actions the service supports.
      *
      * \return the actions the service supports.
+     *
+     * \remarks the ownership of the returned objects is not transferred.
+     * Do \b not delete the returned objects.
      */
-    QList<HAction*> actions() const;
+    HActions actions() const;
 
     /*!
      * Attempts to retrieve an action by name.
@@ -277,6 +303,9 @@ public:
      *
      * \return a pointer to an action supported by this service if the provided
      * name is valid or a null pointer otherwise.
+     *
+     * \remarks the ownership of the object is not transferred. Do \b not delete
+     * the returned object.
      */
     HAction* actionByName(const QString& name) const;
 
@@ -284,8 +313,11 @@ public:
      * Returns the state variables of the service.
      *
      * \return the state variables of the service.
+     *
+     * \remarks the ownership of the returned objects is not transferred.
+     * Do \b not delete the returned objects.
      */
-    QList<HStateVariable*> stateVariables() const;
+    HStateVariables stateVariables() const;
 
     /*!
      * Attempts to retrieve a state variable by name.
@@ -295,6 +327,9 @@ public:
      *
      * \return a pointer to a state variable found in this service if the provided
      * name is valid or a null pointer otherwise.
+     *
+     * \remarks the ownership of the object is not transferred. Do \b not delete
+     * the returned object.
      */
     HStateVariable* stateVariableByName(const QString& name) const;
 

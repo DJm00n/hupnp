@@ -34,14 +34,14 @@
 #include "hdevicebuild_p.h"
 #include "hevent_subscriptionmanager_p.h"
 
-#include "./../habstracthost_p.h"
-#include "./../../devicemodel/hdevice.h"
-#include "./../../devicemodel/hservice.h"
+#include "../habstracthost_p.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/hservice.h"
 
-#include "./../../ssdp/hssdp.h"
-#include "./../../ssdp/hssdp_p.h"
-#include "./../../http/hhttp_server_p.h"
-#include "./../../ssdp/hdiscovery_messages.h"
+#include "../../ssdp/hssdp.h"
+#include "../../ssdp/hssdp_p.h"
+#include "../../http/hhttp_server_p.h"
+#include "../../ssdp/hdiscovery_messages.h"
 
 #include <QUuid>
 #include <QMutex>
@@ -108,10 +108,10 @@ protected:
         const HDiscoveryResponse& msg, const HEndpoint& source);
 
     virtual bool incomingDeviceAvailableAnnouncement(
-        const HResourceAvailable& msg);
+        const HResourceAvailable& msg, const HEndpoint& source);
 
     virtual bool incomingDeviceUnavailableAnnouncement(
-        const HResourceUnavailable& msg);
+        const HResourceUnavailable& msg, const HEndpoint& source);
 
 public:
 
@@ -136,8 +136,6 @@ private:
     DeviceBuildTasks m_deviceBuildTasks;
     // this is accessed only from the thread in which all the HUpnp objects live.
 
-    HControlPoint* q_ptr;
-
 private Q_SLOTS:
 
     void deviceModelBuildDone(const Herqq::Upnp::HUdn&);
@@ -146,15 +144,18 @@ private:
 
     void subscribeToEvents(HDeviceController*);
 
-    void processDeviceOnline(HDeviceController*, bool newDevice);
-
     HActionInvoke createActionInvoker(HAction*);
 
-    bool processDeviceOffline(const HResourceUnavailable& msg);
+    void processDeviceOnline(HDeviceController*, bool newDevice);
+
+    bool processDeviceOffline(
+        const HResourceUnavailable& msg, const HEndpoint& source,
+        HControlPointSsdpHandler* origin);
 
     template<class Msg>
     bool processDeviceDiscovery(
-        const Msg& msg, const HEndpoint& source = HEndpoint());
+        const Msg& msg, const HEndpoint& source,
+        HControlPointSsdpHandler* origin);
 
     template<class Msg>
     bool shouldFetch(const Msg& msg);
@@ -165,12 +166,13 @@ private Q_SLOTS:
 
     void addRootDevice_(HDeviceController* device);
     void deviceExpired(HDeviceController* source);
-    void unsubscribed(Herqq::Upnp::HService*);
+    void unsubscribed(Herqq::Upnp::HServiceProxy*);
 
 public:
 
     QScopedPointer<HControlPointConfiguration> m_configuration;
-    HControlPointSsdpHandler* m_ssdp;
+    QList<QPair<quint32, HControlPointSsdpHandler*> > m_ssdps;
+    // the int is a ipv4 network address
 
     ControlPointHttpServer* m_server;
     HEventSubscriptionManager* m_eventSubscriber;
@@ -180,10 +182,12 @@ public:
 
     HControlPoint::ControlPointError m_lastError;
 
+    HControlPoint* q_ptr;
+
     HControlPointPrivate();
     virtual ~HControlPointPrivate();
 
-    HDeviceController* buildDevice(QUrl deviceLocation, qint32 maxAge);
+    HDeviceController* buildDevice(const QUrl& deviceLocation, qint32 maxAge);
 };
 
 }

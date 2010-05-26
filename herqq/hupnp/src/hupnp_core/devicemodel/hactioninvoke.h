@@ -22,8 +22,8 @@
 #ifndef HACTIONINVOKE_H_
 #define HACTIONINVOKE_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../../utils/hfunctor.h"
+#include "../general/hdefs_p.h"
+#include "../../utils/hfunctor.h"
 
 /*!
  * \file

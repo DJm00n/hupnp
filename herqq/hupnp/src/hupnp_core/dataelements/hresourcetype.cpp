@@ -20,7 +20,7 @@
  */
 
 #include "hresourcetype.h"
-#include "./../../utils/hmisc_utils_p.h"
+#include "../../utils/hmisc_utils_p.h"
 
 #include <QByteArray>
 
@@ -170,6 +170,49 @@ qint32 HResourceType::version() const
     }
 
     return m_resourceElements[4].toInt();
+}
+
+bool HResourceType::compare(
+    const HResourceType& other, VersionMatch versionMatch) const
+{
+    if (other.isValid() != isValid())
+    {
+        return false;
+    }
+    else if (!isValid())
+    {
+        return true;
+    }
+
+    switch (versionMatch)
+    {
+    case Ignore:
+        break;
+    case ExactVersionMatch:
+        if (other.version() != version())
+        {
+            return false;
+        }
+        break;
+    case InclusiveVersionMatch:
+        if (version() > other.version())
+        {
+            return false;
+        }
+        break;
+    default:
+        Q_ASSERT(false);
+    }
+
+    for(qint32 i = 0; i < m_resourceElements.size() - 1; ++i)
+    {
+        if (m_resourceElements[i] != other.m_resourceElements[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool operator==(const HResourceType& arg1, const HResourceType& arg2)

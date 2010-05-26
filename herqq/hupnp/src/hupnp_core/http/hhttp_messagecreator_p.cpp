@@ -22,10 +22,10 @@
 #include "hhttp_messagecreator_p.h"
 #include "hhttp_utils_p.h"
 
-#include "./../devicemodel/haction.h"
-#include "./../../utils/hlogger_p.h"
+#include "../devicemodel/haction.h"
+#include "../../utils/hlogger_p.h"
 
-#include "./../general/hupnp_global_p.h"
+#include "../general/hupnp_global_p.h"
 
 #include <QHttpRequestHeader>
 #include <QHttpResponseHeader>

@@ -25,10 +25,10 @@
 #include "hwritable_statevariable.h"
 #include "hreadable_statevariable.h"
 
-#include "./../general/hupnp_global_p.h"
-#include "./../datatypes/hdatatype_mappings_p.h"
+#include "../general/hupnp_global_p.h"
+#include "../datatypes/hdatatype_mappings_p.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QMetaType>
 #include <QMutexLocker>

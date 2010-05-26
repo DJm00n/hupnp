@@ -19,11 +19,15 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "./../hmulticast_socket.h"
-#include "./../../../utils/hlogger_p.h"
+#include "hmulticast_socket.h"
+#include "../../utils/hlogger_p.h"
 
+#ifdef Q_OS_WIN
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 #include <QNetworkProxy>
 
@@ -38,60 +42,51 @@ namespace Upnp
 //
 class HMulticastSocketPrivate
 {
-public:
 
 };
 
-HMulticastSocket::HMulticastSocket(QObject *parent) :
+HMulticastSocket::HMulticastSocket(QObject* parent) :
     QUdpSocket(parent), h_ptr(new HMulticastSocketPrivate())
 {
-    HLOG(H_AT, H_FUN);
-
     setProxy(QNetworkProxy::NoProxy);
 }
 
 HMulticastSocket::~HMulticastSocket()
 {
-    HLOG(H_AT, H_FUN);
     delete h_ptr;
 }
 
-HMulticastSocket::HMulticastSocket(HMulticastSocketPrivate& dd, QObject* parent) :
-    QUdpSocket(parent), h_ptr(&dd)
+HMulticastSocket::HMulticastSocket(
+    HMulticastSocketPrivate& dd, QObject* parent) :
+        QUdpSocket(parent), h_ptr(&dd)
 {
-    HLOG(H_AT, H_FUN);
-
     setProxy(QNetworkProxy::NoProxy);
 }
 
 bool HMulticastSocket::bind(quint16 port)
 {
-    HLOG(H_AT, H_FUN);
-
     return QUdpSocket::bind(
         port, QUdpSocket::ReuseAddressHint | QUdpSocket::ShareAddress);
 }
 
-bool HMulticastSocket::bind(const QHostAddress& addressToBind, quint16 port)
+bool HMulticastSocket::joinMulticastGroup(const QHostAddress& groupAddress)
 {
-    HLOG(H_AT, H_FUN);
-
-    return QUdpSocket::bind(
-        addressToBind, port,
-        QUdpSocket::ReuseAddressHint | QUdpSocket::ShareAddress);
+    return joinMulticastGroup(groupAddress, QHostAddress());
 }
 
-bool HMulticastSocket::joinMulticastGroup(const QHostAddress &address)
+bool HMulticastSocket::joinMulticastGroup(
+    const QHostAddress& groupAddress, const QHostAddress& localAddress)
 {
     HLOG(H_AT, H_FUN);
 
-    if (address.protocol() != QAbstractSocket::IPv4Protocol)
+    if (groupAddress.protocol() != QAbstractSocket::IPv4Protocol)
     {
         // TODO: IPv6 multicast
         HLOG_WARN("IPv6 is not supported.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
+
     if (proxy().type() != QNetworkProxy::NoProxy)
     {
         // TODO: Proxied multicast
@@ -108,19 +103,30 @@ bool HMulticastSocket::joinMulticastGroup(const QHostAddress &address)
     }
 
     struct ip_mreq mreq;
-    memset(&mreq,0,sizeof(struct ip_mreq));
+    memset(&mreq, 0, sizeof(ip_mreq));
 
-    mreq.imr_multiaddr.s_addr = inet_addr(address.toString().toUtf8());
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    mreq.imr_multiaddr.s_addr = inet_addr(groupAddress.toString().toUtf8());
+
+    if (!localAddress.isNull())
+    {
+        mreq.imr_interface.s_addr = inet_addr(localAddress.toString().toUtf8());
+    }
+    else
+    {
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    }
 
     if (setsockopt(
             socketDescriptor(),
             IPPROTO_IP,
             IP_ADD_MEMBERSHIP,
             reinterpret_cast<char*>(&mreq),
-            sizeof(struct ip_mreq)) < 0)
+            sizeof(mreq)) < 0)
     {
-        HLOG_WARN(QString("Failed to join the specified group @ %1.").arg(address.toString()));
+        HLOG_WARN(QString(
+            "Failed to join the group [%1] using local address: [%2].").arg(
+                groupAddress.toString(), localAddress.toString()));
+
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
@@ -128,17 +134,24 @@ bool HMulticastSocket::joinMulticastGroup(const QHostAddress &address)
     return true;
 }
 
-bool HMulticastSocket::leaveMulticastGroup(const QHostAddress &address)
+bool HMulticastSocket::leaveMulticastGroup(const QHostAddress& groupAddress)
+{
+    return leaveMulticastGroup(groupAddress, QHostAddress());
+}
+
+bool HMulticastSocket::leaveMulticastGroup(
+    const QHostAddress& groupAddress, const QHostAddress& localAddress)
 {
     HLOG(H_AT, H_FUN);
 
-    if (address.protocol() != QAbstractSocket::IPv4Protocol)
+    if (groupAddress.protocol() != QAbstractSocket::IPv4Protocol)
     {
         // TODO: IPv6 multicast
         HLOG_WARN("IPv6 is not supported.");
         setSocketError(QAbstractSocket::UnknownSocketError);
         return false;
     }
+
     if (proxy().type() != QNetworkProxy::NoProxy)
     {
         // TODO: Proxied multicast
@@ -155,17 +168,24 @@ bool HMulticastSocket::leaveMulticastGroup(const QHostAddress &address)
     }
 
     struct ip_mreq mreq;
-    memset(&mreq,0,sizeof(struct ip_mreq));
+    memset(&mreq, 0, sizeof(ip_mreq));
 
-    mreq.imr_multiaddr.s_addr = inet_addr(address.toString().toUtf8());
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    mreq.imr_multiaddr.s_addr = inet_addr(groupAddress.toString().toUtf8());
+    if (localAddress.isNull())
+    {
+        mreq.imr_interface.s_addr = htons(INADDR_ANY);
+    }
+    else
+    {
+        mreq.imr_interface.s_addr = inet_addr(localAddress.toString().toUtf8());
+    }
 
     if (setsockopt(
             socketDescriptor(),
             IPPROTO_IP,
             IP_DROP_MEMBERSHIP,
             reinterpret_cast<char*>(&mreq),
-            sizeof(struct ip_mreq)) < 0)
+            sizeof(mreq)) < 0)
     {
         HLOG_WARN("Failed to leave the specified group.");
         setSocketError(QAbstractSocket::UnknownSocketError);

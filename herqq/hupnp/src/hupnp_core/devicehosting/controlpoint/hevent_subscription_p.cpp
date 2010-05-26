@@ -21,15 +21,15 @@
 
 #include "hevent_subscription_p.h"
 
-#include "./../../http/hhttp_server_p.h"
-#include "./../../devicemodel/hdevice.h"
-#include "./../../devicemodel/hservice.h"
-#include "./../../devicemodel/hservice_p.h"
-#include "./../../general/hupnp_global_p.h"
-#include "./../../http/hhttp_messagecreator_p.h"
+#include "../../http/hhttp_server_p.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/hservice.h"
+#include "../../devicemodel/hservice_p.h"
+#include "../../general/hupnp_global_p.h"
+#include "../../http/hhttp_messagecreator_p.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../../utils/hexceptions_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../../utils/hexceptions_p.h"
 
 #include <QThread>
 

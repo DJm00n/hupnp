@@ -24,19 +24,19 @@
 #include "hdiscovery_messages.h"
 #include "hssdp_messagecreator_p.h"
 
-#include "./../dataelements/hdiscoverytype.h"
-#include "./../dataelements/hproduct_tokens.h"
+#include "../dataelements/hdiscoverytype.h"
+#include "../dataelements/hproduct_tokens.h"
 
-#include "./../socket/hendpoint.h"
+#include "../socket/hendpoint.h"
 
-#include "./../../utils/hlogger_p.h"
-#include "./../../utils/hexceptions_p.h"
+#include "../../utils/hlogger_p.h"
+#include "../../utils/hexceptions_p.h"
+#include "../../utils/hmisc_utils_p.h"
 
 #include <QUrl>
 #include <QString>
 #include <QDateTime>
 #include <QHostAddress>
-#include <QNetworkInterface>
 #include <QHttpRequestHeader>
 #include <QHttpResponseHeader>
 
@@ -119,6 +119,18 @@
  * may suit your needs better.
  */
 
+#include <QMetaType>
+
+static bool registerMetaTypes()
+{
+    qRegisterMetaType<Herqq::Upnp::HSsdp::DiscoveryRequestMethod>(
+        "Herqq::Upnp::HSsdp::DiscoveryRequestMethod");
+
+    return true;
+}
+
+static bool test = registerMetaTypes();
+
 namespace Herqq
 {
 
@@ -138,22 +150,31 @@ inline qint16 multicastPort()
     static qint16 retVal = 1900;
     return retVal;
 }
+
+inline HEndpoint multicastEndpoint()
+{
+    static HEndpoint retVal = HEndpoint("239.255.255.250:1900");
+    return retVal;
+}
 }
 
 /*******************************************************************************
  * HSsdpPrivate
  ******************************************************************************/
-HSsdpPrivate::HSsdpPrivate(const QByteArray& loggingIdentifier) :
-    m_loggingIdentifier(loggingIdentifier),
-    m_multicastSocket(),
-    m_unicastSocket  (),
-    q_ptr            (0),
-    m_allowedMessages(HSsdp::All)
+HSsdpPrivate::HSsdpPrivate(
+    HSsdp* qptr, const QByteArray& loggingIdentifier) :
+        m_loggingIdentifier(loggingIdentifier),
+        m_multicastSocket(0),
+        m_unicastSocket  (0),
+        q_ptr            (qptr),
+        m_allowedMessages(HSsdp::All)
 {
+    Q_UNUSED(test)
 }
 
 HSsdpPrivate::~HSsdpPrivate()
 {
+    clear();
 }
 
 qint32 HSsdpPrivate::parseCacheControl(const QString& str)
@@ -345,8 +366,7 @@ HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(
 
     checkHost(host);
 
-    return HResourceUnavailable(
-        HDiscoveryType(usn), QUrl(), bootId, configId); // TODO
+    return HResourceUnavailable(HDiscoveryType(usn), bootId, configId);
 }
 
 HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
@@ -396,17 +416,11 @@ HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
         searchPort);
 }
 
-bool HSsdpPrivate::send(const QByteArray& data)
-{
-    qint64 retVal = m_unicastSocket.writeDatagram(
-        data, multicastAddress(), multicastPort());
-
-    return retVal == data.size();
-}
-
 bool HSsdpPrivate::send(const QByteArray& data, const HEndpoint& receiver)
 {
-    qint64 retVal = m_unicastSocket.writeDatagram(
+    Q_ASSERT(isInitialized());
+
+    qint64 retVal = m_unicastSocket->writeDatagram(
         data, receiver.hostAddress(), receiver.portNumber());
 
     return retVal == data.size();
@@ -438,7 +452,7 @@ void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)
     }
 }
 
-void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
+void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& source)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -460,9 +474,9 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
                 HLOG_WARN(QString(
                     "Ignoring an invalid ssdp:alive announcement:\n%1").arg(msg));
             }
-            else if (!q_ptr->incomingDeviceAvailableAnnouncement(rcvdMsg))
+            else if (!q_ptr->incomingDeviceAvailableAnnouncement(rcvdMsg, source))
             {
-                emit q_ptr->resourceAvailableReceived(rcvdMsg);
+                emit q_ptr->resourceAvailableReceived(rcvdMsg, source);
             }
         }
     }
@@ -476,9 +490,9 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
                 HLOG_WARN(QString(
                     "Ignoring an invalid ssdp:byebye announcement:\n%1").arg(msg));
             }
-            else if (!q_ptr->incomingDeviceUnavailableAnnouncement(rcvdMsg))
+            else if (!q_ptr->incomingDeviceUnavailableAnnouncement(rcvdMsg, source))
             {
-                emit q_ptr->resourceUnavailableReceived(rcvdMsg);
+                emit q_ptr->resourceUnavailableReceived(rcvdMsg, source);
             }
         }
     }
@@ -492,9 +506,9 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& /*from*/)
                 HLOG_WARN(QString(
                     "Ignoring invalid ssdp:update announcement:\n%1").arg(msg));
             }
-            else if (!q_ptr->incomingDeviceUpdateAnnouncement(rcvdMsg))
+            else if (!q_ptr->incomingDeviceUpdateAnnouncement(rcvdMsg, source))
             {
-                emit q_ptr->deviceUpdateReceived(rcvdMsg);
+                emit q_ptr->deviceUpdateReceived(rcvdMsg, source);
             }
         }
     }
@@ -519,54 +533,85 @@ void HSsdpPrivate::processSearch(
 
     if (m_allowedMessages & HSsdp::DiscoveryRequest)
     {
+        HSsdp::DiscoveryRequestMethod type = destination.isMulticast() ?
+            HSsdp::MulticastDiscovery : HSsdp::UnicastDiscovery;
+
         HDiscoveryRequest rcvdMsg = parseDiscoveryRequest(hdr);
         if (!rcvdMsg.isValid(false))
         {
             HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
                 source.toString(), msg));
         }
-        else if (!q_ptr->incomingDiscoveryRequest(rcvdMsg, source, destination))
+        else if (!q_ptr->incomingDiscoveryRequest(rcvdMsg, source, type))
         {
-            emit q_ptr->discoveryRequestReceived(rcvdMsg, source, destination);
+            emit q_ptr->discoveryRequestReceived(rcvdMsg, source, type);
         }
     }
 }
 
-bool HSsdpPrivate::init(const QHostAddress& addressToBind, HSsdp* qptr)
+void HSsdpPrivate::clear()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    if (!m_multicastSocket.bind(1900))
+    if (m_multicastSocket &&
+        m_multicastSocket->state() == QUdpSocket::BoundState)
     {
-        HLOG_WARN("Failed to bind multicast socket for listening.");
+        m_multicastSocket->leaveMulticastGroup(
+            multicastAddress(), m_unicastSocket->localAddress());
+    }
+    delete m_unicastSocket; m_unicastSocket = 0;
+    delete m_multicastSocket; m_multicastSocket = 0;
+}
+
+bool HSsdpPrivate::init(const QHostAddress& addressToBind)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(!isInitialized());
+
+    m_multicastSocket = new HMulticastSocket(q_ptr);
+    m_unicastSocket   = new QUdpSocket(q_ptr);
+
+    bool ok = QObject::connect(
+        m_multicastSocket, SIGNAL(readyRead()),
+        q_ptr, SLOT(multicastMessageReceived()));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    ok = QObject::connect(
+        m_unicastSocket, SIGNAL(readyRead()),
+        q_ptr, SLOT(unicastMessageReceived()));
+
+    Q_ASSERT(ok);
+
+    if (!m_multicastSocket->bind(1900))
+    {
+        HLOG_WARN("Failed to bind multicast socket for listening");
         return false;
     }
 
-    if (!m_multicastSocket.joinMulticastGroup(multicastAddress()))
+    if (!m_multicastSocket->joinMulticastGroup(
+            multicastAddress(), addressToBind))
     {
         HLOG_WARN(QString("Could not join %1").arg(
             multicastAddress().toString()));
 
-        return false;
+        //return false;
     }
 
     HLOG_DBG(QString(
-        "Using address [%1] for unicast socket").arg(
+        "Attempting to use address [%1] for SSDP communications").arg(
             addressToBind.toString()));
 
-    HLOG_DBG("Attempting to bind unicast socket to port 1900");
-
     // always attempt to bind to the 1900 first
-    if (!m_unicastSocket.bind(addressToBind, 1900))
+    if (!m_unicastSocket->bind(addressToBind, 1900))
     {
-        HLOG_DBG("Failed. Searching a suitable port.");
+        HLOG_DBG("Could not bind UDP unicast socket to port 1900");
 
         // the range is specified by the UDA 1.1 standard
         for(qint32 i = 49152; i < 65535; ++i)
         {
-            if (m_unicastSocket.bind(addressToBind, i))
+            if (m_unicastSocket->bind(addressToBind, i))
             {
-                HLOG_DBG(QString("Binding unicast socket to [%1].").arg(
+                HLOG_DBG(QString("Unicast UDP socket bound to port [%1].").arg(
                     QString::number(i)));
 
                 break;
@@ -575,38 +620,43 @@ bool HSsdpPrivate::init(const QHostAddress& addressToBind, HSsdp* qptr)
     }
     else
     {
-        HLOG_DBG("Successfully bound to port 1900");
+        HLOG_DBG("Unicast UDP socket bound to port 1900");
     }
 
-    if (m_unicastSocket.state() != QUdpSocket::BoundState)
+    if (m_unicastSocket->state() != QUdpSocket::BoundState)
     {
-        HLOG_WARN("Failed to bind unicast UDP socket for listening.");
+        HLOG_WARN(QString(
+            "Failed to bind UDP unicast socket on address.").arg(
+                addressToBind.toString()));
+
+        clear();
         return false;
     }
-
-    m_multicastSocket.setParent(qptr);
-    m_unicastSocket.setParent(qptr);
-    q_ptr = qptr;
-
-    bool ok = QObject::connect(
-        &m_multicastSocket, SIGNAL(readyRead()),
-        q_ptr, SLOT(multicastMessageReceived()));
-
-    Q_ASSERT(ok); Q_UNUSED(ok)
-
-    ok = QObject::connect(
-        &m_unicastSocket, SIGNAL(readyRead()),
-        q_ptr, SLOT(unicastMessageReceived()));
-
-    Q_ASSERT(ok);
 
     return true;
 }
 
-void HSsdpPrivate::messageReceived(
-    const QString& msg, const HEndpoint& source, const HEndpoint& destination)
+void HSsdpPrivate::messageReceived(QUdpSocket* socket, const HEndpoint* dest)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    QHostAddress ha; quint16 port;
+
+    QByteArray buf;
+    buf.resize(socket->pendingDatagramSize() + 1);
+
+    qint64 read = socket->readDatagram(buf.data(), buf.size(), &ha, &port);
+    if (read < 0)
+    {
+        HLOG_WARN(QString("Read failed: %1").arg(socket->errorString()));
+        Q_ASSERT(false);
+        return;
+    }
+
+    QString msg(QString::fromUtf8(buf, read));
+    HEndpoint source(ha, port);
+    HEndpoint destination(
+        dest ? *dest : HEndpoint(socket->localAddress(), socket->localPort()));
 
     try
     {
@@ -637,21 +687,31 @@ void HSsdpPrivate::messageReceived(
  ******************************************************************************/
 HSsdp::HSsdp(QObject* parent) :
     QObject(parent),
-        h_ptr(new HSsdpPrivate())
+        h_ptr(new HSsdpPrivate(this))
 {
 }
 
 HSsdp::HSsdp(const QByteArray& loggingIdentifier, QObject* parent) :
     QObject(parent),
-        h_ptr(new HSsdpPrivate(loggingIdentifier))
+        h_ptr(new HSsdpPrivate(this, loggingIdentifier))
 {
 }
 
 HSsdp::~HSsdp()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    h_ptr->m_multicastSocket.leaveMulticastGroup(multicastAddress());
     delete h_ptr;
+}
+
+void HSsdp::unicastMessageReceived()
+{
+    h_ptr->messageReceived(h_ptr->m_unicastSocket);
+}
+
+void HSsdp::multicastMessageReceived()
+{
+    HEndpoint ep = multicastEndpoint();
+    h_ptr->messageReceived(h_ptr->m_multicastSocket, &ep);
 }
 
 void HSsdp::setFilter(AllowedMessages allowedMessages)
@@ -664,59 +724,46 @@ HSsdp::AllowedMessages HSsdp::filter() const
     return h_ptr->m_allowedMessages;
 }
 
-bool HSsdp::bind()
+bool HSsdp::init()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    if (h_ptr->m_unicastSocket.state() == QUdpSocket::BoundState)
+    if (isInitialized())
     {
         return false;
     }
 
-    QHostAddress addressToBind = QHostAddress::LocalHost;
-    foreach (const QNetworkInterface& iface, QNetworkInterface::allInterfaces())
-    {
-        if (iface.flags() & QNetworkInterface::IsUp &&
-          !(iface.flags() & QNetworkInterface::IsLoopBack))
-        {
-            QList<QNetworkAddressEntry> entries = iface.addressEntries();
-            foreach(const QNetworkAddressEntry& entry, entries)
-            {
-                if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol)
-                {
-                    addressToBind = entry.ip();
-                    goto end;
-                }
-            }
-        }
-    }
-
-end:
-    return h_ptr->init(addressToBind, this);
+    QHostAddress ha(findBindableHostAddress());
+    return h_ptr->init(ha);
 }
 
-bool HSsdp::bind(const QHostAddress& unicastAddress)
+bool HSsdp::init(const QHostAddress& unicastAddress)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
-    if (h_ptr->m_unicastSocket.state() == QUdpSocket::BoundState)
+    if (isInitialized())
     {
         return false;
     }
 
-    return h_ptr->init(unicastAddress, this);
+    return h_ptr->init(unicastAddress);
+}
+
+bool HSsdp::isInitialized() const
+{
+    return h_ptr->isInitialized();
 }
 
 HEndpoint HSsdp::unicastEndpoint() const
 {
     return HEndpoint(
-        h_ptr->m_unicastSocket.localAddress(),
-        h_ptr->m_unicastSocket.localPort());
+        h_ptr->m_unicastSocket->localAddress(),
+        h_ptr->m_unicastSocket->localPort());
 }
 
 bool HSsdp::incomingDiscoveryRequest(
-    const HDiscoveryRequest&, const HEndpoint&, /*source*/
-    const HEndpoint& /*dest*/)
+    const HDiscoveryRequest&, const HEndpoint& /*source*/,
+    DiscoveryRequestMethod /*requestType*/)
 {
     return false;
 }
@@ -728,110 +775,31 @@ bool HSsdp::incomingDiscoveryResponse(
 }
 
 bool HSsdp::incomingDeviceAvailableAnnouncement(
-    const HResourceAvailable&)
+    const HResourceAvailable&, const HEndpoint& /*source*/)
 {
     return false;
 }
 
 bool HSsdp::incomingDeviceUnavailableAnnouncement(
-    const HResourceUnavailable&)
+    const HResourceUnavailable&, const HEndpoint& /*source*/)
 {
     return false;
 }
 
 bool HSsdp::incomingDeviceUpdateAnnouncement(
-    const HResourceUpdate&)
+    const HResourceUpdate&, const HEndpoint& /*source*/)
 {
     return false;
-}
-
-void HSsdp::unicastMessageReceived()
-{
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    QHostAddress ha; quint16 port;
-
-    QByteArray buf;
-    buf.resize(h_ptr->m_unicastSocket.pendingDatagramSize() + 1);
-
-    qint64 read = h_ptr->m_unicastSocket.readDatagram(
-        buf.data(), buf.size(), &ha, &port);
-
-    if (read < 0)
-    {
-        HLOG_WARN(QString("Read failed: %1").arg(
-            h_ptr->m_unicastSocket.errorString()));
-
-        return;
-    }
-
-    QString msg(QString::fromUtf8(buf, read));
-    HEndpoint source(ha, port);
-    HEndpoint destination(
-        h_ptr->m_unicastSocket.localAddress(),
-        h_ptr->m_unicastSocket.localPort());
-
-    h_ptr->messageReceived(msg, source, destination);
-}
-
-void HSsdp::multicastMessageReceived()
-{
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    QHostAddress ha; quint16 port;
-
-    QByteArray buf;
-    buf.resize(h_ptr->m_multicastSocket.pendingDatagramSize() + 1);
-
-    qint64 read = h_ptr->m_multicastSocket.readDatagram(
-        buf.data(), buf.size(), &ha, &port);
-
-    if (read < 0)
-    {
-        HLOG_WARN(QString("Read failed: %1").arg(
-            h_ptr->m_multicastSocket.errorString()));
-
-        return;
-    }
-
-    QString msg(QString::fromUtf8(buf, read));
-    HEndpoint source(ha, port);
-    HEndpoint destination(multicastAddress(), multicastPort());
-
-    h_ptr->messageReceived(msg, source, destination);
 }
 
 namespace
 {
 template<class Msg>
-qint32 send(HSsdpPrivate* hptr, const Msg& msg, qint32 count)
-{
-    HLOG(H_AT, H_FUN);
-    if (!msg.isValid(true) || count < 0)
-    {
-        return -1;
-    }
-
-    qint32 sent = 0;
-    for (qint32 i = 0; i < count; ++i)
-    {
-        QByteArray data = HSsdpMessageCreator::create(msg);
-        Q_ASSERT(!data.isEmpty());
-        if (hptr->send(data))
-        {
-            ++sent;
-        }
-    }
-
-    return sent;
-}
-
-template<class Msg>
 qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver,
             qint32 count)
 {
     HLOG(H_AT, H_FUN);
-    if (!msg.isValid(true) || count < 0)
+    if (!msg.isValid(true) || count < 0 || !hptr->isInitialized())
     {
         return -1;
     }
@@ -853,28 +821,34 @@ qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver,
 
 qint32 HSsdp::announcePresence(const HResourceAvailable& msg, qint32 count)
 {
-    return send(h_ptr, msg, count);
+    return send(h_ptr, msg, multicastEndpoint(), count);
 }
 
 qint32 HSsdp::announcePresence(const HResourceUnavailable& msg, qint32 count)
 {
-    return send(h_ptr, msg, count);
+    return send(h_ptr, msg, multicastEndpoint(), count);
 }
 
 qint32 HSsdp::announceUpdate(const HResourceUpdate& msg, qint32 count)
 {
-    return send(h_ptr, msg, count);
+    return send(h_ptr, msg, multicastEndpoint(), count);
 }
 
 qint32 HSsdp::sendDiscoveryRequest(const HDiscoveryRequest& msg, qint32 count)
 {
-    return send(h_ptr, msg, count);
+    return send(h_ptr, msg, multicastEndpoint(), count);
+}
+
+qint32 HSsdp::sendDiscoveryRequest(
+    const HDiscoveryRequest& msg, const HEndpoint& endpoint, qint32 count)
+{
+    return send(h_ptr, msg, endpoint, count);
 }
 
 qint32 HSsdp::sendDiscoveryResponse(
-    const HEndpoint& receiver, const HDiscoveryResponse& msg, qint32 count)
+    const HDiscoveryResponse& msg, const HEndpoint& destination, qint32 count)
 {
-    return send(h_ptr, msg, receiver, count);
+    return send(h_ptr, msg, destination, count);
 }
 
 }

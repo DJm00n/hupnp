@@ -131,7 +131,7 @@ void DataItemDisplay::NavItemVisitor::visit(DeviceItem* item)
     m_owner->m_modelData.push_back(
         qMakePair(QString("UDN"), deviceInfo.udn().toString()));
 
-    QList<QUrl> locations = device->locations(true);
+    QList<QUrl> locations = device->locations();
     for (qint32 i = 0; i < locations.size(); ++i)
     {
         m_owner->m_modelData.push_back(

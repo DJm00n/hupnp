@@ -22,6 +22,9 @@
 #include "hdevicehost_configuration.h"
 #include "hdevicehost_configuration_p.h"
 
+#include "../../general/hupnp_global_p.h"
+#include "../../../utils/hmisc_utils_p.h"
+
 #include <QFile>
 
 namespace Herqq
@@ -62,7 +65,9 @@ HDeviceConfiguration* HDeviceConfiguration::clone() const
     HDeviceConfiguration* newClone = doClone();
     if (!newClone) { return 0; }
 
-    *newClone->h_ptr = *h_ptr;
+    newClone->h_ptr->m_cacheControlMaxAgeInSecs = h_ptr->m_cacheControlMaxAgeInSecs;
+    newClone->h_ptr->m_deviceCreator            = h_ptr->m_deviceCreator;
+    newClone->h_ptr->m_pathToDeviceDescriptor   = h_ptr->m_pathToDeviceDescriptor;
 
     return newClone;
 }
@@ -110,15 +115,15 @@ HDeviceCreator HDeviceConfiguration::deviceCreator() const
     return h_ptr->m_deviceCreator;
 }
 
-bool HDeviceConfiguration::setDeviceCreator(HDeviceCreator deviceCreator)
+bool HDeviceConfiguration::setDeviceCreator(const HDeviceCreator& deviceCreator)
 {
-    if (!deviceCreator)
+    if (deviceCreator)
     {
-        return false;
+        h_ptr->m_deviceCreator = deviceCreator;
+        return true;
     }
 
-    h_ptr->m_deviceCreator = deviceCreator;
-    return true;
+    return false;
 }
 
 bool HDeviceConfiguration::isValid() const
@@ -131,8 +136,11 @@ bool HDeviceConfiguration::isValid() const
  ******************************************************************************/
 HDeviceHostConfigurationPrivate::HDeviceHostConfigurationPrivate() :
     m_collection(), m_individualAdvertisementCount(2),
-    m_subscriptionExpirationTimeout(0)
+    m_subscriptionExpirationTimeout(0), m_networkAddresses()//,
+    //m_threadingModel(HDeviceHostConfiguration::MultiThreaded)
 {
+    QHostAddress ha = findBindableHostAddress();
+    m_networkAddresses.append(ha);
 }
 
 /*******************************************************************************
@@ -198,6 +206,11 @@ qint32 HDeviceHostConfiguration::individualAdvertisementCount() const
     return h_ptr->m_individualAdvertisementCount;
 }
 
+QList<QHostAddress> HDeviceHostConfiguration::networkAddressesToUse() const
+{
+    return h_ptr->m_networkAddresses;
+}
+
 void HDeviceHostConfiguration::setIndividualAdvertisementCount(qint32 arg)
 {
     if (arg < 1)
@@ -213,6 +226,12 @@ qint32 HDeviceHostConfiguration::subscriptionExpirationTimeout() const
     return h_ptr->m_subscriptionExpirationTimeout;
 }
 
+/*HDeviceHostConfiguration::ThreadingModel
+    HDeviceHostConfiguration::threadingModel() const
+{
+    return h_ptr->m_threadingModel;
+}*/
+
 void HDeviceHostConfiguration::setSubscriptionExpirationTimeout(qint32 arg)
 {
     static const qint32 max = 60*60*24;
@@ -224,6 +243,23 @@ void HDeviceHostConfiguration::setSubscriptionExpirationTimeout(qint32 arg)
 
     h_ptr->m_subscriptionExpirationTimeout = arg;
 }
+
+bool HDeviceHostConfiguration::setNetworkAddressesToUse(
+    const QList<QHostAddress>& addresses)
+{
+    if (!HSysInfo::instance().areLocalAddresses(addresses))
+    {
+        return false;
+    }
+
+    h_ptr->m_networkAddresses = addresses;
+    return true;
+}
+
+/*void HDeviceHostConfiguration::setThreadingModel(ThreadingModel arg)
+{
+    h_ptr->m_threadingModel = arg;
+}*/
 
 bool HDeviceHostConfiguration::isEmpty() const
 {

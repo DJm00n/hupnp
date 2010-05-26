@@ -23,7 +23,7 @@
 #define HWRITABLE_STATEVARIABLE_H_
 
 #include "hstatevariable.h"
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 class QMutexLocker;
 

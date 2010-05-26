@@ -22,7 +22,7 @@
 #ifndef HTTP_MESSAGINGINFO_P_H_
 #define HTTP_MESSAGINGINFO_P_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include <QString>
 #include <QAtomicInt>

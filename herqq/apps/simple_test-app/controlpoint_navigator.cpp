@@ -48,9 +48,10 @@ ControlPointNavigatorItem* ControlPointNavigator::buildModel(
 {
     DeviceItem* deviceItem = new DeviceItem(device, parentItem);
 
-    HServiceList services = device->services();
-    foreach(HService* service, services)
+    HServices services(device->services());
+    for(qint32 i = 0; i < services.size(); ++i)
     {
+        HService* service = services.at(i);
         ServiceItem* serviceItem = new ServiceItem(service, deviceItem);
 
         ContainerItem* stateVariablesItem =

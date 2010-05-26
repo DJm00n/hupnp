@@ -23,7 +23,7 @@
 #include "hhttp_messagecreator_p.h"
 #include "hhttp_utils_p.h"
 
-#include "./../general/hupnp_global_p.h"
+#include "../general/hupnp_global_p.h"
 
 #include <QTcpSocket>
 #include <QtSoapMessage>

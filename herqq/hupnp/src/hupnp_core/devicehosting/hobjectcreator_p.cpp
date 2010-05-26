@@ -21,23 +21,22 @@
 
 #include "hobjectcreator_p.h"
 
-#include "hdefaultdevice.h"
 #include "hdevicehosting_exceptions_p.h"
 
-#include "./../dataelements/hudn.h"
-#include "./../dataelements/hdeviceinfo.h"
+#include "../dataelements/hudn.h"
+#include "../dataelements/hdeviceinfo.h"
 
-#include "./../general/hupnp_global_p.h"
-#include "./../datatypes/hdatatype_mappings_p.h"
+#include "../general/hupnp_global_p.h"
+#include "../datatypes/hdatatype_mappings_p.h"
 
-#include "./../devicemodel/hdevice_p.h"
-#include "./../devicemodel/haction_p.h"
-#include "./../devicemodel/hservice_p.h"
-#include "./../devicemodel/hactionarguments.h"
-#include "./../devicemodel/hwritable_statevariable.h"
-#include "./../devicemodel/hreadable_statevariable.h"
+#include "../devicemodel/hdevice_p.h"
+#include "../devicemodel/haction_p.h"
+#include "../devicemodel/hservice_p.h"
+#include "../devicemodel/hactionarguments.h"
+#include "../devicemodel/hwritable_statevariable.h"
+#include "../devicemodel/hreadable_statevariable.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QImage>
 
@@ -51,12 +50,145 @@ namespace Upnp
  * HObjectCreationParameters
  ******************************************************************************/
 HObjectCreationParameters::HObjectCreationParameters() :
-    m_deviceDescription(), m_deviceLocations(), m_deviceCreator(),
-    m_actionInvokeCreator(), m_createDefaultObjects(false),
-    m_serviceDescriptionFetcher(), m_deviceTimeoutInSecs(0),
-    m_appendUdnToDeviceLocation(false), m_sharedActionInvokers(),
-    m_iconFetcher(), m_strictParsing(true), m_stateVariablesAreImmutable(false)
+    m_deviceDescription(),
+    m_deviceLocations(),
+    m_actionInvokeCreator(),
+    m_serviceDescriptionFetcher(),
+    m_deviceTimeoutInSecs(0),
+    m_appendUdnToDeviceLocation(false),
+    m_sharedActionInvokers(),
+    m_iconFetcher(),
+    m_strictParsing(true),
+    m_stateVariablesAreImmutable(false),
+    m_threadPool(0),
+    m_loggingIdentifier()
 {
+}
+
+HObjectCreationParameters::~HObjectCreationParameters()
+{
+}
+
+HObjectCreationParameters* HObjectCreationParameters::clone() const
+{
+    HObjectCreationParameters* newObj = createType();
+
+    newObj->m_deviceDescription = m_deviceDescription;
+    newObj->m_deviceLocations = m_deviceLocations;
+    newObj->m_actionInvokeCreator = m_actionInvokeCreator;
+    newObj->m_serviceDescriptionFetcher = m_serviceDescriptionFetcher;
+    newObj->m_deviceTimeoutInSecs = m_deviceTimeoutInSecs;
+    newObj->m_appendUdnToDeviceLocation = m_appendUdnToDeviceLocation;
+    newObj->m_sharedActionInvokers = m_sharedActionInvokers;
+    newObj->m_iconFetcher = m_iconFetcher;
+    newObj->m_strictParsing = m_strictParsing;
+    newObj->m_stateVariablesAreImmutable = m_stateVariablesAreImmutable;
+    newObj->m_threadPool = m_threadPool;
+    newObj->m_loggingIdentifier = m_loggingIdentifier;
+
+    return newObj;
+}
+
+HDevice* HObjectCreationParameters::createDefaultDevice(
+    const HDeviceInfo&)
+{
+    return 0;
+}
+
+HService* HObjectCreationParameters::createDefaultService(
+    const HResourceType&)
+{
+    return 0;
+}
+
+/*******************************************************************************
+ * HDeviceHostObjectCreationParameters
+ ******************************************************************************/
+HDeviceHostObjectCreationParameters::HDeviceHostObjectCreationParameters() :
+    m_deviceCreator()
+{
+}
+
+HDeviceHostObjectCreationParameters*
+    HDeviceHostObjectCreationParameters::clone() const
+{
+    HDeviceHostObjectCreationParameters* newObj =
+        static_cast<HDeviceHostObjectCreationParameters*>(
+            HObjectCreationParameters::clone());
+
+    newObj->m_deviceCreator = m_deviceCreator;
+
+    return newObj;
+}
+
+HDeviceHostObjectCreationParameters*
+    HDeviceHostObjectCreationParameters::createType() const
+{
+    return new HDeviceHostObjectCreationParameters();
+}
+
+HDevice* HDeviceHostObjectCreationParameters::createDevice(
+    const HDeviceInfo& arg)
+{
+    return m_deviceCreator(arg);
+}
+
+HDevice* HDeviceHostObjectCreationParameters::createDefaultDevice(
+    const HDeviceInfo&)
+{
+    return 0;
+}
+
+HService* HDeviceHostObjectCreationParameters::createDefaultService(
+    const HResourceType&)
+{
+    return 0;
+}
+
+/*******************************************************************************
+ * HControlPointObjectCreationParameters
+ ******************************************************************************/
+HControlPointObjectCreationParameters::HControlPointObjectCreationParameters() :
+    m_deviceCreator(), m_defaultDeviceCreator(), m_defaultServiceCreator()
+{
+}
+
+HControlPointObjectCreationParameters*
+    HControlPointObjectCreationParameters::clone() const
+{
+    HControlPointObjectCreationParameters* newObj =
+        static_cast<HControlPointObjectCreationParameters*>(
+            HObjectCreationParameters::clone());
+
+    newObj->m_deviceCreator = m_deviceCreator;
+    newObj->m_defaultDeviceCreator = m_defaultDeviceCreator;
+    newObj->m_defaultServiceCreator = m_defaultServiceCreator;
+
+    return newObj;
+}
+
+HControlPointObjectCreationParameters*
+    HControlPointObjectCreationParameters::createType() const
+{
+    return new HControlPointObjectCreationParameters();
+}
+
+HDevice* HControlPointObjectCreationParameters::createDevice(
+    const HDeviceInfo& arg)
+{
+    return m_deviceCreator(arg);
+}
+
+HDevice* HControlPointObjectCreationParameters::createDefaultDevice(
+    const HDeviceInfo& arg)
+{
+    return m_defaultDeviceCreator(arg);
+}
+
+HService* HControlPointObjectCreationParameters::createDefaultService(
+    const HResourceType& arg)
+{
+    return m_defaultServiceCreator(arg);
 }
 
 /*******************************************************************************
@@ -64,7 +196,7 @@ HObjectCreationParameters::HObjectCreationParameters() :
  ******************************************************************************/
 HObjectCreator::HObjectCreator(
     const HObjectCreationParameters& creationParameters) :
-        m_creationParameters(creationParameters)
+        m_creationParameters(creationParameters.clone())
 {
     Q_ASSERT(creationParameters.m_serviceDescriptionFetcher);
     Q_ASSERT(creationParameters.m_deviceLocations.size() > 0);
@@ -76,7 +208,7 @@ HObjectCreator::HObjectCreator(
 void HObjectCreator::initService(
     HService* service, const QDomElement& serviceDefinition)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
     Q_ASSERT(service);
     Q_ASSERT(!serviceDefinition.isNull());
 
@@ -88,7 +220,7 @@ void HObjectCreator::initService(
         readElementValue("serviceId", serviceDefinition, &wasDefined);
 
     service->h_ptr->m_loggingIdentifier =
-        m_creationParameters.m_loggingIdentifier.append(
+        m_creationParameters->m_loggingIdentifier.append(
             service->h_ptr->m_serviceId.toString()).append(": ");
 
     if (!wasDefined)
@@ -98,7 +230,7 @@ void HObjectCreator::initService(
                 toString(serviceDefinition)));
     }
 
-    if (!service->h_ptr->m_serviceId.isValid(m_creationParameters.m_strictParsing))
+    if (!service->h_ptr->m_serviceId.isValid(m_creationParameters->m_strictParsing))
     {
         throw HParseException(QString(
             "The service ID is invalid:\n%1").arg(toString(serviceDefinition)));
@@ -168,8 +300,8 @@ void HObjectCreator::initService(
     service->h_ptr->m_eventSubUrl = tmp;
 
     service->h_ptr->m_serviceDescriptor =
-        m_creationParameters.m_serviceDescriptionFetcher(
-            extractBaseUrl(m_creationParameters.m_deviceLocations[0]),
+        m_creationParameters->m_serviceDescriptionFetcher(
+            extractBaseUrl(m_creationParameters->m_deviceLocations[0]),
             service->h_ptr->m_scpdUrl);
 
     parseServiceDescription(service);
@@ -177,7 +309,7 @@ void HObjectCreator::initService(
 
 void HObjectCreator::parseServiceDescription(HService* service)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
     Q_ASSERT(service);
 
     QDomDocument tmp(service->h_ptr->m_serviceDescriptor);
@@ -268,7 +400,7 @@ void HObjectCreator::parseServiceDescription(HService* service)
 HStateVariableController* HObjectCreator::parseStateVariable(
     HService* parentService, const QDomElement& stateVariableElement)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     QString strSendEvents = stateVariableElement.attribute("sendEvents", "no");
     bool bSendEvents      = false;
@@ -334,7 +466,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                 }
             }
 
-            stateVar.reset(m_creationParameters.m_stateVariablesAreImmutable ?
+            stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
                 (HStateVariable*) new HReadableStateVariable(parentService) :
                 (HStateVariable*) new HWritableStateVariable(parentService));
 
@@ -383,7 +515,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                    }
                }
 
-               stateVar.reset(m_creationParameters.m_stateVariablesAreImmutable ?
+               stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
                    (HStateVariable*) new HReadableStateVariable(parentService) :
                    (HStateVariable*) new HWritableStateVariable(parentService));
 
@@ -396,7 +528,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
             }
         }
 
-        stateVar.reset(m_creationParameters.m_stateVariablesAreImmutable ?
+        stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
            (HStateVariable*) new HReadableStateVariable(parentService) :
            (HStateVariable*) new HWritableStateVariable(parentService));
 
@@ -422,7 +554,7 @@ HActionController* HObjectCreator::parseAction(
     HService* parentService, const QDomElement& actionElement,
     const HService::HActionMap& definedActions)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     QString name = readElementValue("name", actionElement);
 
@@ -533,8 +665,8 @@ HActionController* HObjectCreator::parseAction(
         }
 
         HActionInvoke actionInvoke =
-            m_creationParameters.m_actionInvokeCreator ?
-                m_creationParameters.m_actionInvokeCreator(action.data()) :
+            m_creationParameters->m_actionInvokeCreator ?
+                m_creationParameters->m_actionInvokeCreator(action.data()) :
                 definedActions.value(name);
 
         if (!action->h_ptr->setActionInvoke(actionInvoke))
@@ -543,7 +675,7 @@ HActionController* HObjectCreator::parseAction(
         }
 
         action->h_ptr->setSharedInvoker(
-            m_creationParameters.m_sharedActionInvokers->value(
+            m_creationParameters->m_sharedActionInvokers->value(
                 parentService->parentDevice()->deviceInfo().udn()));
     }
     catch(HException& ex)
@@ -656,7 +788,7 @@ void validateRootDevice(HDeviceController* device)
 QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
     const QDomElement& iconListElement)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     QList<QPair<QUrl, QImage> > retVal;
 
@@ -667,13 +799,13 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
 
         try
         {
-            QImage icon = m_creationParameters.m_iconFetcher(
-                extractBaseUrl(m_creationParameters.m_deviceLocations[0]),
+            QImage icon = m_creationParameters->m_iconFetcher(
+                extractBaseUrl(m_creationParameters->m_deviceLocations[0]),
                 iconUrl);
 
             if (icon.isNull())
             {
-                if (m_creationParameters.m_strictParsing)
+                if (m_creationParameters->m_strictParsing)
                 {
                     throw HParseException(
                         QString("Could not create icon from [%1]").arg(
@@ -696,7 +828,7 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
         }
         catch(HException& /*ex*/)
         {
-            if (m_creationParameters.m_strictParsing)
+            if (m_creationParameters->m_strictParsing)
             {
                 throw;
             }
@@ -714,7 +846,7 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
 
 HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     QString deviceType       =
         readElementValue("deviceType"      , deviceElement);
@@ -760,7 +892,7 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
     QString tmp =
         readElementValue("presentationURL", deviceElement, &wasDefined);
 
-    if (m_creationParameters.m_strictParsing && wasDefined && tmp.isEmpty())
+    if (m_creationParameters->m_strictParsing && wasDefined && tmp.isEmpty())
     {
         throw InvalidDeviceDescription(
             "Presentation URL has to be defined, if the corresponding element is used.");
@@ -798,7 +930,7 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
 QList<HServiceController*> HObjectCreator::parseServiceList(
     const QDomElement& serviceListElement, HDevice* device)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     Q_ASSERT(device);
     Q_ASSERT(!serviceListElement.isNull());
@@ -820,7 +952,7 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
             HResourceType serviceType =
                 HResourceType(readElementValue("serviceType", serviceElement));
 
-            if (!serviceId.isValid(m_creationParameters.m_strictParsing))
+            if (!serviceId.isValid(m_creationParameters->m_strictParsing))
             {
                 throw InvalidServiceDescription(
                     QString("Service ID is invalid:\n%1.").arg(
@@ -837,11 +969,9 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
 
             if (!service)
             {
-                if (m_creationParameters.m_createDefaultObjects)
-                {
-                    service = new HDefaultService();
-                }
-                else
+                service = m_creationParameters->createDefaultService(serviceType);
+
+                if (!service)
                 {
                     QString err(QString(
                         "No object created for service of type [%1] with ID %2").arg(
@@ -859,6 +989,8 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
             retVal.push_back(new HServiceController(service));
 
             initService(service, serviceElement); // may throw
+
+            service->finalizeInit();
 
             serviceElement = serviceElement.nextSiblingElement("service");
         }
@@ -880,12 +1012,10 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
 
 namespace
 {
-QList<QUrl> generateLocations(const HUdn& udn, const QList<QUrl>& locations)
+QList<QUrl> generateLocations(
+    const HUdn& udn, const QList<QUrl>& locations)
 {
-    HLOG(H_AT, H_FUN);
-
     QList<QUrl> retVal;
-
     foreach(const QUrl& location, locations)
     {
         QString locStr = location.toString();
@@ -895,7 +1025,7 @@ QList<QUrl> generateLocations(const HUdn& udn, const QList<QUrl>& locations)
                 udn.toSimpleUuid(), HDevicePrivate::deviceDescriptionPostFix()));
         }
 
-        retVal.push_back(locStr);
+        retVal.append(locStr);
     }
 
     return retVal;
@@ -904,7 +1034,7 @@ QList<QUrl> generateLocations(const HUdn& udn, const QList<QUrl>& locations)
 
 HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     QScopedPointer<HDeviceInfo> deviceInfo;
     try
@@ -920,19 +1050,13 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
         throw InvalidDeviceDescription(ex.reason());
     }
 
-    QScopedPointer<HDevice> device;
-    if (m_creationParameters.m_deviceCreator)
-    {
-        device.reset(m_creationParameters.m_deviceCreator(*deviceInfo));
-    }
+    QScopedPointer<HDevice> device(
+        m_creationParameters->createDevice(*deviceInfo));
 
     if (!device)
     {
-        if (m_creationParameters.m_createDefaultObjects)
-        {
-            device.reset(new HDefaultDevice());
-        }
-        else
+        device.reset(m_creationParameters->createDefaultDevice(*deviceInfo));
+        if (!device)
         {
             throw HOperationFailedException(QString(
                 "No object created for UPnP device type [%1], with UDN: [%2]").arg(
@@ -942,9 +1066,9 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
 
     device->h_ptr->m_upnpDeviceInfo.swap(deviceInfo);
 
-    m_creationParameters.m_sharedActionInvokers->insert(
+    m_creationParameters->m_sharedActionInvokers->insert(
         device->deviceInfo().udn(),
-        new HSharedActionInvoker(m_creationParameters.m_threadPool));
+        new HSharedActionInvoker(m_creationParameters->m_threadPool));
 
     QDomElement serviceListElement =
         deviceElement.firstChildElement("serviceList");
@@ -957,7 +1081,7 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
 
     QScopedPointer<HDeviceController> retVal(
         new HDeviceController(
-            device.take(), m_creationParameters.m_deviceTimeoutInSecs));
+            device.take(), m_creationParameters->m_deviceTimeoutInSecs));
     // the device controller takes ownership of the created device. it will become
     // its parent as well.
 
@@ -979,7 +1103,7 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
             embeddedDevice->m_device->h_ptr->m_parent = retVal.data();
 
             embeddedDevice->m_device->h_ptr->m_deviceDescription =
-                m_creationParameters.m_deviceDescription;
+                m_creationParameters->m_deviceDescription;
 
             embeddedDevices.push_back(embeddedDevice);
 
@@ -990,15 +1114,17 @@ HDeviceController* HObjectCreator::parseDevice(const QDomElement& deviceElement)
         retVal->m_device->h_ptr->m_embeddedDevices = embeddedDevices;
     }
 
+    retVal->m_device->finalizeInit();
+
     return retVal.take();
 }
 
 HDeviceController* HObjectCreator::createRootDevice()
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters.m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
     QDomElement rootElement =
-        m_creationParameters.m_deviceDescription.firstChildElement("root");
+        m_creationParameters->m_deviceDescription.firstChildElement("root");
 
     // "urn:schemas-upnp-org:device-1-0",
 
@@ -1029,13 +1155,20 @@ HDeviceController* HObjectCreator::createRootDevice()
     createdDevice->m_configId = readConfigId(rootElement);
 
     createdDevice->m_device->h_ptr->m_deviceDescription =
-        m_creationParameters.m_deviceDescription;
+        m_creationParameters->m_deviceDescription;
 
-    createdDevice->m_device->h_ptr->m_locations =
-        m_creationParameters.m_appendUdnToDeviceLocation ?
-            generateLocations(createdDevice->m_device->deviceInfo().udn(),
-                              m_creationParameters.m_deviceLocations) :
-            m_creationParameters.m_deviceLocations;
+    if (m_creationParameters->m_appendUdnToDeviceLocation)
+    {
+        createdDevice->m_device->h_ptr->m_locations =
+            generateLocations(
+                createdDevice->m_device->deviceInfo().udn(),
+                m_creationParameters->m_deviceLocations);
+    }
+    else
+    {
+        createdDevice->m_device->h_ptr->m_locations =
+            m_creationParameters->m_deviceLocations;
+    }
 
     validateRootDevice(createdDevice);
 

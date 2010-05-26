@@ -30,11 +30,11 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include "hhttp_p.h"
 #include "hhttp_messaginginfo_p.h"
-#include "./../devicehosting/messages/hevent_messages_p.h"
+#include "../devicehosting/messages/hevent_messages_p.h"
 
 #include <QHash>
 #include <QUuid>

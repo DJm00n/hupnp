@@ -31,10 +31,10 @@
 //
 
 #include "hevent_notifier_p.h"
-#include "./../hdevicestorage_p.h"
+#include "../hdevicestorage_p.h"
 
-#include "./../../general/hdefs_p.h"
-#include "./../../http/hhttp_server_p.h"
+#include "../../general/hdefs_p.h"
+#include "../../http/hhttp_server_p.h"
 
 namespace Herqq
 {

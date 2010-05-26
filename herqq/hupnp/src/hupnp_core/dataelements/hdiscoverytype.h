@@ -22,7 +22,7 @@
 #ifndef HDISCOVERYTYPE_H_
 #define HDISCOVERYTYPE_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 class QString;
 
@@ -65,11 +65,11 @@ class HDiscoveryTypePrivate;
  *
  * A discovery type may also have a \e resource \e type associated with it.
  * A \e resource \e type specifies the exact type of a device or a service
- * and whether it is standard or vendor defined. If the resource type is specified you can call
- * resourceType() to retrieve it. Similarly, you can call setResourceType() to specify
- * it.
+ * and whether it is standard or vendor defined. If the resource type is specified
+ * you can call resourceType() to retrieve it. Similarly, you can call
+ * setResourceType() to specify it.
  *
- * \headerfile hresource_identifier.h HDiscoveryType
+ * \headerfile hdiscoverytype.h HDiscoveryType
  *
  * \remarks this class is not thread-safe.
  *
@@ -79,7 +79,8 @@ class HDiscoveryTypePrivate;
  */
 class H_UPNP_CORE_EXPORT HDiscoveryType
 {
-friend H_UPNP_CORE_EXPORT bool operator==(const HDiscoveryType&, const HDiscoveryType&);
+friend H_UPNP_CORE_EXPORT bool operator==(
+    const HDiscoveryType&, const HDiscoveryType&);
 
 private:
 

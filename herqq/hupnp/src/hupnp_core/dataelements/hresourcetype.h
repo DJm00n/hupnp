@@ -22,7 +22,7 @@
 #ifndef HRESOURCE_TYPE_H_
 #define HRESOURCE_TYPE_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include <QStringList>
 
@@ -100,6 +100,30 @@ public:
          * The resource is urn:domain-name:service:serviceType:ver.
          */
         VendorSpecifiedServiceType
+    };
+
+    /*!
+     * This enumeration specifies how the version part of a HResourceType
+     * is matched against a target value.
+     */
+    enum VersionMatch
+    {
+        /*!
+         * The version part of HResoureType objects is ignored.
+         */
+        Ignore,
+
+        /*!
+         * The version part of HResourceType object has to be identical
+         * to the specified value.
+         */
+        ExactVersionMatch,
+
+        /*!
+         * The version part of HResourceType object has to be 
+         * less than or equal to the specified value.
+         */
+        InclusiveVersionMatch
     };
 
 private:
@@ -279,6 +303,9 @@ public:
      *     HResourceType::Type | HResourceType::TypeSuffix | HResourceType::Version);
      * \endcode
      *
+     * \param tokens specifies what components of the objects are included
+     * in the returned string. The default is to return everything.
+     *
      * \return a string representation of the object as defined by the provided
      * tokens if the object is valid. Otherwise an empty string is returned.
      *
@@ -286,6 +313,22 @@ public:
      * By default the contents of the object are returned in full.
      */
     QString toString(Tokens tokens=All) const;
+
+    /*!
+     * Compares this object to the provided object according to the specified
+     * HResourceType::VersionMatch argument.
+     *
+     * \param other specifies the other \c %HResourceType object.
+     * \param versionMatch specifies how the version information in the objects
+     * are compared against one another. The target of the comparison is always
+     * \e this object. Therefore if the \c versionMatch is set to
+     * HResourceType::InclusiveVersionMatch, the specified \e other object defines
+     * the upper bound for the comparison.
+     *
+     * \return \e true in case the two objects are considered a match
+     * taking into account the specified HResourceType::VersionMatch argument.
+     */
+    bool compare(const HResourceType& other, VersionMatch versionMatch) const;
 };
 
 /*!

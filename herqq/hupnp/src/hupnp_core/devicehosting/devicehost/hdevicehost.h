@@ -22,8 +22,10 @@
 #ifndef HDEVICEHOST_H_
 #define HDEVICEHOST_H_
 
-#include "./../../general/hdefs_p.h"
-#include "./../../general/hupnp_fwd.h"
+#include "../../general/hdefs_p.h"
+#include "../../general/hupnp_fwd.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../general/hupnp_global.h"
 
 #include <QObject>
 
@@ -67,8 +69,6 @@ class HDeviceHostPrivate;
  * // myclass.h
 
  * #include <HDeviceHost>
- * #include <QScopedPointer>
- *
  * #include <QObject>
  *
  * class MyClass :
@@ -166,7 +166,8 @@ class HDeviceHostPrivate;
  * of every object it has created. In other words, a device host \b never
  * transfers the ownership of the HDevice objects it manages.
  *
- * \li <b>%HDeviceHost always destroys every %HDevice it manages when it is being destroyed</b>.
+ * \li <b>%HDeviceHost always destroys every %HDevice it manages when it is
+ * being destroyed</b>.
  *
  * \sa devicehosting, HDevice, HDeviceHostConfiguration, HDeviceConfiguration
  */
@@ -176,6 +177,7 @@ class H_UPNP_CORE_EXPORT HDeviceHost :
 Q_OBJECT
 H_DISABLE_COPY(HDeviceHost)
 H_DECLARE_PRIVATE(HDeviceHost)
+friend class HDeviceHostRuntimeStatus;
 
 public:
 
@@ -235,8 +237,8 @@ private:
      * first constructs an instance and then calls init() in order to ready
      * the object for use. This method is called by the \c %HDeviceHost
      * during its private initialization after all the private data structures
-     * are constructed, but before any network operations are performed. At this point no HTTP
-     * or SSDP requests are served.
+     * are constructed, but before any network operations are performed. At this
+     * point no HTTP or SSDP requests are served.
      *
      * You can override this method to perform any further initialization of a derived
      * class.
@@ -305,10 +307,25 @@ protected:
     const HDeviceHostConfiguration* configuration() const;
 
     /*!
+     * Returns the object that details information of the status of a
+     * device host.
+     *
+     * \return the object that details information of the status of a
+     * device host.
+     *
+     * \remarks
+     * \li A device host creates a single HDeviceHostRuntimeStatus object
+     * during construction and deletes it when the device host is being
+     * deleted.
+     * \li The returned object is always owned by the device host.
+     */
+    const HDeviceHostRuntimeStatus* runtimeStatus() const;
+
+    /*!
      * Sets the type and description of the last error occurred.
      *
-     * \param error specifies the error type
-     * \param errorDescr specifies a human readable description of the error
+     * \param error specifies the error type.
+     * \param errorDescr specifies a human readable description of the error.
      *
      * \sa error(), errorDescription()
      */
@@ -327,6 +344,40 @@ public:
      * Destroys the device host and every hosted device.
      */
     virtual ~HDeviceHost();
+
+    /*!
+     * Returns a root device with the specified Unique Device Name.
+     *
+     * \param udn specifies the Unique Device Name of the desired root device.
+     * \param target specifies the type of devices that are included in the
+     * search.
+     *
+     * \return the root device with the specified Unique Device Name, or a
+     * null pointer in case no currently managed root device has the
+     * specified UDN.
+     *
+     * \warning the returned device will be deleted when the
+     * device host is being destroyed. However, do \b not delete
+     * the device object directly. The ownership of an HDevice is \b never transferred.
+     */
+    HDevice* device(
+        const HUdn& udn,
+        HDevice::TargetDeviceType target = HDevice::RootDevices) const;
+
+    /*!
+     * Returns a list of UPnP root devices the host is currently managing.
+     *
+     * The returned list contains pointers to root HDevice objects that are currently
+     * hosted by this instance.
+     *
+     * \return a list of pointers to root HDevice objects that are currently managed
+     * by the device host.
+     *
+     * \warning the returned HDevice instances will be deleted when the
+     * device host is being destroyed. However, do \b not delete
+     * the device objects directly. The ownership of an HDevice is \b never transferred.
+     */
+    HDevices rootDevices() const;
 
     /*!
      * Initializes the device host and the devices it is supposed to host.
@@ -361,36 +412,6 @@ public:
      */
     bool isStarted() const;
 
-    /*!
-     * Returns a list of UPnP root devices the host is currently managing.
-     *
-     * The returned list contains pointers to root HDevice objects that are currently
-     * hosted by this instance.
-     *
-     * \return a list of pointers to root HDevice objects that are currently managed
-     * by the device host.
-     *
-     * \warning the returned HDevice instances will be deleted when the
-     * device host is being destroyed. However, do \b not delete
-     * the device objects directly. The ownership of an HDevice is \b never transferred.
-     */
-    HDeviceList rootDevices() const;
-
-    /*!
-     * Returns a root device with the specified Unique Device Name.
-     *
-     * \param udn specifies the Unique Device Name of the desired root device.
-     *
-     * \return the root device with the specified Unique Device Name, or a
-     * null pointer in case no currently managed root device has the
-     * specified UDN.
-     *
-     * \warning the returned device will be deleted when the
-     * device host is being destroyed. However, do \b not delete
-     * the device object directly. The ownership of an HDevice is \b never transferred.
-     */
-    HDevice* rootDevice(const HUdn& udn) const;
-
 public Q_SLOTS:
 
     /*!
@@ -407,6 +428,63 @@ public Q_SLOTS:
      * \sa init()
      */
     void quit();
+};
+
+class HDeviceHostRuntimeStatusPrivate;
+
+/*!
+ * This is a class for detailing information of the runtime status of an
+ * HDeviceHost instance.
+ *
+ * \headerfile hdevicehost.h HDeviceHostRuntimeStatus
+ *
+ * \ingroup devicehosting
+ *
+ * \sa HDeviceHost
+ */
+class H_UPNP_CORE_EXPORT HDeviceHostRuntimeStatus
+{
+H_DISABLE_COPY(HDeviceHostRuntimeStatus)
+friend class HDeviceHost;
+
+protected:
+
+    HDeviceHostRuntimeStatusPrivate* h_ptr;
+
+    //
+    // \internal
+    //
+    HDeviceHostRuntimeStatus(HDeviceHostRuntimeStatusPrivate& dd);
+
+    /*!
+     * \brief Creates an instance.
+     *
+     * Creates an instance.
+     */
+    HDeviceHostRuntimeStatus();
+
+public:
+
+    /*!
+     * \brief Destroys the instance.
+     *
+     * Destroys the instance.
+     */
+    virtual ~HDeviceHostRuntimeStatus();
+
+    /*!
+     * Returns the IP endpoints that the device host uses for SSDP communications.
+     *
+     * \return the IP endpoints that the device host uses for SSDP communications.
+     */
+    QList<HEndpoint> ssdpEndpoints() const;
+
+    /*!
+     * Returns the IP endpoints that the device host uses for HTTP communications.
+     *
+     * \return the IP endpoints that the device host uses for HTTP communications.
+     */
+    QList<HEndpoint> httpEndpoints() const;
 };
 
 }

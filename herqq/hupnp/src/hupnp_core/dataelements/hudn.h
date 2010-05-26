@@ -22,7 +22,7 @@
 #ifndef HUDN_H_
 #define HUDN_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include <QUuid>
 

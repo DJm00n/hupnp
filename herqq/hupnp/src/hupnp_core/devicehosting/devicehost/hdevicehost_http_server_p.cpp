@@ -22,16 +22,16 @@
 #include "hdevicehost_http_server_p.h"
 #include "hevent_subscriber_p.h"
 
-#include "./../messages/hcontrol_messages_p.h"
+#include "../messages/hcontrol_messages_p.h"
 
-#include "./../../dataelements/hudn.h"
-#include "./../../general/hupnp_global_p.h"
-#include "./../../datatypes/hdatatype_mappings_p.h"
+#include "../../dataelements/hudn.h"
+#include "../../general/hupnp_global_p.h"
+#include "../../datatypes/hdatatype_mappings_p.h"
 
-#include "./../../devicemodel/haction_p.h"
-#include "./../../devicemodel/hactionarguments.h"
+#include "../../devicemodel/haction_p.h"
+#include "../../devicemodel/hactionarguments.h"
 
-#include "./../../../utils/hlogger_p.h"
+#include "../../../utils/hlogger_p.h"
 
 #include <QHttpRequestHeader>
 

@@ -32,10 +32,10 @@
 
 #include "hdevicestorage_p.h"
 
-#include "./../socket/hendpoint.h"
-#include "./../general/hupnp_fwd.h"
-#include "./../http/hhttp_server_p.h"
-#include "./../devicemodel/hdevice_p.h"
+#include "../socket/hendpoint.h"
+#include "../general/hupnp_fwd.h"
+#include "../http/hhttp_server_p.h"
+#include "../devicemodel/hdevice_p.h"
 
 #include <QList>
 #include <QMutex>

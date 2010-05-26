@@ -183,7 +183,7 @@ class Creator
 {
 public:
 
-    HDevice* operator()(const HDeviceInfo& /*deviceInfo*/)
+    HDevice* operator()(const HDeviceInfo& /*deviceInfo*/) const
     {
         // If we wanted to use this functor for creating other types as well,
         // we would quite likely read the received "deviceInfo" and base the
@@ -199,19 +199,19 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
 {
     m_ui->setupUi(this);
 
-    HDeviceConfiguration initParams;
-    initParams.setPathToDeviceDescription(
+    HDeviceConfiguration config;
+    config.setPathToDeviceDescription(
         "./descriptions/hupnp_testdevice.xml");
     // the path to the device description file we want to be instantiated
 
-    initParams.setDeviceCreator(Creator());
+    config.setDeviceCreator(Creator());
     // the functor that is used for creating the HDevice types.
 
-    initParams.setCacheControlMaxAge(30);
+    config.setCacheControlMaxAge(30);
 
     m_deviceHost = new HDeviceHost(this);
 
-    if (!m_deviceHost->init(initParams))
+    if (!m_deviceHost->init(config))
     {
         qWarning() << m_deviceHost->errorDescription();
         Q_ASSERT(false);

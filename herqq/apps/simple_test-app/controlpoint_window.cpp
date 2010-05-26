@@ -31,6 +31,7 @@
 #include <HUdn>
 #include <HService>
 #include <HDeviceInfo>
+#include <HDeviceProxy>
 #include <HControlPoint>
 #include <HStateVariable>
 #include <HControlPointConfiguration>
@@ -42,29 +43,27 @@ ControlPointWindow::ControlPointWindow(QWidget* parent) :
         m_ui(new Ui::ControlPointWindow), m_controlPoint(0),
         m_controlpointNavigator(0), m_dataItemDisplay(0)
 {
-    //SetLoggingLevel(Warning);
-
     m_ui->setupUi(this);
 
     HControlPointConfiguration configuration;
     //configuration.setDesiredSubscriptionTimeout(30);
     // you can uncomment this ^^ to test subscription renewal with UPnP devices
     // that respect the subscription timeout requests of control points
-    m_controlPoint = new HControlPoint(&configuration, this);
+    m_controlPoint = new HControlPoint(configuration, this);
 
     bool ok = connect(
         m_controlPoint,
-        SIGNAL(rootDeviceOnline(Herqq::Upnp::HDevice*)),
+        SIGNAL(rootDeviceOnline(Herqq::Upnp::HDeviceProxy*)),
         this,
-        SLOT(rootDeviceOnline(Herqq::Upnp::HDevice*)));
+        SLOT(rootDeviceOnline(Herqq::Upnp::HDeviceProxy*)));
 
     Q_ASSERT(ok);
 
     ok = connect(
         m_controlPoint,
-        SIGNAL(rootDeviceOffline(Herqq::Upnp::HDevice*)),
+        SIGNAL(rootDeviceOffline(Herqq::Upnp::HDeviceProxy*)),
         this,
-        SLOT(rootDeviceOffline(Herqq::Upnp::HDevice*)));
+        SLOT(rootDeviceOffline(Herqq::Upnp::HDeviceProxy*)));
 
     Q_ASSERT(ok);
 
@@ -87,7 +86,7 @@ ControlPointWindow::~ControlPointWindow()
 
 void ControlPointWindow::connectToEvents(HDevice* device)
 {
-    HServiceList services = device->services();
+    HServices services = device->services();
     for (qint32 i = 0; i < services.size(); ++i)
     {
         QList<HStateVariable*> stateVars = services[i]->stateVariables();
@@ -119,13 +118,13 @@ void ControlPointWindow::stateVariableChanged(
             event.newValue().toString()));
 }
 
-void ControlPointWindow::rootDeviceOnline(HDevice* newDevice)
+void ControlPointWindow::rootDeviceOnline(HDeviceProxy* newDevice)
 {
     m_controlpointNavigator->rootDeviceOnline(newDevice);
     connectToEvents(newDevice);
 }
 
-void ControlPointWindow::rootDeviceOffline(HDevice* device)
+void ControlPointWindow::rootDeviceOffline(HDeviceProxy* device)
 {
     m_controlpointNavigator->rootDeviceOffline(device);
     m_dataItemDisplay->deviceRemoved(device->deviceInfo().udn());

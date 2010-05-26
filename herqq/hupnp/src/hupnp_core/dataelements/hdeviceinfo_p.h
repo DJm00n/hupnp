@@ -30,10 +30,10 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../dataelements/hudn.h"
-#include "./../dataelements/hresourcetype.h"
+#include "../dataelements/hudn.h"
+#include "../dataelements/hresourcetype.h"
 
-#include "./../../utils/hlogger_p.h"
+#include "../../utils/hlogger_p.h"
 
 #include <QUrl>
 #include <QList>

@@ -25,11 +25,11 @@
 #include "hdevice.h"
 #include "haction_p.h"
 
-#include "./../../utils/hlogger_p.h"
-#include "./../general/hupnp_global_p.h"
+#include "../../utils/hlogger_p.h"
+#include "../general/hupnp_global_p.h"
 
-#include "./../datatypes/hupnp_datatypes.h"
-#include "./../datatypes/hdatatype_mappings_p.h"
+#include "../datatypes/hupnp_datatypes.h"
+#include "../datatypes/hdatatype_mappings_p.h"
 
 #include <QByteArray>
 
@@ -222,6 +222,11 @@ HService::~HService()
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     delete h_ptr;
+}
+
+void HService::finalizeInit()
+{
+    // intentionally empty.
 }
 
 HDevice* HService::parentDevice() const

@@ -23,7 +23,7 @@
 #ifndef HENDPOINT_H
 #define HENDPOINT_H
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include <QUrl>
 #include <QHostAddress>
@@ -40,11 +40,14 @@ namespace Upnp
  *
  * \headerfile hendpoint.h HEndpoint
  *
- * \remark this class provides an assignment operator that is not thread-safe.
+ * \remarks this class provides an assignment operator that is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HEndpoint
 {
-friend H_UPNP_CORE_EXPORT bool operator==(const HEndpoint& ep1, const HEndpoint& ep2);
+friend H_UPNP_CORE_EXPORT bool operator==(
+    const HEndpoint&, const HEndpoint&);
+
+friend H_UPNP_CORE_EXPORT quint32 qHash(const HEndpoint&);
 
 private:
 
@@ -165,6 +168,19 @@ H_UPNP_CORE_EXPORT bool operator==(const HEndpoint&, const HEndpoint&);
  * \relates HEndpoint
  */
 H_UPNP_CORE_EXPORT bool operator!=(const HEndpoint&, const HEndpoint&);
+
+/*!
+ * Returns a value that can be used as a unique key in a hash-map identifying
+ * the object.
+ *
+ * \param key specifies the object from which the hash value is created.
+ *
+ * \return a value that can be used as a unique key in a hash-map identifying
+ * the object.
+ *
+ * \relates HEndpoint
+ */
+H_UPNP_CORE_EXPORT quint32 qHash(const HEndpoint& key);
 
 }
 }

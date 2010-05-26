@@ -22,7 +22,7 @@
 #ifndef HPRODUCT_TOKENS_H
 #define HPRODUCT_TOKENS_H
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 #include <QString>
 

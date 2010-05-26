@@ -30,11 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../hdevicecreator.h"
-#include "./../../../utils/hglobal.h"
+#include "../hdevicecreator.h"
+#include "../../../utils/hglobal.h"
 
 #include <QList>
 #include <QString>
+#include <QHostAddress>
+#include <QScopedPointer>
 
 namespace Herqq
 {
@@ -45,8 +47,10 @@ namespace Upnp
 //
 // Implementation details of HDeviceConfiguration class
 //
-class HDeviceConfigurationPrivate
+class H_UPNP_CORE_EXPORT HDeviceConfigurationPrivate
 {
+H_DISABLE_COPY(HDeviceConfigurationPrivate)
+
 public: // attributes
 
     QString        m_pathToDeviceDescriptor;
@@ -61,7 +65,7 @@ public: // methods
 //
 //
 //
-class HDeviceHostConfigurationPrivate
+class H_UPNP_CORE_EXPORT HDeviceHostConfigurationPrivate
 {
 H_DISABLE_COPY(HDeviceHostConfigurationPrivate)
 
@@ -74,6 +78,10 @@ public:
     // how many times each announcement / advertisement is sent
 
     qint32 m_subscriptionExpirationTimeout;
+
+    QList<QHostAddress> m_networkAddresses;
+
+    //HDeviceHostConfiguration::ThreadingModel m_threadingModel;
 
     HDeviceHostConfigurationPrivate();
 };

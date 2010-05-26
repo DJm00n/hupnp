@@ -23,18 +23,18 @@
 #include "hevent_subscriber_p.h"
 #include "hdevicehost_configuration.h"
 
-#include "./../messages/hevent_messages_p.h"
+#include "../messages/hevent_messages_p.h"
 
-#include "./../../devicemodel/hdevice.h"
-#include "./../../devicemodel/hservice.h"
-#include "./../../devicemodel/hstatevariable.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/hservice.h"
+#include "../../devicemodel/hstatevariable.h"
 
-#include "./../../dataelements/hudn.h"
-#include "./../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hudn.h"
+#include "../../dataelements/hdeviceinfo.h"
 
-#include "./../../http/hhttp_messaginginfo_p.h"
+#include "../../http/hhttp_messaginginfo_p.h"
 
-#include "./../../../utils/hlogger_p.h"
+#include "../../../utils/hlogger_p.h"
 
 #include <QTcpSocket>
 #include <QDomDocument>

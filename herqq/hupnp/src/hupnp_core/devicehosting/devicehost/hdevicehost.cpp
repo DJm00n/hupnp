@@ -24,18 +24,19 @@
 #include "hevent_notifier_p.h"
 #include "hpresence_announcer_p.h"
 #include "hdevicehost_configuration.h"
+#include "hdevicehost_runtimestatus_p.h"
 #include "hdevicehost_http_server_p.h"
 #include "hdevicehost_ssdp_handler_p.h"
 #include "hdevicehost_dataretriever_p.h"
 
-#include "./../hobjectcreator_p.h"
-#include "./../hdevicehosting_exceptions_p.h"
+#include "../hobjectcreator_p.h"
+#include "../hdevicehosting_exceptions_p.h"
 
-#include "./../../devicemodel/hdevice_p.h"
-#include "./../../devicemodel/hservice_p.h"
+#include "../../devicemodel/hdevice_p.h"
+#include "../../devicemodel/hservice_p.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../../utils/hsysutils_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../../utils/hsysutils_p.h"
 
 #include <QDomDocument>
 #include <QAbstractEventDispatcher>
@@ -54,12 +55,12 @@ namespace Upnp
 HDeviceHostPrivate::HDeviceHostPrivate() :
     HAbstractHostPrivate(
         QString("__DEVICE HOST %1__: ").arg(QUuid::createUuid().toString())),
-            m_initParams         (),
-            m_ssdp               (0),
-            m_httpServer         (0),
-            m_activeRequestCount (0),
-            m_eventNotifier      (0),
-            m_presenceAnnouncer  (0),
+            m_config           (),
+            m_ssdps            (),
+            m_httpServer       (0),
+            m_eventNotifier    (0),
+            m_presenceAnnouncer(0),
+            m_runtimeStatus    (0),
             q_ptr(0),
             m_lastError(HDeviceHost::UndefinedError)
 {
@@ -91,34 +92,29 @@ void HDeviceHostPrivate::createRootDevices()
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QList<const HDeviceConfiguration*> diParams =
-        m_initParams->deviceConfigurations();
+        m_config->deviceConfigurations();
 
-    foreach(const HDeviceConfiguration* deviceInitParams, diParams)
+    foreach(const HDeviceConfiguration* deviceconfig, diParams)
     {
         QString baseDir =
-            extractBaseUrl(deviceInitParams->pathToDeviceDescription());
+            extractBaseUrl(deviceconfig->pathToDeviceDescription());
 
         DeviceHostDataRetriever dataRetriever(m_loggingIdentifier, baseDir);
 
         QDomDocument dd = dataRetriever.retrieveDeviceDescription(
-            deviceInitParams->pathToDeviceDescription());
+            deviceconfig->pathToDeviceDescription());
 
-        QList<QUrl> locations;
-        locations.push_back(m_httpServer->rootUrl());
-        // TODO, modify ^^^ when the server component supports multi-homed devices.
-
-        HObjectCreationParameters creatorParams;
-        creatorParams.m_createDefaultObjects = false;
-        creatorParams.m_deviceDescription    = dd;
-        creatorParams.m_deviceCreator        = deviceInitParams->deviceCreator();
-        creatorParams.m_deviceLocations      = locations;
+        HDeviceHostObjectCreationParameters creatorParams;
+        creatorParams.m_deviceDescription = dd;
+        creatorParams.m_deviceCreator = deviceconfig->deviceCreator();
+        creatorParams.m_deviceLocations   = m_httpServer->rootUrls();
 
         creatorParams.m_serviceDescriptionFetcher =
             ServiceDescriptionFetcher(
                 &dataRetriever, &DeviceHostDataRetriever::retrieveServiceDescription);
 
         creatorParams.m_deviceTimeoutInSecs =
-            deviceInitParams->cacheControlMaxAge() / 2;
+            deviceconfig->cacheControlMaxAge() / 2;
         // this timeout value instructs the device host to re-announce the
         // device presence well before the advertised cache-control value
         // expires.
@@ -151,9 +147,10 @@ void HDeviceHostPrivate::connectSelfToServiceSignals(HDevice* device)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QList<HService*> services = device->services();
-    foreach(HService* service, services)
+    HServices services(device->services());
+    for(qint32 i = 0; i < services.size(); ++i)
     {
+        HService* service = services.at(i);
         bool ok = connect(
             service,
             SIGNAL(stateChanged(const Herqq::Upnp::HService*)),
@@ -163,10 +160,10 @@ void HDeviceHostPrivate::connectSelfToServiceSignals(HDevice* device)
         Q_ASSERT(ok); Q_UNUSED(ok)
     }
 
-    QList<HDevice*> devices = device->embeddedDevices();
-    foreach(HDevice* embeddedDevice, devices)
+    HDevices devices(device->embeddedDevices());
+    for(qint32 i = 0; i < devices.size(); ++i)
     {
-        connectSelfToServiceSignals(embeddedDevice);
+        connectSelfToServiceSignals(devices.at(i));
     }
 }
 
@@ -224,7 +221,8 @@ void HDeviceHostPrivate::doClear()
     q_ptr->doQuit();
 
     m_presenceAnnouncer.reset(0);
-    m_ssdp.reset(0);
+    qDeleteAll(m_ssdps);
+    m_ssdps.clear();
 
     m_eventNotifier->shutdown();
 
@@ -244,8 +242,7 @@ void HDeviceHostPrivate::doClear()
     m_http.reset(0);
     m_httpServer.reset(0);
     m_eventNotifier.reset(0);
-    m_initParams.reset(0);
-    m_activeRequestCount = 0;
+    m_config.reset(0);
 
     setState(Uninitialized);
 }
@@ -258,6 +255,9 @@ HDeviceHost::HDeviceHost(QObject* parent) :
 {
     h_ptr->setParent(this);
     h_ptr->q_ptr = this;
+
+    h_ptr->m_runtimeStatus.reset(new HDeviceHostRuntimeStatus());
+    h_ptr->m_runtimeStatus->h_ptr->m_deviceHost = this;
 }
 
 HDeviceHost::~HDeviceHost()
@@ -287,7 +287,12 @@ bool HDeviceHost::acceptSubscription(
 
 const HDeviceHostConfiguration* HDeviceHost::configuration() const
 {
-    return h_ptr->m_initParams.data();
+    return h_ptr->m_config.data();
+}
+
+const HDeviceHostRuntimeStatus* HDeviceHost::runtimeStatus() const
+{
+    return h_ptr->m_runtimeStatus.data();
 }
 
 void HDeviceHost::setError(DeviceHostError error, const QString& errorStr)
@@ -298,7 +303,7 @@ void HDeviceHost::setError(DeviceHostError error, const QString& errorStr)
     h_ptr->m_lastErrorDescription = errorStr;
 }
 
-bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
+bool HDeviceHost::init(const HDeviceHostConfiguration& config)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
@@ -317,7 +322,7 @@ bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
 
     Q_ASSERT(h_ptr->state() == HAbstractHostPrivate::Uninitialized);
 
-    if (initParams.isEmpty())
+    if (config.isEmpty())
     {
         setError(InvalidConfigurationError,
             tr("No UPnP device configuration provided"));
@@ -332,7 +337,7 @@ bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
 
         HLOG_INFO("DeviceHost Initializing.");
 
-        h_ptr->m_initParams.reset(initParams.clone());
+        h_ptr->m_config.reset(config.clone());
 
         h_ptr->m_http.reset(new HHttpHandler(h_ptr->m_loggingIdentifier));
 
@@ -340,7 +345,7 @@ bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
             new EventNotifier(
                 h_ptr->m_loggingIdentifier,
                 *h_ptr->m_http,
-                *h_ptr->m_initParams,
+                *h_ptr->m_config,
                 this));
 
         h_ptr->m_httpServer.reset(
@@ -348,7 +353,8 @@ bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
                 h_ptr->m_loggingIdentifier, *h_ptr->m_deviceStorage,
                 *h_ptr->m_eventNotifier, this));
 
-        if (!h_ptr->m_httpServer->listen())
+        QList<QHostAddress> addrs = config.networkAddressesToUse();
+        if (!h_ptr->m_httpServer->init(convertHostAddressesToEndpoints(addrs)))
         {
             QString err = QString("Failed to initialize HTTP server");
             setError(CommunicationsError, err);
@@ -357,19 +363,24 @@ bool HDeviceHost::init(const HDeviceHostConfiguration& initParams)
         {
             h_ptr->createRootDevices();
 
-            h_ptr->m_ssdp.reset(
-                new DeviceHostSsdpHandler(
-                    h_ptr->m_loggingIdentifier, *h_ptr->m_deviceStorage, this));
-
-            if (!h_ptr->m_ssdp->bind())
+            foreach(const QHostAddress& ha, addrs)
             {
-                throw HSocketException(tr("Failed to initialize SSDP"));
+                DeviceHostSsdpHandler* ssdp =
+                    new DeviceHostSsdpHandler(
+                        h_ptr->m_loggingIdentifier, *h_ptr->m_deviceStorage, this);
+
+                h_ptr->m_ssdps.append(ssdp);
+
+                if (!ssdp->init(ha))
+                {
+                    throw HSocketException(tr("Failed to initialize SSDP"));
+                }
             }
 
             h_ptr->m_presenceAnnouncer.reset(
                 new PresenceAnnouncer(
-                    h_ptr->m_ssdp.data(),
-                    h_ptr->m_initParams->individualAdvertisementCount()));
+                    h_ptr->m_ssdps,
+                    h_ptr->m_config->individualAdvertisementCount()));
 
             // allow the derived classes to perform their initialization routines
             // before the hosted devices are announced to the network and timers
@@ -474,20 +485,20 @@ bool HDeviceHost::isStarted() const
     return h_ptr->state() == HAbstractHostPrivate::Initialized;
 }
 
-HDeviceList HDeviceHost::rootDevices() const
+HDevices HDeviceHost::rootDevices() const
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     if (!isStarted())
     {
         HLOG_WARN("The device host is not started");
-        return HDeviceList();
+        return HDevices();
     }
 
     return h_ptr->m_deviceStorage->rootDevices();
 }
 
-HDevice* HDeviceHost::rootDevice(const HUdn& udn) const
+HDevice* HDeviceHost::device(const HUdn& udn, HDevice::TargetDeviceType dts) const
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
@@ -497,10 +508,48 @@ HDevice* HDeviceHost::rootDevice(const HUdn& udn) const
         return 0;
     }
 
-    HDeviceController* dc = h_ptr->m_deviceStorage->searchDeviceByUdn(udn);
+    HDeviceController* dc = h_ptr->m_deviceStorage->searchDeviceByUdn(udn, dts);
 
-    return dc ?
-        h_ptr->m_deviceStorage->searchDeviceByUdn(udn)->m_device : 0;
+    return dc ? dc->m_device : 0;
+}
+
+/*******************************************************************************
+ * HDeviceHostRuntimeStatusPrivate
+ ******************************************************************************/
+HDeviceHostRuntimeStatusPrivate::HDeviceHostRuntimeStatusPrivate() :
+    m_deviceHost(0)
+{
+}
+
+/*******************************************************************************
+ * HDeviceHostRuntimeStatus
+ ******************************************************************************/
+HDeviceHostRuntimeStatus::HDeviceHostRuntimeStatus() :
+    h_ptr(new HDeviceHostRuntimeStatusPrivate())
+{
+}
+
+HDeviceHostRuntimeStatus::~HDeviceHostRuntimeStatus()
+{
+    delete h_ptr;
+}
+
+QList<HEndpoint> HDeviceHostRuntimeStatus::ssdpEndpoints() const
+{
+    Q_ASSERT(h_ptr->m_deviceHost);
+
+    QList<HEndpoint> retVal;
+    foreach(DeviceHostSsdpHandler* ssdp, h_ptr->m_deviceHost->h_ptr->m_ssdps)
+    {
+        retVal.append(ssdp->unicastEndpoint());
+    }
+    return retVal;
+}
+
+QList<HEndpoint> HDeviceHostRuntimeStatus::httpEndpoints() const
+{
+    Q_ASSERT(h_ptr->m_deviceHost);
+    return h_ptr->m_deviceHost->h_ptr->m_httpServer->endpoints();
 }
 
 }

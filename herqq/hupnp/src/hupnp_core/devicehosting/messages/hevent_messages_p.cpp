@@ -21,7 +21,7 @@
 
 #include "hevent_messages_p.h"
 
-#include "./../../../utils/hlogger_p.h"
+#include "../../../utils/hlogger_p.h"
 
 #include <QRegExp>
 #include <QStringList>

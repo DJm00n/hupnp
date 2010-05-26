@@ -33,7 +33,7 @@
 #include "hstatevariable.h"
 #include "hvaluerange_p.h"
 
-#include "./../datatypes/hupnp_datatypes.h"
+#include "../datatypes/hupnp_datatypes.h"
 
 #include <QUrl>
 #include <QMutex>

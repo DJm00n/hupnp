@@ -65,8 +65,8 @@ protected:
 
 private slots:
 
-    void rootDeviceOnline(Herqq::Upnp::HDevice*);
-    void rootDeviceOffline(Herqq::Upnp::HDevice*);
+    void rootDeviceOnline(Herqq::Upnp::HDeviceProxy*);
+    void rootDeviceOffline(Herqq::Upnp::HDeviceProxy*);
 
     void stateVariableChanged(const Herqq::Upnp::HStateVariableEvent&);
 

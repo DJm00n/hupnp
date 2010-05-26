@@ -22,8 +22,8 @@
 #ifndef HSTATEVARIABLE_H_
 #define HSTATEVARIABLE_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../datatypes/hupnp_datatypes.h"
+#include "../general/hdefs_p.h"
+#include "../datatypes/hupnp_datatypes.h"
 
 #include <QList>
 #include <QObject>

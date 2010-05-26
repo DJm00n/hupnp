@@ -21,9 +21,9 @@
 
 #include "hevent_connectors.h"
 
-#include "./../devicemodel/hservice.h"
-#include "./../devicemodel/hstatevariable.h"
-#include "./../devicehosting/controlpoint/hcontrolpoint.h"
+#include "../devicemodel/hservice.h"
+#include "../devicemodel/hstatevariable.h"
+#include "../devicehosting/controlpoint/hcontrolpoint.h"
 
 namespace Herqq
 {

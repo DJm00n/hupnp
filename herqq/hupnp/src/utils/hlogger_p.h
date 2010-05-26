@@ -53,7 +53,7 @@ private:
 
 public:
 
-    enum LogLevel
+    enum HLogLevel
     {
         None = 0,
         Fatal = 1,
@@ -79,12 +79,12 @@ public:
     void logCritical     (const QString& text);
     void logFatal        (const QString& text);
 
-    inline static LogLevel traceLevel()
+    inline static HLogLevel traceLevel()
     {
-        return static_cast<LogLevel>(s_logLevel);
+        return static_cast<HLogLevel>(s_logLevel);
     }
 
-    inline static void setTraceLevel(LogLevel level)
+    inline static void setTraceLevel(HLogLevel level)
     {
         s_logLevel = static_cast<qint32>(level);
     }

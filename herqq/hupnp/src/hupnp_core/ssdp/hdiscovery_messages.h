@@ -22,7 +22,7 @@
 #ifndef DISCOVERY_MSGS_H_
 #define DISCOVERY_MSGS_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 class QUrl;
 class QString;
@@ -291,8 +291,6 @@ public:
      * \param usn specifies the Unique Service Name. The created object is invalid
      * if the provided USN is invalid.
      *
-     * \param sourceLocation
-     *
      * \param bootId specifies the \c BOOTID.UPNP.ORG header value. Note that
      * this is mandatory in UDA v1.1, whereas it is not specified at all in
      * UDA v1.0.
@@ -304,8 +302,7 @@ public:
      * \sa isValid()
      */
     HResourceUnavailable(
-        const HDiscoveryType& usn, const HEndpoint& sourceLocation,
-        qint32 bootId = -1, qint32 configId = -1);
+        const HDiscoveryType& usn, qint32 bootId = -1, qint32 configId = -1);
 
     /*!
      * Destroys the instance.
@@ -617,7 +614,8 @@ public:
      * \sa isValid(), mx(), searchTarget(), userAgent()
      */
     HDiscoveryRequest(
-        qint32 mx, const HDiscoveryType& resource, const HProductTokens& userAgent);
+        qint32 mx, const HDiscoveryType& resource,
+        const HProductTokens& userAgent);
 
     /*!
      * Destroys the instance.

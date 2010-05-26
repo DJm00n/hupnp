@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTTP_SERVER_H_
-#define HTTP_SERVER_H_
+#ifndef HHTTP_SERVER_H_
+#define HHTTP_SERVER_H_
 
 //
 // !! Warning !!
@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 #include "hhttp_handler_p.h"
 #include "hhttp_messaginginfo_p.h"
 
@@ -51,6 +51,7 @@ namespace Herqq
 namespace Upnp
 {
 
+class HEndpoint;
 class NotifyRequest;
 class SubscribeRequest;
 class UnsubscribeRequest;
@@ -96,9 +97,9 @@ private:
 
 private:
 
-    Server        m_server;
-    QThreadPool*  m_threadPool;
-    volatile bool m_exiting;
+    QList<Server*> m_servers;
+    QThreadPool*   m_threadPool;
+    volatile bool  m_exiting;
 
 protected:
 
@@ -124,6 +125,8 @@ private:
 
     HHttpHandler::ReturnValue processUnsubscription(
         MessagingInfo&, const QHttpRequestHeader&);
+
+    bool setupIface(const HEndpoint&);
 
 protected:
 
@@ -157,9 +160,15 @@ public:
 
     virtual ~HHttpServer();
 
-    QUrl rootUrl() const;
-    bool listen();
-    bool listen(const QHostAddress& ha, quint16 port);
+    QList<QUrl> rootUrls() const;
+    QUrl rootUrl(const QHostAddress&) const;
+    QList<HEndpoint> endpoints() const;
+    inline qint32 endpointCount() const { return m_servers.size(); }
+
+    bool init();
+    bool init(const HEndpoint&);
+    bool init(const QList<HEndpoint>&);
+    bool isInitialized() const;
     void close(bool wait);
 
     qint32 activeClientCount() const;
@@ -168,4 +177,4 @@ public:
 }
 }
 
-#endif /* HTTP_SERVER_H_ */
+#endif /* HHTTP_SERVER_H_ */

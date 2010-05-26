@@ -32,7 +32,7 @@
 
 #include "hhttp_p.h"
 #include "hhttp_messaginginfo_p.h"
-#include "./../devicehosting/messages/hevent_messages_p.h"
+#include "../devicehosting/messages/hevent_messages_p.h"
 
 class QByteArray;
 class QHttpHeader;

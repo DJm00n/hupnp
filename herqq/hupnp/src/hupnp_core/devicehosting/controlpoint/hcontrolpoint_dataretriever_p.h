@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../general/hdefs_p.h"
+#include "../../general/hdefs_p.h"
 
 #include <QByteArray>
 
@@ -50,13 +50,13 @@ class HDeviceController;
 //
 //
 //
-class DataRetriever
+class HDataRetriever
 {
-H_DISABLE_COPY(DataRetriever)
+H_DISABLE_COPY(HDataRetriever)
 
 private:
 
-    QByteArray m_loggingIdentifier;
+    const QByteArray m_loggingIdentifier;
     HHttpHandler& m_http;
 
     QByteArray retrieveData(
@@ -64,7 +64,7 @@ private:
 
 public:
 
-    DataRetriever(const QByteArray& loggingId, HHttpHandler&);
+    HDataRetriever(const QByteArray& loggingId, HHttpHandler&);
 
     QDomDocument retrieveServiceDescription(
         const QUrl& deviceLocation, const QUrl& scpdUrl);

@@ -30,7 +30,7 @@
 
 int main(int argc, char* argv[])
 {
-    Herqq::Upnp::SetLoggingLevel(Herqq::Upnp::Debug);
+    Herqq::Upnp::SetLoggingLevel(Herqq::Upnp::Warning);
 
     QApplication app(argc, argv);
 

@@ -22,7 +22,7 @@
 #ifndef HSERVICEID_H_
 #define HSERVICEID_H_
 
-#include "./../general/hdefs_p.h"
+#include "../general/hdefs_p.h"
 
 class QString;
 

@@ -21,15 +21,15 @@
 
 #include "hevent_subscriber_p.h"
 
-#include "./../../devicemodel/hservice.h"
-#include "./../../dataelements/hserviceid.h"
+#include "../../devicemodel/hservice.h"
+#include "../../dataelements/hserviceid.h"
 
-#include "./../../http/hhttp_handler_p.h"
-#include "./../../http/hhttp_messagecreator_p.h"
+#include "../../http/hhttp_handler_p.h"
+#include "../../http/hhttp_messagecreator_p.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../../utils/hsysutils_p.h"
-#include "./../../../utils/hexceptions_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../../utils/hsysutils_p.h"
+#include "../../../utils/hexceptions_p.h"
 
 #include <QTcpSocket>
 

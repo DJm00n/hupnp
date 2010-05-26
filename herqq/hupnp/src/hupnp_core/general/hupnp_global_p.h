@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UPNP_GLOBAL_P_H_
-#define UPNP_GLOBAL_P_H_
+#ifndef HUPNP_GLOBAL_P_H_
+#define HUPNP_GLOBAL_P_H_
 
 //
 // !! Warning !!
@@ -30,7 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-class QDomElement;
+#include "hupnp_fwd.h"
+#include "../devicemodel/hdeviceproxy.h"
+#include "../devicemodel/hserviceproxy.h"
 
 #include <QUrl>
 #include <QMutex>
@@ -40,13 +42,33 @@ class QDomElement;
 #include <QHostAddress>
 #include <QScopedPointer>
 
+class QDomElement;
+
 namespace Herqq
 {
 
 namespace Upnp
 {
 
-class HProductTokens;
+inline HDeviceProxy* devToProxy(HDevice* device)
+{
+    return static_cast<HDeviceProxy*>(device);
+}
+
+inline const HDeviceProxy* devToProxy(const HDevice* device)
+{
+    return static_cast<const HDeviceProxy*>(device);
+}
+
+inline HServiceProxy* srvToProxy(HService* srv)
+{
+    return static_cast<HServiceProxy*>(srv);
+}
+
+inline const HServiceProxy* srvToProxy(const HService* srv)
+{
+    return static_cast<const HServiceProxy*>(srv);
+}
 
 //
 //
@@ -62,9 +84,10 @@ private:
     static QMutex s_initMutex;
 
     QScopedPointer<HProductTokens> m_productTokens;
-
+    QList<QPair<quint32, quint32> > m_localNetworks;
 
     void createProductTokens();
+    void createLocalNetworks();
 
 public:
 
@@ -90,7 +113,17 @@ public:
     {
         return *m_productTokens;
     }
+
+    bool localNetwork(const QHostAddress&, quint32*) const;
+
+    bool isLocalAddress(const QHostAddress&) const;
+    bool areLocalAddresses(const QList<QHostAddress>&) const;
 };
+
+//
+//
+//
+HEndpoints convertHostAddressesToEndpoints(const QList<QHostAddress>&);
 
 //
 //
@@ -196,4 +229,4 @@ QUrl appendUrls(const QUrl& baseUrl, const QUrl& relativeUrl);
 }
 }
 
-#endif /* UPNP_GLOBAL_P_H_ */
+#endif /* HUPNP_GLOBAL_P_H_ */

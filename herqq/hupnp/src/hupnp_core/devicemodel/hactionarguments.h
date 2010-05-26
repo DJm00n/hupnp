@@ -22,8 +22,8 @@
 #ifndef HACTIONARGUMENTS_H_
 #define HACTIONARGUMENTS_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../datatypes/hupnp_datatypes.h"
+#include "../general/hdefs_p.h"
+#include "../datatypes/hupnp_datatypes.h"
 
 template<typename T, typename U>
 class QHash;
@@ -355,6 +355,8 @@ public:
     /*!
      * \overload
      *
+     * \param argumentName specifies the name of the argument to be retrieved.
+     *
      * \return a pointer to the action argument with the specified name
      * or a null pointer in case no argument has the specified name.
      */
@@ -383,6 +385,10 @@ public:
 
     /*!
      * \overload
+     *
+     * \param index specifies the index of the action argument to return. The
+     * index has to be valid position in the container, i.e. it must be
+     * 0 <= i < size().
      *
      * \return a pointer to the action argument that can be found at the specified
      * index.
@@ -460,6 +466,10 @@ public:
     /*!
      * \overload
      *
+     * \param index specifies the index of the action argument to return. The
+     * index has to be valid position in the container, i.e. it must be
+     * 0 <= i < size().
+     *
      * \return the action argument matching the specified index.
      */
     const HActionArgument* operator[](qint32 index) const;
@@ -470,12 +480,16 @@ public:
      * This is the same as calling get() with the specified argument name.
      * This method is provided for convenience.
      *
+     * \param argName specifies the name of the argument to be retrieved.
+     *
      * \return the action argument matching the specified name, if any.
      */
     HActionArgument* operator[](const QString& argName);
 
     /*!
      * \overload
+     *
+     * \param argName specifies the name of the argument to be retrieved.
      *
      * \return the action argument matching the specified name, if any.
      */
@@ -493,8 +507,8 @@ public:
      *
      * \return a string representation of the object. The
      * returned string contains all the arguments represented as strings and
-     * separated from each other by a new-line. The string representation of an argument is
-     * retrieved using HActionArgument::toString().
+     * separated from each other by a new-line. The string representation of
+     * an argument is retrieved using HActionArgument::toString().
      */
     QString toString() const;
 };

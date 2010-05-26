@@ -30,10 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./hdevicehost.h"
-#include "./../habstracthost_p.h"
+#include "hdevicehost.h"
+#include "../habstracthost_p.h"
 
-#include <QAtomicInt>
 #include <QScopedPointer>
 
 namespace Herqq
@@ -68,22 +67,22 @@ private:
 
 public: // attributes
 
-    QScopedPointer<HDeviceHostConfiguration> m_initParams;
+    QScopedPointer<HDeviceHostConfiguration> m_config;
     //
 
-    QScopedPointer<DeviceHostSsdpHandler> m_ssdp;
+    QList<DeviceHostSsdpHandler*> m_ssdps;
     //
 
     QScopedPointer<DeviceHostHttpServer> m_httpServer;
-    //
-
-    QAtomicInt m_activeRequestCount;
     //
 
     QScopedPointer<EventNotifier> m_eventNotifier;
     //
 
     QScopedPointer<PresenceAnnouncer> m_presenceAnnouncer;
+    //
+
+    QScopedPointer<HDeviceHostRuntimeStatus> m_runtimeStatus;
     //
 
     HDeviceHost* q_ptr;

@@ -22,12 +22,12 @@
 #include "hssdp_messagecreator_p.h"
 #include "hdiscovery_messages.h"
 
-#include "./../dataelements/hresourcetype.h"
-#include "./../dataelements/hdiscoverytype.h"
-#include "./../dataelements/hproduct_tokens.h"
+#include "../dataelements/hresourcetype.h"
+#include "../dataelements/hdiscoverytype.h"
+#include "../dataelements/hproduct_tokens.h"
 
-#include "./../socket/hendpoint.h"
-#include "./../../utils/hlogger_p.h"
+#include "../socket/hendpoint.h"
+#include "../../utils/hlogger_p.h"
 
 //#include <QHttpRequestHeader>
 //#include <QHttpResponseHeader>

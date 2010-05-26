@@ -23,7 +23,7 @@
 #define H_ACTIONARGUMENTS_P_H_
 
 #include "hactionarguments.h"
-#include "./../datatypes/hupnp_datatypes.h"
+#include "../datatypes/hupnp_datatypes.h"
 
 #include <QUrl>
 #include <QVector>

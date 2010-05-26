@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../../utils/hexceptions_p.h"
+#include "../../utils/hexceptions_p.h"
 
 #include <QString>
 #include <QVariant>

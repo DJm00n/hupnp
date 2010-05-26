@@ -19,12 +19,19 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HDEFAULTDEVICE_H_
-#define HDEFAULTDEVICE_H_
+#ifndef HDEVICEHOST_RUNTIMESTATUS_P_H_
+#define HDEVICEHOST_RUNTIMESTATUS_P_H_
 
-#include "./../devicemodel/hdevice.h"
-#include "./../devicemodel/haction.h"
-#include "./../devicemodel/hservice.h"
+//
+// !! Warning !!
+//
+// This file is not part of public API and it should
+// never be included in client code. The contents of this file may
+// change or the file may be removed without of notice.
+//
+
+#include "../../../utils/hglobal.h"
+#include "../../general/hupnp_fwd.h"
 
 namespace Herqq
 {
@@ -32,43 +39,21 @@ namespace Herqq
 namespace Upnp
 {
 
-/*!
- *
- */
-class HDefaultService :
-    public HService
+//
+//
+//
+class H_UPNP_CORE_EXPORT HDeviceHostRuntimeStatusPrivate
 {
-H_DISABLE_COPY(HDefaultService)
-
-private:
-
-    virtual HActionMap createActions();
+H_DISABLE_COPY(HDeviceHostRuntimeStatusPrivate)
 
 public:
 
-    HDefaultService();
-    virtual ~HDefaultService();
-};
+    HDeviceHost* m_deviceHost;
 
-/*!
- *
- */
-class HDefaultDevice :
-    public HDevice
-{
-H_DISABLE_COPY(HDefaultDevice)
-
-private:
-
-    virtual HServiceMap createServices();
-
-public:
-
-    HDefaultDevice();
-    virtual ~HDefaultDevice();
+    HDeviceHostRuntimeStatusPrivate();
 };
 
 }
 }
 
-#endif /* HDEFAULTDEVICE_H_ */
+#endif /* HDEVICEHOST_RUNTIMESTATUS_P_H_ */

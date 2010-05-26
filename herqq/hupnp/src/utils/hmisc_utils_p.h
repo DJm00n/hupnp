@@ -19,10 +19,12 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MISC_UTILS_P_H_
-#define MISC_UTILS_P_H_
+#ifndef HMISC_UTILS_P_H_
+#define HMISC_UTILS_P_H_
 
 #include "hglobal.h"
+
+class QHostAddress;
 
 //
 // !! Warning !!
@@ -42,6 +44,8 @@ namespace Herqq
  */
 unsigned long hash(const char* str, int n);
 
+QHostAddress findBindableHostAddress();
+
 }
 
-#endif /* MISC_UTILS_P_H_ */
+#endif /* HMISC_UTILS_P_H_ */

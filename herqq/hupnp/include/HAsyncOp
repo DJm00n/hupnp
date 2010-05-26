@@ -1,0 +1,6 @@
+#ifndef H_ASYNCOP_
+#define H_ASYNCOP_
+
+#include "../src/hupnp_core/devicemodel/hasyncop.h"
+
+#endif // H_ASYNCOP_

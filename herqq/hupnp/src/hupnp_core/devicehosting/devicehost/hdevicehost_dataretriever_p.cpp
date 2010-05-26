@@ -21,10 +21,10 @@
 
 #include "hdevicehost_dataretriever_p.h"
 
-#include "./../hdevicehosting_exceptions_p.h"
+#include "../hdevicehosting_exceptions_p.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../../utils/hexceptions_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../../utils/hexceptions_p.h"
 
 #include <QFile>
 #include <QImage>

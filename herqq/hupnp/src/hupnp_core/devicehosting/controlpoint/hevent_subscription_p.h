@@ -30,12 +30,12 @@
 // change or the file may be removed without of notice.
 //
 
-#include "./../messages/hsid_p.h"
-#include "./../messages/hevent_messages_p.h"
-#include "./../../http/hhttp_asynchandler_p.h"
+#include "../messages/hsid_p.h"
+#include "../messages/hevent_messages_p.h"
+#include "../../http/hhttp_asynchandler_p.h"
 
-#include "./../../general/hdefs_p.h"
-#include "./../../general/hupnp_fwd.h"
+#include "../../general/hdefs_p.h"
+#include "../../general/hupnp_fwd.h"
 
 #include <QUrl>
 #include <QList>
@@ -52,8 +52,8 @@ namespace Upnp
 
 class MessagingInfo;
 class HServiceController;
-class HHttpAsyncOperation;
 class HEventSubscription;
+class HHttpAsyncOperation;
 class HControlPointPrivate;
 
 //

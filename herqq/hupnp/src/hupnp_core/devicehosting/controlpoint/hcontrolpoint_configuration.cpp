@@ -22,6 +22,10 @@
 #include "hcontrolpoint_configuration.h"
 #include "hcontrolpoint_configuration_p.h"
 
+#include "../../general/hupnp_global_p.h"
+#include "../../devicemodel/hdeviceproxy.h"
+#include "../../../utils/hmisc_utils_p.h"
+
 namespace Herqq
 {
 
@@ -29,16 +33,52 @@ namespace Upnp
 {
 
 /*******************************************************************************
+ * HProxyCreator
+ ******************************************************************************/
+HProxyCreator::HProxyCreator()
+{
+}
+
+HDeviceProxy* HProxyCreator::operator()(const HDeviceInfo&) const
+{
+    return new HDeviceProxy();
+}
+
+HServiceProxy* HProxyCreator::operator()(const HResourceType&) const
+{
+    return new HServiceProxy();
+}
+
+/*******************************************************************************
  * HControlPointConfigurationPrivate
  ******************************************************************************/
 HControlPointConfigurationPrivate::HControlPointConfigurationPrivate() :
-    m_deviceCreator(), m_subscribeToEvents(true),
-    m_desiredSubscriptionTimeout(1800), m_performInitialDiscovery(true)
+    m_deviceCreator(HProxyCreator()),
+    m_subscribeToEvents(true),
+    m_desiredSubscriptionTimeout(1800),
+    m_autoDiscovery(true),
+    m_networkAddresses()
 {
+    QHostAddress ha = findBindableHostAddress();
+    m_networkAddresses.append(ha);
 }
 
 HControlPointConfigurationPrivate::~HControlPointConfigurationPrivate()
 {
+}
+
+HControlPointConfigurationPrivate* HControlPointConfigurationPrivate::clone() const
+{
+    HControlPointConfigurationPrivate* newObj =
+        new HControlPointConfigurationPrivate();
+
+    newObj->m_deviceCreator = m_deviceCreator;
+    newObj->m_subscribeToEvents = m_subscribeToEvents;
+    newObj->m_desiredSubscriptionTimeout = m_desiredSubscriptionTimeout;
+    newObj->m_autoDiscovery = m_autoDiscovery;
+    newObj->m_networkAddresses = m_networkAddresses;
+
+    return newObj;
 }
 
 /*******************************************************************************
@@ -60,16 +100,22 @@ HControlPointConfiguration::~HControlPointConfiguration()
     delete h_ptr;
 }
 
-HControlPointConfiguration* HControlPointConfiguration::clone() const
+HControlPointConfiguration* HControlPointConfiguration::doClone() const
 {
-    HControlPointConfiguration* clone =
-        new HControlPointConfiguration(
-            *new HControlPointConfigurationPrivate(*h_ptr));
-
-    return clone;
+    return new HControlPointConfiguration();
 }
 
-HDeviceCreator HControlPointConfiguration::deviceCreator() const
+HControlPointConfiguration* HControlPointConfiguration::clone() const
+{
+    HControlPointConfiguration* newClone = doClone();
+    if (!newClone) { return 0; }
+
+    newClone->h_ptr = h_ptr->clone();
+
+    return newClone;
+}
+
+HDeviceProxyCreator HControlPointConfiguration::deviceCreator() const
 {
     return h_ptr->m_deviceCreator;
 }
@@ -84,15 +130,26 @@ qint32 HControlPointConfiguration::desiredSubscriptionTimeout() const
     return h_ptr->m_desiredSubscriptionTimeout;
 }
 
-bool HControlPointConfiguration::performInitialDiscovery() const
+bool HControlPointConfiguration::autoDiscovery() const
 {
-    return h_ptr->m_performInitialDiscovery;
+    return h_ptr->m_autoDiscovery;
 }
 
-void HControlPointConfiguration::setDeviceCreator(
-    HDeviceCreator deviceCreator)
+QList<QHostAddress> HControlPointConfiguration::networkAddressesToUse() const
 {
+    return h_ptr->m_networkAddresses;
+}
+
+bool HControlPointConfiguration::setDeviceCreator(
+    const HDeviceProxyCreator& deviceCreator)
+{
+    if (!deviceCreator)
+    {
+        return false;
+    }
+
     h_ptr->m_deviceCreator = deviceCreator;
+    return true;
 }
 
 void HControlPointConfiguration::setSubscribeToEvents(bool arg)
@@ -112,9 +169,21 @@ void HControlPointConfiguration::setDesiredSubscriptionTimeout(qint32 arg)
     h_ptr->m_desiredSubscriptionTimeout = arg;
 }
 
-void HControlPointConfiguration::setPerformInitialDiscovery(bool arg)
+void HControlPointConfiguration::setAutoDiscovery(bool arg)
 {
-    h_ptr->m_performInitialDiscovery = arg;
+    h_ptr->m_autoDiscovery = arg;
+}
+
+bool HControlPointConfiguration::setNetworkAddressesToUse(
+    const QList<QHostAddress>& addresses)
+{
+    if (!HSysInfo::instance().areLocalAddresses(addresses))
+    {
+        return false;
+    }
+
+    h_ptr->m_networkAddresses = addresses;
+    return true;
 }
 
 }

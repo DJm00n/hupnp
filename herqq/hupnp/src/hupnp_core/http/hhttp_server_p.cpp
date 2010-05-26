@@ -24,12 +24,14 @@
 #include "hhttp_messaginginfo_p.h"
 #include "hhttp_messagecreator_p.h"
 
-#include "./../../utils/hlogger_p.h"
-#include "./../../utils/hexceptions_p.h"
-#include "./../general/hupnp_global_p.h"
+#include "../../utils/hlogger_p.h"
+#include "../../utils/hmisc_utils_p.h"
+#include "../../utils/hexceptions_p.h"
 
-#include "./../devicehosting/messages/hcontrol_messages_p.h"
-#include "./../devicehosting/messages/hevent_messages_p.h"
+#include "../socket/hendpoint.h"
+#include "../general/hupnp_global_p.h"
+#include "../devicehosting/messages/hcontrol_messages_p.h"
+#include "../devicehosting/messages/hevent_messages_p.h"
 
 #include <QUrl>
 #include <QTime>
@@ -85,7 +87,7 @@ void HHttpServer::Server::incomingConnection(qint32 socketDescriptor)
 HHttpServer::HHttpServer(
     const QString& loggingIdentifier, QObject* parent) :
         QObject(parent),
-            m_server(this), m_threadPool(new QThreadPool()), m_exiting(false),
+            m_servers(), m_threadPool(new QThreadPool()), m_exiting(false),
             m_loggingIdentifier(loggingIdentifier.toLocal8Bit()),
             m_httpHandler(m_loggingIdentifier),
             m_chunkedInfo()
@@ -100,6 +102,7 @@ HHttpServer::~HHttpServer()
 
     close(false);
     delete m_threadPool;
+    qDeleteAll(m_servers);
 }
 
 ChunkedInfo& HHttpServer::chunkedInfo()
@@ -223,6 +226,31 @@ void HHttpServer::processRequest(qint32 socketDescriptor)
         arg(peer, QString::number(m_threadPool->activeThreadCount())));
 }
 
+HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
+    MessagingInfo& mi, const QHttpRequestHeader& request, const QByteArray& body)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    NotifyRequest nreq;
+    NotifyRequest::RetVal notifyRv;
+
+    HHttpHandler::ReturnValue rv =
+        m_httpHandler.receive(mi, nreq, notifyRv, &request, &body);
+
+    if (rv != HHttpHandler::Success)
+    {
+        return rv;
+    }
+
+    if (notifyRv == NotifyRequest::Success)
+    {
+        HLOG_DBG("Dispatching event notification.");
+        incomingNotifyMessage(mi, nreq);
+    }
+
+    return HHttpHandler::Success;
+}
+
 HHttpHandler::ReturnValue HHttpServer::processGet(
     MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
 {
@@ -335,29 +363,34 @@ HHttpHandler::ReturnValue HHttpServer::processUnsubscription(
     return HHttpHandler::Success;
 }
 
-HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
-    MessagingInfo& mi, const QHttpRequestHeader& request, const QByteArray& body)
+bool HHttpServer::setupIface(const HEndpoint& ep)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    NotifyRequest nreq;
-    NotifyRequest::RetVal notifyRv;
-
-    HHttpHandler::ReturnValue rv =
-        m_httpHandler.receive(mi, nreq, notifyRv, &request, &body);
-
-    if (rv != HHttpHandler::Success)
+    QHostAddress ha = ep.hostAddress();
+    if (ha == QHostAddress::Null || ha == QHostAddress::Any ||
+        ha == QHostAddress::Broadcast)
     {
-        return rv;
+        return false;
     }
 
-    if (notifyRv == NotifyRequest::Success)
+    QScopedPointer<Server> server(new Server(this));
+    bool b = server->listen(ha, ep.portNumber());
+    if (b)
     {
-        HLOG_DBG("Dispatching event notification.");
-        incomingNotifyMessage(mi, nreq);
+        HLOG_INFO(QString("HTTP server bound to %1:%2").arg(
+            server->serverAddress().toString(),
+            QString::number(server->serverPort())));
+
+        m_servers.append(server.take());
+    }
+    else
+    {
+        HLOG_INFO(QString("Failed to bind HTTP server to %1").arg(
+            ep.hostAddress().toString()));
     }
 
-    return HHttpHandler::Success;
+    return b;
 }
 
 void HHttpServer::incomingSubscriptionRequest(
@@ -423,72 +456,103 @@ void HHttpServer::incomingUnknownPostRequest(
     m_httpHandler.send(mi, MethotNotAllowed);
 }
 
-QUrl HHttpServer::rootUrl() const
+QList<QUrl> HHttpServer::rootUrls() const
 {
-    Q_ASSERT(!m_server.serverAddress().isNull());
-    Q_ASSERT(m_server.serverPort() > 0);
+    QList<QUrl> retVal;
+    foreach(const Server* server, m_servers)
+    {
+        QUrl url(QString("http://%1:%2").arg(
+            server->serverAddress().toString(),
+            QString::number(server->serverPort())));
 
-    return QUrl(QString("http://%1:%2").arg(
-        m_server.serverAddress().toString(),
-        QString::number(m_server.serverPort())));
+        retVal.append(url);
+    }
+
+    return retVal;
 }
 
-bool HHttpServer::listen()
+QUrl HHttpServer::rootUrl(const QHostAddress& ha) const
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    Q_ASSERT_X(
-        thread() == QThread::currentThread(), H_AT,
-            "The HTTP Server has to be shutdown in the thread in which it is currently located.");
-
-    QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
-    foreach (const QNetworkInterface& iface, interfaces)
+    foreach(const Server* server, m_servers)
     {
-        if (iface.flags() & QNetworkInterface::IsUp &&
-          !(iface.flags() & QNetworkInterface::IsLoopBack))
+        if (ha == server->serverAddress())
         {
-            QList<QNetworkAddressEntry> entries = iface.addressEntries();
-            foreach(const QNetworkAddressEntry& entry, entries)
-            {
-                if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol)
-                {
-                    for (int i = 0; i < 10; ++i)
-                    {
-                        if (m_server.listen(entry.ip()))
-                        {
-                            HLOG_INFO(QString(
-                                "Binding to %1").arg(entry.ip().toString()));
+            QUrl url(QString("http://%1:%2").arg(
+                server->serverAddress().toString(),
+                QString::number(server->serverPort())));
 
-                            return true;
-                        }
-                    }
-                }
-            }
+            return url;
         }
     }
 
-    HLOG_INFO(
-        "Could not find a suitable network interface. Binding to localhost.");
-
-    return m_server.listen(QHostAddress::LocalHost);
+    return QUrl();
 }
 
-bool HHttpServer::listen(const QHostAddress& ha, quint16 port)
+QList<HEndpoint> HHttpServer::endpoints() const
+{
+    QList<HEndpoint> retVal;
+    foreach(const Server* server, m_servers)
+    {
+        retVal.append(HEndpoint(server->serverAddress(), server->serverPort()));
+    }
+    return retVal;
+}
+
+bool HHttpServer::init()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(thread() == QThread::currentThread());
 
-    Q_ASSERT_X(
-        thread() == QThread::currentThread(), H_AT,
-            "The HTTP Server has to be shutdown in the thread in which it is currently located.");
-
-
-    if (ha == QHostAddress::Null || ha == QHostAddress::Any ||
-        ha == QHostAddress::Broadcast)
+    if (isInitialized())
     {
         return false;
     }
 
-    return m_server.listen(ha, port);
+    QHostAddress ha = findBindableHostAddress();
+    return setupIface(HEndpoint(ha));
+}
+
+bool HHttpServer::init(const HEndpoint& ep)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(thread() == QThread::currentThread());
+
+    if (isInitialized())
+    {
+        return false;
+    }
+
+    return setupIface(ep);
+}
+
+bool HHttpServer::init(const QList<HEndpoint>& eps)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(thread() == QThread::currentThread());
+
+    if (isInitialized())
+    {
+        return false;
+    }
+
+    bool b = false;
+    foreach(const HEndpoint& ep, eps)
+    {
+        b = setupIface(ep);
+        if (!b)
+        {
+            qDeleteAll(m_servers);
+            m_servers.clear();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool HHttpServer::isInitialized() const
+{
+    return m_servers.size();
 }
 
 void HHttpServer::close(bool wait)
@@ -502,9 +566,12 @@ void HHttpServer::close(bool wait)
 
     m_exiting = true;
 
-    if (m_server.isListening())
+    foreach(Server* server, m_servers)
     {
-        m_server.close();
+        if (server->isListening())
+        {
+            server->close();
+        }
     }
 
     m_httpHandler.shutdown();

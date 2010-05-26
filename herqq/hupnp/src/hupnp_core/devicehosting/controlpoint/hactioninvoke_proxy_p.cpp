@@ -21,18 +21,18 @@
 
 #include "hactioninvoke_proxy_p.h"
 
-#include "./../../general/hupnp_global_p.h"
-#include "./../../datatypes/hdatatype_mappings_p.h"
+#include "../../general/hupnp_global_p.h"
+#include "../../datatypes/hdatatype_mappings_p.h"
 
-#include "./../../dataelements/hudn.h"
-#include "./../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hudn.h"
+#include "../../dataelements/hdeviceinfo.h"
 
-#include "./../../devicemodel/haction.h"
-#include "./../../devicemodel/hdevice.h"
-#include "./../../devicemodel/hservice.h"
+#include "../../devicemodel/haction.h"
+#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/hservice.h"
 
-#include "./../../../utils/hlogger_p.h"
-#include "./../../../utils/hexceptions_p.h"
+#include "../../../utils/hlogger_p.h"
+#include "../../../utils/hexceptions_p.h"
 
 #include <QList>
 #include <QTcpSocket>
@@ -224,7 +224,6 @@ void HActionInvokeProxyConnection::send()
     QtSoapNamespaces::instance().registerNamespace(
         "u", m_service->serviceType().toString());
 
-    // 1) create the remote method call request
     QtSoapMessage soapMsg;
     soapMsg.setMethod(
         QtSoapQName(m_actionName, m_service->serviceType().toString()));
@@ -247,9 +246,7 @@ void HActionInvokeProxyConnection::send()
         soapMsg.addMethodArgument(soapArg);
     }
 
-    // 2) send it and attempt to get a response
     QUrl baseUrl = m_locations[m_iNextLocationToTry];
-
     QUrl controlUrl = resolveUri(baseUrl.path(), m_service->controlUrl());
 
     QHttpRequestHeader actionInvokeRequest("POST", controlUrl.toString());
@@ -277,7 +274,7 @@ void HActionInvokeProxyConnection::invoke_slot(Invocation* invocation)
     {
         // store the device locations only upon action invocation, and only
         // if they haven't been stored yet.
-        m_locations = m_service->parentDevice()->locations(false);
+        m_locations = m_service->parentDevice()->locations(HDevice::BaseUrl);
         Q_ASSERT(!m_locations.isEmpty());
         m_iNextLocationToTry = 0;
     }

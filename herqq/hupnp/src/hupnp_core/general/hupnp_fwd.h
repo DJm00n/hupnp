@@ -19,13 +19,11 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UPNPFWD_H_
-#define UPNPFWD_H_
+#ifndef HUPNPFWD_H_
+#define HUPNPFWD_H_
 
 template<typename T>
 class QList;
-
-#include <QSharedPointer>
 
 namespace Herqq
 {
@@ -37,27 +35,32 @@ namespace Upnp
  * \file
  * This file contains forward-declarations to every public class HUPnP exposes
  * and a few common type definitions.
- *
  */
 
 class HUdn;
 class HAction;
 class HDevice;
 class HService;
+class HAsyncOp;
 class HEndpoint;
 class HServiceId;
 class HDeviceHost;
 class HDeviceInfo;
+class HDeviceProxy;
+class HServiceProxy;
 class HControlPoint;
 class HResourceType;
 class HObjectCreator;
 class HStateVariable;
+class HProductTokens;
 class HDiscoveryType;
 class HActionArgument;
+class HDeviceProxyList;
 class HActionArguments;
 class HStateVariableEvent;
 class HDeviceConfiguration;
 class HDeviceHostConfiguration;
+class HDeviceHostRuntimeStatus;
 class HControlPointConfiguration;
 
 class HResourceUpdate;
@@ -67,24 +70,47 @@ class HResourceAvailable;
 class HResourceUnavailable;
 
 /*!
- * Type definition for a list of pointers to HDevice instances.
- *
- * \ingroup devicemodel
- *
- * \sa HDevice
+ * This is a type definition for a collection of Herqq::Upnp::HEndpoint instances.
  */
-typedef QList<HDevice*> HDeviceList;
+typedef QList<HEndpoint> HEndpoints;
 
 /*!
- * Type definition for a list of pointers to HService instances.
- *
- * \ingroup devicemodel
- *
- * \sa HService
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HService instances.
  */
-typedef QList<HService*> HServiceList;
+typedef QList<HService*> HServices;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HServiceProxy instances.
+ */
+typedef QList<HServiceProxy*> HServiceProxies;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HDevice instances.
+ */
+typedef QList<HDevice*> HDevices;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HDeviceProxy instances.
+ */
+typedef QList<HDeviceProxy*> HDeviceProxies;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HStateVariable instances.
+ */
+typedef QList<HStateVariable*> HStateVariables;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HAction instances.
+ */
+typedef QList<HAction*> HActions;
 
 }
 }
 
-#endif /* UPNPFWD_H_ */
+#endif /* HUPNPFWD_H_ */

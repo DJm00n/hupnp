@@ -22,9 +22,9 @@
 #ifndef HDEVICE_H_
 #define HDEVICE_H_
 
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
-#include "./../dataelements/hresourcetype.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
+#include "../dataelements/hresourcetype.h"
 
 template<typename T, typename U>
 class QHash;
@@ -121,7 +121,7 @@ class HDeviceController;
  *
  * \ingroup devicemodel
  *
- * \remark the methods introduced in this class are thread-safe, but the \c QObject
+ * \remarks the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.
  */
 class H_UPNP_CORE_EXPORT HDevice :
@@ -132,6 +132,80 @@ H_DISABLE_COPY(HDevice)
 H_DECLARE_PRIVATE(HDevice)
 friend class HObjectCreator;
 friend class HDeviceController;
+
+public: // enums
+
+    /*!
+     * This enumeration specifies how a device tree should be traversed given a
+     * starting node.
+     *
+     * HUPnP \ref devicemodel is organized into a tree in which there's a root HDevice
+     * and it may contain embedded HDevices as its children and they may contain
+     * embedded HDevices as their children recursively.
+     *
+     * This enumeration is used to specify how a device and its children are traversed.
+     */
+    enum DeviceVisitType
+    {
+        /*!
+         * This value is used to indicate that only the HDevice in question is visited.
+         */
+        VisitThisOnly = 0,
+
+        /*!
+         * This value is used to indicate that this HDevice and its embedded HDevices
+         * are visited.
+         */
+        VisitThisAndDirectChildren,
+
+        /*!
+         * This value is used to indicate that this HDevice and all of its child
+         * devices are visited recursively.
+         */
+        VisitThisRecursively
+    };
+
+    /*!
+     * This enumeration specifies the device types that are considered as
+     * \e targets of an operation.
+     */
+    enum TargetDeviceType
+    {
+        /*!
+         * This value is used to indicate that \b all devices, both root and
+         * embedded are the targets of an operation.
+         */
+        AllDevices,
+
+        /*!
+         * This value is used to indicate that \b only embedded devices are the
+         * targets of an operation.
+         */
+        EmbeddedDevices,
+
+        /*!
+         * This value is used to indicate that \b only root devices are the
+         * targets of an operation.
+         */
+        RootDevices
+    };
+
+    /*!
+     * This enumeration specifies the type of a device location URL.
+     */
+    enum LocationUrlType
+    {
+        /*!
+         * The absolute URL for the device description.
+         */
+        AbsoluteUrl,
+
+        /*!
+         * The base URL of the device. This is the URL with which the various
+         * other URLs found in a device description are resolved.
+         */
+        BaseUrl
+    };
 
 public: // typedefs
 
@@ -154,16 +228,42 @@ private:
      *
      * Every descendant has to override this.
      *
-     * This method is called once when the device is being initialized by the managing device host.
+     * This method is called once when the device is being initialized by the
+     * host that is managing this instance.
      *
      * \return the services that this HDevice provides.
      *
-     * \remark The base class takes the ownership of the created services and will
+     * \remarks The base class takes the ownership of the created services and will
      * delete them upon destruction. Because of that, you can store the
      * addresses of the created services and use them safely throughout the lifetime
      * of the containing device object. However, you cannot delete them.
      */
     virtual HServiceMap createServices() = 0;
+
+    /*!
+     * Provides the opportunity to do post-construction initialization routines
+     * in derived classes.
+     *
+     * As \c %HDevice is part of the HUPnP's \ref devicemodel
+     * the object creation process is driven by HUPnP. At the time
+     * of instantiation of a descendant \c %HDevice the base \c %HDevice
+     * sub-object is not yet fully set up. In other words, at that time
+     * it is not guaranteed that every private or protected member of a
+     * \c %HDevice is set to its "final" value that is used once the object
+     * is fully initialized and ready to be used.
+     *
+     * Because of the above, descendants of
+     * \c %HDevice should not reference or rely on values of \c %HDevice at
+     * the time of construction. If the initialization of a \c %HDevice
+     * descendant needs to do things that rely on \c %HDevice being fully
+     * set up, you can override this method. This method is called \b once
+     * right after the base \c %HDevice is fully initialized.
+     *
+     * \note It is advisable to keep the constructors of the descendants of
+     * \c %HDevice small and fast, and do more involved initialization routines
+     * here.
+     */
+    virtual void finalizeInit();
 
 protected:
 
@@ -185,18 +285,8 @@ public:
 
     /*!
      * Destroys the instance.
-     *
-     * \warning An HDevice is always owned and destroyed by HUPnP.
-     * You should never destroy an HDevice.
      */
     virtual ~HDevice() = 0;
-
-    /*!
-     * Returns information about the device that is read from the device description.
-     *
-     * \return information about the device that is read from the device description.
-     */
-    HDeviceInfo deviceInfo() const;
 
     /*!
      * Returns the parent device of this device, if any.
@@ -207,49 +297,17 @@ public:
      * \remarks the pointer is guaranteed to
      * point to the parent object throughout the lifetime of this object.
      */
-    const HDevice* parentDevice() const;
+    HDevice* parentDevice() const;
 
     /*!
      * Returns the root device of the device tree to which this device belongs.
      *
      * \return the root device of the device tree to which this device belongs.
      *
-     * \remark this device could be the root device of the device tree in question,
+     * \remarks this device could be the root device of the device tree in question,
      * in which case a pointer to this instance is returned.
      */
-    const HDevice* rootDevice() const;
-
-    /*!
-     * Returns the full device description of the device.
-     *
-     * \return full device description that is associated to this device.
-     *
-     * \remarks an embedded device returns the same device description as
-     * its root device.
-     */
-    QString deviceDescription() const;
-
-    /*!
-     * Returns the embedded devices of this device.
-     *
-     * \return the embedded devices of this device. The collection is empty
-     * if the device has no embedded devices.
-     *
-     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
-     * of this object.
-     */
-    HDeviceList embeddedDevices() const;
-
-    /*!
-     * Returns the services this device exports.
-     *
-     * \return the services this device exports. The collection is empty
-     * if the device has no services.
-     *
-     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
-     * of this object.
-     */
-    HServiceList services() const;
+    HDevice* rootDevice() const;
 
     /*!
      * Returns the service that has the specified service ID.
@@ -265,16 +323,75 @@ public:
     HService* serviceById(const HServiceId& serviceId) const;
 
     /*!
-     * Returns the list of locations where the device is currently available.
+     * Returns the services this device exports.
      *
-     * \param includeDeviceDescriptionPostfix specifies whether or not the returned
-     * URLs are absolute URLs for retrieving the device description. The default
-     * is true. If the parameter is specified as false, the returned URLs contain
-     * only the base URLs of the device.
+     * \return the services this device exports. The collection is empty
+     * if the device has no services.
      *
-     * \return the list location where the device is currently available.
+     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
+     * of this object.
      */
-    QList<QUrl> locations(bool includeDeviceDescriptionPostfix=true) const;
+    HServices services() const;
+
+    /*!
+     * Returns the services of a specific UPnP service type.
+     *
+     * \param serviceType specifies the UPnP service type of interest.
+     * Only services matching the type are returned.
+     * \param versionMatch specifies how the version information in argument
+     * \c serviceType should be used. The default is <em>inclusive match</em>,
+     * which essentially means that any service with a service type version that
+     * is \b less than or \b equal to the version specified in argument
+     * \c serviceType is successfully matched.
+     *
+     * \return the services of the specified type.
+     *
+     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
+     * of this object.
+     */
+    HServices servicesByType(
+        const HResourceType& serviceType,
+        HResourceType::VersionMatch versionMatch = HResourceType::InclusiveVersionMatch) const;
+
+    /*!
+     * Returns the embedded devices of this device.
+     *
+     * \return the embedded devices of this device. The collection is empty
+     * if the device has no embedded devices.
+     *
+     * \remarks the pointers are guaranteed to be valid only throughout the lifetime
+     * of this object.
+     */
+    HDevices embeddedDevices() const;
+
+    /*!
+     * Returns information about the device that is read from the device description.
+     *
+     * \return information about the device that is read from the device description.
+     */
+    HDeviceInfo deviceInfo() const;
+
+    /*!
+     * Returns the full device description of the device.
+     *
+     * \return full device description that is associated to this device.
+     *
+     * \remarks an embedded device returns the same device description as
+     * its root device.
+     */
+    QString deviceDescription() const;
+
+    /*!
+     * Returns a list of locations where the device is currently available.
+     *
+     * \param urlType specifies whether the returned
+     * location URLs are absolute URLs for retrieving the device description.
+     * By default absolute URLs are returned and from these URLs the device
+     * description should be retrievable.
+     *
+     * \return a list of locations where the device is currently available.
+     */
+    QList<QUrl> locations(LocationUrlType urlType=AbsoluteUrl) const;
 };
 
 }

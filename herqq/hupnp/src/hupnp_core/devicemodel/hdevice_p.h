@@ -31,14 +31,15 @@
 //
 
 #include "hdevice.h"
-#include "./../general/hdefs_p.h"
-#include "./../general/hupnp_fwd.h"
+#include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
+#include "../general/hupnp_global_p.h"
 
 #include <QUrl>
 #include <QList>
 #include <QMutex>
 #include <QTimer>
-#include <QAtomicInt>
+#include <QHostAddress>
 #include <QDomDocument>
 #include <QScopedPointer>
 
@@ -88,6 +89,7 @@ class HServiceController;
 //
 class H_UPNP_CORE_EXPORT HDevicePrivate
 {
+H_DECLARE_PUBLIC(HDevice)
 H_DISABLE_COPY(HDevicePrivate)
 
 public: // attributes
@@ -116,6 +118,8 @@ public: // methods
         static QString retVal = "device_description.xml";
         return retVal;
     }
+
+    inline bool isValid() const { return m_upnpDeviceInfo.data(); }
 };
 
 //
@@ -143,7 +147,12 @@ private Q_SLOTS:
 
 public:
 
-    HDevice* m_device;
+    union
+    {
+        HDevice* m_device;
+        HDeviceProxy* m_deviceProxy;
+    };
+
     qint32 m_configId;
 
 public:
@@ -197,7 +206,7 @@ public:
     void startStatusNotifier(SearchCriteria searchCriteria);
     void stopStatusNotifier(SearchCriteria searchCriteria);
 
-    void addLocation(const QUrl& location);
+    bool addLocation(const QUrl& location);
     void addLocations(const QList<QUrl>& locations);
     bool isTimedout(SearchCriteria searchCriteria) const;
 

@@ -21,13 +21,13 @@
 
 #include "hdevicestorage_p.h"
 
-#include "./../dataelements/hudn.h"
-#include "./../dataelements/hdeviceinfo.h"
+#include "../dataelements/hudn.h"
+#include "../dataelements/hdeviceinfo.h"
 
-#include "./../general/hupnp_global_p.h"
-#include "./../../utils/hlogger_p.h"
+#include "../general/hupnp_global_p.h"
+#include "../../utils/hlogger_p.h"
 
-#include "./../devicemodel/haction_p.h"
+#include "../devicemodel/haction_p.h"
 
 #include <QUuid>
 #include <QHostAddress>
@@ -154,33 +154,23 @@ public:
 //
 //
 //
-template<bool ExactMatch>
 class ResourceTypeTester
 {
 private:
 
     HResourceType m_resourceType;
+    HResourceType::VersionMatch m_versionMatch;
 
 public:
-    ResourceTypeTester(const HResourceType& resType) :
-        m_resourceType(resType)
+    ResourceTypeTester(
+        const HResourceType& resType, HResourceType::VersionMatch vm) :
+            m_resourceType(resType), m_versionMatch(vm)
     {
     }
 
     bool test(const HResourceType& resType) const
     {
-        // either an exact match is searched, or the searched device type's version
-        // is smaller or equals to the version number of the stored type.
-        if (ExactMatch)
-        {
-            return resType == m_resourceType;
-        }
-
-        HResourceType::Tokens tokens(HResourceType::All);
-        tokens ^= HResourceType::Version;
-
-        return resType.toString(tokens) == m_resourceType.toString(tokens) &&
-            m_resourceType.version() <= resType.version();
+        return m_resourceType.compare(resType, m_versionMatch);
     }
 
     bool operator()(HDeviceController* device) const
@@ -199,12 +189,11 @@ public:
 template<typename T>
 void seekDevices(
     HDeviceController* device, const MatchFunctor<T>& mf,
-    QList<HDeviceController*>& foundDevices,
-    bool rootOnly = false)
+    QList<HDeviceController*>& foundDevices, HDevice::TargetDeviceType dts)
 {
     Q_ASSERT(device);
 
-    if (rootOnly && device->parentDevice())
+    if (dts == HDevice::RootDevices && device->parentDevice())
     {
         return;
     }
@@ -217,7 +206,7 @@ void seekDevices(
     const QList<HDeviceController*>* devices = device->embeddedDevices();
     foreach(HDeviceController* device, *devices)
     {
-        seekDevices(device, mf, foundDevices);
+        seekDevices(device, mf, foundDevices, dts);
     }
 }
 
@@ -227,11 +216,11 @@ void seekDevices(
 template<typename T>
 void seekDevices(
     const QList<HDeviceController*>& devices, const MatchFunctor<T>& mf,
-    QList<HDeviceController*>& foundDevices, bool rootOnly)
+    QList<HDeviceController*>& foundDevices, HDevice::TargetDeviceType dts)
 {
     foreach(HDeviceController* device, devices)
     {
-        seekDevices(device, mf, foundDevices, rootOnly);
+        seekDevices(device, mf, foundDevices, dts);
     }
 }
 
@@ -355,12 +344,13 @@ void DeviceStorage::clear()
     m_rootDevices.clear();
 }
 
-HDeviceController* DeviceStorage::searchDeviceByUdn(const HUdn& udn) const
+HDeviceController* DeviceStorage::searchDeviceByUdn(
+    const HUdn& udn, HDevice::TargetDeviceType dts) const
 {
     QMutexLocker lock(&m_rootDevicesMutex);
 
     QList<HDeviceController*> devices;
-    seekDevices(m_rootDevices, MatchFunctor<UdnTester>(udn), devices, true);
+    seekDevices(m_rootDevices, MatchFunctor<UdnTester>(udn), devices, dts);
 
     return devices.size() > 0 ? devices[0] : 0;
 }
@@ -371,7 +361,7 @@ bool DeviceStorage::searchValidLocation(
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(device);
 
-    QList<QUrl> locations = device->locations(true);
+    QList<QUrl> locations = device->locations();
     QList<QUrl>::const_iterator ci = locations.constBegin();
     for(; ci != locations.constEnd(); ++ci)
     {
@@ -393,55 +383,34 @@ bool DeviceStorage::searchValidLocation(
 }
 
 QList<HDeviceController*> DeviceStorage::searchDevicesByDeviceType(
-    const HResourceType& deviceType, bool exactMatch) const
+    const HResourceType& deviceType, HResourceType::VersionMatch vm, 
+    HDevice::TargetDeviceType dts) const
 {
     QMutexLocker locker(&m_rootDevicesMutex);
 
     QList<HDeviceController*> retVal;
 
-    if (exactMatch)
-    {
-        seekDevices(
-            m_rootDevices,
-            MatchFunctor<ResourceTypeTester<true> >(deviceType),
-            retVal,
-            false);
-    }
-    else
-    {
-        seekDevices(
-            m_rootDevices,
-            MatchFunctor<ResourceTypeTester<false> >(deviceType),
-            retVal,
-            false);
-    }
+    seekDevices(
+        m_rootDevices,
+        MatchFunctor<ResourceTypeTester>(ResourceTypeTester(deviceType, vm)),
+        retVal,
+        dts);
 
     return retVal;
 }
 
 QList<HServiceController*> DeviceStorage::searchServicesByServiceType(
-    const HResourceType& serviceType, bool exactMatch) const
+    const HResourceType& serviceType, HResourceType::VersionMatch vm) const
 {
     QMutexLocker lock(&m_rootDevicesMutex);
 
     QList<HServiceController*> retVal;
 
-    if (exactMatch)
-    {
-        seekServices(
-            m_rootDevices,
-            MatchFunctor<ResourceTypeTester<true> >(serviceType),
-            retVal,
-            false);
-    }
-    else
-    {
-        seekServices(
-            m_rootDevices,
-            MatchFunctor<ResourceTypeTester<false> >(serviceType),
-            retVal,
-            false);
-    }
+    seekServices(
+        m_rootDevices,
+        MatchFunctor<ResourceTypeTester>(ResourceTypeTester(serviceType, vm)),
+        retVal,
+        false);
 
     return retVal;
 }
@@ -581,15 +550,29 @@ HServiceController* DeviceStorage::searchServiceByEventUrl(
     return seekService(m_rootDevices, MatchFunctor<EventUrlTester>(eventUrl));
 }
 
-HDeviceList DeviceStorage::rootDevices() const
+HDevices DeviceStorage::rootDevices() const
 {
     QMutexLocker lock(&m_rootDevicesMutex);
 
-    HDeviceList retVal;
+    QList<HDevice*> retVal;
     foreach(HDeviceController* dc, m_rootDevices)
     {
         Q_ASSERT(dc->m_device);
         retVal.push_back(dc->m_device);
+    }
+
+    return retVal;
+}
+
+HDeviceProxies DeviceStorage::rootDeviceProxies() const
+{
+    QMutexLocker lock(&m_rootDevicesMutex);
+
+    QList<HDeviceProxy*> retVal;
+    foreach(HDeviceController* dc, m_rootDevices)
+    {
+        Q_ASSERT(dc->m_device);
+        retVal.push_back(dc->m_deviceProxy);
     }
 
     return retVal;

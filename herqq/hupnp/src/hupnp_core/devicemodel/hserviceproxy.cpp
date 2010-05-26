@@ -19,7 +19,9 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hdefaultdevice.h"
+#include "hserviceproxy.h"
+#include "hserviceproxy_p.h"
+#include "hdeviceproxy.h"
 
 namespace Herqq
 {
@@ -27,30 +29,36 @@ namespace Herqq
 namespace Upnp
 {
 
-HDefaultService::HDefaultService()
+HServiceProxyPrivate::HServiceProxyPrivate()
 {
 }
 
-HDefaultService::~HDefaultService()
+HServiceProxyPrivate::~HServiceProxyPrivate()
 {
 }
 
-HService::HActionMap HDefaultService::createActions()
+HServiceProxy::HServiceProxy() :
+    HService(*new HServiceProxyPrivate())
+{
+}
+
+HServiceProxy::~HServiceProxy()
+{
+}
+
+HServiceProxy::HServiceProxy(HServiceProxyPrivate& dd) :
+    HService(dd)
+{
+}
+
+HService::HActionMap HServiceProxy::createActions()
 {
     return HActionMap();
 }
 
-HDefaultDevice::HDefaultDevice()
+HDeviceProxy* HServiceProxy::parentProxyDevice() const
 {
-}
-
-HDefaultDevice::~HDefaultDevice()
-{
-}
-
-HDevice::HServiceMap HDefaultDevice::createServices()
-{
-    return HServiceMap();
+    return static_cast<HDeviceProxy*>(parentDevice());
 }
 
 }

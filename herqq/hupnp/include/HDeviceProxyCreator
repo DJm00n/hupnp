@@ -1,0 +1,6 @@
+#ifndef H_DEVICEPROXYCREATOR_
+#define H_DEVICEPROXYCREATOR_
+
+#include "../src/hupnp_core/devicehosting/controlpoint/hdeviceproxy_creator.h"
+
+#endif // H_DEVICEPROXYCREATOR_
