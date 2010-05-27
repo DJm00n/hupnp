@@ -149,19 +149,19 @@ public:
    HAsyncOp(const HAsyncOp&);
 
    /*!
-    * Returns the wait timeout -if any- associated with the operation.
+    * Returns the wait timeout in milliseconds -if any- associated with the operation.
     *
-    * \return the wait timeout -if any- associated with the operation.
+    * \return the wait timeout in milliseconds -if any- associated with the operation.
     *
     * \sa setWaitTimeout()
     */
    inline qint32 waitTimeout() const { return m_waitTimeout; }
 
    /*!
-    * Sets the wait timeout for the operation.
+    * Sets the wait timeout in milliseconds for the operation.
     *
-    * \param timeout specifies the timeout. A negative value means that the
-    * timeout isn't set.
+    * \param timeout specifies the wait timeout in milliseconds.
+    * A negative value means that the timeout isn't set.
     *
     * \sa waitTimeout()
     */
