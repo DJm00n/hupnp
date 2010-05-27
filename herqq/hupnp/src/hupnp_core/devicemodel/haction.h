@@ -387,8 +387,9 @@ public:
      * the object will contain the output arguments of the action invocation.
      * If the action has no output arguments, the parameter is ignored.
      *
-     * \return value indicates whether the invocation successfully completed
-     * before the timeout.
+     * \return \e true in case both the wait and the action invocation
+     * succeeded. Otherwise you may want to check the HAsyncOp::waitCode() and
+     * HAsyncOp::returnValue() for more information about the failure.
      *
      * \sa beginInvoke(), outputArguments()
      */
