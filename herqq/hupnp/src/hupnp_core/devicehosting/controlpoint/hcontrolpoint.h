@@ -846,6 +846,8 @@ public:
      *
      * \param discoveryType specifies the type of the discovery to perform.
      * \param destination specifies the location where the discovery is sent.
+     * If the port of the specified endpoint is set to zero the message is sent
+     * to the specified host address using the default port 1900.
      * \param count specifies how many times the discovery should be performed.
      * The number translates directly to the number of SSDP messages send. The
      * default is 1.

@@ -420,8 +420,11 @@ bool HSsdpPrivate::send(const QByteArray& data, const HEndpoint& receiver)
 {
     Q_ASSERT(isInitialized());
 
+    quint16 port = receiver.portNumber();
+    if (!port) { port = 1900; }
+
     qint64 retVal = m_unicastSocket->writeDatagram(
-        data, receiver.hostAddress(), receiver.portNumber());
+        data, receiver.hostAddress(), port);
 
     return retVal == data.size();
 }
@@ -799,7 +802,8 @@ qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver,
             qint32 count)
 {
     HLOG(H_AT, H_FUN);
-    if (!msg.isValid(true) || count < 0 || !hptr->isInitialized())
+    if (!msg.isValid(true) || receiver.isNull() || count < 0 ||
+        !hptr->isInitialized())
     {
         return -1;
     }

@@ -393,6 +393,8 @@ public:
      *
      * \param msg specifies the announcement to send.
      * \param destination specifies the target UDP endpoint of the message.
+     * If the port of the specified endpoint is set to zero the message is sent
+     * to the specified host address using the default port 1900.
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
@@ -409,7 +411,8 @@ public:
      * \param msg specifies the announcement to send.
      *
      * \param destination specifies the target of the response.
-     *
+     * If the port of the specified endpoint is set to zero the message is sent
+     * to the specified host address using the default port 1900.
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
