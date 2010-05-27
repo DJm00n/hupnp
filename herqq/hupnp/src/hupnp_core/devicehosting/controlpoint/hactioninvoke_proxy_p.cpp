@@ -119,12 +119,6 @@ void HActionInvokeProxyConnection::error(QAbstractSocket::SocketError serr)
                 m_iNextLocationToTry + 1;
 
         connectToHost();
-        return;
-    }
-
-    if (m_invocationInProgress)
-    {
-        invocationDone(HAction::ActionFailed());
     }
 }
 
@@ -156,17 +150,38 @@ bool HActionInvokeProxyConnection::connectToHost()
 
 void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(op);
+
     op->deleteLater();
+
+    if (op->state() == HHttpAsyncOperation::Failed)
+    {
+        HLOG_WARN(QString("Action invocation failed: [%1]").arg(
+            op->messagingInfo()->lastErrorDescription()));
+
+        invocationDone(HAction::UndefinedFailure());
+        return;
+    }
 
     QtSoapMessage response;
     if (!response.setContent(op->dataRead()))
     {
+        HLOG_WARN(QString(
+            "Received an invalid SOAP message as a response to "
+            "action invocation: [%1]").arg(QString::fromUtf8(op->dataRead())));
+
         invocationDone(HAction::UndefinedFailure());
         return;
     }
 
     if (response.isFault())
     {
+        HLOG_WARN(QString(
+            "Action invocation failed: [%1, %2]").arg(
+                response.faultString().toString(),
+                response.faultDetail().toString()));
+
         invocationDone(HAction::UndefinedFailure());
         return;
     }
@@ -179,11 +194,13 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
         return;
     }
 
-    // 3) parse and verify the response
-
     const QtSoapType& root = response.method();
     if (!root.isValid())
     {
+        HLOG_WARN(QString(
+            "Received an invalid response to action invocation: [%1]").arg(
+                response.toXmlString()));
+
         invocationDone(HAction::UndefinedFailure());
         return;
     }
@@ -221,6 +238,8 @@ void HActionInvokeProxyConnection::invocationDone(qint32 rc)
 
 void HActionInvokeProxyConnection::send()
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     QtSoapNamespaces::instance().registerNamespace(
         "u", m_service->serviceType().toString());
 
