@@ -34,7 +34,7 @@ namespace Upnp
 HAsyncOp::HAsyncOp() :
     m_id(QUuid::createUuid()),
     m_waitTimeout(-1), m_waitCode(WaitSuccess), m_returnValue(0), 
-    m_userData(0)
+    m_userData(new volatile void*)
 {
 }
 
@@ -51,12 +51,12 @@ HAsyncOp::HAsyncOp(const HAsyncOp& other) :
 
 void HAsyncOp::setUserData(void* userData)
 {
-    m_userData = userData;
+    *m_userData = userData;
 }
 
 volatile void* HAsyncOp::userData() const
 {
-    return m_userData;
+    return *m_userData;
 }
 
 bool operator==(const HAsyncOp& arg1, const HAsyncOp& arg2)

@@ -25,6 +25,7 @@
 #include "../general/hupnp_global.h"
 
 #include <QUuid>
+#include <QSharedPointer>
 
 namespace Herqq
 {
@@ -121,7 +122,7 @@ private:
    volatile qint32 m_waitTimeout;
    volatile AsyncWaitCode m_waitCode;
    volatile qint32 m_returnValue;
-   volatile void* m_userData;
+   QSharedPointer<volatile void*> m_userData;
 
    HAsyncOp& operator=(const HAsyncOp&);
 

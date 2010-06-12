@@ -290,7 +290,7 @@ public:
      * invokeComplete() signal is emitted, you have to call waitForInvoke()
      * providing this ID to retrieve the result of the action invocation.
      *
-     * \remark
+     * \remarks
      * \li The invokeComplete() signal is always emitted,
      * even if you have called waitForInvoke() before that.
      * \li waitForInvoke() with a proper ID will complete before
