@@ -71,6 +71,68 @@ namespace Upnp
  *
  * \endcode
  *
+ * The above example highlights two different return codes that have two different
+ * purposes, the <em>wait code</em> and the <em>return value of the
+ * asynchronous operation</em>. The wait code specifies the result of the
+ * \e wait operation; it tells whether the wait operation succeeded. A wait can
+ * be successful even if the asynchronous operation failed and vice versa;
+ * a wait can fail even if the asynchronous operation eventually succeeds.
+ *
+ * All the HUPnP's waitFor() methods used to retrieve the results of
+ * asynchronous operations use \c bool as a return value to indicate if both
+ * the wait and the asynchronous operation succeeded. For instance,
+ *
+ * \code
+ *
+ * HAsyncOp op = someObject->beginSomeAsyncOp();
+ * if (!someObject->waitForSomeAsyncOp(&op))
+ * {
+ *     // Either the wait or the asynchronous operation failed. You can check
+ *     // the wait code to see if it was the wait that failed:
+ *     if (op.waitCode() != HAsyncOp::WaitSuccess)
+ *     {
+ *         // It was the wait that failed. This means that the operation is
+ *         // still running and it may still succeed normally.
+ *     }
+ *     else if (op.returnValue() != SomeErrorCodeThatIndicatesSuccess)
+ *     {
+ *        // It was the asynchronous operation that failed.
+ *     }
+ * }
+ *
+ * \endcode
+ *
+ * In some scenarios it is useful to pass custom data within an HAsyncOp.
+ * For example,
+ *
+ * \code
+ *
+ * void MyQObject::slotToBeCalledWhenAsyncOpCompletes(HAsyncOp op)
+ * {
+ *     SomeClass* someObject = reinterpret_cast<SomeClass*>(op.userData());
+ *     someObject->waitForSomeAsyncOp(&op);
+ * }
+ *
+ * void MyQObject::someMethod()
+ * {
+ *     HAsyncOp op = someObject->beginSomeAsyncOp();
+ *     op.setUserData(reinterpret_cast<void*>(someObject));
+ *     // call executes and the above slot gets called once the operation completes
+ *     // (or fails)
+ * }
+ * \endcode
+ *
+ * Note, the user data is retrievable from \b any copy of the object that was
+ * used to set the data. If an instance is created by the runner of an
+ * asynchronous operation, setting the userData of that instance will associate
+ * the userData with all the copies the runner uses too. From this follows that
+ * when the runner informs the user an operation is finished, the provided
+ * HAsyncOp object contains the previously set userData.
+ *
+ * Note also that the user data is never referenced by the runner of an
+ * asynchronous operation. This also means that the ownership of the data is
+ * never transferred.
+ *
  * \headerfile hasyncop.h HAsyncOp
  *
  * \ingroup devicemodel
