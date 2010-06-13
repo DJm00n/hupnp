@@ -286,7 +286,7 @@ public:
     *
     * \sa setUserData()
     */
-   volatile void* userData() const;
+   void* userData() const;
 
    /*!
     * Returns universally unique identifier of the asynchronous operation.

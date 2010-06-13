@@ -54,9 +54,9 @@ void HAsyncOp::setUserData(void* userData)
     *m_userData = userData;
 }
 
-volatile void* HAsyncOp::userData() const
+void* HAsyncOp::userData() const
 {
-    return *m_userData;
+    return const_cast<void*>(*m_userData);
 }
 
 bool operator==(const HAsyncOp& arg1, const HAsyncOp& arg2)
