@@ -1,5 +1,94 @@
 # HUPnP Changelog
 
+
+HUPnP 0.6.0 [June 25, 2010]
+--------------------------------------------------------------------------------
+- License changed from GPLv3 to LGPLv3.
+
+- Significant modifications to the HUPnP device model. See the reference documentation for more information.
+
+- Added support for specifying the network interfaces to be used with the HUPnP hosting API.
+
+- Added support for a unicast device discovery into the HControlPoint.
+
+- Added various helper methods to some of the members of the device model and the hosting API.
+
+- Added support for retrieving runtime status information of a HDeviceHost.
+
+- Modified asynchronous action invocation to use a class named HAsyncOp to abstract 
+the use of various input and output arguments controlling the execution and waiting of an asynchronous operation.
+
+- Modified the usage semantics and the interface of HSsdp. See the reference documentation for more information.
+
+- Modified the SSDP layer to send messages with the destination UDP port set to 0 to the port 1900.
+
+- Renamed several classes and enumerations to improve clarity.
+
+- Fixed a bug in HMulticastSocket relating to operations targeted at a multicast group using a specific network interface.
+
+- Fixed a bug in the initialization of HControlPoint.
+
+- Fixed a bug relating to client-side action invocation, which in certain error scenarios resulted in a null pointer dereference.
+
+- Did internal refactoring in various places.
+
+- Many small optimizations, code cleansing and general improvements not worth mentioning individually. 
+
+- Updated documentation.
+
+Special thanks to Nikhil Marathe <nsm.nikhil@gmail.com> for testing and using the library and reporting his findings to me. Much appreciated.
+--------------------------------------------------------------------------------
+
+HUPnP 0.5.0 [May 1, 2010]
+
+The changes done between 0.4 and 0.5 were significant and the list below is far from complete. For much more information of what has been you can check the version control history.
+
+- Major redesign of the hosting API. Both HControlPoint and HDeviceHost were changed notably in an attempt to add more power, configurability and extensibility to the classes.
+  
+- HDeviceHost and HControlPoint no longer expose the device trees (HUPnP device model) using QSharedPointer. Raw pointers are used instead.
+
+- Modified the HControlPoint and HDeviceHost API regarding return values of various methods. Now methods signal failure with a boolean return value and the last error occurred can be checked with a separate call.
+
+- Modified the design of action arguments. Input and output arguments are no longer separated at type-level.
+
+- Did numerous modifications to improve interoperability with other UPnP software. Generally this meant lessening the strictness of HUPnP or making the level of strictness "configurable".
+
+- Did significant changes to the SSDP layer. Mainly the changes were about cleaning the API and making it more powerful. However, the implementation was improved as well. The changes include several bug fixes and improve interoperability with other UPnP software.
+
+- Event subscription at the control point now uses Qt event loop only (used threads before). This change is part of the plan of reducing worker thread usage to absolute minimum and attempting to utilize the Qt event loop as much as possible instead.
+
+- Added proper support for MX wait time during discovery.
+
+- Removed the 'T' postfix of certain type definitions, as it isn't part of the Qt's design conventions. Along with this change some type definitions were also renamed, such as HServicePtrList was changed to HServiceList and HDevicePtrList was changed to HDeviceList.
+
+- Renamed the toReadable() and toWritable() methods in HStateVariable to readable() and writable() to better convey the semantics that new unrelated types are not created. 
+
+- Fixed several bugs relating to URL handling.
+
+- Fixed a possible null pointer dereference bug in HException.
+
+- Fixed a few bugs in creation of event subscription messages.
+
+- Fixed a few bugs in the HDeviceHost relating to UPnP event handling.
+
+- Fixed a crash bug in the simple test app.
+
+- Fixed a bug relating to multicast address check in HEndpoint.
+
+- Fixed a few bugs in general HTTP messaging / handling.
+
+- Various logging improvements.
+
+- Did internal refactoring in various places.
+
+- Removed insulation from several small classes that are unlikely to change.
+
+- Many small optimizations, code cleansing and general improvements not worth mentioning individually.
+
+- Updated documentation.
+
+Special thanks to Bart Cerneels <bart.cerneels@kde.org>, Thiago Macieira, James Wa <jw@jameswa.com>, Nikhil Marathe <nsm.nikhil@gmail.com>, Jukka Kinnunen <jukka.kinnunen@tieto.com>, Simon Zsolt <zsolt.simon@tieto.com> and Pekka Turunen <pekka.m.turunen@tieto.com> for testing and using the library or otherwise checking it out, and reporting their findings to me. Much appreciated.
+
 HUPnP 0.4.0 [Mar. 4, 2010]
 - Modified the design of state variables and their use. More specifically, the API is now clear 
 that state variables can be changed directly only at server-side.

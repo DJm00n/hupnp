@@ -6,16 +6,16 @@
  *  This file is part of Herqq UPnP (HUPnP) library.
  *
  *  Herqq UPnP is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
+ *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
  *  Herqq UPnP is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+ *  GNU Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have received a copy of the GNU Lesser General Public License
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -333,10 +333,10 @@ bool HControlPointPrivate::processDeviceOffline(
     Q_ASSERT(root);
 
     root->deviceStatus()->setOnline(false);
-    
+
     m_eventSubscriber->cancel(
         root->m_deviceProxy, HDevice::VisitThisRecursively, false);
-    
+
     emit q_ptr->rootDeviceOffline(root->m_deviceProxy);
 
     return true;
@@ -344,11 +344,10 @@ bool HControlPointPrivate::processDeviceOffline(
 
 template<typename Msg>
 bool HControlPointPrivate::processDeviceDiscovery(
-    const Msg& msg, const HEndpoint& source, HControlPointSsdpHandler* origin)
+    const Msg& msg, const HEndpoint& source, HControlPointSsdpHandler*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(thread() == QThread::currentThread());
-    Q_ASSERT(origin);
 
     if (state() == Exiting)
     {
@@ -758,11 +757,25 @@ bool HControlPoint::init()
 
             for(qint32 i = 0; i < h_ptr->m_ssdps.size(); ++i)
             {
-                h_ptr->m_ssdps[i].second->sendDiscoveryRequest(
-                    HDiscoveryRequest(
-                        1,
-                        HDiscoveryType::createDiscoveryTypeForRootDevices(),
-                        HSysInfo::instance().herqqProductTokens()));
+                QString ep =
+                    h_ptr->m_ssdps[i].second->unicastEndpoint().toString();
+
+                HLOG_DBG(QString(
+                    "Sending discovery request using endpoint [%1]").arg(ep));
+
+                qint32 messagesSent =
+                    h_ptr->m_ssdps[i].second->sendDiscoveryRequest(
+                        HDiscoveryRequest(
+                            1,
+                            HDiscoveryType::createDiscoveryTypeForRootDevices(),
+                            HSysInfo::instance().herqqProductTokens()));
+
+                if (!messagesSent)
+                {
+                    HLOG_WARN(QString(
+                        "Failed to send discovery request using endpoint "
+                        "[%1]").arg(ep));
+                }
             }
         }
         else
@@ -850,7 +863,7 @@ HDeviceProxies HControlPoint::rootDevices() const
 }
 
 HDeviceProxies HControlPoint::devices(
-    const HResourceType& deviceType, HResourceType::VersionMatch vm, 
+    const HResourceType& deviceType, HResourceType::VersionMatch vm,
     HDevice::TargetDeviceType dts)
 {
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
