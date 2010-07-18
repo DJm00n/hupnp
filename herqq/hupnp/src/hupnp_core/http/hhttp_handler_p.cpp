@@ -228,11 +228,6 @@ HHttpHandler::ReturnValue HHttpHandler::readChunkedRequest(
 HHttpHandler::ReturnValue HHttpHandler::readRequestData(
     MessagingInfo& mi, QByteArray* requestData, qint64 contentLength)
 {
-    if (contentLength <= 0)
-    {
-        return Success;
-    }
-
     Q_ASSERT(requestData);
 
     qint64 bytesRead = 0;
@@ -276,10 +271,12 @@ HHttpHandler::ReturnValue HHttpHandler::readRequestData(
 
         do
         {
-            qint64 retVal = mi.socket().read(
-                buf.data(),
-                qMin(static_cast<qint64>(buf.size()), contentLength - bytesRead));
+            qint64 bufSize = static_cast<qint64>(buf.size()) - 1;
 
+            qint64 toBeRead = contentLength >= 0 ?
+                qMin(bufSize, contentLength - bytesRead) : bufSize;
+
+            qint64 retVal = mi.socket().read(buf.data(), toBeRead);
             if (retVal < 0)
             {
                 mi.setLastErrorDescription(
@@ -298,7 +295,7 @@ HHttpHandler::ReturnValue HHttpHandler::readRequestData(
                 break;
             }
         }
-        while(bytesRead < contentLength && !m_shuttingDown);
+        while((bytesRead < contentLength || contentLength < 0) && !m_shuttingDown);
 
         if (!m_shuttingDown)
         {
