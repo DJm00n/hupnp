@@ -91,7 +91,8 @@ QByteArray HDataRetriever::retrieveData(
     QHttpResponseHeader responseHdr;
 
     QTcpSocket sock;
-    sock.connectToHost(baseUrl.host(), baseUrl.port());
+    qint32 port = baseUrl.port();
+    sock.connectToHost(baseUrl.host(), port <= 0 ? 80 : port);
     if (!sock.waitForConnected(5000))
     {
         throw HSocketException(

@@ -239,7 +239,7 @@ HHttpHandler::ReturnValue HHttpHandler::readRequestData(
     QByteArray buf; buf.resize(4096);
 
     QTime stopWatch; stopWatch.start();
-    while (bytesRead < contentLength)
+    while (bytesRead < contentLength || contentLength < 0)
     {
         bool dataAvailable = mi.socket().bytesAvailable() ||
                              mi.socket().waitForReadyRead(50);
@@ -417,7 +417,7 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
             }
             else
             {
-                *body = mi.socket().readAll();
+                readRequestData(mi, body, -1);
             }
         }
     }
