@@ -201,13 +201,11 @@ HDeviceController* HControlPointPrivate::buildDevice(
     return newRootDevice;
 }
 
-void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
+bool HControlPointPrivate::addRootDevice(HDeviceController* newRootDevice)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(thread() == QThread::currentThread());
-
-    QScopedPointer<HDeviceController> newRootDevicePtr(newRootDevice);
 
     HDeviceController* existingDevice =
         m_deviceStorage->searchDeviceByUdn(
@@ -223,7 +221,7 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
 
         existingDevice = existingDevice->rootDevice();
         existingDevice->addLocations(newRootDevice->m_device->locations());
-        return;
+        return false;
     }
 
     if (q_ptr->acceptRootDevice(newRootDevice->m_deviceProxy) ==
@@ -231,7 +229,7 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
     {
         HLOG_DBG(QString("Device [%1] rejected").arg(
             newRootDevice->m_device->deviceInfo().udn().toString()));
-        return;
+        return false;
     }
 
     newRootDevice->setParent(this);
@@ -247,8 +245,6 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
     {
         m_deviceStorage->addRootDevice(newRootDevice);
         emit q_ptr->rootDeviceOnline(newRootDevice->m_deviceProxy);
-
-        newRootDevicePtr.take();
     }
     catch(HException& ex)
     {
@@ -257,8 +253,10 @@ void HControlPointPrivate::addRootDevice_(HDeviceController* newRootDevice)
                 newRootDevice->m_device->deviceInfo().udn().toSimpleUuid(),
                 ex.reason()));
 
-        m_eventSubscriber->remove(newRootDevice->m_deviceProxy, true);
+        return false;
     }
+
+    return true;
 }
 
 void HControlPointPrivate::deviceExpired(HDeviceController* source)
@@ -476,7 +474,11 @@ void HControlPointPrivate::processDeviceOnline(
     {
         if (newDevice)
         {
-            addRootDevice_(device);
+            if (!addRootDevice(device))
+            {
+                delete device;
+                return;
+            }
         }
         if (subscribe)
         {

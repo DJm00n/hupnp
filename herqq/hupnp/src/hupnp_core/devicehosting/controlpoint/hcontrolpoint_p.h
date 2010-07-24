@@ -142,6 +142,7 @@ private Q_SLOTS:
 
 private:
 
+    bool addRootDevice(HDeviceController* device);
     void subscribeToEvents(HDeviceController*);
 
     HActionInvoke createActionInvoker(HAction*);
@@ -164,7 +165,6 @@ private:
 
 private Q_SLOTS:
 
-    void addRootDevice_(HDeviceController* device);
     void deviceExpired(HDeviceController* source);
     void unsubscribed(Herqq::Upnp::HServiceProxy*);
 
