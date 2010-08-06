@@ -28,13 +28,13 @@ namespace Upnp
 {
 
 HNt::HNt() :
-    m_typeValue   (qMakePair(Type_Undefined   , QString(""))),
+    m_typeValue(qMakePair(Type_Undefined   , QString(""))),
     m_subTypeValue(qMakePair(SubType_Undefined, QString("")))
 {
 }
 
 HNt::HNt(const QString& type) :
-    m_typeValue   (qMakePair(Type_Undefined, QString(""))),
+    m_typeValue(qMakePair(Type_Undefined, QString(""))),
     m_subTypeValue(qMakePair(SubType_Undefined, QString("")))
 {
     if (type.compare("upnp:event", Qt::CaseInsensitive) == 0)
@@ -45,7 +45,7 @@ HNt::HNt(const QString& type) :
 }
 
 HNt::HNt(const QString& type, const QString& subtype) :
-    m_typeValue   (qMakePair(Type_Undefined, QString(""))),
+    m_typeValue(qMakePair(Type_Undefined, QString(""))),
     m_subTypeValue(qMakePair(SubType_Undefined, QString("")))
 {
     if (type.compare("upnp:event", Qt::CaseInsensitive) == 0)
@@ -62,13 +62,13 @@ HNt::HNt(const QString& type, const QString& subtype) :
 }
 
 HNt::HNt(Type type) :
-    m_typeValue   (qMakePair(type, toString(type))),
+    m_typeValue(qMakePair(type, toString(type))),
     m_subTypeValue(qMakePair(SubType_Undefined, QString("")))
 {
 }
 
 HNt::HNt(Type type, SubType subType) :
-    m_typeValue   (qMakePair(type, toString(type))),
+    m_typeValue(qMakePair(type, toString(type))),
     m_subTypeValue(qMakePair(subType, toString(subType)))
 {
 }

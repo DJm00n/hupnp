@@ -22,8 +22,9 @@
 #ifndef HDEVICEHOST_CONFIGURATION_H_
 #define HDEVICEHOST_CONFIGURATION_H_
 
-#include "../../general/hdefs_p.h"
 #include "../hdevicecreator.h"
+#include "../../general/hdefs_p.h"
+#include "../../general/hupnp_global.h"
 
 class QString;
 class QHostAddress;
@@ -40,17 +41,15 @@ namespace Upnp
 class HDeviceConfigurationPrivate;
 
 /*!
- * This is a class for specifying configuration to an HDevice that is to be created
+ * This is a class for specifying a configuration to an HDevice that is to be created
  * and hosted by an HDeviceHost.
  *
- * To host a device, you have to set:
+ * A valid device configuration contains at least:
  *
  * \li a path to a device description file (setPathToDeviceDescription()) and
  * \li a <em>device creator</em> (setDeviceCreator()).
  *
- * Otherwise, an HDeviceHost instance will fail to start.
- *
- * Other options affect the runtime behavior of a HDeviceHost in regard to
+ * The other options affect the runtime behavior of a HDeviceHost in regard to
  * the HDevice that is created based on the information provided through
  * an instance of this class.
  *
@@ -58,24 +57,63 @@ class HDeviceConfigurationPrivate;
  *
  * \ingroup devicehosting
  *
- * \sa HDeviceHost, HDeviceHost::init(), HDevice
+ * \sa HDeviceHostConfiguration, HDeviceHost, HDeviceHost::init(), HDevice
  */
 class H_UPNP_CORE_EXPORT HDeviceConfiguration
 {
 H_DISABLE_COPY(HDeviceConfiguration)
 
-private:
+protected:
 
     HDeviceConfigurationPrivate* h_ptr;
 
     /*!
-     * Creates a clone of the object.
+     * Clones the contents of this to the \c target object.
      *
-     * \remarks you should override this in derived classes. Failing
-     * to override this will result in invalid clones being made of derived classes
-     * that introduce new member variables.
+     * Every derived class should override this method, especially if new
+     * member variables have been introduced. Further, the implementation
+     * should be something along these lines:
+     *
+     * \code
+     * void MyDeviceConfiguration::doClone(HDeviceConfiguration* target) const
+     * {
+     *    MyDeviceConfiguration* myConf =
+     *        dynamic_cast<MyDeviceConfiguration*>(target);
+     *    if (!target)
+     *    {
+     *        return;
+     *    }
+     *
+     *    BaseClassOfMyDeviceConfiguration::doClone(myConf);
+     *
+     *    // copy the variables introduced in *this* MyDeviceConfiguration
+     *    // instance to "myConf".
+     * }
+     * \endcode
+     *
+     * \param target specifies the target object to which the contents of
+     * \c this instance are cloned.
      */
-    virtual HDeviceConfiguration* doClone() const;
+    virtual void doClone(HDeviceConfiguration* target) const;
+
+    /*!
+     * Creates a new instance.
+     *
+     * This method is used as part of object cloning. Because of that, it is
+     * important that every descendant class overrides this method:
+     *
+     * \code
+     * HDeviceConfiguration* MyDeviceConfiguration::newInstance() const
+     * {
+     *     return new MyDeviceConfiguration();
+     * }
+     * \endcode
+     *
+     * \remarks
+     * \li the object has to be heap-allocated and
+     * \li the ownership of the object is passed to the caller.
+     */
+    virtual HDeviceConfiguration* newInstance() const;
 
 public:
 
@@ -102,16 +140,14 @@ public:
     /*!
      * Sets the path to the UPnP device description.
      *
-     * \param pathToDeviceDescription specifies the path to the UPnP device description.
+     * \param pathToDeviceDescription specifies the path to the UPnP
+     * device description.
      *
-     * \return \e true if the path points to an existing file and the path
-     * was successfully set.
-     *
-     * \remarks that the device description file is not validated in anyway. The
-     * method only checks the existence of the provided file. The device description
-     * validation occurs during the initialization of the HDeviceHost.
+     * \remarks The provided path or the device description document is not
+     * validated in anyway. The device description validation occurs during the
+     * initialization of the HDeviceHost.
      */
-    bool setPathToDeviceDescription(const QString& pathToDeviceDescription);
+    void setPathToDeviceDescription(const QString& pathToDeviceDescription);
 
     /*!
      * Returns the path to the device description.
@@ -196,7 +232,7 @@ public:
      *
      * \code
      *
-     * setDeviceCreator(Creator());
+     * deviceCreator(Creator());
      *
      * \endcode
      *
@@ -224,7 +260,7 @@ public:
      * MyClass::MyClass()
      * {
      *    HDeviceConfiguration configuration;
-     *    configuration.setDeviceCreator(this, &MyClass::createMyDevice);
+     *    configuration.deviceCreator(this, &MyClass::createMyDevice);
      * }
      *
      * \endcode
@@ -245,10 +281,12 @@ public:
      * \remarks
      *
      * \li The objects your device creator creates will be deallocated by HUPnP
-     * when the objects are no longer needed. Do NOT store them or delete
+     * when the objects are no longer needed. Do \b not delete
      * them manually.
      *
      * \li The device creator has to be set for every device to be hosted.
+     *
+     * \sa deviceCreator()
      */
     bool setDeviceCreator(const HDeviceCreator& deviceCreator);
 
@@ -269,9 +307,41 @@ public:
 class HDeviceHostConfigurationPrivate;
 
 /*!
- * This is a class for specifying configurations for HDevices that should be created
- * and hosted by an HDeviceHost. The class is also used to configure the
- * operations of HDeviceHost that affect every hosted HDevice.
+ * This class is used to specify one or more device configurations to an
+ * HDeviceHost instance and to configure the functionality of the HDeviceHost
+ * that affect every hosted HDevice.
+ *
+ * The initialization of an HDeviceHost requires a valid configuration.
+ * A valid \e host \e configuration contains at least one \e device
+ * \e configuration, as otherwise the host would have nothing to do. Because
+ * of this the initialization of an HDeviceHost follows roughly these steps:
+ *
+ * - Create an HDeviceHostConfiguration instance.
+ * - Create and setup one or more HDeviceConfiguration instances.
+ * - Add the device configurations to the HDeviceHostConfiguration instance
+ * using add().
+ * - Modify the behavior of the HDeviceHost by setting other variables
+ * in this class.
+ * - Create an HDeviceHost and initialize it by passing the
+ * HDeviceHostConfiguration to its HDeviceHost::init() method.
+ *
+ * Besides specifying the device configurations, you can configure an HDeviceHost
+ * in following ways:
+ * - Specify the threading model an HDeviceHost should use in regard to invoking
+ * user code with setThreadingModel().
+ * The default is HDeviceHostConfiguration::MultiThreaded, which means that the
+ * user provided action implementations have to be thread-safe.
+ * - Specify how many times each resource advertisement is sent with
+ * setIndividualAdvertisementCount(). The default is 2.
+ * - Specify the timeout for event subscriptions with
+ * setSubscriptionExpirationTimeout(). The default is 0, which means that
+ * an HDeviceHost respects the subscription timeouts requested by control points
+ * as long as the requested values are less than a day.
+ * - Specify the network addresses an HDeviceHost should use in its operations
+ * with setNetworkAddressesToUse().
+ * The default is the first found interface that is up. Non-loopback interfaces
+ * have preference, but if none are found the loopback is used. However, in this
+ * case UDP multicast is not available.
  *
  * \headerfile hdevicehost_configuration.h HDeviceHostConfiguration
  *
@@ -283,29 +353,84 @@ class H_UPNP_CORE_EXPORT HDeviceHostConfiguration
 {
 H_DISABLE_COPY(HDeviceHostConfiguration)
 
-private:
+protected:
 
     HDeviceHostConfigurationPrivate* h_ptr;
 
     /*!
-     * Creates a clone of the object.
+     * Clones the contents of this to the \c target object.
      *
-     * \remarks you should override this in derived classes. Failing
-     * to override this will result in invalid clones being made of derived classes
-     * that introduce new member variables.
+     * Every derived class should override this method, especially if new
+     * member variables have been introduced. Further, the implementation
+     * should be something along these lines:
+     *
+     * \code
+     * void MyDeviceHostConfiguration::doClone(HDeviceHostConfiguration* target) const
+     * {
+     *    MyDeviceHostConfiguration* myConf =
+     *        dynamic_cast<MyDeviceHostConfiguration*>(target);
+     *    if (!target)
+     *    {
+     *        return;
+     *    }
+     *
+     *    BaseClassOfMyDeviceHostConfiguration::doClone(myConf);
+     *
+     *    // copy the variables introduced in *this* MyDeviceHostConfiguration
+     *    // instance to "myConf".
+     * }
+     * \endcode
+     *
+     * \param target specifies the target object to which the contents of
+     * \c this instance are cloned.
      */
-    virtual HDeviceHostConfiguration* doClone() const;
+    virtual void doClone(HDeviceHostConfiguration* target) const;
+
+    /*!
+     * Creates a new instance.
+     *
+     * This method is used as part of object cloning. Because of that, it is
+     * important that every descendant class overrides this method:
+     *
+     * \code
+     * HDeviceHostConfiguration* HDeviceHostConfiguration::newInstance() const
+     * {
+     *     return new HDeviceHostConfiguration();
+     * }
+     * \endcode
+     *
+     * \remarks
+     * \li the object has to be heap-allocated and
+     * \li the ownership of the object is passed to the caller.
+     */
+    virtual HDeviceHostConfiguration* newInstance() const;
 
 public:
 
     /*!
-     * todo
+     * This enumeration specifies the threading models the HDeviceHost may
+     * use in its operations in regard to user code invocation.
      */
-    /*enum ThreadingModel
+    enum ThreadingModel
     {
+        /*!
+         * User code is invoked only from the thread in which the HDeviceHost
+         * lives.
+         *
+         * This value is often used in situations where an HDevice being run
+         * by the device host has thread affinity. For instance, this is the case
+         * with \c HDevices that need to interact with GUIs.
+         */
         SingleThreaded,
+
+        /*!
+         * User code may be invoked from an arbitrary thread.
+         *
+         * This value should be used in situations where the HDevices run by
+         * the device host are thread-safe.
+         */
         MultiThreaded
-    };*/
+    };
 
     /*!
      * Creates a new, empty instance.
@@ -384,23 +509,6 @@ public:
     QList<QHostAddress> networkAddressesToUse() const;
 
     /*!
-     * Specifies how many times the device host sends each individual
-     * advertisement / announcement.
-     *
-     * By default, each advertisement is sent twice.
-     *
-     * \param count specifies how many times the device host sends each individual
-     * advertisement / announcement. If the provided value is smaller than 1 the
-     * advertisement count is set to 1.
-     *
-     * \remarks this is a low-level detail, which you shouldn't modify unless you
-     * know what you are doing.
-     *
-     * \sa individualAdvertisementCount()
-     */
-    void setIndividualAdvertisementCount(qint32 count);
-
-    /*!
      * Returns the timeout the device host uses for subscriptions.
      *
      * The default value is zero, which means that the device host honors the
@@ -417,9 +525,30 @@ public:
     qint32 subscriptionExpirationTimeout() const;
 
     /*!
-     * todo
+     * Returns the user code threading model the HDeviceHost uses in its
+     * operations.
+     *
+     * \return the user code threading model the HDeviceHost uses in its
+     * operations.
      */
-    //ThreadingModel threadingModel() const;
+    ThreadingModel threadingModel() const;
+
+    /*!
+     * Specifies how many times the device host sends each individual
+     * advertisement / announcement.
+     *
+     * By default, each advertisement is sent twice.
+     *
+     * \param count specifies how many times the device host sends each individual
+     * advertisement / announcement. If the provided value is smaller than 1 the
+     * advertisement count is set to 1.
+     *
+     * \remarks this is a low-level detail, which you shouldn't modify unless you
+     * know what you are doing.
+     *
+     * \sa individualAdvertisementCount()
+     */
+    void setIndividualAdvertisementCount(qint32 count);
 
     /*!
      * Specifies the timeout the device host uses for subscriptions.
@@ -454,15 +583,26 @@ public:
     bool setNetworkAddressesToUse(const QList<QHostAddress>& addresses);
 
     /*!
-     *todo
+     * Sets the user code threading model the HDeviceHost should use in its
+     * operations.
+     *
+     * This value specifies how an HDeviceHost invokes user code in regard
+     * to thread safety. If the value is HDeviceHostConfiguration::SingleThreaded
+     * user code is invoked only from the thread in which the HDeviceHost instance
+     * is run. If the value is HDeviceHostConfiguration::MultiThreaded user code
+     * may be invoked from any thread at any time. The default is
+     * HDeviceHostConfiguration::MultiThreaded.
+     *
+     * \param arg specifies the user code threading model the HDeviceHost
+     * should use in its operations.
      */
-    //void setThreadingModel(ThreadingModel arg);
+    void setThreadingModel(ThreadingModel arg);
 
     /*!
      * Indicates if the instance contains any device configurations.
      *
-     * \return \e true in case the instance contains at least
-     * one device configuration.
+     * \return \e true in case the instance contains no device configurations.
+     * In this case the object cannot be used to initialize an HDeviceHost.
      */
     bool isEmpty() const;
 };

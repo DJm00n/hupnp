@@ -319,12 +319,16 @@ HProductTokens::HProductTokens(const QString& tokens) :
 }
 
 HProductTokens::HProductTokens(const HProductTokens& other) :
-    h_ptr(new HProductTokensPrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HProductTokensPrivate(*other.h_ptr);
 }
 
 HProductTokens& HProductTokens::operator=(const HProductTokens& other)
 {
+    Q_ASSERT(&other != this);
+
     HProductTokensPrivate* newHptr = new HProductTokensPrivate(*other.h_ptr);
 
     delete h_ptr;

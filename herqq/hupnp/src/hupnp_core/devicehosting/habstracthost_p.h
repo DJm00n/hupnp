@@ -32,19 +32,14 @@
 
 #include "hdevicestorage_p.h"
 
-#include "../socket/hendpoint.h"
 #include "../general/hupnp_fwd.h"
-#include "../http/hhttp_server_p.h"
-#include "../devicemodel/hdevice_p.h"
+#include "../http/hhttp_handler_p.h"
 
-#include <QList>
-#include <QMutex>
+#include "../../utils/hthreadpool_p.h"
+
 #include <QObject>
 #include <QAtomicInt>
-#include <QThreadPool>
-#include <QSharedPointer>
 
-class QUrl;
 class QString;
 
 namespace Herqq
@@ -80,18 +75,14 @@ public: // attributes
     QScopedPointer<DeviceStorage> m_deviceStorage;
     // the storage for device model.
 
-    QThreadPool* m_threadPool;
-    //
+    HThreadPool* m_threadPool;
+    // thread pool for worker threads
 
     QAtomicInt m_initializationStatus;
     // -1 exiting, can change to state 0
     // 0 uninitialized / closed, can change to state 1
     // 1 initializing, can change to state 2, or -1
     // 2 initialized, can change to state -1
-
-    QHash<HUdn, HSharedActionInvoker*> m_sharedActionInvokers;
-    // map for holding an asynchronous action invoker for each device tree
-    // (hence, "shared")
 
     QString m_lastErrorDescription;
     // description of the error that occurred last

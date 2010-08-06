@@ -31,16 +31,45 @@
 //
 
 #include "hevent_notifier_p.h"
+#include "hdevicehost_configuration.h"
+
 #include "../hdevicestorage_p.h"
 
 #include "../../general/hdefs_p.h"
 #include "../../http/hhttp_server_p.h"
+
+#include "../../devicemodel/haction_p.h"
 
 namespace Herqq
 {
 
 namespace Upnp
 {
+
+//
+//
+//
+class HActionInvocationInfo
+{
+H_DISABLE_COPY(HActionInvocationInfo)
+
+public:
+
+    HActionInvocationInfo(
+        HActionController* action, HActionArguments* inArgs,
+        HActionArguments* outArgs) :
+            m_action(action), m_inArgs(inArgs), m_outArgs(outArgs)
+    {
+        Q_ASSERT(action);
+        Q_ASSERT(inArgs);
+        Q_ASSERT(outArgs);
+    }
+
+    HActionController* m_action;
+    HActionArguments* m_inArgs;
+    HActionArguments* m_outArgs;
+    qint32 m_retVal;
+};
 
 //
 // Internal class that provides minimal HTTP server functionality for the needs of
@@ -51,52 +80,57 @@ class DeviceHostHttpServer :
 {
 Q_OBJECT
 H_DISABLE_COPY(DeviceHostHttpServer)
-friend class HDeviceHostPrivate;
+    friend class HDeviceHostPrivate;
 
 private:
 
     DeviceStorage& m_deviceStorage;
     EventNotifier& m_eventNotifier;
+    HDeviceHostConfiguration::ThreadingModel m_threadingModel;
 
 private Q_SLOTS:
 
-    void processSubscription_slot(
-        const SubscribeRequest*, HService*, HSid*, StatusCode*);
+    void processSubscription_slot(const SubscribeRequest*, HService*, HSid*,
+            StatusCode*, HRunnable*);
 
-    void removeSubscriber_slot(const UnsubscribeRequest*, bool*);
+    void removeSubscriber_slot(const UnsubscribeRequest*, bool*, HRunnable*);
+
+    void invokeFromMainThread_slot(HActionInvocationInfo*, HRunnable*);
 
 Q_SIGNALS:
 
-    void processSubscription_sig(
-        const SubscribeRequest*, HService*, HSid*, StatusCode*);
+    void processSubscription_sig(const SubscribeRequest*, HService*, HSid*,
+            StatusCode*, HRunnable*);
 
-    void removeSubscriber_sig(const UnsubscribeRequest*, bool*);
+    void removeSubscriber_sig(const UnsubscribeRequest*, bool*, HRunnable*);
+
+    void invokeFromMainThread(HActionInvocationInfo*, HRunnable*);
 
 protected:
 
     virtual void incomingSubscriptionRequest(
-        MessagingInfo&, const SubscribeRequest&);
+        MessagingInfo&, const SubscribeRequest&, HRunnable*);
 
     virtual void incomingUnsubscriptionRequest(
-        MessagingInfo&, const UnsubscribeRequest&);
+        MessagingInfo&, const UnsubscribeRequest&, HRunnable*);
 
     virtual void incomingControlRequest(
-        MessagingInfo&, const InvokeActionRequest&);
+        MessagingInfo&, const InvokeActionRequest&, HRunnable*);
 
     virtual void incomingUnknownHeadRequest(
-        MessagingInfo&, const QHttpRequestHeader&);
+        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
 
     virtual void incomingUnknownGetRequest(
-        MessagingInfo&, const QHttpRequestHeader&);
+        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
 
     virtual void incomingUnknownPostRequest(
-        MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body);
+        MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body, HRunnable*);
 
 public:
 
-    explicit DeviceHostHttpServer (
-        const QByteArray& loggingId, DeviceStorage&, EventNotifier&,
-        QObject* parent = 0);
+    DeviceHostHttpServer(const QByteArray& loggingId,
+            HDeviceHostConfiguration::ThreadingModel, DeviceStorage&,
+            EventNotifier&, QObject* parent = 0);
 
     virtual ~DeviceHostHttpServer();
 };

@@ -38,8 +38,7 @@
 #include "../../../utils/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
 
-#include <QDomDocument>
-#include <QAbstractEventDispatcher>
+#include <QImage>
 
 #include <ctime>
 
@@ -101,17 +100,18 @@ void HDeviceHostPrivate::createRootDevices()
 
         DeviceHostDataRetriever dataRetriever(m_loggingIdentifier, baseDir);
 
-        QDomDocument dd = dataRetriever.retrieveDeviceDescription(
+        QString deviceDescr = dataRetriever.retrieveDeviceDescription(
             deviceconfig->pathToDeviceDescription());
 
         HDeviceHostObjectCreationParameters creatorParams;
-        creatorParams.m_deviceDescription = dd;
+        creatorParams.m_deviceDescription = deviceDescr;
         creatorParams.m_deviceCreator = deviceconfig->deviceCreator();
-        creatorParams.m_deviceLocations   = m_httpServer->rootUrls();
+        creatorParams.m_deviceLocations = m_httpServer->rootUrls();
 
         creatorParams.m_serviceDescriptionFetcher =
             ServiceDescriptionFetcher(
-                &dataRetriever, &DeviceHostDataRetriever::retrieveServiceDescription);
+                &dataRetriever,
+                &DeviceHostDataRetriever::retrieveServiceDescription);
 
         creatorParams.m_deviceTimeoutInSecs =
             deviceconfig->cacheControlMaxAge() / 2;
@@ -120,7 +120,6 @@ void HDeviceHostPrivate::createRootDevices()
         // expires.
 
         creatorParams.m_appendUdnToDeviceLocation = true;
-        creatorParams.m_sharedActionInvokers = &m_sharedActionInvokers;
 
         creatorParams.m_iconFetcher =
             IconFetcher(
@@ -212,8 +211,13 @@ void HDeviceHostPrivate::doClear()
     // this path should be traversed only when the device host has initiated
     // shut down.
 
-    m_httpServer->close(false);
     m_http->shutdown();
+
+    m_eventNotifier->shutdown();
+
+    m_httpServer->close();
+
+    m_threadPool->shutdown();
 
     // At this point SSDP and HTTP are closed and no further requests can come in.
     // However, no objects have been deleted and the derived class can safely access
@@ -223,21 +227,6 @@ void HDeviceHostPrivate::doClear()
     m_presenceAnnouncer.reset(0);
     qDeleteAll(m_ssdps);
     m_ssdps.clear();
-
-    m_eventNotifier->shutdown();
-
-    while(m_httpServer->activeClientCount() > 0 ||
-          m_threadPool->activeThreadCount() > 0)
-    {
-        // as long as there are requests being processed, we cannot go
-        // deleting objects that may be needed by the request processing. ==>
-        // wait for the requests to complete
-
-        QAbstractEventDispatcher::instance()->processEvents(
-            QEventLoop::ExcludeUserInputEvents);
-    }
-
-    m_threadPool->waitForDone();
 
     m_http.reset(0);
     m_httpServer.reset(0);
@@ -262,8 +251,6 @@ HDeviceHost::HDeviceHost(QObject* parent) :
 
 HDeviceHost::~HDeviceHost()
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     quit();
     delete h_ptr;
 }
@@ -350,7 +337,9 @@ bool HDeviceHost::init(const HDeviceHostConfiguration& config)
 
         h_ptr->m_httpServer.reset(
             new DeviceHostHttpServer(
-                h_ptr->m_loggingIdentifier, *h_ptr->m_deviceStorage,
+                h_ptr->m_loggingIdentifier,
+                h_ptr->m_config->threadingModel(),
+                *h_ptr->m_deviceStorage,
                 *h_ptr->m_eventNotifier, this));
 
         QList<QHostAddress> addrs = config.networkAddressesToUse();

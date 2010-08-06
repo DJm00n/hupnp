@@ -37,16 +37,13 @@
 #include "hstatevariable.h"
 #include "hstatevariable_p.h"
 
-#include "../dataelements/hserviceid.h"
-#include "../dataelements/hresourcetype.h"
+#include "../dataelements/hserviceinfo.h"
 
 #include <QUrl>
 #include <QHash>
 #include <QList>
-#include <QPair>
 #include <QMutex>
 #include <QString>
-#include <QDomDocument>
 
 class QByteArray;
 
@@ -98,12 +95,8 @@ H_DISABLE_COPY(HServicePrivate)
 
 public: // attributes
 
-    HServiceId      m_serviceId;
-    HResourceType   m_serviceType;
-    QUrl            m_scpdUrl;
-    QUrl            m_controlUrl;
-    QUrl            m_eventSubUrl;
-    QDomDocument    m_serviceDescriptor;
+    HServiceInfo m_serviceInfo;
+    QString m_serviceDescription;
 
     QList<HActionController*> m_actions;
     QHash<QString, HActionController*> m_actionsAsMap;
@@ -119,7 +112,7 @@ public: // attributes
 
     QMutex m_updateMutex;
 
-    QByteArray m_loggingIdentifier;    
+    QByteArray m_loggingIdentifier;
 
 public: // methods
 

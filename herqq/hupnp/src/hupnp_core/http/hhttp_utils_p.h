@@ -75,7 +75,11 @@ public:
     static QString callbackAsStr(const QList<QUrl>& callbacks);
 
     // the date format used in UPnP
-    static QString rfc1123DateFormat();
+    inline static QString rfc1123DateFormat()
+    {
+        QString retVal = "ddd, dd MMM yyyy HH:mm:ss";
+        return retVal;
+    }
 
     //
     // reads byte by byte to the target bytearray until \r\n\r\n is found,

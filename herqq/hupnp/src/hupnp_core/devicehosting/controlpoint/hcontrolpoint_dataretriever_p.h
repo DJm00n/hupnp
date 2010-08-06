@@ -36,7 +36,6 @@
 
 class QUrl;
 class QImage;
-class QDomDocument;
 
 namespace Herqq
 {
@@ -66,14 +65,13 @@ public:
 
     HDataRetriever(const QByteArray& loggingId, HHttpHandler&);
 
-    QDomDocument retrieveServiceDescription(
+    QString retrieveServiceDescription(
         const QUrl& deviceLocation, const QUrl& scpdUrl);
 
     QImage retrieveIcon(
         const QUrl& deviceLocation, const QUrl& iconUrl);
 
-    QDomDocument retrieveDeviceDescription(
-        const QUrl& deviceLocation);
+    QString retrieveDeviceDescription(const QUrl& deviceLocation);
 };
 
 }

@@ -26,7 +26,9 @@
 #include <HAction>
 #include <HService>
 #include <HServiceId>
+#include <HActionInfo>
 #include <HDeviceInfo>
+#include <HServiceInfo>
 #include <HResourceType>
 #include <HStateVariable>
 #include <HActionArguments>
@@ -54,25 +56,25 @@ void DataItemDisplay::NavItemVisitor::visit(ActionItem* item)
     HAction* action = item->action();
 
     m_owner->m_rootDeviceUdn = action->parentService()->parentDevice()->
-        rootDevice()->deviceInfo().udn();
+        rootDevice()->info().udn();
 
     m_owner->m_modelData.clear();
     m_owner->reset();
 
     m_owner->m_modelData.push_back(qMakePair(
-        QString("Name"), action->name()));
+        QString("Name"), action->info().name()));
 
     m_owner->m_modelData.push_back(qMakePair(
         QString("Number of input arguments"),
-        QString::number(action->inputArguments().size())));
+        QString::number(action->info().inputArguments().size())));
 
     m_owner->m_modelData.push_back(qMakePair(
         QString("Number of output arguments"),
-        QString::number(action->outputArguments().size())));
+        QString::number(action->info().outputArguments().size())));
 
     m_owner->m_modelData.push_back(qMakePair(
         QString("Return argument name"),
-        action->returnArgumentName()));
+        action->info().returnArgumentName()));
 
     m_owner->reset();
 }
@@ -85,22 +87,22 @@ void DataItemDisplay::NavItemVisitor::visit(ServiceItem* item)
     HService* service = item->service();
 
     m_owner->m_rootDeviceUdn = service->parentDevice()->
-        rootDevice()->deviceInfo().udn();
+        rootDevice()->info().udn();
 
     m_owner->m_modelData.push_back(qMakePair(
-        QString("Service ID"), service->serviceId().toString()));
+        QString("Service ID"), service->info().serviceId().toString()));
 
     m_owner->m_modelData.push_back(qMakePair(
-        QString("Service type"), service->serviceType().toString()));
+        QString("Service type"), service->info().serviceType().toString()));
 
     m_owner->m_modelData.push_back(qMakePair(
-        QString("SCPD URL"), service->scpdUrl().toString()));
+        QString("SCPD URL"), service->info().scpdUrl().toString()));
 
     m_owner->m_modelData.push_back(qMakePair(
-        QString("Event Sub URL"), service->eventSubUrl().toString()));
+        QString("Event Sub URL"), service->info().eventSubUrl().toString()));
 
     m_owner->m_modelData.push_back(qMakePair(
-        QString("Control URL"), service->controlUrl().toString()));
+        QString("Control URL"), service->info().controlUrl().toString()));
 
     m_owner->reset();
 }
@@ -112,9 +114,9 @@ void DataItemDisplay::NavItemVisitor::visit(DeviceItem* item)
     m_owner->m_modelData.clear();
 
     HDevice* device = item->device();
-    HDeviceInfo deviceInfo = device->deviceInfo();
+    HDeviceInfo deviceInfo = device->info();
 
-    m_owner->m_rootDeviceUdn = device->rootDevice()->deviceInfo().udn();
+    m_owner->m_rootDeviceUdn = device->rootDevice()->info().udn();
 
     m_owner->m_modelData.push_back(
         qMakePair(QString("Friendly name"), deviceInfo.friendlyName()));
@@ -152,31 +154,31 @@ void DataItemDisplay::NavItemVisitor::visit(StateVariableItem* item)
     HStateVariable* stateVar = item->stateVariable();
 
     m_owner->m_rootDeviceUdn = stateVar->parentService()->parentDevice()->
-        rootDevice()->deviceInfo().udn();
+        rootDevice()->info().udn();
 
     m_owner->m_modelData.push_back(
-        qMakePair(QString("Name"), stateVar->name()));
+        qMakePair(QString("Name"), stateVar->info().name()));
 
     m_owner->m_modelData.push_back(
-        qMakePair(QString("Minimum value"), stateVar->minimumValue().toString()));
+        qMakePair(QString("Minimum value"), stateVar->info().minimumValue().toString()));
 
     m_owner->m_modelData.push_back(
-        qMakePair(QString("Maximum value"), stateVar->maximumValue().toString()));
+        qMakePair(QString("Maximum value"), stateVar->info().maximumValue().toString()));
 
     m_owner->m_modelData.push_back(
-        qMakePair(QString("Step value"), stateVar->stepValue().toString()));
+        qMakePair(QString("Step value"), stateVar->info().stepValue().toString()));
 
     m_owner->m_modelData.push_back(
-        qMakePair(QString("Default value"), stateVar->defaultValue().toString()));
+        qMakePair(QString("Default value"), stateVar->info().defaultValue().toString()));
 
     QString boolStr =
-        stateVar->eventingType() != HStateVariable::NoEvents ? "Yes" : "No";
+        stateVar->info().eventingType() != HStateVariableInfo::NoEvents ? "Yes" : "No";
 
     m_owner->m_modelData.push_back(
         qMakePair(QString("Is evented"), boolStr));
 
     m_owner->m_modelData.push_back(
-        qMakePair(QString("Allowed values"), stateVar->allowedValueList().join(";")));
+        qMakePair(QString("Allowed values"), stateVar->info().allowedValueList().join(";")));
 
     m_owner->reset();
 }

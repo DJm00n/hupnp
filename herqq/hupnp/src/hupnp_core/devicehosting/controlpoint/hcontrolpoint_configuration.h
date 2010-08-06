@@ -46,11 +46,32 @@ class HControlPointConfigurationPrivate;
 /*!
  * Class for specifying initialization information to HControlPoint instances.
  *
+ * This class is used to pass initialization information for HControlPoint
+ * instances. The use of this is optional and an HControlPoint instance is perfectly
+ * functional with the default configuration.
+ *
+ * However, you can configure an HControlPoint in following ways:
+ * - Define whether an HControlPoint should subscribe to events when a
+ * device has been discovered by using setSubscribeToEvents().
+ * By default an HControlPoint instances subscribes to all events.
+ * - Set the timeout request for event subscriptions with setDesiredSubscriptionTimeout().
+ * The default is 30 minutes.
+ * - Specify whether an HControlPoint should perform initial discovery upon
+ * startup using setAutoDiscovery(). The default is yes.
+ * - Specify the network addresses an HControlPoint should use in its operations
+ * with setNetworkAddressesToUse().
+ * The default is the first found interface that is up. Non-loopback interfaces
+ * have preference, but if none are found the loopback is used. However, in this
+ * case UDP multicast is not available.
+ * - Specify an object creator that can be used to create custom HDeviceProxy
+ * and HServiceProxy objects during run-time when new devices are discovered
+ * with setDeviceCreator().
+ *
  * \headerfile hcontrolpoint_configuration.h HControlPointConfiguration
  *
  * \ingroup devicehosting
  *
- * \sa HControlPoint::init()
+ * \sa HControlPoint
  *
  * \remarks this class is not thread-safe.
  */
@@ -59,16 +80,55 @@ class H_UPNP_CORE_EXPORT HControlPointConfiguration
 H_DISABLE_COPY(HControlPointConfiguration)
 friend class HControlPoint;
 
-private:
+protected:
 
     /*!
-     * Creates a clone of the object.
+     * Clones the contents of this to the \c target object.
      *
-     * \remarks you should override this in derived classes. Failing
-     * to override this will result in invalid clones being made of derived classes
-     * that introduce new member variables.
+     * Every derived class should override this method, especially if new
+     * member variables have been introduced. Further, the implementation
+     * should be something along these lines:
+     *
+     * \code
+     * void MyControlPointConfiguration::doClone(HControlPointConfiguration* target) const
+     * {
+     *    MyControlPointConfiguration* myConf =
+     *        dynamic_cast<MyControlPointConfiguration*>(target);
+     *    if (!target)
+     *    {
+     *        return;
+     *    }
+     *
+     *    BaseClassMyControlPointConfiguration::doClone(myConf);
+     *
+     *    // copy the variables introduced in *this* MyControlPointConfiguration
+     *    // instance to "myConf".
+     * }
+     * \endcode
+     *
+     * \param target specifies the target object to which the contents of
+     * \c this instance are cloned.
      */
-    virtual HControlPointConfiguration* doClone() const;
+    virtual void doClone(HControlPointConfiguration* target) const;
+
+    /*!
+     * Creates a new instance.
+     *
+     * This method is used as part of object cloning. Because of that, it is
+     * important that every descendant class overrides this method:
+     *
+     * \code
+     * HControlPointConfiguration* MyControlPointConfiguration::newInstance() const
+     * {
+     *     return new MyControlPointConfiguration();
+     * }
+     * \endcode
+     *
+     * \remarks
+     * \li the object has to be heap-allocated and
+     * \li the ownership of the object is passed to the caller.
+     */
+    virtual HControlPointConfiguration* newInstance() const;
 
 protected:
 
@@ -248,11 +308,12 @@ public:
      * \param deviceCreator specifies the callable entity that is used to
      * create HDeviceProxy instances.
      *
-     * \remarks the objects your device creator creates will be deallocated by
+     * \remarks
+     * \li The objects your device creator creates will be deallocated by
      * the HUPnP library when the objects are no longer needed.
-     * Do NOT store them or delete them manually.
+     * Do \b not delete them manually.
      *
-     * \remarks setting a device creator is optional and unless you really want
+     * \li Setting a device creator is optional and unless you really want
      * to define custom HDeviceProxy types to be used, you should not set this
      * at all.
      */

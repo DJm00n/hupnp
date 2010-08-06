@@ -29,10 +29,14 @@
 #include "../../datatypes/hdatatype_mappings_p.h"
 
 #include "../../devicemodel/haction_p.h"
+#include "../../devicemodel/hservice_p.h"
 #include "../../devicemodel/hactionarguments.h"
 
 #include "../../../utils/hlogger_p.h"
 
+#include <QUrl>
+#include <QPair>
+#include <QImage>
 #include <QHttpRequestHeader>
 
 namespace Herqq
@@ -43,7 +47,7 @@ namespace Upnp
 
 namespace
 {
-inline QUuid extractUdn(const QUrl& arg)
+QUuid extractUdn(const QUrl& arg)
 {
     QString path = extractRequestPart(arg);
 
@@ -56,7 +60,7 @@ inline QUuid extractUdn(const QUrl& arg)
     return udn;
 }
 
-inline QString extractRequestExludingUdn(const QUrl& arg)
+QString extractRequestExludingUdn(const QUrl& arg)
 {
     QString pathToSearch = extractRequestPart(arg).section(
         '/', 2, -1, QString::SectionIncludeLeadingSep);
@@ -69,28 +73,44 @@ inline QString extractRequestExludingUdn(const QUrl& arg)
  * DeviceHostHttpServer
  ******************************************************************************/
 DeviceHostHttpServer::DeviceHostHttpServer(
-    const QByteArray& loggingId, DeviceStorage& ds, EventNotifier& en,
+    const QByteArray& loggingId,
+    HDeviceHostConfiguration::ThreadingModel threadingModel,
+    DeviceStorage& ds,
+    EventNotifier& en,
     QObject* parent) :
         HHttpServer(loggingId, parent),
-            m_deviceStorage(ds), m_eventNotifier(en)
+            m_deviceStorage(ds), m_eventNotifier(en),
+            m_threadingModel(threadingModel)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     bool ok = connect(
         this,
         SIGNAL(processSubscription_sig(
-            const SubscribeRequest*, HService*, HSid*, StatusCode*)),
+                const SubscribeRequest*, HService*, HSid*, StatusCode*,
+                HRunnable*)),
         this,
         SLOT(processSubscription_slot(
-            const SubscribeRequest*, HService*, HSid*, StatusCode*)),
-        Qt::BlockingQueuedConnection);
+                const SubscribeRequest*, HService*, HSid*, StatusCode*,
+                HRunnable*)));
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 
     ok = connect(
-        this, SIGNAL(removeSubscriber_sig(const UnsubscribeRequest*, bool*)),
-        this, SLOT(removeSubscriber_slot(const UnsubscribeRequest*, bool*)),
-        Qt::BlockingQueuedConnection);
+        this,
+        SIGNAL(removeSubscriber_sig(
+            const UnsubscribeRequest*, bool*, HRunnable*)),
+        this,
+        SLOT(removeSubscriber_slot(
+            const UnsubscribeRequest*, bool*, HRunnable*)));
+
+    Q_ASSERT(ok);
+
+    ok = connect(
+        this,
+        SIGNAL(invokeFromMainThread(HActionInvocationInfo*, HRunnable*)),
+        this,
+        SLOT(invokeFromMainThread_slot(HActionInvocationInfo*, HRunnable*)));
 
     Q_ASSERT(ok);
 }
@@ -101,12 +121,15 @@ DeviceHostHttpServer::~DeviceHostHttpServer()
 }
 
 void DeviceHostHttpServer::processSubscription_slot(
-    const SubscribeRequest* req, HService* service, HSid* sid, StatusCode* sc)
+    const SubscribeRequest* req, HService* service, HSid* sid, StatusCode* sc,
+    HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     Q_ASSERT(req);
     Q_ASSERT(sid);
     Q_ASSERT(sc);
+    Q_ASSERT(runner);
 
     // The UDA v1.1 does not specify what to do when a subscription is received
     // to a service that is not evented. A "safe" route was taken here and
@@ -121,30 +144,39 @@ void DeviceHostHttpServer::processSubscription_slot(
     {
         *sc = m_eventNotifier.addSubscriber(service, *req, sid);
     }
+
+    runner->signalTaskComplete();
 }
 
 void DeviceHostHttpServer::removeSubscriber_slot(
-    const UnsubscribeRequest* req, bool* ok)
+    const UnsubscribeRequest* req, bool* ok, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(req);
     Q_ASSERT(ok);
+    Q_ASSERT(runner);
 
-    try
-    {
-        *ok = m_eventNotifier.removeSubscriber(*req);
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(ex.reason());
-    }
+    *ok = m_eventNotifier.removeSubscriber(*req);
+
+    runner->signalTaskComplete();
+}
+
+void DeviceHostHttpServer::invokeFromMainThread_slot(
+    HActionInvocationInfo* info, HRunnable* runner)
+{
+    Q_ASSERT(info);
+    Q_ASSERT(runner);
+
+    info->m_retVal = info->m_action->invoke(*info->m_inArgs, info->m_outArgs);
+    runner->signalTaskComplete();
 }
 
 void DeviceHostHttpServer::incomingSubscriptionRequest(
-    MessagingInfo& mi, const SubscribeRequest& sreq)
+    MessagingInfo& mi, const SubscribeRequest& sreq, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(runner);
 
     HLOG_DBG("Subscription received.");
 
@@ -191,17 +223,22 @@ void DeviceHostHttpServer::incomingSubscriptionRequest(
     }
 
     // have to perform a switch to the right thread so that an instance of
-    // UnicastRemoteClient can be created into the thread where every other
-    // HUpnp object resides. moveToThread() could be used as well, but the
-    // accompanying setParent() will fail, since Qt cannot send
-    // events to the "old" parent, because it lives in a different thread.
+    // ServiceEventSubscriber can be created into the thread where every other
+    // HUpnp object resides. moveToThread() cannot be used, as the
+    // accompanying setParent() will fail. This is because Qt cannot send
+    // events to the "old" parent living in a different thread.
     HSid sid;
     StatusCode sc;
-    emit processSubscription_sig(&sreq, service->m_service, &sid, &sc);
-    // this is connected using BlockingQueuedConnection
-    // to the local slot that does the processing (in the right thread)
+    emit processSubscription_sig(
+        &sreq, service->m_service, &sid, &sc, runner);
 
-    if (sc != Ok)
+    if (runner->wait() == HRunnable::Exiting)
+    {
+        mi.setKeepAlive(false);
+        m_httpHandler.send(mi, InternalServerError);
+        return;
+    }
+    else if (sc != Ok)
     {
         mi.setKeepAlive(false);
         m_httpHandler.send(mi, sc);
@@ -243,14 +280,22 @@ void DeviceHostHttpServer::incomingSubscriptionRequest(
 }
 
 void DeviceHostHttpServer::incomingUnsubscriptionRequest(
-    MessagingInfo& mi, const UnsubscribeRequest& usreq)
+    MessagingInfo& mi, const UnsubscribeRequest& usreq, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(runner);
 
     HLOG_DBG("Unsubscription received.");
 
     bool ok = false;
-    emit removeSubscriber_sig(&usreq, &ok);
+    emit removeSubscriber_sig(&usreq, &ok, runner);
+
+    if (runner->wait() == HRunnable::Exiting)
+    {
+        mi.setKeepAlive(false);
+        m_httpHandler.send(mi, InternalServerError);
+        return;
+    }
 
     mi.setKeepAlive(false);
     if (ok)
@@ -264,9 +309,11 @@ void DeviceHostHttpServer::incomingUnsubscriptionRequest(
 }
 
 void DeviceHostHttpServer::incomingControlRequest(
-    MessagingInfo& mi, const InvokeActionRequest& invokeActionRequest)
+    MessagingInfo& mi, const InvokeActionRequest& invokeActionRequest,
+    HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(runner);
 
     HLOG_DBG(QString("Control message to [%1] received.").arg(
         invokeActionRequest.soapAction()));
@@ -316,7 +363,6 @@ void DeviceHostHttpServer::incomingControlRequest(
     }
 
     const QtSoapMessage* soapMsg = invokeActionRequest.soapMsg();
-
     const QtSoapType& method = soapMsg->method();
     if (!method.isValid())
     {
@@ -327,92 +373,96 @@ void DeviceHostHttpServer::incomingControlRequest(
         return;
     }
 
-    try
+    HActionController* action = service->actionByName(method.name().name());
+
+    if (!action)
     {
-        HActionController* action = service->actionByName(method.name().name());
+        HLOG_WARN(QString("The service has no action named [%1].").arg(
+            method.name().name()));
 
-        if (!action)
+        mi.setKeepAlive(false);
+        m_httpHandler.sendActionFailed(
+            mi, HAction::InvalidArgs, soapMsg->toXmlString());
+        // TODO
+        return;
+    }
+
+    HActionArguments iargs = action->m_action->info().inputArguments();
+    HActionArguments::iterator it = iargs.begin();
+    for(; it != iargs.end(); ++it)
+    {
+        HActionArgument* iarg = (*it);
+
+        const QtSoapType& arg = method[iarg->name()];
+        if (!arg.isValid())
         {
-            HLOG_WARN(QString("The service has no action named [%1].").arg(
-                method.name().name()));
-
             mi.setKeepAlive(false);
             m_httpHandler.sendActionFailed(
-                mi, HAction::InvalidArgs(), soapMsg->toXmlString());
+                mi, HAction::InvalidArgs, soapMsg->toXmlString());
             // TODO
             return;
         }
 
-        HActionArguments iargs = action->m_action->inputArguments();
-        HActionArguments::iterator it = iargs.begin();
-        for(; it != iargs.end(); ++it)
-        {
-            HActionArgument* iarg = (*it);
-
-            const QtSoapType& arg = method[iarg->name()];
-            if (!arg.isValid())
-            {
-                mi.setKeepAlive(false);
-                m_httpHandler.sendActionFailed(
-                    mi, HAction::InvalidArgs(), soapMsg->toXmlString());
-                // TODO
-                return;
-            }
-
-            if (!iarg->setValue(
-                convertToRightVariantType(arg.value().toString(), iarg->dataType())))
-            {
-                mi.setKeepAlive(false);
-                m_httpHandler.sendActionFailed(
-                    mi, HAction::InvalidArgs(), soapMsg->toXmlString());
-                // TODO
-                return;
-            }
-        }
-
-        HActionArguments outArgs = action->m_action->outputArguments();
-        qint32 retVal = action->invoke(iargs, &outArgs);
-        if (retVal != HAction::Success())
+        if (!iarg->setValue(
+            convertToRightVariantType(arg.value().toString(), iarg->dataType())))
         {
             mi.setKeepAlive(false);
-            m_httpHandler.sendActionFailed(mi, retVal);
+            m_httpHandler.sendActionFailed(
+                mi, HAction::InvalidArgs, soapMsg->toXmlString());
+            // TODO
             return;
         }
+    }
 
-        QtSoapNamespaces::instance().registerNamespace(
-            "u", service->m_service->serviceType().toString());
+    qint32 retVal = 0;
+    HActionArguments outArgs = action->m_action->info().outputArguments();
+    if (m_threadingModel == HDeviceHostConfiguration::MultiThreaded)
+    {
+        retVal = action->invoke(iargs, &outArgs);
+    }
+    else
+    {
+        HActionInvocationInfo invocationInfo(
+            action, &iargs, &outArgs);
 
-        QtSoapMessage soapResponse;
-        soapResponse.setMethod(QtSoapQName(
-            QString("%1%2").arg(action->m_action->name(), "Response"),
-            service->m_service->serviceType().toString()));
-
-        foreach(const HActionArgument* oarg, outArgs)
+        emit invokeFromMainThread(&invocationInfo, runner);
+        if (runner->wait() == HRunnable::Exiting)
         {
-            QtSoapType* soapArg =
-                new SoapType(oarg->name(), oarg->dataType(), oarg->value());
-
-            soapResponse.addMethodArgument(soapArg);
+            mi.setKeepAlive(false);
+            m_httpHandler.send(mi, InternalServerError);
+            return;
         }
-
-        m_httpHandler.send(mi, soapResponse.toXmlString().toUtf8(), Ok);
-
-        HLOG_DBG("Control message successfully handled.");
+        retVal = invocationInfo.m_retVal;
     }
-    catch(HException& ex)
+    if (retVal != HAction::Success)
     {
         mi.setKeepAlive(false);
-        m_httpHandler.sendActionFailed(mi, 501, ex.reason());
+        m_httpHandler.sendActionFailed(mi, retVal);
+        return;
     }
-    catch(...)
+
+    QtSoapNamespaces::instance().registerNamespace(
+        "u", service->m_service->info().serviceType().toString());
+
+    QtSoapMessage soapResponse;
+    soapResponse.setMethod(QtSoapQName(
+        QString("%1%2").arg(action->m_action->info().name(), "Response"),
+        service->m_service->info().serviceType().toString()));
+
+    foreach(const HActionArgument* oarg, outArgs)
     {
-        mi.setKeepAlive(false);
-        m_httpHandler.sendActionFailed(mi, 501);
+        QtSoapType* soapArg =
+            new SoapType(oarg->name(), oarg->dataType(), oarg->value());
+
+        soapResponse.addMethodArgument(soapArg);
     }
+
+    m_httpHandler.send(mi, soapResponse.toXmlString().toUtf8(), Ok);
+    HLOG_DBG("Control message successfully handled.");
 }
 
 void DeviceHostHttpServer::incomingUnknownHeadRequest(
-    MessagingInfo& mi, const QHttpRequestHeader&)
+    MessagingInfo& mi, const QHttpRequestHeader&, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     // TODO
@@ -422,7 +472,7 @@ void DeviceHostHttpServer::incomingUnknownHeadRequest(
 }
 
 void DeviceHostHttpServer::incomingUnknownGetRequest(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr)
+    MessagingInfo& mi, const QHttpRequestHeader& requestHdr, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -450,12 +500,12 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
                 "Sending service description to [%1] as requested.").arg(peer));
 
             m_httpHandler.send(
-                mi, service->m_service->serviceDescription().toUtf8(), Ok);
+                mi, service->m_service->description().toUtf8(), Ok);
 
             return;
         }
 
-        HLOG_DBG(QString("Responding NOT_FOUND [%1] to [%2].").arg(
+        HLOG_WARN(QString("Responding NOT_FOUND [%1] to [%2].").arg(
             requestHdr.path(), peerAsStr(mi.socket())));
 
         m_httpHandler.send(mi, NotFound);
@@ -467,7 +517,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 
     if (!device)
     {
-        HLOG_DBG(QString("Responding NOT_FOUND [%1] to [%2].").arg(
+        HLOG_WARN(QString("Responding NOT_FOUND [%1] to [%2].").arg(
             requestHdr.path(), peerAsStr(mi.socket())));
 
         m_httpHandler.send(mi, NotFound);
@@ -480,7 +530,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
             "Sending device description to [%1] as requested.").arg(peer));
 
         m_httpHandler.send(
-            mi, device->m_device->deviceDescription().toUtf8(), Ok);
+            mi, device->m_device->description().toUtf8(), Ok);
 
         return;
     }
@@ -497,7 +547,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
             "Sending service description to [%1] as requested.").arg(peer));
 
         m_httpHandler.send(
-            mi, service->m_service->serviceDescription().toUtf8(), Ok);
+            mi, service->m_service->description().toUtf8(), Ok);
 
         return;
     }
@@ -527,7 +577,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
         return;
     }
 
-    HLOG_DBG(QString("Responding NOT_FOUND [%1] to [%2].").arg(
+    HLOG_WARN(QString("Responding NOT_FOUND [%1] to [%2].").arg(
         requestHdr.path(), peerAsStr(mi.socket())));
 
     m_httpHandler.send(mi, NotFound);
@@ -535,7 +585,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 
 void DeviceHostHttpServer::incomingUnknownPostRequest(
     MessagingInfo& mi, const QHttpRequestHeader& /*requestHdr*/,
-    const QByteArray& /*body*/)
+    const QByteArray& /*body*/, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 

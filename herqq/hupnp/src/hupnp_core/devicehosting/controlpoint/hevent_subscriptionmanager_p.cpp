@@ -20,10 +20,11 @@
  */
 
 #include "hevent_subscriptionmanager_p.h"
-#include "hcontrolpoint_p.h"
 #include "hcontrolpoint_configuration.h"
+#include "hcontrolpoint_p.h"
 
 #include "../../devicemodel/hservice_p.h"
+#include "../../dataelements/hserviceid.h"
 #include "../../dataelements/hdeviceinfo.h"
 
 #include "../../../utils/hlogger_p.h"
@@ -198,14 +199,14 @@ HEventSubscriptionManager::SubscriptionResult
     {
         HLOG_WARN(QString(
             "Cannot subscribe to a service [%1] that is not evented").arg(
-                service->serviceId().toString()));
+                service->info().serviceId().toString()));
 
         return Sub_Failed_NotEvented;
     }
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
-    HUdn deviceUdn = service->parentDevice()->deviceInfo().udn();
+    HUdn deviceUdn = service->parentDevice()->info().udn();
 
     QList<HEventSubscription*>* subs = m_subscriptionsByUdn.value(deviceUdn);
 
@@ -225,7 +226,7 @@ HEventSubscriptionManager::SubscriptionResult
                 if (sub->subscriptionStatus() == HEventSubscription::Status_Subscribed)
                 {
                     HLOG_WARN(QString("Subscription to service [%1] exists").arg(
-                        service->serviceId().toString()));
+                        service->info().serviceId().toString()));
                     return Sub_AlreadySubscribed;
                 }
                 else
@@ -260,7 +261,7 @@ HEventSubscription::SubscriptionStatus
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
 
-    HUdn udn = service->parentDevice()->deviceInfo().udn();
+    HUdn udn = service->parentDevice()->info().udn();
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
@@ -293,7 +294,7 @@ bool HEventSubscriptionManager::cancel(
     Q_ASSERT(device);
     Q_ASSERT(thread() == QThread::currentThread());
 
-    HUdn udn = device->deviceInfo().udn();
+    HUdn udn = device->info().udn();
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
@@ -340,7 +341,7 @@ bool HEventSubscriptionManager::remove(HDeviceProxy* device, bool recursive)
     Q_ASSERT(device);
     Q_ASSERT(thread() == QThread::currentThread());
 
-    HUdn udn = device->deviceInfo().udn();
+    HUdn udn = device->info().udn();
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
@@ -382,7 +383,7 @@ bool HEventSubscriptionManager::cancel(HServiceProxy* service, bool unsubscribe)
 
     HDeviceProxy* parentDevice = service->parentProxyDevice();
 
-    HUdn udn = parentDevice->deviceInfo().udn();
+    HUdn udn = parentDevice->info().udn();
 
     QMutexLocker locker(&m_subscribtionsMutex);
 
@@ -426,7 +427,7 @@ bool HEventSubscriptionManager::remove(HServiceProxy* service)
 
     HDeviceProxy* parentDevice = service->parentProxyDevice();
 
-    HUdn udn = parentDevice->deviceInfo().udn();
+    HUdn udn = parentDevice->info().udn();
 
     QMutexLocker locker(&m_subscribtionsMutex);
 

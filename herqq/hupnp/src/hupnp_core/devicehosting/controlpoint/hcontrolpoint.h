@@ -73,7 +73,6 @@ class HControlPointConfiguration;
  * // myclass.h
 
  * #include <HControlPoint>
- * #include <QObject>
  *
  * class MyClass :
  *     public QObject
@@ -133,7 +132,7 @@ class HControlPointConfiguration;
  * {
  *     // device discovered, should something be done with it? Perhaps we want
  *     // to learn something from it:
- *     Herqq::Upnp::HDeviceInfo info = newDevice->deviceInfo();
+ *     Herqq::Upnp::HDeviceInfo info = newDevice->info();
  *     // do something with the info object
  * }
  *
@@ -171,7 +170,7 @@ class HControlPointConfiguration;
  *
  * \warning see notes about object deletion in ~HControlPoint().
  *
- * \sa HDeviceProxy, HDeviceProxyList, devicemodel
+ * \sa HDeviceProxy, HDeviceProxies, devicemodel
  */
 class H_UPNP_CORE_EXPORT HControlPoint :
     public QObject
@@ -824,9 +823,10 @@ public:
      * default is 1.
      *
      * \remarks
-     * \li as a result of this call there may be any number of rootDeviceOnline()
+     * \li This method returns immediately.
+     * \li As a result of this call there may be any number of rootDeviceOnline()
      * signals emitted as a consequence of newly found devices.
-     * \li the call will not affect the expiration of existing devices.
+     * \li The call will not affect the expiration of existing devices.
      * More specifically, any device that does not respond
      * to the scan will not be considered as expired and no rootDeviceOffline()
      * signals will be sent consequently.
@@ -853,9 +853,10 @@ public:
      * default is 1.
      *
      * \remarks
-     * \li as a result of this call there may be any number of rootDeviceOnline()
+     * \li This method returns immediately.
+     * \li As a result of this call there may be any number of rootDeviceOnline()
      * signals emitted as a consequence of newly found devices.
-     * \li the call will not affect the expiration of existing devices.
+     * \li The call will not affect the expiration of existing devices.
      * More specifically, any device that does not respond
      * to the scan will not be considered as expired and no rootDeviceOffline()
      * signals will be sent consequently.

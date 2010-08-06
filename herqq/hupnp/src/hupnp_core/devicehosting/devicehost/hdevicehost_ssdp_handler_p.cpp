@@ -30,6 +30,8 @@
 #include "../../dataelements/hdiscoverytype.h"
 #include "../../dataelements/hproduct_tokens.h"
 
+#include "../../devicemodel/hservice_p.h"
+
 #include "../../../utils/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
 
@@ -172,7 +174,7 @@ bool DeviceHostSsdpHandler::processSearchRequest_deviceType(
             continue;
         }
 
-        st.setUdn(device->m_device->deviceInfo().udn());
+        st.setUdn(device->m_device->info().udn());
 
         responses->push_back(
             HDiscoveryResponse(
@@ -227,7 +229,7 @@ bool DeviceHostSsdpHandler::processSearchRequest_serviceType(
             continue;
         }
 
-        HDeviceInfo deviceInfo = device->deviceInfo();
+        HDeviceInfo deviceInfo = device->info();
 
         const HDeviceController* dc =
             m_deviceStorage.searchDeviceByUdn(deviceInfo.udn());
@@ -257,7 +259,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     Q_ASSERT(device);
 
-    HDeviceInfo deviceInfo = device->m_device->deviceInfo();
+    HDeviceInfo deviceInfo = device->m_device->info();
     HProductTokens pt = HSysInfo::instance().herqqProductTokens();
     HDiscoveryType usn(deviceInfo.udn());
     const HDeviceStatus* deviceStatus = device->deviceStatus();
@@ -283,7 +285,7 @@ void DeviceHostSsdpHandler::processSearchRequest(
     const QList<HServiceController*>* services = device->services();
     foreach(const HServiceController* service, *services)
     {
-        usn.setResourceType(service->m_service->serviceType());
+        usn.setResourceType(service->m_service->info().serviceType());
 
         responses->push_back(
             HDiscoveryResponse(
@@ -327,7 +329,7 @@ bool DeviceHostSsdpHandler::processSearchRequest_AllDevices(
             continue;
         }
 
-        HDiscoveryType usn(rootDevice->m_device->deviceInfo().udn(), true);
+        HDiscoveryType usn(rootDevice->m_device->info().udn(), true);
 
         responses->push_back(
             HDiscoveryResponse(
@@ -392,7 +394,7 @@ bool DeviceHostSsdpHandler::processSearchRequest_RootDevice(
         }
 
         HDiscoveryType usn(
-            rootDevice->m_device->deviceInfo().udn(), true);
+            rootDevice->m_device->info().udn(), true);
 
         responses->push_back(
             HDiscoveryResponse(

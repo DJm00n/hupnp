@@ -20,11 +20,9 @@
  */
 
 #include "hdevicebuild_p.h"
-#include "hevent_subscription_p.h"
 #include "hcontrolpoint_p.h"
 
 #include "../../devicemodel/hdevice.h"
-#include "../../devicemodel/hservice_p.h"
 #include "../../../utils/hlogger_p.h"
 
 namespace Herqq
@@ -38,7 +36,7 @@ namespace Upnp
  ******************************************************************************/
 DeviceBuildTask::~DeviceBuildTask()
 {
-   HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 
     if (m_createdDevice.data())
     {
@@ -57,32 +55,31 @@ void DeviceBuildTask::run()
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 
-    try
+    QString err;
+    QScopedPointer<HDeviceController> device;
+    device.reset(
+        m_owner->buildDevice(m_locations[0], m_cacheControlMaxAge, &err));
+    // the returned device is a fully built root device containing every
+    // embedded device and service advertised in the device and service descriptions
+    // otherwise, the creation failed and an exception was thrown
+    if (!device.data())
     {
-        QScopedPointer<HDeviceController> device(
-            m_owner->buildDevice(m_locations[0], m_cacheControlMaxAge));
-
-        // the returned device is a fully built root device containing every
-        // embedded device and service advertised in the device and service descriptions
-        // otherwise, the creation failed and an exception was thrown
-
-        device->moveToThread(m_owner->thread());
-        device->m_device->moveToThread(m_owner->thread());
-
-        m_completionValue = 0;
-        m_createdDevice.swap(device);
-
-        emit done(m_udn);
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(QString("Couldn't create a device: %1").arg(ex.reason()));
+        HLOG_WARN(QString("Couldn't create a device: %1").arg(err));
 
         m_completionValue = -1;
-        m_errorString = ex.reason();
+        m_errorString = err;
 
         emit done(m_udn);
+        return;
     }
+
+    device->moveToThread(m_owner->thread());
+    device->m_device->moveToThread(m_owner->thread());
+
+    m_completionValue = 0;
+    m_createdDevice.swap(device);
+
+    emit done(m_udn);
 }
 
 /*******************************************************************************

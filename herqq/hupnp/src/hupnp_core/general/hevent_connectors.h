@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UPNP_EVENT_CONNECTORS_H_
-#define UPNP_EVENT_CONNECTORS_H_
+#ifndef HEVENT_CONNECTORS_H_
+#define HEVENT_CONNECTORS_H_
 
 #include "hupnp_fwd.h"
 #include "../../utils/hglobal.h"
@@ -110,4 +110,4 @@ public:
 }
 }
 
-#endif /* UPNP_EVENT_CONNECTORS_H_ */
+#endif /* HEVENT_CONNECTORS_H_ */

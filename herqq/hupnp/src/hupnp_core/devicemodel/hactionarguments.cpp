@@ -22,8 +22,6 @@
 #include "hactionarguments.h"
 #include "hactionarguments_p.h"
 
-#include "hstatevariable.h"
-
 #include <QMetaType>
 
 static bool registerMetaTypes()
@@ -48,34 +46,18 @@ namespace Upnp
  * HActionArgument
  *******************************************************************************/
 HActionArgument::HActionArgument() :
-    m_name(), m_stateVariable(), m_value()
+    m_name(), m_stateVariableInfo(), m_value()
 {
 }
 
-HActionArgument::HActionArgument(const HActionArgument& other) :
-    m_name(other.m_name), m_stateVariable(other.m_stateVariable),
-    m_value(other.m_value)
-{
-}
-
-HActionArgument& HActionArgument::operator=(
-    const HActionArgument& other)
-{
-    m_name = other.m_name;
-    m_stateVariable = other.m_stateVariable;
-    m_value = other.m_value;
-
-    return *this;
-}
-
-HActionArgument::~HActionArgument()
-{
-}
-
-void HActionArgument::init(
-    const QString& name, HStateVariable* stateVariable)
+HActionArgument::HActionArgument(
+    const QString& name, const HStateVariableInfo& stateVariableInfo)
 {
     if (name.isEmpty() || (!name[0].isLetterOrNumber() && name[0] != '_'))
+    {
+        return;
+    }
+    else if (!stateVariableInfo.isValid())
     {
         return;
     }
@@ -91,7 +73,33 @@ void HActionArgument::init(
     }
 
     m_name = name;
-    m_stateVariable = stateVariable;
+    m_value = stateVariableInfo.defaultValue();
+    m_stateVariableInfo = stateVariableInfo;
+}
+
+HActionArgument::HActionArgument(const HActionArgument& other) :
+    m_name(), m_stateVariableInfo(), m_value()
+{
+    Q_ASSERT(&other != this);
+    m_name = other.m_name;
+    m_value = other.m_value;
+    m_stateVariableInfo = other.m_stateVariableInfo;
+}
+
+HActionArgument& HActionArgument::operator=(
+    const HActionArgument& other)
+{
+    Q_ASSERT(&other != this);
+
+    m_name = other.m_name;
+    m_stateVariableInfo = other.m_stateVariableInfo;
+    m_value = other.m_value;
+
+    return *this;
+}
+
+HActionArgument::~HActionArgument()
+{
 }
 
 QString HActionArgument::name() const
@@ -99,21 +107,14 @@ QString HActionArgument::name() const
     return m_name;
 }
 
-HStateVariable* HActionArgument::relatedStateVariable() const
+const HStateVariableInfo& HActionArgument::relatedStateVariable() const
 {
-    return m_stateVariable;
+    return m_stateVariableInfo;
 }
 
 HUpnpDataTypes::DataType HActionArgument::dataType() const
 {
-    if (m_stateVariable)
-    {
-        return m_stateVariable->dataType();
-    }
-    else
-    {
-        return HUpnpDataTypes::Undefined;
-    }
+    return m_stateVariableInfo.dataType();
 }
 
 QVariant HActionArgument::value() const
@@ -124,7 +125,7 @@ QVariant HActionArgument::value() const
 bool HActionArgument::setValue(const QVariant& value)
 {
     QVariant convertedValue;
-    if (isValid() && m_stateVariable->isValidValue(value, &convertedValue))
+    if (isValid() && m_stateVariableInfo.isValidValue(value, &convertedValue))
     {
         m_value = convertedValue;
         return true;
@@ -153,7 +154,76 @@ QString HActionArgument::toString() const
 
 bool HActionArgument::isValidValue(const QVariant& value)
 {
-    return isValid() && m_stateVariable->isValidValue(value);
+    return isValid() && m_stateVariableInfo.isValidValue(value);
+}
+
+bool operator==(const HActionArgument& arg1, const HActionArgument& arg2)
+{
+    return arg1.m_name == arg2.m_name &&
+           arg1.m_value == arg2.m_value &&
+           arg1.m_stateVariableInfo == arg2.m_stateVariableInfo;
+}
+
+bool operator!=(const HActionArgument& arg1, const HActionArgument& arg2)
+{
+    return !(arg1 == arg2);
+}
+
+/*******************************************************************************
+ * HActionArgumentsPrivate
+ *******************************************************************************/
+HActionArgumentsPrivate::HActionArgumentsPrivate()
+{
+}
+
+HActionArgumentsPrivate::HActionArgumentsPrivate(
+    const QVector<HActionArgument*>& args)
+{
+    QVector<HActionArgument*>::const_iterator ci = args.constBegin();
+
+    for (; ci != args.constEnd(); ++ci)
+    {
+        m_argumentsOrdered.push_back(*ci);
+        m_arguments[(*ci)->name()] = *ci;
+    }
+}
+
+HActionArgumentsPrivate::~HActionArgumentsPrivate()
+{
+    qDeleteAll(m_argumentsOrdered);
+}
+
+HActionArgumentsPrivate::HActionArgumentsPrivate(
+    const HActionArgumentsPrivate& other)
+{
+    QVector<HActionArgument*>::const_iterator ci =
+        other.m_argumentsOrdered.constBegin();
+
+    for (; ci != other.m_argumentsOrdered.constEnd(); ++ci)
+    {
+        HActionArgument* arg = new HActionArgument(**ci);
+        m_argumentsOrdered.push_back(arg);
+        m_arguments[arg->name()] = arg;
+    }
+}
+
+HActionArgumentsPrivate& HActionArgumentsPrivate::operator=(
+    const HActionArgumentsPrivate& other)
+{
+    qDeleteAll(m_argumentsOrdered);
+    m_arguments.clear(); m_argumentsOrdered.clear();
+
+    QVector<HActionArgument*>::const_iterator ci =
+        other.m_argumentsOrdered.constBegin();
+
+    for (; ci != other.m_argumentsOrdered.constEnd(); ++ci)
+    {
+        HActionArgument* arg = new HActionArgument(**ci);
+        m_argumentsOrdered.push_back(arg);
+        m_arguments[arg->name()] = arg;
+    }
+
+    return *this;
 }
 
 /*******************************************************************************
@@ -164,15 +234,8 @@ HActionArguments::HActionArguments() :
 {
 }
 
-HActionArguments::HActionArguments(
-    const QVector<HActionArgument*>& args) :
-        h_ptr(new HActionArgumentsPrivate(args))
-{
-}
-
-HActionArguments::HActionArguments(
-    const QHash<QString, HActionArgument*>& args) :
-        h_ptr(new HActionArgumentsPrivate(args))
+HActionArguments::HActionArguments(const QVector<HActionArgument*>& args) :
+    h_ptr(new HActionArgumentsPrivate(args))
 {
 }
 
@@ -182,13 +245,16 @@ HActionArguments::~HActionArguments()
 }
 
 HActionArguments::HActionArguments(const HActionArguments& other) :
-    h_ptr(new HActionArgumentsPrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HActionArgumentsPrivate(*other.h_ptr);
 }
 
-HActionArguments& HActionArguments::operator=(
-    const HActionArguments& other)
+HActionArguments& HActionArguments::operator=(const HActionArguments& other)
 {
+    Q_ASSERT(&other != this);
+
     HActionArgumentsPrivate* newHptr =
         new HActionArgumentsPrivate(*other.h_ptr);
 
@@ -283,6 +349,11 @@ QList<QString> HActionArguments::names() const
     return h_ptr->m_arguments.keys();
 }
 
+bool HActionArguments::isEmpty() const
+{
+    return h_ptr->m_argumentsOrdered.isEmpty();
+}
+
 QString HActionArguments::toString() const
 {
     QString retVal;
@@ -299,6 +370,32 @@ QString HActionArguments::toString() const
 void swap(HActionArguments& a, HActionArguments& b)
 {
     std::swap(a.h_ptr, b.h_ptr);
+}
+
+bool operator==(const HActionArguments& arg1, const HActionArguments& arg2)
+{
+    if (arg1.h_ptr->m_argumentsOrdered.size() !=
+        arg2.h_ptr->m_argumentsOrdered.size())
+    {
+        return false;
+    }
+
+    qint32 size = arg1.h_ptr->m_argumentsOrdered.size();
+    for(qint32 i = 0; i < size; ++i)
+    {
+        if (*arg1.h_ptr->m_argumentsOrdered.at(i) !=
+            *arg2.h_ptr->m_argumentsOrdered.at(i))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool operator!=(const HActionArguments& arg1, const HActionArguments& arg2)
+{
+    return !(arg1 == arg2);
 }
 
 }

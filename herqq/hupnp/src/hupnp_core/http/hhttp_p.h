@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTTP_P_H_
-#define HTTP_P_H_
+#ifndef HHTTP_P_H_
+#define HHTTP_P_H_
 
 //
 // !! Warning !!
@@ -66,4 +66,4 @@ enum StatusCode
 }
 }
 
-#endif /* HTTP_P_H_ */
+#endif /* HHTTP_P_H_ */

@@ -301,13 +301,17 @@ HDiscoveryType::~HDiscoveryType()
 }
 
 HDiscoveryType::HDiscoveryType(const HDiscoveryType& other) :
-    h_ptr(new HDiscoveryTypePrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HDiscoveryTypePrivate(*other.h_ptr);
 }
 
 HDiscoveryType& HDiscoveryType::operator=(
     const HDiscoveryType& other)
 {
+    Q_ASSERT(&other != this);
+
     HDiscoveryTypePrivate* newHptr =
         new HDiscoveryTypePrivate(*other.h_ptr);
 

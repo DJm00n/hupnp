@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTTP_MESSAGINGINFO_P_H_
-#define HTTP_MESSAGINGINFO_P_H_
+#ifndef HHTTP_MESSAGINGINFO_P_H_
+#define HHTTP_MESSAGINGINFO_P_H_
 
 #include "../general/hdefs_p.h"
 
@@ -84,6 +84,8 @@ private:
     QString m_lastErrorDescription;
 
     volatile bool m_autoDelete;
+
+    qint32 m_msecsToWaitOnSend;
 
 public:
 
@@ -159,6 +161,16 @@ public:
         m_lastErrorDescription = errDescr;
     }
 
+    inline void setSendWait(qint32 msecsToWait)
+    {
+        m_msecsToWaitOnSend = msecsToWait;
+    }
+
+    inline qint32 sendWait() const
+    {
+        return m_msecsToWaitOnSend;
+    }
+
     QString lastErrorDescription() const;
 };
 
@@ -166,4 +178,4 @@ public:
 }
 }
 
-#endif /* HTTP_MESSAGINGINFO_P_H_ */
+#endif /* HHTTP_MESSAGINGINFO_P_H_ */

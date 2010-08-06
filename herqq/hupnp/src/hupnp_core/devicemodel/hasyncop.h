@@ -175,7 +175,20 @@ public:
         /*!
          * The wait for the completion of an asynchronous operation was aborted.
          */
-        WaitAborted
+        WaitAborted,
+
+        /*!
+         * The object in question cannot execute the specified asynchronous
+         * operation at the moment.
+         */
+        WaitInvalidObjectState,
+
+        /*!
+         * The asynchronous operation cannot be waited upon. For instance,
+         * this is the case when the operation is launched with
+         * <em>fire and forget</em> semantics (HExecArgs::FireAndForget).
+         */
+        WaitInvalidOperation
     };
 
 private:
@@ -194,8 +207,13 @@ public:
     * \brief Creates a new instance.
     *
     * Creates a new instance.
+    *
+    * \param waitCode specifies the initial wait code for the operation.
+    * The default is HAsyncOp::WaitSuccess.
+    *
+    * \sa isNull()
     */
-   HAsyncOp();
+   explicit HAsyncOp(AsyncWaitCode waitCode = WaitSuccess);
 
    /*!
     * \brief Destroys the instance.
@@ -294,6 +312,13 @@ public:
     * \return universally unique identifier of the asynchronous operation.
     */
    inline QUuid id() const { return m_id; }
+
+   /*!
+    * Indicates whether the object identifies an asynchronous operation.
+    *
+    * \return \e true in case the object identifies an asynchronous operation.
+    */
+   inline bool isNull() const { return m_id.isNull(); }
 };
 
 /*!

@@ -29,17 +29,20 @@ namespace Herqq
  * HException
  *******************************************************************************/
 HException::HException() :
-    std::exception(), m_reason(), m_inner(0)
+    std::exception(),
+        m_reason(), m_inner(0)
 {
     HLOG(H_AT, H_FUN);
 }
 
 HException::HException(const HException& other) :
     std::exception(),
-        m_reason(other.m_reason),
-        m_inner(other.m_inner.isNull() ? 0 : other.m_inner->clone())
+        m_reason(), m_inner(0)
 {
     HLOG(H_AT, H_FUN);
+    Q_ASSERT(&other != this);
+    m_reason = other.m_reason;
+    m_inner.reset(other.m_inner.isNull() ? 0 : other.m_inner->clone());
 }
 
 HException::HException(const QString& reason) :
@@ -49,14 +52,19 @@ HException::HException(const QString& reason) :
 }
 
 HException::HException(const HException& inner, const QString& reason) :
-    m_reason(reason), m_inner(inner.clone())
+    m_reason(), m_inner(0)
 {
     HLOG(H_AT, H_FUN);
+    Q_ASSERT(&inner != this);
+    m_reason = reason;
+    m_inner.reset(inner.m_inner.isNull() ? 0 : inner.m_inner->clone());
 }
 
 HException& HException::operator=(const HException& other)
 {
     HLOG(H_AT, H_FUN);
+    Q_ASSERT(&other != this);
+
     m_reason = other.m_reason;
     m_inner.reset(other.m_inner.isNull() ? 0 : other.m_inner->clone());
 

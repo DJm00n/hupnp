@@ -25,6 +25,11 @@
 #include "hdefs_p.h"
 #include "hupnp_fwd.h"
 
+/*!
+ * \file
+ * This file contains public functions and enumerations.
+ */
+
 namespace Herqq
 {
 
@@ -32,9 +37,31 @@ namespace Upnp
 {
 
 /*!
- * \file
- * This file contains public functions and enumerations.
+ * This enumeration specifies how a component of the \ref devicemodel should
+ * be treated in terms of inclusion.
  */
+enum HInclusionRequirement
+{
+    /*!
+     * This value indicates that the inclusion requirement for the component
+     * is not specified.
+     *
+     * This value is used only in error situations.
+     */
+    InclusionRequirementUnknown = 0,
+
+    /*!
+     * This value indicates that the component has to be specified and valid.
+     * It is a critical error if the component is missing.
+     */
+    InclusionMandatory,
+
+    /*!
+     * This value indicates that the component is optional and may or may not be
+     * specified.
+     */
+    InclusionOptional
+};
 
  /*!
  * This enumeration specifies the logging levels that can be used with the device host.

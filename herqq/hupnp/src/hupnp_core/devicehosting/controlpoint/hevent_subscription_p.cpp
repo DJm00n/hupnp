@@ -21,17 +21,13 @@
 
 #include "hevent_subscription_p.h"
 
-#include "../../http/hhttp_server_p.h"
+#include "../../http/hhttp_handler_p.h"
 #include "../../devicemodel/hdevice.h"
-#include "../../devicemodel/hservice.h"
 #include "../../devicemodel/hservice_p.h"
 #include "../../general/hupnp_global_p.h"
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../../utils/hlogger_p.h"
-#include "../../../utils/hexceptions_p.h"
-
-#include <QThread>
 
 namespace Herqq
 {
@@ -321,7 +317,7 @@ void HEventSubscription::renewSubscription()
 
     QUrl eventUrl = resolveUri(
         extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
-        m_service->m_service->eventSubUrl());
+        m_service->m_service->info().eventSubUrl());
 
     MessagingInfo* mi = new MessagingInfo(m_socket, false);
     mi->setHostInfo(eventUrl);
@@ -379,7 +375,6 @@ bool HEventSubscription::connectToDevice(qint32 msecsToWait)
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(m_currentOpType != Op_None);
-    Q_ASSERT(thread() == QThread::currentThread());
 
     if (m_socket.state() == QTcpSocket::ConnectedState)
     {
@@ -493,7 +488,7 @@ void HEventSubscription::subscribe()
 
     m_eventUrl = resolveUri(
         extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
-        m_service->m_service->eventSubUrl());
+        m_service->m_service->info().eventSubUrl());
 
     MessagingInfo* mi = new MessagingInfo(m_socket, false);
     mi->setHostInfo(m_eventUrl);
@@ -629,7 +624,7 @@ void HEventSubscription::unsubscribe(qint32 msecsToWait)
 
     m_eventUrl = resolveUri(
         extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
-        m_service->m_service->eventSubUrl());
+        m_service->m_service->info().eventSubUrl());
 
     HLOG_DBG(QString(
         "Attempting to cancel event subscription from [%1]").arg(
@@ -637,6 +632,10 @@ void HEventSubscription::unsubscribe(qint32 msecsToWait)
 
     MessagingInfo* mi = new MessagingInfo(m_socket, false);
     mi->setHostInfo(m_eventUrl);
+    if (msecsToWait > 0)
+    {
+        mi->setSendWait(msecsToWait);
+    }
 
     UnsubscribeRequest req(m_eventUrl, m_sid);
     QByteArray data = HHttpMessageCreator::create(req, *mi);

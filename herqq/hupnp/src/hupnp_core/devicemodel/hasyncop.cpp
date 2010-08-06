@@ -31,9 +31,9 @@ namespace Herqq
 namespace Upnp
 {
 
-HAsyncOp::HAsyncOp() :
+HAsyncOp::HAsyncOp(AsyncWaitCode waitCode) :
     m_id(QUuid::createUuid()),
-    m_waitTimeout(-1), m_waitCode(WaitSuccess), m_returnValue(0), 
+    m_waitTimeout(-1), m_waitCode(waitCode), m_returnValue(0),
     m_userData(new volatile void*)
 {
 }

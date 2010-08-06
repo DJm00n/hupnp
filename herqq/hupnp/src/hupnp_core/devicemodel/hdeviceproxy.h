@@ -36,8 +36,8 @@ class HDeviceProxyPrivate;
  * \brief A class that is used at client-side to represent a UPnP device.
  *
  * A proxy device is a pure client-side concept utilized by HControlPoint. This
- * class is instantiated by HControlPoint for each discovered UPnP device that
- * is added into the control of an \c %HControlPoint.
+ * class, or a class derived from this is instantiated by HControlPoint
+ * for each discovered UPnP device that is added into the control of an \c %HControlPoint.
  *
  * As an HDevice, the \c %HDeviceProxy relies fully on the HUPnP \ref devicemodel
  * and thus it is used similarly to server-side \c %HDevice classes.
@@ -85,7 +85,7 @@ private:
      * creating types not derived from HServiceProxy results in undefined
      * behavior.
      */
-    virtual HServiceMap createServices();
+    virtual HServicesSetupData* createServices();
 
 protected:
 

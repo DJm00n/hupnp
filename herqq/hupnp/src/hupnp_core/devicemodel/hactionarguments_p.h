@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef H_ACTIONARGUMENTS_P_H_
-#define H_ACTIONARGUMENTS_P_H_
+#ifndef HACTIONARGUMENTS_P_H_
+#define HACTIONARGUMENTS_P_H_
 
 #include "hactionarguments.h"
 #include "../datatypes/hupnp_datatypes.h"
@@ -57,76 +57,19 @@ public: // attributes
 
     QHash<QString, HActionArgument*> m_arguments;
     // QHash has a very low memory footprint and it provides us a constant-time
-    // lookup using argument names regardless of the number of arguments. then again,
-    // if the number of arguments is usually (nearly always?) very low, this
-    // provides little to no benefit.
+    // lookup using argument names regardless of the number of arguments.
 
 public: // functions
 
-    inline HActionArgumentsPrivate()
-    {
-    }
+    HActionArgumentsPrivate();
+    explicit HActionArgumentsPrivate(const QVector<HActionArgument*>& args);
+    ~HActionArgumentsPrivate();
 
-    inline explicit HActionArgumentsPrivate(const QVector<HActionArgument*>& args)
-    {
-        QVector<HActionArgument*>::const_iterator ci = args.constBegin();
-
-        for (; ci != args.constEnd(); ++ci)
-        {
-            m_argumentsOrdered.push_back(*ci);
-            m_arguments[(*ci)->name()] = *ci;
-        }
-    }
-
-    inline explicit HActionArgumentsPrivate(const QHash<QString, HActionArgument*>& args)
-    {
-        QHash<QString, HActionArgument*>::const_iterator ci = args.constBegin();
-
-        for(; ci != args.end(); ++ci)
-        {
-            m_argumentsOrdered.push_back(*ci);
-            m_arguments[(*ci)->name()] = *ci;
-        }
-    }
-
-    inline ~HActionArgumentsPrivate()
-    {
-        qDeleteAll(m_argumentsOrdered);
-    }
-
-    inline HActionArgumentsPrivate(const HActionArgumentsPrivate& other)
-    {
-        QVector<HActionArgument*>::const_iterator ci =
-            other.m_argumentsOrdered.constBegin();
-
-        for (; ci != other.m_argumentsOrdered.constEnd(); ++ci)
-        {
-            HActionArgument* arg = new HActionArgument(**ci);
-            m_argumentsOrdered.push_back(arg);
-            m_arguments[arg->name()] = arg;
-        }
-    }
-
-    inline HActionArgumentsPrivate& operator=(const HActionArgumentsPrivate& other)
-    {
-        qDeleteAll(m_argumentsOrdered);
-        m_arguments.clear(); m_argumentsOrdered.clear();
-
-        QVector<HActionArgument*>::const_iterator ci =
-            other.m_argumentsOrdered.constBegin();
-
-        for (; ci != other.m_argumentsOrdered.constEnd(); ++ci)
-        {
-            HActionArgument* arg = new HActionArgument(**ci);
-            m_argumentsOrdered.push_back(arg);
-            m_arguments[arg->name()] = arg;
-        }
-
-        return *this;
-    }
+    HActionArgumentsPrivate(const HActionArgumentsPrivate& other);
+    HActionArgumentsPrivate& operator=(const HActionArgumentsPrivate& other);
 };
 
 }
 }
 
-#endif /* H_ACTIONARGUMENTS_P_H_ */
+#endif /* HACTIONARGUMENTS_P_H_ */

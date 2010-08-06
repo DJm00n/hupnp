@@ -21,7 +21,6 @@
 
 #include "hcontrolpoint.h"
 #include "hcontrolpoint_p.h"
-#include "hactioninvoke_proxy_p.h"
 #include "hevent_subscription_p.h"
 #include "hcontrolpoint_configuration.h"
 #include "hcontrolpoint_configuration_p.h"
@@ -43,6 +42,7 @@
 #include "../../../utils/hexceptions_p.h"
 
 #include <QUrl>
+#include <QImage>
 #include <QString>
 #include <QMutexLocker>
 
@@ -69,7 +69,7 @@ ControlPointHttpServer::~ControlPointHttpServer()
 }
 
 void ControlPointHttpServer::incomingNotifyMessage(
-    MessagingInfo& mi, const NotifyRequest& req)
+    MessagingInfo& mi, const NotifyRequest& req, HRunnable*)
 {
     // note that currently this method is always executed in a thread from a
     // thread pool
@@ -128,6 +128,27 @@ bool HControlPointSsdpHandler::incomingDeviceUnavailableAnnouncement(
 {
     return m_owner->processDeviceOffline(msg, source, this);
 }
+/*******************************************************************************
+ * HControlPointThread
+ ******************************************************************************/
+HControlPointThread::HControlPointThread() :
+    m_exit(false)
+{
+}
+
+void HControlPointThread::run()
+{
+    if (!m_exit)
+    {
+        exec();
+    }
+}
+
+void HControlPointThread::quit()
+{
+    m_exit = true;
+    QThread::quit();
+}
 
 /*******************************************************************************
  * HControlPointPrivate
@@ -142,7 +163,8 @@ HControlPointPrivate::HControlPointPrivate() :
             m_eventSubscriber(0),
             m_deviceCreationMutex(),
             m_lastError(HControlPoint::UndefinedError),
-            q_ptr(0)
+            q_ptr(0),
+            m_controlPointThread(0)
 {
 }
 
@@ -151,54 +173,64 @@ HControlPointPrivate::~HControlPointPrivate()
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 }
 
-HActionInvoke HControlPointPrivate::createActionInvoker(HAction* action)
+HActionInvokeProxy* HControlPointPrivate::createActionInvoker(HAction* action)
 {
-    return HActionInvokeProxy(m_loggingIdentifier, action);
+    HActionInvokeProxyImpl* retVal =
+        new HActionInvokeProxyImpl(
+            m_loggingIdentifier, action, m_controlPointThread.data());
+
+    return retVal;
 }
 
 HDeviceController* HControlPointPrivate::buildDevice(
-    const QUrl& deviceLocation, qint32 maxAgeInSecs)
+    const QUrl& deviceLocation, qint32 maxAgeInSecs, QString* err)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    HDataRetriever dataRetriever(m_loggingIdentifier, *m_http);
+    try
+    {
+        HDataRetriever dataRetriever(m_loggingIdentifier, *m_http);
 
-    QDomDocument dd =
-        dataRetriever.retrieveDeviceDescription(deviceLocation);
+        QString deviceDescr =
+            dataRetriever.retrieveDeviceDescription(deviceLocation);
 
-    QList<QUrl> deviceLocations;
-    deviceLocations.push_back(deviceLocation);
+        QList<QUrl> deviceLocations;
+        deviceLocations.push_back(deviceLocation);
 
-    HControlPointObjectCreationParameters creatorParams;
-    creatorParams.m_deviceDescription    = dd;
-    creatorParams.m_deviceCreator        = m_configuration->deviceCreator();
-    creatorParams.m_deviceLocations      = deviceLocations;
-    creatorParams.m_defaultDeviceCreator = HProxyCreator();
-    creatorParams.m_defaultServiceCreator = HProxyCreator();
+        HControlPointObjectCreationParameters creatorParams;
+        creatorParams.m_deviceDescription    = deviceDescr;
+        creatorParams.m_deviceCreator        = m_configuration->deviceCreator();
+        creatorParams.m_deviceLocations      = deviceLocations;
+        creatorParams.m_defaultDeviceCreator = HProxyCreator();
+        creatorParams.m_defaultServiceCreator = HProxyCreator();
 
-    creatorParams.m_serviceDescriptionFetcher =
-        ServiceDescriptionFetcher(
-            &dataRetriever, &HDataRetriever::retrieveServiceDescription);
+        creatorParams.m_serviceDescriptionFetcher =
+            ServiceDescriptionFetcher(
+                &dataRetriever, &HDataRetriever::retrieveServiceDescription);
 
-    creatorParams.m_actionInvokeCreator  =
-        ActionInvokeCreator(this, &HControlPointPrivate::createActionInvoker);
+        creatorParams.m_actionInvokeProxyCreator  =
+            HActionInvokeProxyCreator(this, &HControlPointPrivate::createActionInvoker);
 
-    creatorParams.m_deviceTimeoutInSecs  = maxAgeInSecs;
-    creatorParams.m_appendUdnToDeviceLocation = false;
-    creatorParams.m_sharedActionInvokers = &m_sharedActionInvokers;
+        creatorParams.m_deviceTimeoutInSecs  = maxAgeInSecs;
+        creatorParams.m_appendUdnToDeviceLocation = false;
 
-    creatorParams.m_iconFetcher =
-        IconFetcher(&dataRetriever, &HDataRetriever::retrieveIcon);
+        creatorParams.m_iconFetcher =
+            IconFetcher(&dataRetriever, &HDataRetriever::retrieveIcon);
 
-    creatorParams.m_strictParsing = false;
-    creatorParams.m_stateVariablesAreImmutable = true;
-    creatorParams.m_threadPool = m_threadPool;
-    creatorParams.m_loggingIdentifier = m_loggingIdentifier;
+        creatorParams.m_strictParsing = false;
+        creatorParams.m_stateVariablesAreImmutable = true;
+        creatorParams.m_threadPool = m_threadPool;
+        creatorParams.m_loggingIdentifier = m_loggingIdentifier;
 
-    HObjectCreator creator(creatorParams);
+        HObjectCreator creator(creatorParams);
+        return creator.createRootDevice();
+    }
+    catch(HException& ex)
+    {
+        *err = ex.reason();
+    }
 
-    HDeviceController* newRootDevice = creator.createRootDevice();
-    return newRootDevice;
+    return 0;
 }
 
 bool HControlPointPrivate::addRootDevice(HDeviceController* newRootDevice)
@@ -209,7 +241,7 @@ bool HControlPointPrivate::addRootDevice(HDeviceController* newRootDevice)
 
     HDeviceController* existingDevice =
         m_deviceStorage->searchDeviceByUdn(
-            newRootDevice->m_device->deviceInfo().udn());
+            newRootDevice->m_device->info().udn());
 
     if (existingDevice)
     {
@@ -228,7 +260,7 @@ bool HControlPointPrivate::addRootDevice(HDeviceController* newRootDevice)
             HControlPoint::IgnoreDevice)
     {
         HLOG_DBG(QString("Device [%1] rejected").arg(
-            newRootDevice->m_device->deviceInfo().udn().toString()));
+            newRootDevice->m_device->info().udn().toString()));
         return false;
     }
 
@@ -250,7 +282,7 @@ bool HControlPointPrivate::addRootDevice(HDeviceController* newRootDevice)
     {
         HLOG_WARN(QString(
             "Failed to add root device [UDN: %1]: %2").arg(
-                newRootDevice->m_device->deviceInfo().udn().toSimpleUuid(),
+                newRootDevice->m_device->info().udn().toSimpleUuid(),
                 ex.reason()));
 
         return false;
@@ -449,9 +481,12 @@ void HControlPointPrivate::processDeviceOnline(
     case HControlPoint::IgnoreDevice:
 
         HLOG_DBG(QString("Discarding device with UDN %1").arg(
-            device->m_device->deviceInfo().udn().toString()));
+            device->m_device->info().udn().toString()));
 
-        if (newDevice) { delete device; device = 0; }
+        if (newDevice)
+        {
+            delete device; device = 0;
+        }
         break;
 
     case HControlPoint::AddDevice:
@@ -544,13 +579,7 @@ void HControlPointPrivate::doClear()
     m_eventSubscriber->cancelAll(100);
     m_eventSubscriber->removeAll();
 
-    QAbstractEventDispatcher* ed = QAbstractEventDispatcher::instance();
-    while(m_threadPool->activeThreadCount())
-    {
-        ed->processEvents(QEventLoop::ExcludeUserInputEvents);
-    }
-
-    m_threadPool->waitForDone();
+    m_threadPool->shutdown();
     // ensure that no threads created by this thread pool are running when we
     // start deleting shared objects.
 
@@ -570,11 +599,6 @@ void HControlPointPrivate::doClear()
     m_http.reset(0);
 
     m_initializationStatus = 0;
-
-    QAbstractEventDispatcher::instance()->processEvents(
-        QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-    // this is execute to ensure that if there is deferred deletion to be performed
-    // on some objects, the deleters get a chance to run.
 
     // once this method exists, the abstract host will proceed to delete
     // the device tree, which is safe by now.
@@ -622,8 +646,6 @@ HControlPoint::HControlPoint(
 
 HControlPoint::~HControlPoint()
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     quit();
     delete h_ptr;
 }
@@ -785,6 +807,9 @@ bool HControlPoint::init()
             HLOG_DBG("Omitting initial device discovery as configured");
         }
 
+        h_ptr->m_controlPointThread.reset(new HControlPointThread());
+        h_ptr->m_controlPointThread->start();
+
         h_ptr->setState(HAbstractHostPrivate::Initialized);
     }
     catch(HSocketException& ex)
@@ -842,6 +867,10 @@ void HControlPoint::quit()
 
     h_ptr->setState(HAbstractHostPrivate::Exiting);
     h_ptr->clear();
+
+    h_ptr->m_controlPointThread->quit();
+    h_ptr->m_controlPointThread->wait();
+    h_ptr->m_controlPointThread.reset(0);
 
     HLOG_INFO("Shut down.");
 }
@@ -921,7 +950,7 @@ bool HControlPoint::subscribeEvents(
         return false;
     }
     else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
-                device->deviceInfo().udn()))
+                device->info().udn()))
     {
         setError(InvalidArgumentError,
             tr("The specified device was not found in this control point"));
@@ -963,7 +992,7 @@ bool HControlPoint::subscribeEvents(HServiceProxy* service)
         return false;
     }
     else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
-                service->parentDevice()->deviceInfo().udn()))
+                service->parentDevice()->info().udn()))
     {
         setError(InvalidArgumentError,
             tr("The specified service was not found in this control point"));
@@ -1026,7 +1055,7 @@ bool HControlPoint::cancelEvents(
         return false;
     }
     else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
-                device->deviceInfo().udn()))
+                device->info().udn()))
     {
         setError(
             InvalidArgumentError,
@@ -1062,7 +1091,7 @@ bool HControlPoint::cancelEvents(HServiceProxy* service)
         return false;
     }
     else if (!h_ptr->m_deviceStorage->searchDeviceByUdn(
-                service->parentDevice()->deviceInfo().udn()))
+                service->parentDevice()->info().udn()))
     {
         setError(
             InvalidArgumentError,
@@ -1111,7 +1140,7 @@ bool HControlPoint::removeRootDevice(HDeviceProxy* rootDevice)
     h_ptr->m_eventSubscriber->remove(rootDevice, true);
     // TODO should send unsubscription to the UPnP device?
 
-    HDeviceInfo info(rootDevice->deviceInfo());
+    HDeviceInfo info(rootDevice->info());
     if (h_ptr->m_deviceStorage->removeRootDevice(controller))
     {
         emit rootDeviceRemoved(info);

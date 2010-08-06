@@ -21,7 +21,7 @@
 
 #include "hserviceproxy.h"
 #include "hserviceproxy_p.h"
-#include "hdeviceproxy.h"
+#include "hactions_setupdata.h"
 
 namespace Herqq
 {
@@ -29,6 +29,9 @@ namespace Herqq
 namespace Upnp
 {
 
+/*******************************************************************************
+ * HServiceProxyPrivate
+ ******************************************************************************/
 HServiceProxyPrivate::HServiceProxyPrivate()
 {
 }
@@ -37,6 +40,9 @@ HServiceProxyPrivate::~HServiceProxyPrivate()
 {
 }
 
+/*******************************************************************************
+ * HServiceProxy
+ ******************************************************************************/
 HServiceProxy::HServiceProxy() :
     HService(*new HServiceProxyPrivate())
 {
@@ -51,14 +57,14 @@ HServiceProxy::HServiceProxy(HServiceProxyPrivate& dd) :
 {
 }
 
-HService::HActionMap HServiceProxy::createActions()
+HActionsSetupData HServiceProxy::createActions()
 {
-    return HActionMap();
+    return HActionsSetupData();
 }
 
 HDeviceProxy* HServiceProxy::parentProxyDevice() const
 {
-    return static_cast<HDeviceProxy*>(parentDevice());
+    return reinterpret_cast<HDeviceProxy*>(parentDevice());
 }
 
 }

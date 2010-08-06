@@ -28,6 +28,12 @@
     Class(const Class& clazz); \
     Class& operator=(const Class& clazz);
 
+#define H_FORCE_SINGLETON(Class) \
+    Class(const Class& clazz); \
+    Class& operator=(const Class& clazz); \
+    Class(); \
+    ~Class();
+
 #define H_DECLARE_PRIVATE(Class) \
     inline Class##Private* h_func() { return reinterpret_cast<Class##Private *>(h_ptr); } \
     inline const Class##Private* h_func() const { return reinterpret_cast<const Class##Private *>(h_ptr); } \

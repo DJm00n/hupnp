@@ -390,7 +390,7 @@ public:
 /*!
  * Compares the two objects for equality.
  *
- * \return \e true in case the object are logically equivalent.
+ * \return \e true in case the objects are logically equivalent.
  *
  * \relates HProductTokens
  */
@@ -400,7 +400,7 @@ H_UPNP_CORE_EXPORT bool operator==(
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HProductTokens
  */

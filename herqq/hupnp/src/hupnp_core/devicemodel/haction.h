@@ -22,7 +22,6 @@
 #ifndef HACTION_H_
 #define HACTION_H_
 
-#include "hasyncop.h"
 #include "hactioninvoke_callback.h"
 
 #include "../general/hdefs_p.h"
@@ -51,13 +50,13 @@ class HActionController;
  * may have a return value. In a way, a UPnP action is an abstraction
  * to a method or to a remote procedure call.
  *
- * You can call inputArguments() and outputArguments() to find out what the
+ * You can get the input and output arguments from info() to find out what the
  * defined input and output arguments for the action are. In essence,
- * when you execute an action using invoke() or beginInvoke(), you have to provide the set
- * of input arguments the inputArguments() method returns.
+ * when you execute an action using invoke() or beginInvoke(), you have to
+ * provide the set of input arguments the action info object defines.
  * Otherwise, the invocation fails. Obviously the values of the arguments can be changed.
  * On the other hand, HUPnP will fill the user provided output arguments to match
- * the return value of outputArguments(), if necessary.
+ * output arguments defined in the action info object, if necessary.
  *
  * You can invoke an \c %HAction synchronously and asynchronously.
  * To perform an asynchronous invocation, you have to call beginInvoke().
@@ -65,17 +64,15 @@ class HActionController;
  * followed by waitForInvoke(), or you can call invoke(), which is a
  * helper method that calls beginInvoke() and waitForInvoke().
  * It is important to note that although \c %HAction
- * is derived from \c QObject, neither the invoke() nor beginInvoke() has thread affinity.
- * Because of this, you can perform invocation from any thread.
+ * is derived from \c QObject, neither the invoke() nor beginInvoke()
+ * has thread affinity. Because of this, you can perform invocation or
+ * waiting the result of invocation from any thread.
  *
  * \headerfile haction.h HAction
  *
  * \ingroup devicemodel
  *
- * \sa HService
- *
- * \warning you should \b never perform a synchronous invocation from a thread
- * in which the \c %HAction to be invoked resides, since this may cause a dead-lock.
+ * \sa HActionInfo, HService
  *
  * \remarks
  * \li the methods introduced in this class are thread-safe, although the
@@ -100,91 +97,103 @@ private:
     // Initializes the instance with the specified name.
     // \param name specifies the name of the action.
     //
-    // \throw Herqq::Utils::HIllegalArgumentException in case the the name
-    // argument is invalid.
     //
-    HAction(const QString& name, HService* parent);
+    HAction(const HActionInfo& info, HService* parent);
 
 public:
 
     /*!
-     * \brief Action invocation succeeded.
+     * This enumeration specifies the generic error codes that action invocation
+     * may return.
      *
-     * Action invocation succeeded.
-     */
-    inline static qint32 Success() { return 0; }
-
-    /*!
-     * \brief Action invocation failed due to the action lacking an implementation.
+     * These values correspond to the values defined in the UDA, excluding
+     * \c NotImplemented and \c UndefinedFailure, which are defined for the purposes
+     * of HUPnP.
      *
-     * Action invocation failed due to the action lacking an implementation.
+     * \note These are only the generic error codes. Many UPnP devices define
+     * and use domain specific error codes that cannot be specified here.
      */
-    inline static qint32 NotImplemented() { return 0xffffffff; }
+    enum ReturnCode
+    {
+        /*!
+         * \brief Action invocation succeeded.
+         *
+         * Action invocation succeeded.
+         */
+        Success = 200,
 
-    /*!
-     * Action invocation failed due to:
-     * \li not enough arguments,
-     * \li arguments in wrong order,
-     * \li one or more arguments have wrong data type
-     */
-    inline static qint32 InvalidArgs() { return 402; }
+        /*!
+         * \brief Action invocation failed due to the action lacking an implementation.
+         *
+         * Action invocation failed due to the action lacking an implementation.
+         */
+        NotImplemented = 0xffffffff,
 
-    /*!
-     * \brief Action invocation failed due to an invalid argument value.
-     *
-     * Action invocation failed due to an invalid argument value.
-     */
-    inline static qint32 ArgumentValueInvalid() { return 600; }
+        /*!
+         * Action invocation failed due to:
+         * \li not enough arguments,
+         * \li arguments in wrong order,
+         * \li one or more arguments have wrong data type
+         */
+        InvalidArgs = 402,
 
-    /*!
-     * Action invocation failed due to:
-     * \li an argument value is less than the minimum of the allowed value range,
-     * \li an argument value is more than the maximum of the allowed value range,
-     * \li an argument value is not in the allowed value list
-     */
-    inline static qint32 ArgumentValueOutOfRange() { return 601; }
+        /*!
+         * \brief Action invocation failed due to an invalid argument value.
+         *
+         * Action invocation failed due to an invalid argument value.
+         */
+        ArgumentValueInvalid = 600,
 
-    /*!
-     * Action invocation failed due to the requested action being optional
-     * and not implemented by the device.
-     */
-    inline static qint32 OptionalActionNotImplemented() { return 602; }
+        /*!
+         * Action invocation failed due to:
+         * \li an argument value is less than the minimum of the allowed value range,
+         * \li an argument value is more than the maximum of the allowed value range,
+         * \li an argument value is not in the allowed value list
+         */
+        ArgumentValueOutOfRange = 601,
 
-    /*!
-     * Action invocation failed due to insufficient memory.
-     *
-     * The device does not have sufficient memory available to complete the action.
-     * This MAY be a temporary condition; the control point MAY choose to retry the
-     * unmodified request again later and it MAY succeed if memory is available.
-     */
-    inline static qint32 OutOfMemory() { return 603; }
+        /*!
+         * Action invocation failed due to the requested action being optional
+         * and not implemented by the device.
+         */
+        OptionalActionNotImplemented = 602,
 
-    /*!
-     * The device has encountered an error condition which it cannot resolve itself
-     * and required human intervention such as a reset or power cycle. See the device
-     * display or documentation for further guidance.
-     */
-    inline static qint32 HumanInterventionRequired() { return 604; }
+        /*!
+         * Action invocation failed due to insufficient memory.
+         *
+         * The device does not have sufficient memory available to complete the action.
+         * This MAY be a temporary condition; the control point MAY choose to retry the
+         * unmodified request again later and it MAY succeed if memory is available.
+         */
+        OutOfMemory = 603,
 
-    /*!
-     * Action invocation failed due to a string argument being
-     * too long for the device to handle properly.
-     */
-    inline static qint32 StringArgumentTooLong() { return 605; }
+        /*!
+         * The device has encountered an error condition which it cannot resolve itself
+         * and required human intervention such as a reset or power cycle. See the device
+         * display or documentation for further guidance.
+         */
+        HumanInterventionRequired = 604,
 
-    /*!
-     * \brief The current state of the service prevents the action invocation.
-     *
-     * The current state of the service prevents the action invocation.
-     */
-    inline static qint32 ActionFailed() { return 501; }
+        /*!
+         * Action invocation failed due to a string argument being
+         * too long for the device to handle properly.
+         */
+        StringArgumentTooLong = 605,
 
-    /*!
-     * \brief Action invocation failed, but the exact cause could not be determined.
-     *
-     * Action invocation failed, but the exact cause could not be determined.
-     */
-    inline static qint32 UndefinedFailure() { return 0xf0000000; }
+        /*!
+         * \brief The current state of the service prevents the action invocation.
+         *
+         * The current state of the service prevents the action invocation.
+         */
+        ActionFailed = 501,
+
+        /*!
+         * \brief Action invocation failed, but the exact cause could not be determined.
+         *
+         * Action invocation failed, but the exact cause could not be determined.
+         */
+        UndefinedFailure = 0x0ff00000
+    };
 
 public:
 
@@ -210,61 +219,13 @@ public:
     HService* parentService() const;
 
     /*!
-     * Returns the name of the action.
+     * Returns information about the action that is read from the
+     * service description.
      *
-     * This is the name specified in the corresponding service description file.
-     *
-     * \return the name of the action.
+     * \return information about the action that is read from the
+     * service description.
      */
-    QString name() const;
-
-    /*!
-     * Returns a copy of the input arguments the action expects.
-     *
-     * Most often action invocation is preceded by calling this and
-     * setting the values for the desired input arguments. For example,
-     *
-     * \code
-     *
-     * Herqq::Upnp::HActionArguments inArgs = action->inputArguments();
-     * inArgs["DesiredArgumentName"]->setValue("ValueThatHappensToBeStringInThisExample");
-     *
-     * Herqq::Upnp::HActionArguments outArgs;
-     * qint32 retVal = action->invoke(inArgs, &outArgs);
-     *
-     * \endcode
-     *
-     * \return a copy of the input arguments the action expects. The returned
-     * input arguments are set to their default state. The values are always
-     * the same.
-     *
-     * \sa outputArguments(), invoke(), beginInvoke()
-     */
-    HActionArguments inputArguments() const;
-
-    /*!
-     * Returns a copy of the output arguments of the action.
-     *
-     * \return a copy of the output arguments of the action. The returned output
-     * arguments are set to their default state. The values are always the same.
-     *
-     * \remark \e action \e invocation fills a copy of the output arguments reflecting
-     * the result of the action invocation. The output arguments of an \e action
-     * are never changed.
-     *
-     * \sa inputArguments(), invoke(), beginInvoke(), waitForInvoke()
-     */
-    HActionArguments outputArguments() const;
-
-    /*!
-     * Returns the name of the output argument that is marked as the
-     * action's return value.
-     *
-     * \return the name of the output argument that is marked as the action's
-     * return value, or an empty string, if no output argument has been marked as
-     * the action's return value.
-     */
-    QString returnArgumentName() const;
+    const HActionInfo& info() const;
 
     /*!
      * Schedules the action to be invoked.
@@ -274,31 +235,38 @@ public:
      * as soon as possible. Therefore, the following issues are important to be
      * noted:
      *
-     * \li the method is thread-safe
-     * \li the order of invocations is the order in which beginInvoke() methods
-     * are invoked
-     * \li the executing thread is arbitrary
-     * \li the method returns immediately
+     * \li The method is thread-safe.
+     * \li The order of invocations is the order in which beginInvoke() methods
+     * are invoked.
+     * \li The method returns immediately.
      *
-     * When the action invocation is done, the signal invokeComplete()
-     * is emitted. After that, you have to call waitForInvoke() with the proper
+     * Unless you specified the action to be executed as <em>fire and forget</em>,
+     * the signal invokeComplete() is emitted once the invocation is complete.
+     * After that, you have to call waitForInvoke() with the proper
      * <em>action invocation id</em> to retrieve the result of the invocation.
      *
      * \param inArgs specifies the input arguments for the action invocation.
+     *
+     * \param execArgs specifies information used to control the execution of
+     * the action invocation procedure. This is optional.
      *
      * \return the ID used to identify the asynchronous operation. Once the
      * invokeComplete() signal is emitted, you have to call waitForInvoke()
      * providing this ID to retrieve the result of the action invocation.
      *
      * \remarks
+     *
+     * Unless you specified the action to be executed as <em>fire and forget</em>,
+     * the following remarks are important to notice:
+     *
      * \li The invokeComplete() signal is always emitted,
      * even if you have called waitForInvoke() before that.
      * \li waitForInvoke() with a proper ID will complete before
      * the invokeComplete() signal is sent.
      *
-     * \sa waitForInvoke(), invoke(), inputArguments()
+     * \sa waitForInvoke(), invoke()
      */
-    HAsyncOp beginInvoke(const HActionArguments& inArgs);
+    HAsyncOp beginInvoke(const HActionArguments& inArgs, HExecArgs* execArgs = 0);
 
     /*!
      * Schedules the action to be invoked.
@@ -308,17 +276,17 @@ public:
      * as soon as possible. Therefore, the following issues are important to be
      * noted:
      *
-     * \li the method is thread-safe
-     * \li the order of invocations is the order in which beginInvoke() methods
-     * are invoked
-     * \li the executing thread is arbitrary
-     * \li the method returns immediately
+     * \li The method is thread-safe.
+     * \li The order of invocations is the order in which beginInvoke() methods
+     * are invoked.
+     * \li The method returns immediately.
      *
-     * When the action has completed or the invocation has failed,
-     * the specified callback is called. No events are sent unless that is
-     * explicitly wanted by \b returning \b true from the callback function.
-     * You have to call waitForInvoke() with the proper <em>action invocation id</em>
-     * to retrieve the result of the invocation.
+     * Unless you specified the action to be executed as <em>fire and forget</em>,
+     * the specified callback is called when the invocation is complete.
+     * No events are sent unless that is explicitly wanted by \b returning \b
+     * true from the callback function. You have to call waitForInvoke()
+     * with the proper <em>action invocation id</em> to retrieve the result of
+     * the invocation.
      *
      * The different semantics compared to the other beginInvoke()
      * method are important to notice:
@@ -329,13 +297,18 @@ public:
      * succeeded or failed <b>in the thread that executed the action</b>. Note,
      * that the time requirements to return from the callback are usually far less severe
      * than they are with \em slots executed in the eventloop thread. However,
-     * the callback should still return as soon as possible.
+     * the callback should still return as soon as possible. Again, this
+     * assumes that the invocation wasn't started as <em>fire and forget</em>.
      *
      * \param inArgs specifies the input arguments for the action invocation
+     *
      * \param completionCallback specifies the callable entity that is called
      * once the action invocation is completed or failed. If the specified callable
      * entity is not valid and it cannot be called, the callable entity is
      * ignored and events are sent instead.
+     *
+     * \param execArgs specifies information used to control the execution of
+     * the action invocation procedure. This is optional.
      *
      * \return the ID used to identify the asynchronous operation. Once the callback
      * is called and possibly the invokeComplete() signal is emitted,
@@ -343,16 +316,21 @@ public:
      * the result of the action invocation.
      *
      * \remarks
+     *
+     * Unless you specified the action to be executed as <em>fire and forget</em>,
+     * the following remarks are important to notice:
+     *
      * \li the completion callback is always called, even if you have called
      * waitForInvoke()
      * \li waitForInvoke() with a proper ID will complete before
      * the callback is called and possibly the invokeComplete() signal is sent.
      *
-     * \sa waitForInvoke(), invoke(), inputArguments()
+     * \sa waitForInvoke(), invoke()
      */
     HAsyncOp beginInvoke(
         const HActionArguments& inArgs,
-        const HActionInvokeCallback& completionCallback);
+        const HActionInvokeCallback& completionCallback,
+        HExecArgs* execArgs = 0);
 
     /*!
      * Waits for the completion of an asynchronous action invocation started
@@ -362,21 +340,18 @@ public:
      * In addition, you can use this method to block the current thread until the specified
      * action invocation is complete.
      *
-     * If the action invocation corresponding to the specified invocationId
+     * If the action invocation corresponding to the specified \c asyncOp
      * has completed and this is the first call to this method with the specified
-     * invocationId, the call will return immediately. If the invocation has not
+     * \c asyncOp, the call will return immediately. If the invocation has not
      * been completed at the time of this call, the calling thread will be blocked
      * until the action invocation is complete.
      *
-     * \attention Calling this method to block the thread in which the
-     * action object lives without \b may result in a dead-lock and the invocation
-     * will \b always fail.
-     *
      * Note also, that you can call this method only once with a particular
-     * invocationId. The results of the action invocation are stored until a
-     * call is made.
+     * \c asyncOp. The results of the action invocation are stored until a
+     * call is made, unless the invocation was executed as <em>fire and forget</em>,
+     * in which case nothing is stored and no results will be available.
      *
-     * \param op specifies the action invocation previously started by
+     * \param asyncOp specifies the action invocation previously started by
      * beginInvoke(). If the parameter is invalid, the method returns immediately with
      * an error code.
      *
@@ -391,9 +366,12 @@ public:
      * succeeded. Otherwise you may want to check the HAsyncOp::waitCode() and
      * HAsyncOp::returnValue() for more information about the failure.
      *
-     * \sa beginInvoke(), outputArguments()
+     * \note the HAsyncOp::returnValue() will be HAction::Success on success.
+     * Any other value indicates that an error occurred.
+     *
+     * \sa beginInvoke(), ReturnCode
      */
-    bool waitForInvoke(HAsyncOp* op, HActionArguments* outArgs = 0);
+    bool waitForInvoke(HAsyncOp* asyncOp, HActionArguments* outArgs = 0);
 
     /*!
      * Invokes the action synchronously.
@@ -404,13 +382,13 @@ public:
      *
      * \code
      *
-     * Herqq::Upnp::HActionArguments inArgs = action->inputArguments();
+     * Herqq::Upnp::HActionArguments inArgs = action->info().inputArguments();
      * inArgs["EchoInArgument"]->setValue("Ping");
      *
      * Herqq::Upnp::HActionArguments outArgs;
      *
      * qint32 retVal = action->invoke(inArgs, &outArgs);
-     * if (retVal == Herqq::Upnp::HAction::Success())
+     * if (retVal == Herqq::Upnp::HAction::Success)
      * {
      *     qDebug() << outArgs["EchoOutArgument"]->value().toString();
      * }
@@ -418,19 +396,18 @@ public:
      * \endcode
      *
      * \param inArgs specifies the input arguments for the action.
+     *
      * \param outArgs specifies a pointer to an object created by the user.
      * This can be null in which case the output arguments will not be set
      * even if the action has output arguments. If the parameter is specified
-     * and the action has output arguments, the values of the arguments will be set accordingly.
-     * If the action doesn't have output arguments, the parameter is ignored.
+     * and the action has output arguments, the values of the arguments will be
+     * set accordingly. If the action doesn't have output arguments,
+     * the parameter is ignored.
      *
-     * \retval 0 indicates success. Any other value indicates that an error
-     * occurred.
+     * \return HAction::Success on success. Any other value indicates
+     * that an error occurred.
      *
-     * \remarks You should never call this method from the thread in which the
-     * \c %HAction lives, since this may result in a dead-lock.
-     *
-     * \sa beginInvoke(), waitForInvoke(), inputArguments(), outputArguments()
+     * \sa beginInvoke(), waitForInvoke(), ReturnCode
      */
     qint32 invoke(
         const HActionArguments& inArgs, HActionArguments* outArgs = 0);
@@ -447,15 +424,16 @@ public:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted when an asynchronous action invocation
+     * Unless an invocation was started as <em>fire and forget</em>,
+     * this signal is emitted when the invocation
      * has been successfully completed or the invocation failed.
      *
-     * After the signal, you have to call waitForInvoke() to retrieve
-     * the result of the action invocation.
+     * After this signal is received, you have to call waitForInvoke()
+     * to retrieve the result of the action invocation.
      *
-     * \param invocationId specifies the ID of the invocation that completed.
+     * \param asyncOp specifies the asynchronous operation that completed.
      */
-    void invokeComplete(Herqq::Upnp::HAsyncOp invocationId);
+    void invokeComplete(Herqq::Upnp::HAsyncOp asyncOp);
 };
 
 }

@@ -34,9 +34,9 @@
 #include "../../dataelements/hudn.h"
 #include "../../devicemodel/hdevice_p.h"
 
+#include "../../../utils/hthreadpool_p.h"
+
 #include <QList>
-#include <QObject>
-#include <QRunnable>
 
 namespace Herqq
 {
@@ -53,7 +53,7 @@ class HControlPointPrivate;
 //
 class DeviceBuildTask :
     public QObject,
-    public QRunnable
+    public HRunnable
 {
 Q_OBJECT
 H_DISABLE_COPY(DeviceBuildTask)
@@ -129,7 +129,7 @@ public:
     ~DeviceBuildTasks();
 
     template<typename Msg>
-    inline DeviceBuildTask* get(const Msg& msg) const
+    DeviceBuildTask* get(const Msg& msg) const
     {
         QList<DeviceBuildTask*>::const_iterator ci = m_builds.constBegin();
 

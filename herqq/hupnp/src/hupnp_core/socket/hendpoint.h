@@ -25,8 +25,9 @@
 
 #include "../general/hdefs_p.h"
 
-#include <QUrl>
 #include <QHostAddress>
+
+class QUrl;
 
 namespace Herqq
 {

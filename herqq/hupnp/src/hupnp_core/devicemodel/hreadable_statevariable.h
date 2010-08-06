@@ -19,11 +19,10 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hstatevariable.h"
-#include "./../general/hdefs_p.h"
-
 #ifndef HREADABLE_STATEVARIABLE_H_
 #define HREADABLE_STATEVARIABLE_H_
+
+#include "hstatevariable.h"
 
 namespace Herqq
 {

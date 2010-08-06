@@ -31,9 +31,9 @@
 //
 
 #include "hhttp_p.h"
-#include "hhttp_messaginginfo_p.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
 
+class QString;
 class QByteArray;
 class QHttpHeader;
 class QHttpRequestHeader;
@@ -44,6 +44,8 @@ namespace Herqq
 
 namespace Upnp
 {
+
+class MessagingInfo;
 
 //
 //
@@ -67,7 +69,10 @@ public:
         QHttpHeader& hdr, const QByteArray& body, MessagingInfo&,
         ContentType = Undefined);
 
-    static QByteArray createResponse(StatusCode, MessagingInfo&);
+    inline static QByteArray createResponse(StatusCode, MessagingInfo&)
+    {
+        return createResponse(sc, mi, QByteArray());
+    }
 
     static QByteArray createResponse(
         StatusCode, MessagingInfo&, const QByteArray& body,

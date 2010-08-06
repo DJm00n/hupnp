@@ -32,6 +32,7 @@
 //#include <QHttpRequestHeader>
 //#include <QHttpResponseHeader>
 
+#include <QUrl>
 #include <QTextStream>
 
 namespace Herqq

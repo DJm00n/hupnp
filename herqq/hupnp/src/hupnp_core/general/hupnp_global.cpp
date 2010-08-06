@@ -22,21 +22,14 @@
 #include "hupnp_global.h"
 #include "hupnp_global_p.h"
 
-#include "hdefs_p.h"
-
 #include "../socket/hendpoint.h"
 #include "../dataelements/hproduct_tokens.h"
 
 #include "../../utils/hlogger_p.h"
-#include "../../utils/hexceptions_p.h"
 
-#include <QUrl>
-#include <QString>
-#include <QTcpSocket>
 #include <QTextStream>
 #include <QDomElement>
-#include <QDomNodeList>
-#include <QHostAddress>
+#include <QMutexLocker>
 #include <QNetworkInterface>
 
 #if defined(Q_OS_LINUX)
@@ -118,6 +111,19 @@ HSysInfo::~HSysInfo()
 {
 }
 
+HSysInfo& HSysInfo::instance()
+{
+    QMutexLocker lock(&s_initMutex);
+
+    if (s_instance)
+    {
+        return *s_instance;
+    }
+
+    s_instance.reset(new HSysInfo());
+    return *s_instance;
+}
+
 void HSysInfo::createProductTokens()
 {
 #if defined(Q_OS_WIN)
@@ -177,7 +183,7 @@ void HSysInfo::createProductTokens()
 #endif
 
     m_productTokens.reset(
-        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.5").arg(server)));
+        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.7").arg(server)));
 }
 
 void HSysInfo::createLocalNetworks()
@@ -256,13 +262,16 @@ HEndpoints convertHostAddressesToEndpoints(const QList<QHostAddress>& addrs)
     return retVal;
 }
 
-void verifySpecVersion(const QDomElement& rootElement)
+bool verifySpecVersion(const QDomElement& rootElement, QString* err)
 {
     QDomElement specVersionElement = rootElement.firstChildElement("specVersion");
     if (specVersionElement.isNull())
     {
-        throw HIllegalArgumentException(
-            "Invalid device description: missing mandatory <specVersion> element");
+        if (err)
+        {
+            *err = "Missing mandatory <specVersion> element";
+        }
+        return false;
     }
 
     QString minorVersion = readElementValue("minor", specVersionElement);
@@ -272,16 +281,24 @@ void verifySpecVersion(const QDomElement& rootElement)
     qint32 major = majorVersion.toInt(&ok);
     if (!ok || major != 1)
     {
-        throw HIllegalArgumentException(
-            "Invalid device description: major element of <specVersion> is not 1");
+        if (err)
+        {
+            *err = "Major element of <specVersion> is not 1";
+        }
+        return false;
     }
 
     qint32 minor = minorVersion.toInt(&ok);
     if (!ok || (minor != 1 && minor != 0))
     {
-        throw HIllegalArgumentException(
-            "Invalid device description: minor element of <specVersion> is not 0 or 1");
+        if (err)
+        {
+            *err = "minor element of <specVersion> is not 0 or 1";
+        }
+        return false;
     }
+
+    return true;
 }
 
 qint32 readConfigId(const QDomElement& rootElement)
@@ -298,37 +315,47 @@ qint32 readConfigId(const QDomElement& rootElement)
     return retVal;
 }
 
-QString verifyName(const QString& name)
+bool verifyName(const QString& name, QString* err)
 {
     HLOG(H_AT, H_FUN);
 
-    QString tmp = name;
-    if (tmp.isEmpty())
+    if (name.isEmpty())
     {
-        throw HIllegalArgumentException("[name] cannot be empty");
+        if (err)
+        {
+            *err = "[name] cannot be empty";
+        }
+        return false;
     }
 
-    if (!tmp[0].isLetterOrNumber() && tmp[0] != '_')
+    if (!name[0].isLetterOrNumber() && name[0] != '_')
     {
-        throw HIllegalArgumentException(
-            QString("[name: %1] has invalid first character").arg(tmp));
+        if (err)
+        {
+            *err = QString("[name: %1] has invalid first character").arg(name);
+        }
+        return false;
     }
 
-    foreach(QChar c, tmp)
+    foreach(const QChar& c, name)
     {
         if (!c.isLetterOrNumber() && c != '_' && c != '.')
         {
-            throw HIllegalArgumentException(
-                QString("[name: %1] contains invalid character(s)").arg(tmp));
+            if (err)
+            {
+                *err = QString(
+                    "[name: %1] contains invalid character(s)").arg(name);
+            }
+            return false;
         }
     }
 
-    if (tmp.size() > 32)
+    if (name.size() > 32)
     {
-        HLOG_WARN(QString("[name: %1] longer than 32 characters").arg(tmp));
+        HLOG_WARN(QString("[name: %1] longer than 32 characters").arg(name));
     }
 
-    return tmp;
+    return true;
 }
 
 QString urlsAsStr(const QList<QUrl>& urls)
@@ -342,6 +369,21 @@ QString urlsAsStr(const QList<QUrl>& urls)
     }
 
     return retVal;
+}
+
+QString extractBaseUrl(const QString& url)
+{
+    if (url.endsWith('/'))
+    {
+        return url;
+    }
+    else if (!url.contains('/'))
+    {
+        return "";
+    }
+
+    QString base = url.section('/', 0, -2, QString::SectionIncludeTrailingSep);
+    return base;
 }
 
 QUrl resolveUri(const QUrl& baseUrl, const QUrl& other)

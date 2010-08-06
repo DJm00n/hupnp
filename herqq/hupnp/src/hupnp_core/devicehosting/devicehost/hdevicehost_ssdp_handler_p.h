@@ -35,6 +35,8 @@
 #include "../../ssdp/hssdp.h"
 #include "../../ssdp/hdiscovery_messages.h"
 
+#include "../../socket/hendpoint.h"
+
 #include <QList>
 
 namespace Herqq

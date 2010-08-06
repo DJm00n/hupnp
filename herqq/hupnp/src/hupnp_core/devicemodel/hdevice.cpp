@@ -25,8 +25,11 @@
 
 #include "../../utils/hlogger_p.h"
 #include "../general/hupnp_global_p.h"
+
+#include "../dataelements/hserviceid.h"
 #include "../dataelements/hdeviceinfo.h"
 
+#include <QTimer>
 #include <QString>
 
 /*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation
@@ -59,7 +62,7 @@
  * come across a binary of HUPnP, it is not made by the author of HUPnP.
  * Second, HUPnP uses the
  * <a href="http://qt.nokia.com/products/appdev/add-on-products/catalog/4/Utilities/qtsoap">QtSoap library</a>
- * under the <a href="http://www.gnu.org/licenses/gpl.html">GPLv3</a> license.
+ * under the <a href="http://www.gnu.org/licenses/lgpl-2.1.html">LGPLv2.1</a> license.
  * The QtSoap library is distributed along the HUPnP in
  * source code and the library is built into a shared library during the compilation of HUPnP.
  * \attention At the moment, HUPnP uses a modified version of QtSoap version 2.7.
@@ -160,16 +163,20 @@
  * which is a UPnP device that has no parent, but may contain other UPnP devices.
  * These contained devices are called <em>embedded devices</em>.
  *
+ * The purpose of the other classes part of the device model is to support the
+ * initialization and use of the four core classes.
+ *
  * \subsection The API differences between client and server sides
  *
- * The HUPnP device model is largely the same at the server client sides.
+ * The HUPnP device model is largely the same at the server and client sides.
  * That is, whether you are writing a custom UPnP device or
  * trying to interact with a UPnP device found in the network, you will be
  * interacting with the HUPnP device model similarly. The most notable difference
  * is that whereas at server side you will be interacting with classes derived
  * directly from the main four components (\c HDevice, \c HService, \c HAction and
  * \c HStateVariable), at client side you will be interacting with devices and
- * services derived from Herqq::Upnp::HDeviceProxy and Herqq::Upnp::HServiceProxy.
+ * services derived from Herqq::Upnp::HDeviceProxy and Herqq::Upnp::HServiceProxy
+ * respectively.
  *
  * The \c HDeviceProxy is an \c HDevice and the \c HServiceProxy is an \c HService.
  * They both provide some additional methods not found in their base classes, but
@@ -193,8 +200,8 @@
  * embedded device, service, state variable and action underneath it are deleted as well.
  * Furthermore, every root \c HDevice is always owned by HUPnP and the
  * ownership is never released. Because of this you should \b never call \c delete
- * to \b any of the components of the device model. This will result in
- * \b undefined \b behavior.
+ * to \b any of the components of the device model that is setup by HUPnP.
+ * This \b will result in \b undefined \b behavior.
  *
  * \note There are situations where you may want to instruct HUPnP to \c delete
  * an \c HDevice. For instance, when a UPnP device is removed from the network
@@ -207,7 +214,7 @@
  *
  * The device model is <em>location independent</em>, which in essence means that the
  * device model is almost always used the same way. That is, if you have a pointer to
- * any of the components of the device model, you use the object the same way
+ * any of the core components of the device model, you use the object the same way
  * regardless of whether you got the pointer directly or indirectly from a
  * Herqq::Upnp::HDeviceHost or a Herqq::Upnp::HControlPoint. There is one exception
  * to the rule and it will be discussed in the section concerning the state
@@ -244,16 +251,16 @@
  * depends of the service type in which the state variable is defined.
  *
  * As described previously, HUPnP uses the same device model everywhere.
- * That is, the same fundamental core classes are used both at the server and
+ * This means that the same fundamental core classes are used both at the server and
  * client sides. Perhaps the most significant benefit
  * of this is that it provides <em>uniform API</em> regardless of the type of use.
  * In turn, uniform API calls for simplicity and re-usability, since there is only
  * one class structure to be learned and used on both server and client side programming.
  *
  * However, the lack of a standardized method for manipulating the values of
- * state variables means that device host and control point programming cannot
- * use an exactly symmetrical API. This is because on device host side you have
- * to have \e read-write access to the state variables, whereas on control point side
+ * state variables means that the client and server-side cannot
+ * use an exactly symmetrical API. This is because on server-side you have
+ * to have \e read-write access to the state variables, whereas on client-side
  * you have to have \e read-only access to the state variables. In HUPnP
  * this is abstracted to  Herqq::Upnp::HWritableStateVariable and
  * Herqq::Upnp::HReadableStateVariable classes.
@@ -376,25 +383,28 @@
  *
  * \section creatingclasses Creating the necessary HUPnP classes
  *
- * HUPnP requires device and service descriptions to be accompanied by corresponding classes.
- * In our example we have to derive a class
+ * HUPnP requires device and service descriptions to be accompanied by
+ * corresponding classes. In our example we have to derive a class
  * from Herqq::Upnp::HDevice for the \b BinaryLight:1 device description and
  * we have to derive a class from Herqq::Upnp::HService for the
- * \b SwitchPower:1 service description.
+ * \b SwitchPower:1 service description. Note that if your device has no
+ * services you do not need to create your own \c HDevice type. Similarly, if your
+ * service has no actions you do not need to create your own \c HService type.
  *
- * To create a concrete class from Herqq::Upnp::HDevice you have to implement
- * its single private abstract method Herqq::Upnp::HDevice::createServices().
- * As the name implies, the purpose of this method is to create objects at run-time that reflect
- * the services defined in the device description. If your device has no services
- * this method has to return an empty list.
+ * To create a concrete class from Herqq::Upnp::HDevice that exposes services
+ * you have to override its protected method Herqq::Upnp::HDevice::createServices().
+ * As the name implies, the purpose of this method is to create \c HService objects
+ * at run-time that reflect the services defined in the device description.
  *
- * To create a concrete class from Herqq::Upnp::HService you have to implement its single abstract method
- * Herqq::Upnp::HService::createActions(). The purpose of this method is to create
- * <em>callable entities</em> that will be called when the corresponding UPnP actions
- * are invoked. Note, the UPnP actions of a particular UPnP service are defined
- * in the service's description file and if a service has no actions
- * this method has to return an empty list. As a side note, these callable entities
- * are used internally by HUPnP. HUPnP does not expose them directly in the public API.
+ * To create a concrete class from Herqq::Upnp::HService that exposes actions
+ * you have to override its protected method Herqq::Upnp::HService::createActions().
+ * The purpose of this method is to create <em>callable entities</em> that will
+ * be called when the corresponding UPnP actions are invoked. Note, the
+ * UPnP actions of a particular UPnP service are defined
+ * in the service's description file and your service implementation has to
+ * implement all of them. As a side note, these callable entities
+ * are used internally by HUPnP. HUPnP does not expose them directly
+ * in the public API.
  *
  * To continue with the example we have to create two classes, one for the
  * \b BinaryLight:1 and one for the \b SwitchPowerService:1. For this example
@@ -411,11 +421,9 @@
  * class MyBinaryLightDevice :
  *    public Herqq::Upnp::HDevice
  * {
- * private:
+ * protected:
  *
- *     virtual Herqq::Upnp::HServiceMap createServices();
- *     // see the documentation of Herqq::Upnp::HDevice::createServices()
- *     // for an explanation why this is private
+ *     virtual Herqq::Upnp::HServicesSetupData* createServices();
  *
  * public:
  *
@@ -426,11 +434,9 @@
  * class MySwitchPowerService :
  *    public Herqq::Upnp::HService
  * {
- * private:
+ * protected:
  *
- *     virtual Herqq::Upnp::HActionMap createActions();
- *     // see the documentation of Herqq::Upnp::HService::createActions()
- *     // for an explanation why this is private
+ *     virtual Herqq::Upnp::HActionsSetupData createActions();
  *
  * public:
  *
@@ -448,6 +454,9 @@
  *
  * #include "mybinarylight.h"
  *
+ * #include <HActionsSetupData>
+ * #include <HServicesSetupData>
+ *
  * using namespace Herqq::Upnp;
  *
  * MyBinaryLightDevice::MyBinaryLightDevice()
@@ -458,19 +467,22 @@
  * {
  * }
  *
- * HDevice::HServiceMap MyBinaryLightDevice::createServices()
+ * HServicesSetupData* MyBinaryLightDevice::createServices()
  * {
- *   HServiceMap retVal;
+ *     HServicesSetupData* retVal = new HServicesSetupData();
  *
- *   retVal[HResourceType("urn:schemas-upnp-org:service:SwitchPower:1")] =
- *       new MySwitchPowerService();
+ *     retVal->insert(
+ *         HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
+ *         HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
+ *         new MySwitchPowerService());
  *
  *  // This maps the UPnP service type "urn:schemas-upnp-org:service:SwitchPower:1"
+ *  // with the standard service ID "urn:schemas-upnp-org:serviceId:SwitchPower"
  *  // defined in the device description file to our custom C++ type.
- *  // You have to map each UPnP service type found in your device description file
+ *  // You have to map each UPnP service found in your device description file
  *  // to a C++ type derived from Herqq::Upnp::HService.
  *
- *   return retVal;
+ *     return retVal;
  * }
  *
  * MySwitchPowerService::MySwitchPowerService()
@@ -481,10 +493,10 @@
  * {
  * }
  *
- * HService::HActionMap MySwitchPowerService::createActions()
+ * HActionsSetupData MySwitchPowerService::createActions()
  * {
- *   HActionMap retVal;
- *   return retVal;
+ *     HActionsSetupData retVal;
+ *     return retVal;
  * }
  *
  * \endcode
@@ -497,12 +509,14 @@
  * device type that has services that in turn have no actions,
  * the above class declarations and definitions are enough.
  *
- * However, the standard \b BinaryLight:1 device type specifies the \b SwitchPower:1
- * service type that has three actions defined (look back in the service description document).
- * Namely these are \b SetTarget, \b GetTarget and \b GetStatus. To make the example complete
- * the <c>MySwitchPowerService</c> class requires some additional work. Note, however, the
- * next example shows only one way of making the service complete. There are
- * a few other ways, which will be discussed later in depth.
+ * However, the standard \b BinaryLight:1 device type specifies the
+ * \b SwitchPower:1 service type that has three actions defined
+ * (look back in the service description document).
+ * Namely these are \b SetTarget, \b GetTarget and \b GetStatus.
+ * To make the example complete the <c>MySwitchPowerService</c> class
+ * requires some additional work. Note that next example shows only one way
+ * of making the service complete. There are a few other ways,
+ * which will be discussed later in depth.
  *
  * The complete declaration for <c>MySwitchPowerService</c>:
  *
@@ -515,11 +529,9 @@
  * class MySwitchPowerService :
  *    public Herqq::Upnp::HService
  * {
- * private:
+ * protected:
  *
- *     virtual Herqq::Upnp::HActionMap createActions();
- *     // see the documentation of Herqq::Upnp::HService::createActions()
- *     // for an explanation why this is private
+ *     virtual Herqq::Upnp::HActionsSetupData createActions();
  *
  * public:
  *
@@ -549,6 +561,7 @@
  *
  * #include "mybinarylight.h"
  *
+ * #include <HAction>
  * #include <HStateVariable>
  * #include <HActionArguments>
  *
@@ -562,25 +575,28 @@
  * {
  * }
  *
- * HService::HActionMap MySwitchPowerService::createActions()
+ * HService::HActionsSetupData MySwitchPowerService::createActions()
  * {
- *     HActionMap retVal;
+ *     HActionsSetupData retVal;
  *
- *     retVal["SetTarget"] =
- *         HActionInvoke(this, &MySwitchPowerService::setTarget);
+ *     retVal.insert(
+ *         "SetTarget",
+ *         HActionInvoke(this, &MySwitchPowerService::setTarget));
  *
  *     // The above lines map the MySwitchPowerService::setTarget() method to
  *     // the action that has the name SetTarget. In essence, this mapping instructs
  *     // HUPnP to call this method when the SetTarget action is invoked.
  *     // However, note that HActionInvoke accepts any "callable entity",
- *     // such as a normal function or a functor. Furthermore, if you use a method the
- *     // method does not have to be public.
+ *     // such as a normal function or a functor. Furthermore, if you use a
+ *     // method the method does not have to be public.
  *
- *     retVal["GetTarget"] =
- *         HActionInvoke(this, &MySwitchPowerService::getTarget);
+ *     retVal.insert(
+ *         "GetTarget",
+ *         HActionInvoke(this, &MySwitchPowerService::getTarget));
  *
- *     retVal["GetStatus"] =
- *         HActionInvoke(this, &MySwitchPowerService::getStatus);
+ *     retVal.insert(
+ *         "GetStatus",
+ *         HActionInvoke(this, &MySwitchPowerService::getStatus));
  *
  *     return retVal;
  * }
@@ -588,7 +604,7 @@
  * qint32 MySwitchPowerService::setTarget(
  *     const HActionArguments& inArgs, HActionArguments* outArgs)
  * {
- *     const HActionArgument* newTargetValueArg = inArgs["newTargetValue"];
+ *     const HActionArgument* newTargetValueArg = inArgs.get("newTargetValue");
  *     if (!newTargetValueArg)
  *     {
  *         // If MySwitchPowerService class is not made for direct public use
@@ -596,7 +612,7 @@
  *         // HUPnP and HUPnP always ensures that the action arguments defined in the
  *         // service description are present when an action is invoked.
  *
- *         return HAction::InvalidArgs();
+ *         return HAction::InvalidArgs;
  *     }
  *
  *     bool newTargetValue = newTargetValueArg->value().toBool();
@@ -619,7 +635,7 @@
  *
  *     stateVariableByName("Status")->writable()->setValue(newTargetValue);
  *
- *     return HAction::Success();
+ *     return HAction::Success;
  * }
  *
  * qint32 MySwitchPowerService::getTarget(
@@ -632,20 +648,20 @@
  *         // is called only by HUPnP, as HUPnP ensures proper arguments
  *         // are always provided when an action is invoked.
  *
- *         return HAction::InvalidArgs();
+ *         return HAction::InvalidArgs;
  *     }
  *
  *     HActionArgument* retTargetValue = outArgs->get("RetTargetValue");
  *     if (!retTargetValue)
  *     {
  *         // See the comments above. The same thing applies here as well.
- *         return HAction::InvalidArgs();
+ *         return HAction::InvalidArgs;
  *     }
  *
  *     bool b = stateVariableByName("Target")->value().toBool();
  *     retTargetValue->setValue(b);
  *
- *     return HAction::Success();
+ *     return HAction::Success;
  * }
  *
  * qint32 MySwitchPowerService::getStatus(
@@ -654,39 +670,42 @@
  *     if (!outArgs)
  *     {
  *         // See the comments in MySwitchPowerService::getTarget();
- *         return HAction::InvalidArgs();
+ *         return HAction::InvalidArgs;
  *     }
  *
  *     HActionArgument* resultStatus = outArgs->get("ResultStatus");
  *     if (!resultStatus)
  *     {
  *         // See the comments above. The same thing applies here as well.
- *         return HAction::InvalidArgs();
+ *         return HAction::InvalidArgs;
  *     }
  *
  *     bool b = stateVariableByName("Status")->value().toBool();
  *     resultStatus->setValue(b);
  *
- *     return HAction::Success();
+ *     return HAction::Success;
  * }
  *
  * \endcode
  *
  * \subsection some_notes_about_switchpower_example Some closing notes
  *
- * First of all, you may want to skim the discussion in \ref devicemodel and \ref devicehosting
- * to fully understand the comments in the example above. That being said, perhaps the
+ * First of all, you may want to skim the discussion in
+ * \ref devicemodel and \ref devicehosting to fully understand
+ * the comments in the example above. That being said, perhaps the
  * most important issues of building a custom UPnP device using HUPnP
  * can be summarized to:
  *
- * - Every device description has to have a corresponding class derived from
- * Herqq::Upnp::HDevice and every service description has to have a corresponding
- * class derived from Herqq::Upnp::HService.
+ * - Every device description has to have a corresponding Herqq::Upnp::HDevice
+ * and every service description has to have a corresponding Herqq::Upnp::HService.
+ * Remember, you need to derive from \c HDevice if your device has one or
+ * more services and you need to derice from \c HService if your service has
+ * one or more actions. This is the most common scenario.
  *
- * - It is perfectly fine to create custom \c HDevice and \c HService classes just to be
- * hosted in a Herqq::Upnp::HDeviceHost. Such classes exist only to run your code
- * when UPnP control points interact with them over the network. These types of
- * classes are to be used directly only by \c HDeviceHost.
+ * - It is perfectly fine to create custom \c HDevice and \c HService classes
+ * just to be hosted in a Herqq::Upnp::HDeviceHost. Such classes exist only to
+ * run your code when UPnP control points interact with them over the network.
+ * These types of classes are to be used directly only by \c HDeviceHost.
  *
  * - You can create more advanced \c HDevice and \c HService classes perhaps
  * to build a higher level public API or just to provide yourself a nicer interface for
@@ -695,13 +714,15 @@
  * the actions of the service through the \c setTarget(), \c getTarget() and \c getStatus()
  * methods.
  *
- * - HUPnP allows direct access to the hosted \c HDevice and \c HService classes,
- * which means you can interact with your classes \b while they are being hosted.
- * Custom \c HDevice and \c HService interfaces may be beneficial if you intend
- * to interact directly with them.
+ * - HUPnP allows direct (in-process) access to the hosted
+ * \c HDevice and \c HService classes, which means you can interact with
+ * your classes \b while they are being hosted and possibly used from external
+ * processes. Custom \c HDevice and \c HService interfaces may be beneficial
+ * in such a case.
  *
- * - The type behind an Herqq::Upnp::HActionInvoke can hold any <em>callable entity</em>, such
- * as a normal function, functor or a member function.
+ * - The type behind an Herqq::Upnp::HActionInvoke can hold any
+ * <em>callable entity</em>, such as a pointer to a normal function,
+ * functor or a pointer to a member function.
  *
  * - A public callable entity should always strictly verify the input and
  * respond to illegal input accordingly. A "private" callable entity that
@@ -719,10 +740,6 @@
  * of \b BinaryLight:1. The next step is to publish your \c HDevice in the network
  * for UPnP control points to discover. You can find the instructions for that
  * in Herqq::Upnp::HDeviceHost and \ref devicehosting.
- *
- * If, on the other hand, you wish to use the created \c HDevice type when a
- * control point discovers a device on the network matching the \em device \em type
- * of the created device, see Herqq::Upnp::HControlPoint.
  */
 
 namespace Herqq
@@ -730,6 +747,14 @@ namespace Herqq
 
 namespace Upnp
 {
+
+/*******************************************************************************
+ * HDeviceStatus
+ ******************************************************************************/
+HDeviceStatus::HDeviceStatus() :
+    m_bootId(0), m_configId(0), m_searchPort(0), m_online(true)
+{
+}
 
 /*******************************************************************************
  * HDeviceController
@@ -754,6 +779,11 @@ HDeviceController::HDeviceController(
 HDeviceController::~HDeviceController()
 {
     HLOG(H_AT, H_FUN);
+}
+
+qint32 HDeviceController::deviceTimeoutInSecs() const
+{
+    return m_statusNotifier->interval() / 1000;
 }
 
 void HDeviceController::timeout_()
@@ -923,13 +953,24 @@ HDevice::HDevice(HDevicePrivate& dd) :
 
 HDevice::~HDevice()
 {
-    HLOG(H_AT, H_FUN);
     delete h_ptr;
 }
 
-void HDevice::finalizeInit()
+HServicesSetupData* HDevice::createServices()
+{
+    return 0;
+}
+
+HDevicesSetupData* HDevice::createEmbeddedDevices()
+{
+    return 0;
+}
+
+bool HDevice::finalizeInit(QString*)
 {
     // intentionally empty
+    Q_ASSERT(h_ptr->q_ptr);
+    return true;
 }
 
 HDevice* HDevice::parentDevice() const
@@ -952,7 +993,7 @@ HService* HDevice::serviceById(const HServiceId& serviceId) const
 {
     foreach(HServiceController* sc, h_ptr->m_services)
     {
-        if (sc->m_service->serviceId() == serviceId)
+        if (sc->m_service->info().serviceId() == serviceId)
         {
             return sc->m_service;
         }
@@ -983,7 +1024,7 @@ HServices HDevice::servicesByType(
     HServices retVal;
     foreach(HServiceController* sc, h_ptr->m_services)
     {
-        if (sc->m_service->serviceType().compare(type, versionMatch))
+        if (sc->m_service->info().serviceType().compare(type, versionMatch))
         {
             retVal.push_back(sc->m_service);
         }
@@ -1003,14 +1044,14 @@ HDevices HDevice::embeddedDevices() const
     return retVal;
 }
 
-HDeviceInfo HDevice::deviceInfo() const
+const HDeviceInfo& HDevice::info() const
 {
     return *h_ptr->m_upnpDeviceInfo;
 }
 
-QString HDevice::deviceDescription() const
+const QString& HDevice::description() const
 {
-    return h_ptr->m_deviceDescription.toString();
+    return h_ptr->m_deviceDescription;
 }
 
 QList<QUrl> HDevice::locations(LocationUrlType urlType) const

@@ -46,7 +46,7 @@ unsigned long hash(const char* str, int n);
 
 QHostAddress findBindableHostAddress();
 
-bool toBool(const QString&);
+bool toBool(const QString&, bool* ok);
 
 }
 

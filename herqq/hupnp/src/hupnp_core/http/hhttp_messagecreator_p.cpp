@@ -20,6 +20,7 @@
  */
 
 #include "hhttp_messagecreator_p.h"
+#include "hhttp_messaginginfo_p.h"
 #include "hhttp_utils_p.h"
 
 #include "../devicemodel/haction.h"
@@ -101,11 +102,6 @@ QByteArray HHttpMessageCreator::setupData(
     return msg;
 }
 
-QByteArray HHttpMessageCreator::createResponse(StatusCode sc, MessagingInfo& mi)
-{
-    return createResponse(sc, mi, QByteArray());
-}
-
 QByteArray HHttpMessageCreator::createResponse(
     StatusCode sc, MessagingInfo& mi, const QByteArray& body, ContentType ct)
 {
@@ -184,49 +180,49 @@ void checkForActionError(
     Q_ASSERT(httpReasonPhrase);
     Q_ASSERT(soapFault);
 
-    if (actionRetVal == HAction::InvalidArgs())
+    if (actionRetVal == HAction::InvalidArgs)
     {
         *httpStatusCode   = 402;
         *httpReasonPhrase = "Invalid Args";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::ActionFailed())
+    else if (actionRetVal == HAction::ActionFailed)
     {
         *httpStatusCode   = 501;
         *httpReasonPhrase = "Action Failed";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::ArgumentValueInvalid())
+    else if (actionRetVal == HAction::ArgumentValueInvalid)
     {
         *httpStatusCode   = 600;
         *httpReasonPhrase = "Argument Value Invalid";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::ArgumentValueOutOfRange())
+    else if (actionRetVal == HAction::ArgumentValueOutOfRange)
     {
         *httpStatusCode   = 601;
         *httpReasonPhrase = "Argument Value Out of Range";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::OptionalActionNotImplemented())
+    else if (actionRetVal == HAction::OptionalActionNotImplemented)
     {
         *httpStatusCode   = 602;
         *httpReasonPhrase = "Optional Action Not Implemented";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::OutOfMemory())
+    else if (actionRetVal == HAction::OutOfMemory)
     {
         *httpStatusCode   = 603;
         *httpReasonPhrase = "Out of Memory";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::HumanInterventionRequired())
+    else if (actionRetVal == HAction::HumanInterventionRequired)
     {
         *httpStatusCode   = 604;
         *httpReasonPhrase = "Human Intervention Required";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::StringArgumentTooLong())
+    else if (actionRetVal == HAction::StringArgumentTooLong)
     {
         *httpStatusCode   = 605;
         *httpReasonPhrase = "String Argument Too Long";
@@ -262,10 +258,10 @@ QByteArray HHttpMessageCreator::createResponse(
     soapFaultResponse.setFaultCode(soapFault);
     soapFaultResponse.setFaultString("UPnPError");
 
-    QtSoapStruct detail(QtSoapQName("UPnPError"));
-    detail.insert(new QtSoapSimpleType(QtSoapQName("errorCode"), actionErrCode));
-    detail.insert(new QtSoapSimpleType(QtSoapQName("errorDescription"), description));
-    soapFaultResponse.addFaultDetail(&detail);
+    QtSoapStruct* detail = new QtSoapStruct(QtSoapQName("UPnPError"));
+    detail->insert(new QtSoapSimpleType(QtSoapQName("errorCode"), actionErrCode));
+    detail->insert(new QtSoapSimpleType(QtSoapQName("errorDescription"), description));
+    soapFaultResponse.addFaultDetail(detail);
 
     return setupData(
         mi, httpStatusCode, httpReasonPhrase, soapFaultResponse.toXmlString());

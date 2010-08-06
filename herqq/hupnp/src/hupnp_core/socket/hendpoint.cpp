@@ -22,6 +22,7 @@
 #include "hendpoint.h"
 #include "../../utils/hmisc_utils_p.h"
 
+#include <QUrl>
 #include <QMetaType>
 
 static bool registerMetaTypes()

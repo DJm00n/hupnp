@@ -21,12 +21,12 @@
 
 #include "hservice.h"
 #include "hservice_p.h"
+#include "hactions_setupdata.h"
+#include "hstatevariables_setupdata.h"
 
-#include "hdevice.h"
 #include "haction_p.h"
 
 #include "../../utils/hlogger_p.h"
-#include "../general/hupnp_global_p.h"
 
 #include "../datatypes/hupnp_datatypes.h"
 #include "../datatypes/hdatatype_mappings_p.h"
@@ -44,7 +44,8 @@ namespace Upnp
  ******************************************************************************/
 HServiceController::HServiceController(
     HService* service) :
-        QObject(service->h_ptr->m_parentDevice), m_service(service)
+        QObject(reinterpret_cast<QObject*>(service->h_ptr->m_parentDevice)),
+            m_service(service)
 {
     Q_ASSERT(m_service);
     m_service->setParent(this);
@@ -77,12 +78,8 @@ QList<HActionController*> HServiceController::actions() const
  * HServicePrivate
  ******************************************************************************/
 HServicePrivate::HServicePrivate() :
-    m_serviceId        (),
-    m_serviceType      (),
-    m_scpdUrl          (),
-    m_controlUrl       (),
-    m_eventSubUrl      (),
-    m_serviceDescriptor(),
+    m_serviceInfo      (),
+    m_serviceDescription(),
     m_actions          (),
     m_actionsAsMap     (),
     m_stateVariables   (),
@@ -108,12 +105,13 @@ bool HServicePrivate::addStateVariable(HStateVariableController* sv)
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(sv);
-    Q_ASSERT(!m_stateVariables.contains(sv->m_stateVariable->name()));
 
-    m_stateVariables.insert(sv->m_stateVariable->name(), sv);
+    HStateVariableInfo info = sv->m_stateVariable->info();
+    Q_ASSERT(!m_stateVariables.contains(info.name()));
 
-    if (!m_evented &&
-        sv->m_stateVariable->eventingType() != HStateVariable::NoEvents)
+    m_stateVariables.insert(info.name(), sv);
+
+    if (!m_evented && info.eventingType() != HStateVariableInfo::NoEvents)
     {
         m_evented = true;
     }
@@ -156,12 +154,13 @@ bool HServicePrivate::updateVariables(
             return false;
         }
 
-        if (!stateVar->isValidValue(
-            convertToRightVariantType(
-                variables[i].second, stateVar->m_stateVariable->dataType())))
+        const HStateVariableInfo& info = stateVar->m_stateVariable->info();
+        if (!info.isValidValue(
+            convertToRightVariantType(variables[i].second, info.dataType())))
         {
-            HLOG_WARN(QString("Cannot update state variable [%1]. New value is invalid: [%2]").
-                arg(stateVar->m_stateVariable->name(), variables[i].second));
+            HLOG_WARN(QString(
+                "Cannot update state variable [%1]. New value is invalid: [%2]").
+                    arg(info.name(), variables[i].second));
 
             return false;
         }
@@ -176,8 +175,11 @@ bool HServicePrivate::updateVariables(
 
         Q_ASSERT(stateVar);
 
+        const HStateVariableInfo& info =
+            stateVar->m_stateVariable->info();
+
         bool ok = stateVar->setValue(convertToRightVariantType(
-            variables[i].second, stateVar->m_stateVariable->dataType()));
+            variables[i].second, info.dataType()));
 
         if (ok)
         {
@@ -191,7 +193,7 @@ bool HServicePrivate::updateVariables(
 
             HLOG_DBG(QString(
                 "Failed to set the value of state variable: [%1] to [%2]").arg(
-                    stateVar->m_stateVariable->name(), variables[i].second));
+                    info.name(), variables[i].second));
         }
     }
     m_eventsEnabled = true;
@@ -220,13 +222,25 @@ HService::HService(HServicePrivate& dd) :
 
 HService::~HService()
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     delete h_ptr;
 }
 
-void HService::finalizeInit()
+HActionsSetupData HService::createActions()
+{
+    return HActionsSetupData();
+    // intentionally empty.
+}
+
+HStateVariablesSetupData HService::stateVariablesSetupData() const
+{
+    return HStateVariablesSetupData();
+    // intentionally empty.
+}
+
+bool HService::finalizeInit(QString*)
 {
     // intentionally empty.
+    return true;
 }
 
 HDevice* HService::parentDevice() const
@@ -234,34 +248,14 @@ HDevice* HService::parentDevice() const
     return h_ptr->m_parentDevice;
 }
 
-HServiceId HService::serviceId() const
+const HServiceInfo& HService::info() const
 {
-    return h_ptr->m_serviceId;
+    return h_ptr->m_serviceInfo;
 }
 
-HResourceType HService::serviceType() const
+const QString& HService::description() const
 {
-    return h_ptr->m_serviceType;
-}
-
-QUrl HService::scpdUrl() const
-{
-    return h_ptr->m_scpdUrl;
-}
-
-QUrl HService::controlUrl() const
-{
-    return h_ptr->m_controlUrl;
-}
-
-QUrl HService::eventSubUrl() const
-{
-    return h_ptr->m_eventSubUrl;
-}
-
-QString HService::serviceDescription() const
-{
-    return h_ptr->m_serviceDescriptor.toString();
+    return h_ptr->m_serviceDescription;
 }
 
 QList<HAction*> HService::actions() const

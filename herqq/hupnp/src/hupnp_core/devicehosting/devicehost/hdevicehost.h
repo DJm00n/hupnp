@@ -44,7 +44,7 @@ class HDeviceHostPrivate;
  *
  * \ingroup devicehosting
  *
- * As the name implies, this is the class in the %Herqq UPnP library
+ * As the name implies, this is the class in the HUPnP library
  * used to expose UPnP devices to UPnP control points.
  * The class \e hosts instances of HDevice, which means that the class takes
  * care of all of the UPnP mechanics detaching the HDevice from it. This separation
@@ -108,23 +108,23 @@ class HDeviceHostPrivate;
  *     deviceConf.setPathToDeviceDescription("my_hdevice_devicedescription.xml");
  *
  *     Creator deviceCreator;
- *     // you could also use a normal or a member function to create HDevice
- *     // types
+ *     // You could also use a normal function or a member function to create
+ *     // HDevice types.
  *
  *     deviceConf.setDeviceCreator(deviceCreator);
  *
  *     if (!m_deviceHost->init(deviceConf))
  *     {
- *         // the initialization failed, perhaps you should do something?
+ *         // The initialization failed, perhaps you should do something?
  *         // for starters, you can call error() to check the error type and
  *         // errorDescription() for a human-readable description of
  *         // the error that occurred.
  *         return;
  *     }
  *
- *     // the host is running and your device should now be accessible to
- *     // UPnP Control points until the host is destroyed and assuming the current
- *     // thread has an event loop.
+ *     // The host is running and your device should now be accessible to
+ *     // UPnP Control points until the host is destroyed (assuming the current
+ *     // thread has an event loop).
  * }
  *
  * \endcode
@@ -162,12 +162,10 @@ class HDeviceHostPrivate;
  * However, you cannot move individual objects managed by \c %HDeviceHost.
  *
  * \li \c %HDeviceHost is the owner of the instances of
- * \c %HDevice it manages. It handles the memory management
- * of every object it has created. In other words, a device host \b never
- * transfers the ownership of the HDevice objects it manages.
- *
- * \li <b>%HDeviceHost always destroys every %HDevice it manages when it is
- * being destroyed</b>.
+ * \c %HDevice it manages. It manages the memory of every object it has created.
+ * In other words, a device host \b never transfers the ownership of the
+ * HDevice objects it manages; <b>%HDeviceHost always destroys every
+ * %HDevice it manages when it is being destroyed</b>.
  *
  * \sa devicehosting, HDevice, HDeviceHostConfiguration, HDeviceConfiguration
  */
@@ -420,10 +418,6 @@ public Q_SLOTS:
      *
      * \attention Every pointer to object retrieved from this instance will be
      * deleted. Be sure not to use any such pointer after calling this method.
-     *
-     * \warning This method usually returns promptly, but in some scenarios it
-     * may involve invoking the \c QAbstractEventDispatcher to process events.
-     * Be sure not to call init() before this method has properly exited.
      *
      * \sa init()
      */

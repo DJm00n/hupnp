@@ -20,23 +20,12 @@
  */
 
 #include "habstracthost_p.h"
-
-#include "../devicemodel/hdevice.h"
-#include "../devicemodel/hservice.h"
-#include "../devicemodel/hdevice_p.h"
-#include "../devicemodel/haction_p.h"
-#include "../devicemodel/hservice_p.h"
-#include "../dataelements/hdeviceinfo.h"
-
 #include "../dataelements/hudn.h"
 #include "../dataelements/hresourcetype.h"
 
 #include "../../utils/hlogger_p.h"
 
-#include <QImage>
 #include <QMetaType>
-#include <QStringList>
-#include <QHostAddress>
 
 static bool registerMetaTypes()
 {
@@ -57,7 +46,7 @@ static bool test = registerMetaTypes();
  * \section notesaboutdesign A few notes about the design
  *
  * The logical core of HUPnP is divided into two major modules; a collection of
- * classes that enable the "hosting" of UPnP device model and the collection of
+ * classes that enable the \e hosting of UPnP device model and the collection of
  * classes that form up the \ref devicemodel. The separation is very distinct. The
  * device hosts provide the technical foundation for the UPnP networking. They
  * encapsulate and implement the protocols the UPnP Device Architecture
@@ -66,7 +55,7 @@ static bool test = registerMetaTypes();
  * technical details of communication. Because of this HUPnP uses the same
  * device model both at the server and client side.
  *
- * HUPnP introduces two types of "hosts".
+ * HUPnP introduces two types of \e hosts.
  * \li The Herqq::Upnp::HDeviceHost is the class
  * that enables a UPnP device to be published for UPnP control points to use.
  * \li The Herqq::Upnp::HControlPoint is the class that enables the discovery
@@ -123,7 +112,7 @@ static bool test = registerMetaTypes();
  *     Herqq::Upnp::HDeviceConfiguration deviceConf;
  *     deviceConf.setPathToDeviceDescription("my_hdevice_devicedescription.xml");
  *     // this is the device description for our custom UPnP device type
- *     // the device host uses this file to build the "device tree"
+ *     // the device host uses this file to build the device tree.
  *
  *     Creator mydeviceCreatorFunctor;
  *     deviceConf.setDeviceCreator(mydeviceCreatorFunctor);
@@ -152,16 +141,16 @@ static bool test = registerMetaTypes();
  *
  * #include <HControlPoint>
  *
- * #include "my_hdevice.h" // your code
+ * #include "myhdeviceproxy.h" // your code
  *
  * namespace
  * {
  * class Creator
  * {
  * public:
- *     Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo& deviceInfo)
+ *     Herqq::Upnp::HDeviceProxy* operator()(const Herqq::Upnp::HDeviceInfo& deviceInfo)
  *     {
- *         return new MyHDevice(); // your class derived from HDevice
+ *         return new MyHDeviceProxy(); // your class derived from HDeviceProxy
  *     }
  * };
  *
@@ -171,15 +160,15 @@ static bool test = registerMetaTypes();
  *
  *     Creator mydeviceCreatorFunctor;
  *     controlPointConf.setDeviceCreator(mydeviceCreatorFunctor);
- *     // This functor can be used to create HDevice types for HControlPoint when
+ *     // This functor can be used to create HDeviceProxy types for HControlPoint when
  *     // it discovers UPnP devices on the network. This can be useful if you want
- *     // to use your custom HDevice types that provide some custom
+ *     // to use your custom HDeviceProxy types that provide some custom
  *     // functionality / API perhaps.
  *     //
- *     // note, the creator can also be a normal or a member function
+ *     // note, the creator can also be a normal or a member function.
  *
  *     Herqq::Upnp::HControlPoint* controlPoint =
- *         new HControlPoint(&controlPointConf);
+ *         new HControlPoint(controlPointConf);
  *     // note, the control point configuration is optional and usually you don't
  *     // need to provide one.
  *
@@ -200,7 +189,7 @@ static bool test = registerMetaTypes();
  * An \c HControlPoint is perfectly usable without it, but you can use
  * a configuration to modify the behavior of it.
  * Furthermore, by providing configuration you have the option to decide what
- * \c HDevice types and \c HService types are actually created when an
+ * \c HDeviceProxy types and \c HServiceProxy types are actually created when an
  * \c HControlPoint instance builds its object model for a discovered device.
  *
  * \sa Herqq::Upnp::HDeviceHost, Herqq::Upnp::HControlPoint, devicemodel
@@ -220,9 +209,8 @@ HAbstractHostPrivate::HAbstractHostPrivate(
         m_loggingIdentifier(loggingIdentfier.toLocal8Bit()),
         m_http(),
         m_deviceStorage(0),
-        m_threadPool(new QThreadPool()),
+        m_threadPool(new HThreadPool()),
         m_initializationStatus(0),
-        m_sharedActionInvokers(),
         m_lastErrorDescription()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -240,13 +228,9 @@ HAbstractHostPrivate::~HAbstractHostPrivate()
 
     // cannot go deleting root devices while threads that may be using them
     // are running
-
-    m_threadPool->waitForDone();
     delete m_threadPool;
 
     m_deviceStorage.reset(0);
-
-    qDeleteAll(m_sharedActionInvokers);
 }
 
 void HAbstractHostPrivate::clear()
@@ -260,7 +244,7 @@ void HAbstractHostPrivate::clear()
 
     // cannot go deleting root devices while threads that may be using them
     // are running
-    m_threadPool->waitForDone();
+    m_threadPool->shutdown();
 
     m_deviceStorage->clear();
 }

@@ -54,7 +54,7 @@ private:
     QHash<QString, IDataHolder*> m_inputWidgets;
 
     void setupArgumentWidgets();
-    IDataHolder* createDataHolder(Herqq::Upnp::HStateVariable*);
+    IDataHolder* createDataHolder(const Herqq::Upnp::HStateVariableInfo&);
 
 public:
 

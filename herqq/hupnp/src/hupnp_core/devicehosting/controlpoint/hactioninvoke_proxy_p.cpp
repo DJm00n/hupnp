@@ -25,17 +25,17 @@
 #include "../../datatypes/hdatatype_mappings_p.h"
 
 #include "../../dataelements/hudn.h"
+#include "../../dataelements/hactioninfo.h"
 #include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hserviceinfo.h"
 
 #include "../../devicemodel/haction.h"
 #include "../../devicemodel/hdevice.h"
 #include "../../devicemodel/hservice.h"
 
 #include "../../../utils/hlogger_p.h"
-#include "../../../utils/hexceptions_p.h"
 
 #include <QList>
-#include <QTcpSocket>
 #include <QHttpRequestHeader>
 
 #include <QtSoapMessage>
@@ -47,71 +47,63 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HActionInvokeProxyConnection
+ * HActionProxy
  ******************************************************************************/
-HActionInvokeProxyConnection::HActionInvokeProxyConnection(
-    const QByteArray& loggingIdentifier, HAction* action) :
-        QObject(action),
+HActionProxy::HActionProxy(
+    const QByteArray& loggingIdentifier, HAction* action,
+    HActionInvokeProxyImpl* owner) :
+        QObject(),
             m_service(action->parentService()),
-            m_actionName(action->name()),
-            m_inArgs(action->inputArguments()),
-            m_outArgs(action->outputArguments()),
+            m_actionName(action->info().name()),
+            m_inArgs(action->info().inputArguments()),
+            m_outArgs(action->info().outputArguments()),
             m_http(new HHttpAsyncHandler(loggingIdentifier, this)),
             m_sock(new QTcpSocket(this)),
             m_loggingIdentifier(loggingIdentifier),
             m_locations(),
             m_iNextLocationToTry(0),
-            m_invokeWaitMutex(),
-            m_invokeWait(),
-            m_invocationMutex(),
             m_invocationInProgress(0),
-            m_messagingInfo(*m_sock, true, 30000)
+            m_messagingInfo(*m_sock, true, 30000),
+            m_owner(owner)
 {
+    Q_ASSERT(m_owner);
     Q_ASSERT(m_service);
 
-    verifyName(m_actionName);
-
-    bool ok = connect(
-        this,
-        SIGNAL(invoke_sig(Invocation*)),
-        this,
-        SLOT(invoke_slot(Invocation*)));
-
+    bool ok = verifyName(m_actionName);
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    ok = connect(
-        m_sock.data(), SIGNAL(connected()), this, SLOT(send()));
+    ok = connect(this, SIGNAL(invoke_sig()), this, SLOT(invoke_slot()));
+    Q_ASSERT(ok);
 
+    ok = connect(m_sock.data(), SIGNAL(connected()), this, SLOT(send()));
     Q_ASSERT(ok);
 
     ok = connect(
         m_sock.data(), SIGNAL(error(QAbstractSocket::SocketError)),
         this, SLOT(error(QAbstractSocket::SocketError)));
-
     Q_ASSERT(ok);
 
     ok = connect(
         m_http.data(), SIGNAL(msgIoComplete(HHttpAsyncOperation*)),
         this, SLOT(msgIoComplete(HHttpAsyncOperation*)));
-
     Q_ASSERT(ok);
 
     m_messagingInfo.setAutoDelete(false);
 }
 
-HActionInvokeProxyConnection::~HActionInvokeProxyConnection()
+HActionProxy::~HActionProxy()
 {
 }
 
-void HActionInvokeProxyConnection::error(QAbstractSocket::SocketError serr)
+void HActionProxy::error(QAbstractSocket::SocketError serr)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     if (serr == QAbstractSocket::ConnectionRefusedError ||
-        serr ==  QAbstractSocket::HostNotFoundError)
+        serr == QAbstractSocket::HostNotFoundError)
     {
         HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
-            m_service->parentDevice()->deviceInfo().udn().toSimpleUuid(),
+            m_service->parentDevice()->info().udn().toSimpleUuid(),
             m_locations[m_iNextLocationToTry].toString()));
 
         m_iNextLocationToTry =
@@ -122,7 +114,7 @@ void HActionInvokeProxyConnection::error(QAbstractSocket::SocketError serr)
     }
 }
 
-bool HActionInvokeProxyConnection::connectToHost()
+bool HActionProxy::connectToHost()
 {
     Q_ASSERT(m_sock.data());
 
@@ -148,7 +140,7 @@ bool HActionInvokeProxyConnection::connectToHost()
     return false;
 }
 
-void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
+void HActionProxy::msgIoComplete(HHttpAsyncOperation* op)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(op);
@@ -160,7 +152,7 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
         HLOG_WARN(QString("Action invocation failed: [%1]").arg(
             op->messagingInfo()->lastErrorDescription()));
 
-        invocationDone(HAction::UndefinedFailure());
+        invocationDone(HAction::UndefinedFailure);
         return;
     }
 
@@ -171,7 +163,7 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
             "Received an invalid SOAP message as a response to "
             "action invocation: [%1]").arg(QString::fromUtf8(op->dataRead())));
 
-        invocationDone(HAction::UndefinedFailure());
+        invocationDone(HAction::UndefinedFailure);
         return;
     }
 
@@ -182,7 +174,7 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
                 response.faultString().toString(),
                 response.faultDetail().toString()));
 
-        invocationDone(HAction::UndefinedFailure());
+        invocationDone(HAction::UndefinedFailure);
         return;
     }
 
@@ -190,7 +182,7 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
     {
         // since there are not supposed to be any out arguments, this is a
         // valid scenario
-        invocationDone(HAction::Success());
+        invocationDone(HAction::Success);
         return;
     }
 
@@ -201,51 +193,50 @@ void HActionInvokeProxyConnection::msgIoComplete(HHttpAsyncOperation* op)
             "Received an invalid response to action invocation: [%1]").arg(
                 response.toXmlString()));
 
-        invocationDone(HAction::UndefinedFailure());
+        invocationDone(HAction::UndefinedFailure);
         return;
     }
 
     HActionArguments::const_iterator ci =
-        m_invocationInProgress->m_outArgs->constBegin();
+        m_invocationInProgress->m_outArgs.constBegin();
 
-    for(; ci != m_invocationInProgress->m_outArgs->constEnd(); ++ci)
+    for(; ci != m_invocationInProgress->m_outArgs.constEnd(); ++ci)
     {
         const HActionArgument* oarg = (*ci);
 
         const QtSoapType& arg = root[oarg->name()];
         if (!arg.isValid())
         {
-            invocationDone(HAction::UndefinedFailure());
+            invocationDone(HAction::UndefinedFailure);
         }
 
-        m_invocationInProgress->m_outArgs->get(
-            oarg->name())->setValue(
-                convertToRightVariantType(
-                    arg.value().toString(), oarg->dataType()));
+        HActionArgument* userArg =
+            m_invocationInProgress->m_outArgs.get(oarg->name());
+
+        userArg->setValue(convertToRightVariantType(
+            arg.value().toString(), oarg->dataType()));
     }
 
-    invocationDone(HAction::Success());
+    invocationDone(HAction::Success);
 }
 
-void HActionInvokeProxyConnection::invocationDone(qint32 rc)
+void HActionProxy::invocationDone(qint32 rc)
 {
-    QMutexLocker lock(&m_invokeWaitMutex);
-    *m_invocationInProgress->m_rc  = rc;
-    m_invocationInProgress->m_done = true;
+    m_invocationInProgress->m_invokeId.setReturnValue(rc);
     m_invocationInProgress = 0;
-    m_invokeWait.wakeAll();
+    m_owner->invokeCompleted();
 }
 
-void HActionInvokeProxyConnection::send()
+void HActionProxy::send()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QtSoapNamespaces::instance().registerNamespace(
-        "u", m_service->serviceType().toString());
+        "u", m_service->info().serviceType().toString());
 
     QtSoapMessage soapMsg;
     soapMsg.setMethod(
-        QtSoapQName(m_actionName, m_service->serviceType().toString()));
+        QtSoapQName(m_actionName, m_service->info().serviceType().toString()));
 
     HActionArguments::const_iterator ci =
         m_invocationInProgress->m_inArgs.constBegin();
@@ -255,7 +246,7 @@ void HActionInvokeProxyConnection::send()
         const HActionArgument* const iarg = (*ci);
         if (!m_inArgs.contains(iarg->name()))
         {
-            invocationDone(HAction::InvalidArgs());
+            invocationDone(HAction::InvalidArgs);
             return;
         }
 
@@ -266,13 +257,13 @@ void HActionInvokeProxyConnection::send()
     }
 
     QUrl baseUrl = m_locations[m_iNextLocationToTry];
-    QUrl controlUrl = resolveUri(baseUrl.path(), m_service->controlUrl());
+    QUrl controlUrl = resolveUri(baseUrl.path(), m_service->info().controlUrl());
 
     QHttpRequestHeader actionInvokeRequest("POST", controlUrl.toString());
     actionInvokeRequest.setContentType("text/xml; charset=\"utf-8\"");
 
     QString soapActionHdrField("\"");
-    soapActionHdrField.append(m_service->serviceType().toString());
+    soapActionHdrField.append(m_service->info().serviceType().toString());
     soapActionHdrField.append("#").append(m_actionName).append("\"");
     actionInvokeRequest.setValue("SOAPACTION", soapActionHdrField);
 
@@ -283,11 +274,11 @@ void HActionInvokeProxyConnection::send()
 
     if (!op)
     {
-        invocationDone(HAction::ActionFailed());
+        invocationDone(HAction::ActionFailed);
     }
 }
 
-void HActionInvokeProxyConnection::invoke_slot(Invocation* invocation)
+void HActionProxy::invoke_slot()
 {
     if (m_locations.isEmpty())
     {
@@ -298,51 +289,60 @@ void HActionInvokeProxyConnection::invoke_slot(Invocation* invocation)
         m_iNextLocationToTry = 0;
     }
 
-    m_invocationInProgress = invocation;
-
     if (connectToHost())
     {
         send();
     }
 }
 
-qint32 HActionInvokeProxyConnection::invoke(
-    const HActionArguments& inArgs, HActionArguments* outArgs)
+void HActionProxy::beginInvoke(HAsyncInvocation* inv)
 {
-    QMutexLocker lock(&m_invocationMutex);
-    QMutexLocker lock2(&m_invokeWaitMutex);
+    Q_ASSERT(!m_invocationInProgress);
+    m_invocationInProgress = inv;
 
-    qint32 rc = 0;
-    Invocation invocation(&rc, inArgs, outArgs);
-
-    emit invoke_sig(&invocation);
+    emit invoke_sig();
     // this is done to ensure that the invocation is run in the right thread
     // (for performance reasons the same socket is used and in Qt, the sockets
     // have thread affinity)
-
-    while(!invocation.m_done)
-    {
-        m_invokeWait.wait(&m_invokeWaitMutex);
-    }
-
-    return rc;
 }
 
 /*******************************************************************************
- * HActionInvokeProxy
+ * HActionInvokeProxyImpl
  ******************************************************************************/
-HActionInvokeProxy::HActionInvokeProxy(
-    const QByteArray& loggingIdentifier, HAction* action) :
-        m_connection(
-            new HActionInvokeProxyConnection(loggingIdentifier, action))
+HActionInvokeProxyImpl::HActionInvokeProxyImpl(
+    const QByteArray& loggingIdentifier, HAction* action, QThread* parentThread) :
+        m_proxy(new HActionProxy(loggingIdentifier, action, this)),
+        m_invocations(), m_invocationsMutex()
 {
+    Q_ASSERT(parentThread);
+    m_proxy->moveToThread(parentThread);
 }
 
-int HActionInvokeProxy::operator()(
-    const HActionArguments& inArgs,
-    HActionArguments* outArgs)
+HActionInvokeProxyImpl::~HActionInvokeProxyImpl()
 {
-    return m_connection->invoke(inArgs, outArgs);
+    m_proxy->deleteLater();
+}
+
+void HActionInvokeProxyImpl::invokeCompleted()
+{
+    QMutexLocker locker(&m_invocationsMutex);
+    m_callback(m_invocations.dequeue()->m_invokeId);
+    if (m_invocations.size())
+    {
+        m_proxy->beginInvoke(m_invocations.head());
+    }
+}
+
+bool HActionInvokeProxyImpl::beginInvoke(HAsyncInvocation* arg)
+{
+    QMutexLocker locker(&m_invocationsMutex);
+    m_invocations.enqueue(arg);
+    if (m_invocations.size() <= 1)
+    {
+        m_proxy->beginInvoke(arg);
+    }
+
+    return true;
 }
 
 }

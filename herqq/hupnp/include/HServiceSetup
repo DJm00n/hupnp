@@ -1,0 +1,6 @@
+#ifndef H_SERVICESETUP_
+#define H_SERVICESETUP_
+
+#include "../src/hupnp_core/devicemodel/hservices_setupdata.h"
+
+#endif // H_SERVICESETUP_

@@ -47,14 +47,16 @@ MessagingInfo::MessagingInfo(
     QTcpSocket& sock, qint32 receiveTimeoutForNoData) :
         m_sock(sock), m_keepAlive(false),
         m_receiveTimeoutForNoData(receiveTimeoutForNoData),
-        m_chunkedInfo(), m_autoDelete(true)
+        m_chunkedInfo(), m_autoDelete(true),
+        m_msecsToWaitOnSend(-1)
 {
 }
 
 MessagingInfo::MessagingInfo(
     QTcpSocket& sock, bool keepAlive, qint32 receiveTimeoutForNoData) :
         m_sock(sock), m_keepAlive(keepAlive),
-        m_receiveTimeoutForNoData(receiveTimeoutForNoData), m_autoDelete(true)
+        m_receiveTimeoutForNoData(receiveTimeoutForNoData), m_autoDelete(true),
+        m_msecsToWaitOnSend(-1)
 {
 }
 

@@ -453,10 +453,26 @@ bool HHttpAsyncOperation::run()
                 QString("failed to send data: %1").arg(
                     m_mi->socket().errorString()));
 
+            done_(Internal_Failed, false);
             return false;
         }
 
         m_state = Internal_WritingBlob;
+
+        if (m_mi->sendWait() > 0)
+        {
+            if (m_mi->socket().waitForBytesWritten(m_mi->sendWait()))
+            {
+                bytesWritten(-1);
+            }
+            else
+            {
+                m_mi->setLastErrorDescription(QString(
+                    "failed to send data %1").arg(m_mi->socket().errorString()));
+                done_(Internal_Failed, false);
+                return false;
+            }
+        }
     }
 
     return true;

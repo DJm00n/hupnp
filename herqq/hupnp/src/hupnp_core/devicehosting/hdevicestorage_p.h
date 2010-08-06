@@ -31,19 +31,12 @@
 //
 
 #include "../general/hdefs_p.h"
-#include "../general/hupnp_global.h"
+#include "../general/hupnp_fwd.h"
 
-#include "../socket/hendpoint.h"
-#include "../devicemodel/hdevice.h"
 #include "../devicemodel/hdevice_p.h"
-#include "../devicemodel/hservice.h"
-#include "../devicemodel/hservice_p.h"
 
-#include <QUrl>
-#include <QPair>
 #include <QList>
 #include <QMutex>
-#include <QImage>
 #include <QByteArray>
 
 namespace Herqq

@@ -40,24 +40,22 @@ namespace Upnp
 class HDeviceInfoPrivate;
 
 /*!
- * \brief Class that represents device information found in a UPnP device description file.
+ * \brief This class is used to contain information of a UPnP device
+ * found in a UPnP device description document.
  *
- * A device description details a UPnP device. A device description specifies
+ * A device description specifies a UPnP device. A device description specifies
  * the services of a device, the embedded devices of a device and other information,
  * such as the manufacturer, model name, serial number and the Unique Device Name
- * that uniquely identifies a device.
- *
- * In HUPnP the UPnP services and embedded devices are part of the
- * HUPnP's \ref devicemodel and because of that they are represented
- * as objects, which ownership is always held by HUPnP.
- * All the other information found in a device description is contained by
- * an instance of this class.
+ * that uniquely identifies a device. Instances of this class contain the
+ * previously mentioned "other" information found in device description documents.
  *
  * \headerfile hdeviceinfo.h HDeviceInfo
  *
  * \ingroup dataelements
  *
  * \remarks this class is not thread-safe.
+ *
+ * \sa HDevice, HServiceInfo, HActionInfo and HStateVariableInfo.
  */
 class H_UPNP_CORE_EXPORT HDeviceInfo
 {
@@ -80,7 +78,9 @@ public:
 
     /*!
      * Constructs a new instance from the specified parameters that the UDA
-     * specification mandates for a device. These are the arguments found in the
+     * specification mandates for a UPnP device.
+     *
+     * The parameters the constructor expects are arguments defined in the
      * device description file and they are all mandatory for a valid UPnP device.
      *
      * \param deviceType specifies the device type.
@@ -98,7 +98,7 @@ public:
      * unique identifier for the device, regardless if the device is root
      * or embedded. The specified UDN has to be valid.
      *
-     * \param err specifies a pointer to a \c QString that will contain
+     * \param err specifies a pointer to a \c QString that contains
      * an error description in case the construction failed. This is optional.
      *
      * \remarks in case any of the provided arguments does not meet the
@@ -155,7 +155,7 @@ public:
      * \param presentationUrl specifies the URL for HTML-based user interface
      * for controlling and/or viewing device status.
      *
-     * \param err specifies a pointer to a \c QString that will contain
+     * \param err specifies a pointer to a \c QString that contains
      * an error description in case the construction failed. This is optional.
      *
      * \remarks in case any of the provided arguments does not meet the
@@ -180,6 +180,8 @@ public:
         QString* err = 0);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HDeviceInfo();
@@ -407,7 +409,7 @@ public:
 /*!
  * Compares the two objects for equality.
  *
- * \return \e true in case the object are logically equivalent.
+ * \return \e true in case the objects are logically equivalent.
  *
  * \relates HDeviceInfo
  */
@@ -416,7 +418,7 @@ H_UPNP_CORE_EXPORT bool operator==(const HDeviceInfo&, const HDeviceInfo&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HDeviceInfo
  */

@@ -44,11 +44,6 @@ QString HHttpUtils::callbackAsStr(const QList<QUrl>& callbacks)
     return retVal;
 }
 
-QString HHttpUtils::rfc1123DateFormat()
-{
-    return "ddd, dd MMM yyyy HH:mm:ss";
-}
-
 bool HHttpUtils::readLines(
     QTcpSocket& socket, QByteArray& target, qint32 lineCount)
 {

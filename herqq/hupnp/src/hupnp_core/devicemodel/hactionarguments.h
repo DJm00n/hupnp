@@ -24,6 +24,7 @@
 
 #include "../general/hdefs_p.h"
 #include "../datatypes/hupnp_datatypes.h"
+#include "../dataelements/hstatevariableinfo.h"
 
 template<typename T, typename U>
 class QHash;
@@ -43,18 +44,16 @@ namespace Herqq
 namespace Upnp
 {
 
-class HStateVariable;
-
 /*!
- * A class that represents input and output arguments for a UPnP action invocation.
+ * A class that represents an argument for a UPnP action invocation.
  *
  * A UPnP argument is defined in the UPnP service description within
  * an action. If you picture a UPnP action as a function, then an
  * action argument is a parameter to the function. In that sense, a UPnP
  * \e input \e argument is a single \b constant parameter that provides
- * input for the function. An input argument is never modified during action invocation.
- * On the other hand, a UPnP \e output \e argument relays information back from the callee
- * to the caller and thus it is modified during action invocation.
+ * input for the function. An input argument is never modified during action
+ * invocation. On the other hand, a UPnP \e output \e argument relays information
+ * back from the callee to the caller and thus it is modified during action invocation.
  *
  * A UPnP argument has an unique name() within the definition
  * of the action that contains it. A UPnP argument contains a value, which you
@@ -64,32 +63,39 @@ class HStateVariable;
  * A somewhat unusual aspect of a UPnP argument is the concept of a
  * <em>related state variable</em>. According to the UDA specification, a
  * UPnP argument is \b always associated with a HStateVariable, even if the
- * state variable does not serve any other purpose. This type of a state variable is used
- * to describe the data type of a UPnP argument and thus the value of a
+ * state variable does not serve any other purpose besides that.
+ * This type of a state variable
+ * is used to describe the data type of a UPnP argument and thus the value of a
  * UPnP argument is bound by the data type of its related state variable.
  * The dataType() method introduced in this class is equivalent for calling
  * \verbatim relatedStateVariable()->dataType() \endverbatim
  *
+ * \note
+ * relatedStateVariable() returns a const reference to an
+ * HStateVariableInfo object, rather than a reference or
+ * a pointer to an HStateVariable. HStateVariableInfo is an object with value semantics
+ * that describes an HStateVariable.
+ *
  * Since it is common for actions
  * to use both input and output arguments that are defined only for the duration of
  * the action invocation, there are bound to be numerous state variables that
- * exist only for UPnP action invocation. It is defined in the UDA specification that these types
- * of state variables have to have a name that includes the prefix \b A_ARG_TYPE.
+ * exist only for UPnP action invocation. It is defined in the UDA specification
+ * that these types of state variables have to have a name that includes the
+ * prefix \b A_ARG_TYPE.
  *
  * Due to the strict typing of UPnP arguments, HUPnP attempts to make sure that
  * invalid values are not entered into a UPnP argument. Because of this, you can
  * call isValidValue() to check if a value you wish to set using setValue()
- * will be accepted. In addition, the setValue() returns false in case the value was not
- * accepted. It is advised that you make sure your values are properly set before
- * attempting action invocation, since the invocation is likely to fail in case
- * any of the provided arguments is invalid.
+ * will be accepted. In addition, the setValue() returns false in case the value
+ * was not accepted. It is advised that you make sure your values are properly
+ * set before attempting action invocation, since the invocation is likely to
+ * fail in case any of the provided arguments is invalid.
  *
  * Finally, you can use isValid() to check if the object itself is valid, which
- * is true if the object was constructed with a proper name and a related state variable.
- * Note, the current \e value of the object has nothing to do with the validity of the
- * \e object itself.
+ * is true if the object was constructed with a proper name and a related state
+ * variable.
  *
- * \remark the class is not thread-safe.
+ * \remarks the class is not thread-safe.
  *
  * \headerfile hactionarguments.h HActionArgument
  *
@@ -99,53 +105,60 @@ class HStateVariable;
  */
 class H_UPNP_CORE_EXPORT HActionArgument
 {
-friend class HObjectCreator;
+friend H_UPNP_CORE_EXPORT bool operator==(
+    const HActionArgument&, const HActionArgument&);
 
 private:
 
-    QString         m_name;
-    HStateVariable* m_stateVariable;
-    QVariant        m_value;
-
-    //
-    // \internal
-    //
-    // Initializes a new instance with the specified name and related state variable.
-    //
-    // \param name specifies the name of the argument
-    // \param stateVariable specifies the related state variable.
-    //
-    // \remark in case the name parameter fails the criteria specified for
-    // UPnP action arguments in UPnP Device Architecture 1.1 specification
-    // or the stateVariable is null, the object is constructed as "invalid";
-    // isValid() always returns false.
-    //
-    // \sa isValid()
-    //
-    void init(const QString& name, HStateVariable* stateVariable);
+    QString m_name;
+    HStateVariableInfo m_stateVariableInfo;
+    QVariant m_value;
 
 public:
 
     /*!
      * Constructs a new, empty instance.
      *
-     * \remark Object constructed using this method is always invalid.
+     * \remarks Object constructed using this method is always invalid.
      *
      * \sa isValid()
      */
     HActionArgument();
 
     /*!
+     *
+     * Initializes a new instance with the specified name and related state variable.
+     *
+     * \param name specifies the name of the argument
+     * \param stateVariableInfo specifies the related state variable.
+     *
+     * \remarks in case the name parameter fails the criteria specified for
+     * UPnP action arguments in UPnP Device Architecture 1.1 specification
+     * or the stateVariable is null, the object is constructed as "invalid";
+     * isValid() always returns false.
+     *
+     * \sa isValid()
+     */
+    HActionArgument(
+        const QString& name, const HStateVariableInfo& stateVariableInfo);
+
+    /*!
      * Copy constructor.
+     *
+     * Creates a copy of \c other.
      */
     HActionArgument(const HActionArgument&);
 
     /*!
      * Assignment operator.
+     *
+     * Copies the contents of \c other to this.
      */
     HActionArgument& operator=(const HActionArgument&);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HActionArgument();
@@ -161,21 +174,24 @@ public:
     QString name() const;
 
     /*!
-     * Returns the state variable that is associated with this action argument.
+     * Returns information about the state variable that is associated
+     * with this action argument.
      *
-     * \return the state variable that is associated with this action argument
-     * or a null pointer in case the object is invalid.
+     * \return information about the state variable that is associated
+     * with this action argument or a null pointer in case the object is invalid.
      *
      * \sa isValid()
      */
-    HStateVariable* relatedStateVariable() const;
+    const HStateVariableInfo& relatedStateVariable() const;
 
     /*!
      * Helper method for accessing the data type of the related state variable
-     * directly.
+     * info object directly.
      *
      * \return the data type of the state variable. The data type is
      * HUpnpDataTypes::Undefined in case the object is invalid.
+     *
+     * \sa isValid()
      */
     HUpnpDataTypes::DataType dataType() const;
 
@@ -246,14 +262,41 @@ public:
     bool isValidValue(const QVariant& value);
 };
 
+/*!
+ * Compares the two objects for equality.
+ *
+ * \return \e true in case the object are logically equivalent.
+ *
+ * \relates HActionArgument
+ */
+H_UPNP_CORE_EXPORT bool operator==(
+    const HActionArgument&, const HActionArgument&);
+
+/*!
+ * Compares the two objects for inequality.
+ *
+ * \return \e true in case the object are not logically equivalent.
+ *
+ * \relates HActionArgument
+ */
+H_UPNP_CORE_EXPORT bool operator!=(
+    const HActionArgument&, const HActionArgument&);
+
 class HActionArgumentsPrivate;
 
 /*!
  * A storage class for HActionArgument instances.
  *
- * Provides iterative and keyed access to the stored HActionArgument instances.
+ * Instances of this class are used to contain the input and output arguments
+ * for an action invocation.
+ *
+ * \note
+ * The class provides iterative and keyed access to the stored HActionArgument instances.
  * The order of action arguments during iteration is the order in which the
- * action arguments are defined in the service description file.
+ * HActionArgument objects are provided to the instance.
+ * If the class is instantiated by HUPnP, the order of the contained arguments
+ * during iteration is the order in which they are defined in the service
+ * description document.
  *
  * \headerfile hactionarguments.h HActionArguments
  *
@@ -261,34 +304,16 @@ class HActionArgumentsPrivate;
  *
  * \sa HActionArgument, HAction
  *
- * \remark this class is not thread-safe.
+ * \remarks this class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HActionArguments
 {
-friend class HObjectCreator;
+friend H_UPNP_CORE_EXPORT bool operator==(
+    const HActionArguments&, const HActionArguments&);
 
 private:
 
     HActionArgumentsPrivate* h_ptr;
-
-    //
-    // \internal
-    //
-    // Creates a new instance from the specified input arguments and takes the
-    // ownership of the provided arguments.
-    //
-    explicit HActionArguments(const QVector<HActionArgument*>& args);
-
-    //
-    // \internal
-    //
-    // Creates a new instance from the specified input arguments.
-    //
-    // \param args specifies the input arguments, where the key of the hash table
-    // is the name of the argument. The ownership of the arguments is transferred.
-    //
-    explicit HActionArguments(
-        const QHash<QString, HActionArgument*>& args);
 
 public:
 
@@ -297,26 +322,46 @@ public:
 
     /*!
      * Swaps the contents of the two containers.
+     *
+     * Swaps the contents of the two containers.
+     *
+     * \relates HActionArguments
      */
-    friend void swap(HActionArguments&, HActionArguments&);
+    friend H_UPNP_CORE_EXPORT void swap(HActionArguments&, HActionArguments&);
 
     /*!
      * Creates a new, empty instance.
+     *
+     * \sa isEmpty()
      */
     HActionArguments();
 
     /*!
+     * Creates a new instance from the specified input arguments and takes the
+     * ownership of the provided arguments.
+     *
+     * \sa isEmpty()
+     */
+    HActionArguments(const QVector<HActionArgument*>& args);
+
+    /*!
+     * Copy constructor.
+     *
+     * Creates a copy of \c other.
+     */
+    HActionArguments(const HActionArguments&);
+
+    /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HActionArguments();
 
     /*!
-     * Copy constructor. Makes a deep copy.
-     */
-    HActionArguments(const HActionArguments&);
-
-    /*!
-     * Assignment operator. Makes a deep-copy.
+     * Assignment operator.
+     *
+     * Copies the contents of \c other to this.
      *
      * \return a reference to this object.
      */
@@ -329,7 +374,7 @@ public:
      *
      * \return \e true in case the object contains an argument with the specified name.
      *
-     * \remark this is a \e constant-time operation.
+     * \remarks this is a \e constant-time operation.
      */
     bool contains(const QString& argumentName) const;
 
@@ -348,7 +393,7 @@ public:
      * not transferred.
      * \li The returned object is deleted when this container is being deleted.
      *
-     * \remark this is a \e constant-time operation.
+     * \remarks this is a \e constant-time operation.
      */
     HActionArgument* get(const QString& argumentName);
 
@@ -379,7 +424,7 @@ public:
      * not transferred.
      * \li The returned object is deleted when this container is being deleted.
      *
-     * \remark this is a \e constant-time operation.
+     * \remarks this is a \e constant-time operation.
      */
     HActionArgument* get(qint32 index);
 
@@ -503,6 +548,13 @@ public:
     QList<QString> names() const;
 
     /*!
+     * Indicates if the object is empty, i.e. it has no arguments.
+     *
+     * \return \e true when the object has no arguments.
+     */
+    bool isEmpty() const;
+
+    /*!
      * Returns a string representation of the object.
      *
      * \return a string representation of the object. The
@@ -512,6 +564,26 @@ public:
      */
     QString toString() const;
 };
+
+/*!
+ * Compares the two objects for equality.
+ *
+ * \return \e true in case the object are logically equivalent.
+ *
+ * \relates HActionArguments
+ */
+H_UPNP_CORE_EXPORT bool operator==(
+    const HActionArguments&, const HActionArguments&);
+
+/*!
+ * Compares the two objects for inequality.
+ *
+ * \return \e true in case the object are not logically equivalent.
+ *
+ * \relates HActionArguments
+ */
+H_UPNP_CORE_EXPORT bool operator!=(
+    const HActionArguments&, const HActionArguments&);
 
 }
 }

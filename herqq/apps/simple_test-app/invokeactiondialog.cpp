@@ -29,6 +29,7 @@
 #include <HAction>
 #include <HDevice>
 #include <HService>
+#include <HActionInfo>
 #include <HStateVariable>
 #include <HActionArguments>
 #include <HActionArguments>
@@ -87,23 +88,23 @@ void InvokeActionDialog::invokeComplete(HAsyncOp invokeOp)
 
 void InvokeActionDialog::setupArgumentWidgets()
 {
-    HActionArguments inputArgs = m_action->inputArguments();
+    HActionArguments inputArgs = m_action->info().inputArguments();
 
     m_ui->inputArguments->setRowCount(inputArgs.size());
 
     for(qint32 i = 0; i < inputArgs.size(); ++i)
     {
         HActionArgument* inputArg = inputArgs[i];
-        HStateVariable* stateVar = inputArg->relatedStateVariable();
+        const HStateVariableInfo& stateVar = inputArg->relatedStateVariable();
 
         QTableWidgetItem* item =
-            new QTableWidgetItem(HUpnpDataTypes::toString(stateVar->dataType()));
+            new QTableWidgetItem(HUpnpDataTypes::toString(stateVar.dataType()));
 
         item->setFlags(Qt::NoItemFlags);
 
         m_ui->inputArguments->setItem(i, 0, item);
 
-        item = new QTableWidgetItem(stateVar->name());
+        item = new QTableWidgetItem(stateVar.name());
         item->setFlags(Qt::NoItemFlags);
 
         m_ui->inputArguments->setItem(i, 1, item);
@@ -116,23 +117,23 @@ void InvokeActionDialog::setupArgumentWidgets()
         //m_ui->inputArguments->resizeColumnsToContents();
     }
 
-    HActionArguments outputArgs = m_action->outputArguments();
+    HActionArguments outputArgs = m_action->info().outputArguments();
 
     m_ui->outputArguments->setRowCount(outputArgs.size());
 
     for(qint32 i = 0; i < outputArgs.size(); ++i)
     {
         HActionArgument* outputArg = outputArgs[i];
-        HStateVariable* stateVar = outputArg->relatedStateVariable();
+        const HStateVariableInfo& stateVar = outputArg->relatedStateVariable();
 
         QTableWidgetItem* item =
-            new QTableWidgetItem(HUpnpDataTypes::toString(stateVar->dataType()));
+            new QTableWidgetItem(HUpnpDataTypes::toString(stateVar.dataType()));
 
         item->setFlags(Qt::NoItemFlags);
 
         m_ui->outputArguments->setItem(i, 0, item);
 
-        item = new QTableWidgetItem(stateVar->name());
+        item = new QTableWidgetItem(stateVar.name());
         item->setFlags(Qt::NoItemFlags);
 
         m_ui->outputArguments->setItem(i, 1, item);
@@ -212,57 +213,58 @@ void minMaxValues(HUpnpDataTypes::DataType dt, qreal* max, qreal* min)
 }
 }
 
-IDataHolder* InvokeActionDialog::createDataHolder(HStateVariable* stateVar)
+IDataHolder* InvokeActionDialog::createDataHolder(
+    const HStateVariableInfo& stateVar)
 {
     IDataHolder* content = 0;
 
-    if (HUpnpDataTypes::isInteger(stateVar->dataType()))
+    if (HUpnpDataTypes::isInteger(stateVar.dataType()))
     {
-        if (stateVar->isConstrained())
+        if (stateVar.isConstrained())
         {
             content = new GenericInput(
                 new QIntValidator(
-                    stateVar->minimumValue().toInt(),
-                    stateVar->maximumValue().toInt(),
+                    stateVar.minimumValue().toInt(),
+                    stateVar.maximumValue().toInt(),
                     0));
         }
         else
         {
             qint32 max = 0, min = 0;
-            minMaxValues(stateVar->dataType(), &max, &min);
+            minMaxValues(stateVar.dataType(), &max, &min);
             content = new GenericInput(new QIntValidator(min, max, 0));
         }
     }
     else if (HUpnpDataTypes::isRational(HUpnpDataTypes::string))
     {
-        if (stateVar->isConstrained())
+        if (stateVar.isConstrained())
         {
             content = new GenericInput(
                 new QDoubleValidator(
-                    stateVar->minimumValue().toDouble(),
-                    stateVar->maximumValue().toDouble(),
+                    stateVar.minimumValue().toDouble(),
+                    stateVar.maximumValue().toDouble(),
                     0,
                     0));
         }
         else
         {
             qreal max = 0, min = 0;
-            minMaxValues(stateVar->dataType(), &max, &min);
+            minMaxValues(stateVar.dataType(), &max, &min);
             content = new GenericInput(new QDoubleValidator(min, max, 0, 0));
         }
     }
-    else if (stateVar->dataType() == HUpnpDataTypes::string)
+    else if (stateVar.dataType() == HUpnpDataTypes::string)
     {
-        if (stateVar->isConstrained())
+        if (stateVar.isConstrained())
         {
-            content = new AllowedValueListInput(stateVar->allowedValueList());
+            content = new AllowedValueListInput(stateVar.allowedValueList());
         }
         else
         {
             content = new GenericInput();
         }
     }
-    else if (stateVar->dataType() == HUpnpDataTypes::boolean)
+    else if (stateVar.dataType() == HUpnpDataTypes::boolean)
     {
         QStringList allowedValues;
         allowedValues.append("True");
@@ -297,7 +299,7 @@ void InvokeActionDialog::changeEvent(QEvent *e)
 
 void InvokeActionDialog::on_invokeButton_clicked()
 {
-    HActionArguments inputArgs = m_action->inputArguments();
+    HActionArguments inputArgs = m_action->info().inputArguments();
 
     for(qint32 i = 0; i < inputArgs.size(); ++i)
     {

@@ -23,9 +23,9 @@
 #define HSTATEVARIABLE_H_
 
 #include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
 #include "../datatypes/hupnp_datatypes.h"
 
-#include <QList>
 #include <QObject>
 #include <QVariant>
 
@@ -37,13 +37,9 @@ namespace Herqq
 namespace Upnp
 {
 
-class HService;
 class HObjectCreator;
-class HStateVariableEvent;
 class HStateVariablePrivate;
 class HStateVariableController;
-class HWritableStateVariable;
-class HReadableStateVariable;
 
 /*!
  * Class that represents a UPnP state variable.
@@ -55,10 +51,10 @@ class HReadableStateVariable;
  * always contained within a UPnP service.
  *
  * A state variable can be \em evented in which case it notifies interested listeners
- * of changes in its value. You can see if a state variable is evented by calling
- * eventingType() and you can connect to the signal valueChanged() to be notified
- * when the value of the state variable changes. Note, however, that only evented
- * state variables emit the valueChanged signal.
+ * of changes in its value. You can see if a state variable is evented by checking
+ * the HStateVariableInfo object using info() and you can connect to the signal
+ * valueChanged() to be notified when the value of the state variable changes.
+ * Note, however, that only evented state variables emit the valueChanged() signal.
  *
  * \headerfile hstatevariable.h HStateVariable
  *
@@ -66,7 +62,7 @@ class HReadableStateVariable;
  *
  * \sa HReadableStateVariable, HWritableStateVariable, HService
  *
- * \remark the methods introduced in this class are thread-safe, but the \c QObject
+ * \remarks the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.
  */
 class H_UPNP_CORE_EXPORT HStateVariable :
@@ -77,36 +73,6 @@ H_DISABLE_COPY(HStateVariable)
 H_DECLARE_PRIVATE(HStateVariable)
 friend class HObjectCreator;
 friend class HStateVariableController;
-
-public:
-
-    /*!
-     * Specifies different types of eventing.
-     *
-     * \sa devicehosting
-     */
-    enum EventingType
-    {
-        /*!
-         * The state variable is not evented and it will never emit
-         * valueChanged() signal.
-         */
-        NoEvents = 0,
-
-        /*!
-         * The state variable is evented, valueChanged() signal is emitted upon
-         * value change and the HUPnP will propagate events over network
-         * to registered listeners through unicast only.
-         */
-        UnicastOnly = 1,
-
-        /*!
-         * The state variable is evented, valueChanged() signal is emitted upon
-         * value change and the HUPnP will propagate events over network
-         * using uni- and multicast.
-         */
-        UnicastAndMulticast = 2
-    };
 
 protected:
 
@@ -121,25 +87,7 @@ protected:
     //
     // \internal
     //
-    void init(
-        const QString& name, HUpnpDataTypes::DataType datatype,
-        const QVariant& defaultValue, EventingType eventingType = NoEvents);
-
-    //
-    // \internal
-    //
-    void init(
-        const QString& name, const QVariant& defaultValue,
-        const QStringList& allowedValueList, EventingType eventingType = NoEvents);
-
-    //
-    // \internal
-    //
-    void init(
-        const QString& name, HUpnpDataTypes::DataType datatype,
-        const QVariant& defaultValue, const QVariant& minimumValue,
-        const QVariant& maximumValue, const QVariant& stepValue,
-        EventingType eventingType = NoEvents);
+    bool init(const HStateVariableInfo& arg);
 
     //
     // \internal
@@ -156,7 +104,7 @@ protected:
     // \retval true in case the new value was successfully set.
     // \retval false in case the new value could not be set.
     //
-    // \remark the new value will be set if the value:
+    // \remarks the new value will be set if the value:
     //  - does not violate the defined constraints
     //  - has the same variant type or the type of the new value can be converted
     //  to the same variant type
@@ -188,84 +136,6 @@ public:
     HService* parentService() const;
 
     /*!
-     * Returns the data type of the state variable.
-     *
-     * \return the data type of the state variable.
-     */
-    HUpnpDataTypes::DataType dataType() const;
-
-    /*!
-     * Returns the name of the state variable.
-     *
-     * \return the name of the state variable.
-     */
-    QString name() const;
-
-    /*!
-     * Indicates the type of eventing this state variable supports, if any.
-     *
-     * \return the type of eventing this state variable supports, if any.
-     */
-    EventingType eventingType() const;
-
-    /*!
-     * Returns the list of allowed values.
-     *
-     * \return the list of allowed values if the contained data type is string
-     * or empty list otherwise.
-     *
-     * \remark this is only applicable on state variables, which data type is
-     * \e string.
-     *
-     * \sa dataType()
-     */
-    QStringList allowedValueList() const;
-
-    /*!
-     * Returns the minimum value of the specified value range.
-     *
-     * \return the minimum value of the specified value range.
-     *
-     * \remark this is only applicable on state variables, which data type is
-     * numeric. In addition, it is optional and it may not be defined.
-     *
-     * \sa dataType()
-     */
-    QVariant minimumValue() const;
-
-    /*!
-     * Returns the maximum value of the specified value range.
-     *
-     * \return the maximum value of the specified value range.
-     *
-     * \remark this is only applicable on state variables, which data type is
-     * numeric. In addition, it is optional and it may not be defined.
-     *
-     * \sa dataType()
-     */
-    QVariant maximumValue() const;
-
-    /*!
-     * Returns the step value of the specified value range.
-     *
-     * \return the step value of the specified value range.
-     *
-     * \remark this is only applicable on state variables, which data type is
-     * numeric. In addition, it is optional and it may not be defined.
-     *
-     * \sa dataType()
-     */
-    QVariant stepValue() const;
-
-    /*!
-     * Returns the default value of the state variable.
-     *
-     * \return the default value of the state variable. If no default has been
-     * specified, QVariant::Invalid is returned.
-     */
-    QVariant defaultValue() const;
-
-    /*!
      * Returns the value of the state variable.
      *
      * \return the value of the state variable.
@@ -273,32 +143,13 @@ public:
     QVariant value() const;
 
     /*!
-     * Indicates if the state variable's value is constrained either by minimum,
-     * maximum or by a list of allowed values.
+     * Returns information about the state variable that is read from the
+     * service description.
      *
-     * \return true in case the state variable's value is constrained either by minimum,
-     * maximum or by a list of allowed values.
-     *
-     * \sa minimumValue(), maximumValue(), allowedValueList()
+     * \return information about the state variable that is read from the
+     * service description.
      */
-    bool isConstrained() const;
-
-    /*!
-     * Indicates whether or not the value is valid in terms of this particular
-     * state variable.
-     *
-     * \param value specifies the value to be checked.
-     * \param convertedValue specifies the exact value that would be used if
-     * the specified value is considered valid. Since two different variant types can contain
-     * the same value, it is sometimes useful to know the variant type that is
-     * used to hold the value as well.
-     *
-     * \retval true in case the specified value is valid to this state variable.
-     * In other words, setValue() will succeed when called with this argument.
-     *
-     * \retval false otherwise.
-     */
-    bool isValidValue(const QVariant& value, QVariant* convertedValue = 0) const;
+    const HStateVariableInfo& info() const;
 
     /*!
      * Attempts to cast the instance to HWritableStateVariable.
@@ -339,7 +190,7 @@ class HStateVariableEventPrivate;
  *
  * \sa HStateVariable::valueChanged()
  *
- * \remark this class is not thread-safe.
+ * \remarks this class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HStateVariableEvent
 {
@@ -350,6 +201,8 @@ private:
 public:
 
     /*!
+     * Creates a new, empty instance.
+     *
      * Creates a new, empty instance.
      */
     HStateVariableEvent();
@@ -363,22 +216,26 @@ public:
      *
      * \param newValue specifies the newly set value.
      *
-     * \remark in case the previousValue and newValue contains a different data
+     * \remarks in case the previousValue and newValue contains a different data
      * types, the values are ignored and the object is set to empty. Similarly, if
      * the eventSource is not defined, the object is constructed empty.
      *
      * \sa isEmpty()
      */
     HStateVariableEvent(
-        HStateVariable* eventSource, const QVariant& previousValue,
+        const HStateVariableInfo& eventSource, const QVariant& previousValue,
         const QVariant& newValue);
 
     /*!
-     * Copies the contents of the other object to this.
+     * Copy constructor.
+     *
+     * Copies the contents of the \c other to this.
      */
     HStateVariableEvent(const HStateVariableEvent&);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     virtual ~HStateVariableEvent();
@@ -395,14 +252,14 @@ public:
      * \return true in case previousValue() and newValue() return a null QVariant and
      * eventSource() returns null.
      */
-    bool isEmpty() const;
+    bool isValid() const;
 
     /*!
      * Returns the source state variable that generated the event.
      *
      * \return the source state variable of the event.
      */
-    HStateVariable* eventSource() const;
+    const HStateVariableInfo& eventSource() const;
 
     /*!
      * Returns the previous value of the state variable.

@@ -32,16 +32,16 @@
 
 #include "../../general/hupnp_fwd.h"
 #include "../../http/hhttp_asynchandler_p.h"
+
+#include "../../devicemodel/haction_p.h"
 #include "../../devicemodel/hactionarguments.h"
 
 #include <QUrl>
 #include <QMutex>
+#include <QQueue>
 #include <QString>
 #include <QTcpSocket>
 #include <QScopedPointer>
-#include <QWaitCondition>
-
-class QtSoapMessage;
 
 namespace Herqq
 {
@@ -49,36 +49,17 @@ namespace Herqq
 namespace Upnp
 {
 
-//
-//
-//
-class Invocation
-{
-H_DISABLE_COPY(Invocation)
-
-public:
-
-    qint32* m_rc;
-    const HActionArguments& m_inArgs;
-    HActionArguments* m_outArgs;
-    volatile bool m_done;
-
-    Invocation(
-        qint32* rc, const HActionArguments& inArgs,
-        HActionArguments* outArgs) :
-            m_rc(rc), m_inArgs(inArgs), m_outArgs(outArgs), m_done(false)
-    {
-    }
-};
+class HActionInvokeProxyImpl;
 
 //
+// Class for relaying action invocations across the network to the real
+// HAction objects instantiated by device hosts
 //
-//
-class HActionInvokeProxyConnection :
+class HActionProxy :
     public QObject
 {
 Q_OBJECT
-H_DISABLE_COPY(HActionInvokeProxyConnection)
+H_DISABLE_COPY(HActionProxy)
 
 private:
 
@@ -109,13 +90,11 @@ private:
     // the device locations and the index the next connection attempt should try
     // these are the places to which the action invocation requests are sent
 
-    QMutex m_invokeWaitMutex;
-    QWaitCondition m_invokeWait;
-
-    QMutex m_invocationMutex;
-    Invocation* m_invocationInProgress;
+    HAsyncInvocation* m_invocationInProgress;
 
     MessagingInfo m_messagingInfo;
+
+    HActionInvokeProxyImpl* m_owner;
 
 private:
 
@@ -124,7 +103,7 @@ private:
 
 private slots:
 
-    void invoke_slot(Invocation*);
+    void invoke_slot();
 
     void error(QAbstractSocket::SocketError);
 
@@ -133,36 +112,45 @@ private slots:
 
 Q_SIGNALS:
 
-    void invoke_sig(Invocation*);
+    void invoke_sig();
 
 public:
 
-    HActionInvokeProxyConnection(
-        const QByteArray& loggingIdentifier, HAction* action);
+    HActionProxy(
+        const QByteArray& loggingIdentifier,
+        HAction* action,
+        HActionInvokeProxyImpl* owner);
 
-    virtual ~HActionInvokeProxyConnection();
+    virtual ~HActionProxy();
 
-    qint32 invoke(
-        const HActionArguments& inArgs,
-        HActionArguments* outArgs);
+    void beginInvoke(HAsyncInvocation*);
 };
 
 //
-// Class for relaying action invocations across the network to the real
-// HAction objects instantiated by device hosts
 //
-class HActionInvokeProxy
+//
+class HActionInvokeProxyImpl :
+    public HActionInvokeProxy
 {
+H_DISABLE_COPY(HActionInvokeProxyImpl)
+friend class HActionProxy;
+
 private:
 
-    QSharedPointer<HActionInvokeProxyConnection> m_connection;
+    void invokeCompleted();
+
+    HActionProxy* m_proxy;
+    QQueue<HAsyncInvocation*> m_invocations;
+    QMutex m_invocationsMutex;
 
 public:
 
-    HActionInvokeProxy(const QByteArray& loggingIdentifier, HAction* action);
+    HActionInvokeProxyImpl(
+        const QByteArray& loggingIdentifier,
+        HAction* action, QThread* parentThread);
 
-    int operator()(
-        const HActionArguments& inArgs, HActionArguments* outArgs);
+    virtual ~HActionInvokeProxyImpl();
+    virtual bool beginInvoke(HAsyncInvocation*);
 };
 
 }

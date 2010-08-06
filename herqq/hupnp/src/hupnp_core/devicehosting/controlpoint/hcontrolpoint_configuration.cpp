@@ -24,6 +24,7 @@
 
 #include "../../general/hupnp_global_p.h"
 #include "../../devicemodel/hdeviceproxy.h"
+#include "../../devicemodel/hserviceproxy.h"
 #include "../../../utils/hmisc_utils_p.h"
 
 namespace Herqq
@@ -100,17 +101,23 @@ HControlPointConfiguration::~HControlPointConfiguration()
     delete h_ptr;
 }
 
-HControlPointConfiguration* HControlPointConfiguration::doClone() const
+HControlPointConfiguration* HControlPointConfiguration::newInstance() const
 {
     return new HControlPointConfiguration();
 }
 
+void HControlPointConfiguration::doClone(HControlPointConfiguration* target) const
+{
+    delete target->h_ptr;
+    target->h_ptr = h_ptr->clone();
+}
+
 HControlPointConfiguration* HControlPointConfiguration::clone() const
 {
-    HControlPointConfiguration* newClone = doClone();
+    HControlPointConfiguration* newClone = newInstance();
     if (!newClone) { return 0; }
 
-    newClone->h_ptr = h_ptr->clone();
+    doClone(newClone);
 
     return newClone;
 }

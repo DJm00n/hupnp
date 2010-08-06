@@ -1,7 +1,9 @@
 
 HEADERS += \
     $$SRC_LOC/devicemodel/haction.h \
+    $$SRC_LOC/devicemodel/hactions_setupdata.h \
     $$SRC_LOC/devicemodel/hasyncop.h \
+    $$SRC_LOC/devicemodel/hexecargs.h \
     $$SRC_LOC/devicemodel/haction_p.h \
     $$SRC_LOC/devicemodel/hactioninvoke.h \
     $$SRC_LOC/devicemodel/hactioninvoke_callback.h \
@@ -15,20 +17,27 @@ HEADERS += \
     $$SRC_LOC/devicemodel/hservice.h \
     $$SRC_LOC/devicemodel/hserviceproxy.h \
     $$SRC_LOC/devicemodel/hserviceproxy_p.h \
+    $$SRC_LOC/devicemodel/hdevices_setupdata.h \
+    $$SRC_LOC/devicemodel/hservices_setupdata.h \
     $$SRC_LOC/devicemodel/hstatevariable.h \
     $$SRC_LOC/devicemodel/hstatevariable_p.h \
     $$SRC_LOC/devicemodel/hwritable_statevariable.h \
-    $$SRC_LOC/devicemodel/hreadable_statevariable.cpp \
-    $$SRC_LOC/devicemodel/hvaluerange_p.h
+    $$SRC_LOC/devicemodel/hreadable_statevariable.h \
+    $$SRC_LOC/devicemodel/hstatevariables_setupdata.h
 
 SOURCES += \
     $$SRC_LOC/devicemodel/haction.cpp \
+    $$SRC_LOC/devicemodel/hactions_setupdata.cpp \
     $$SRC_LOC/devicemodel/hasyncop.cpp \
+    $$SRC_LOC/devicemodel/hexecargs.cpp \
     $$SRC_LOC/devicemodel/hactionarguments.cpp \
     $$SRC_LOC/devicemodel/hdevice.cpp \
     $$SRC_LOC/devicemodel/hdeviceproxy.cpp \
     $$SRC_LOC/devicemodel/hservice.cpp \
     $$SRC_LOC/devicemodel/hserviceproxy.cpp \
+    $$SRC_LOC/devicemodel/hdevices_setupdata.cpp \
+    $$SRC_LOC/devicemodel/hservices_setupdata.cpp \
     $$SRC_LOC/devicemodel/hstatevariable.cpp \
     $$SRC_LOC/devicemodel/hwritable_statevariable.cpp \
-    $$SRC_LOC/devicemodel/hreadable_statevariable.cpp
+    $$SRC_LOC/devicemodel/hreadable_statevariable.cpp \
+    $$SRC_LOC/devicemodel/hstatevariables_setupdata.cpp

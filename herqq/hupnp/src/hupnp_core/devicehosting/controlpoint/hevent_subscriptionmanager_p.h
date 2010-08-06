@@ -32,7 +32,6 @@
 #include <QUuid>
 #include <QMutex>
 #include <QObject>
-#include <QSharedPointer>
 
 namespace Herqq
 {

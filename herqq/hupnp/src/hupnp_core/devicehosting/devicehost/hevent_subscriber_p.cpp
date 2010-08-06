@@ -23,13 +23,13 @@
 
 #include "../../devicemodel/hservice.h"
 #include "../../dataelements/hserviceid.h"
+#include "../../dataelements/hserviceinfo.h"
 
 #include "../../http/hhttp_handler_p.h"
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../../utils/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
-#include "../../../utils/hexceptions_p.h"
 
 #include <QTcpSocket>
 
@@ -253,7 +253,7 @@ bool ServiceEventSubscriber::isInterested(const HService* service) const
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     return !expired() && m_seq && m_service->isEvented() &&
-            m_service->serviceId() == service->serviceId();
+            m_service->info().serviceId() == service->info().serviceId();
 }
 
 void ServiceEventSubscriber::renew(const HTimeout& newTimeout)

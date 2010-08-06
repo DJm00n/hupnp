@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_STATEVARIABLE_P_H_
-#define HUPNP_STATEVARIABLE_P_H_
+#ifndef HSTATEVARIABLE_P_H_
+#define HSTATEVARIABLE_P_H_
 
 //
 // !! Warning !!
@@ -30,15 +30,11 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hstatevariable.h"
-#include "hvaluerange_p.h"
+#include "../dataelements/hstatevariableinfo.h"
 
-#include "../datatypes/hupnp_datatypes.h"
-
-#include <QUrl>
 #include <QMutex>
 #include <QString>
-#include <QStringList>
+#include <QVariant>
 
 namespace Herqq
 {
@@ -55,7 +51,7 @@ class HStateVariableEventPrivate
 {
 public:
 
-    HStateVariable* m_eventSource;
+    HStateVariableInfo m_eventSource;
     QVariant m_previousValue;
     QVariant m_newValue;
 
@@ -83,7 +79,6 @@ public:
     HStateVariableController(HStateVariable* stateVar);
     virtual ~HStateVariableController();
 
-    bool isValidValue(const QVariant& value, QVariant* convertedValue = 0) const;
     bool setValue(const QVariant& newValue);
 };
 
@@ -96,31 +91,20 @@ H_DISABLE_COPY(HStateVariablePrivate)
 
 public:
 
-    QString                  m_name;
-    HUpnpDataTypes::DataType m_dataType;
-    QVariant::Type           m_variantDataType;
-    QVariant                 m_defaultValue;
-    HStateVariable::EventingType m_eventingType;
-    QStringList              m_allowedValueList;
-    HValueRange              m_allowedValueRange;
-    QVariant                 m_value;
-    QMutex                   m_valueMutex;
+    HStateVariableInfo m_info;
 
-    HService*                m_parentService;
+    QVariant  m_value;
+    QMutex    m_valueMutex;
+    HService* m_parentService;
+
+    const QByteArray m_loggingIdentifier;
 
 public:
 
-    HStateVariablePrivate ();
+    HStateVariablePrivate();
     virtual ~HStateVariablePrivate();
 
-    void setName             (const QString&);
-    void setDataType         (HUpnpDataTypes::DataType);
-    QVariant checkValue      (const QVariant&);
-    void setDefaultValue     (const QVariant&);
-    void setEventingType     (HStateVariable::EventingType);
-    void setAllowedValueList (const QStringList&);
-    void setAllowedValueRange(HValueRange);
-    bool setValue            (const QVariant& value);
+    bool setValue(const QVariant& value, QString* err = 0);
 };
 
 }

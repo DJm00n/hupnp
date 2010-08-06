@@ -1,0 +1,6 @@
+#ifndef H_DEVICESETUP_
+#define H_DEVICESETUP_
+
+#include "../src/hupnp_core/devicemodel/hdevices_setupdata.h"
+
+#endif // H_DEVICESETUP_

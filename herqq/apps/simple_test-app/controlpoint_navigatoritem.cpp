@@ -26,8 +26,11 @@
 #include <HDevice>
 #include <HService>
 #include <HServiceId>
+#include <HActionInfo>
 #include <HDeviceInfo>
+#include <HServiceInfo>
 #include <HStateVariable>
+#include <HStateVariableInfo>
 
 #include <QUrl>
 #include <QList>
@@ -165,7 +168,7 @@ DeviceItem::~DeviceItem()
 
 QVariant DeviceItem::data(int /*column*/) const
 {
-    return m_device->deviceInfo().friendlyName();
+    return m_device->info().friendlyName();
 }
 
 void DeviceItem::accept(ControlPointNavigatorItemVisitor* visitor)
@@ -189,7 +192,7 @@ ServiceItem::~ServiceItem()
 
 QVariant ServiceItem::data (int /*column*/) const
 {
-    return m_service->serviceId().toString();
+    return m_service->info().serviceId().toString();
 }
 
 void ServiceItem::accept(ControlPointNavigatorItemVisitor* visitor)
@@ -213,7 +216,7 @@ ActionItem::~ActionItem()
 
 QVariant ActionItem::data (int /*column*/) const
 {
-    return m_action->name();
+    return m_action->info().name();
 }
 
 void ActionItem::accept(ControlPointNavigatorItemVisitor* visitor)
@@ -237,7 +240,7 @@ StateVariableItem::~StateVariableItem()
 
 QVariant StateVariableItem::data (int /*column*/) const
 {
-    return m_stateVar->name();
+    return m_stateVar->info().name();
 }
 
 void StateVariableItem::accept(ControlPointNavigatorItemVisitor* visitor)

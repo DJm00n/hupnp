@@ -24,8 +24,6 @@
 
 #include "hservice_p.h"
 
-#include <QHash>
-
 namespace Herqq
 {
 
@@ -54,9 +52,9 @@ HDeviceProxy::~HDeviceProxy()
 {
 }
 
-HDevice::HServiceMap HDeviceProxy::createServices()
+HServicesSetupData* HDeviceProxy::createServices()
 {
-    return HServiceMap();
+    return 0;
 }
 
 HDeviceProxy* HDeviceProxy::parentProxyDevice() const
@@ -107,7 +105,7 @@ HServiceProxies HDeviceProxy::serviceProxiesByType(
     HServiceProxies retVal;
     foreach(HServiceController* sc, h_ptr->m_services)
     {
-        if (sc->m_service->serviceType().compare(type, versionMatch))
+        if (sc->m_service->info().serviceType().compare(type, versionMatch))
         {
             retVal.push_back(sc->m_serviceProxy);
         }

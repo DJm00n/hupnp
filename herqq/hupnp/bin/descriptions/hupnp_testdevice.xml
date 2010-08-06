@@ -18,7 +18,7 @@
         <serviceList>
             <service>
                 <serviceType>urn:herqq-org:service:HTestService:1</serviceType>
-                <serviceId>urn:upnp-org:serviceId:HTestService</serviceId>
+                <serviceId>urn:herqq-org:serviceId:HTestService</serviceId>
                 <SCPDURL>hupnp_testservice_scpd.xml</SCPDURL>
                 <controlURL>HTestService/Control</controlURL>
                 <eventSubURL>HTestService/Events</eventSubURL>

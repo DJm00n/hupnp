@@ -34,6 +34,7 @@
 #include <HDeviceProxy>
 #include <HControlPoint>
 #include <HStateVariable>
+#include <HStateVariableInfo>
 #include <HControlPointConfiguration>
 
 using namespace Herqq::Upnp;
@@ -114,7 +115,7 @@ void ControlPointWindow::stateVariableChanged(
 {
     m_ui->status->append(QString(
         "State variable [%1] changed value from [%2] to [%3]").arg(
-            event.eventSource()->name(), event.previousValue().toString(),
+            event.eventSource().name(), event.previousValue().toString(),
             event.newValue().toString()));
 }
 
@@ -127,7 +128,7 @@ void ControlPointWindow::rootDeviceOnline(HDeviceProxy* newDevice)
 void ControlPointWindow::rootDeviceOffline(HDeviceProxy* device)
 {
     m_controlpointNavigator->rootDeviceOffline(device);
-    m_dataItemDisplay->deviceRemoved(device->deviceInfo().udn());
+    m_dataItemDisplay->deviceRemoved(device->info().udn());
     emit contentSourceRemoved(device);
 }
 

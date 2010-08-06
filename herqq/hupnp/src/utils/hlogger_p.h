@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LOGGER_H_
-#define LOGGER_H_
+#ifndef HLOGGER_H_
+#define HLOGGER_H_
 
 //
 // !! Warning !!
@@ -158,4 +158,4 @@ public:
     CHECK_LEVEL(Critical) herqqLog__.logCritical(text, at);
 }
 
-#endif /* LOGGER_H_ */
+#endif /* HLOGGER_H_ */

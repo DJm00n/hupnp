@@ -24,12 +24,17 @@
 #include "../dataelements/hudn.h"
 #include "../dataelements/hdeviceinfo.h"
 
-#include "../general/hupnp_global_p.h"
+#include "../socket/hendpoint.h"
 #include "../../utils/hlogger_p.h"
+#include "../../utils/hexceptions_p.h"
 
 #include "../devicemodel/haction_p.h"
+#include "../devicemodel/hdevice_p.h"
+#include "../devicemodel/hservice_p.h"
 
-#include <QUuid>
+#include <QUrl>
+#include <QPair>
+#include <QImage>
 #include <QHostAddress>
 
 namespace Herqq
@@ -90,7 +95,7 @@ public:
     {
         Q_ASSERT(service);
         //return service->m_service->scpdUrl() == m_url;
-        return compareUrls(m_url, service->m_service->scpdUrl());
+        return compareUrls(m_url, service->m_service->info().scpdUrl());
     }
 };
 
@@ -109,7 +114,7 @@ public:
     {
         Q_ASSERT(service);
         //return service->m_service->controlUrl() == m_url;
-        return compareUrls(m_url, service->m_service->controlUrl());
+        return compareUrls(m_url, service->m_service->info().controlUrl());
     }
 };
 
@@ -128,7 +133,7 @@ public:
     {
         Q_ASSERT(service);
         //return service->m_service->eventSubUrl() == m_url;
-        return compareUrls(m_url, service->m_service->eventSubUrl());
+        return compareUrls(m_url, service->m_service->info().eventSubUrl());
     }
 };
 
@@ -147,7 +152,7 @@ public:
     inline bool operator()(HDeviceController* device) const
     {
         Q_ASSERT(device);
-        return device->m_device->deviceInfo().udn() == m_udn;
+        return device->m_device->info().udn() == m_udn;
     }
 };
 
@@ -176,13 +181,13 @@ public:
     bool operator()(HDeviceController* device) const
     {
         Q_ASSERT(device);
-        return test(device->m_device->deviceInfo().deviceType());
+        return test(device->m_device->info().deviceType());
     }
 
     bool operator()(HServiceController* service) const
     {
         Q_ASSERT(service);
-        return test(service->m_service->serviceType());
+        return test(service->m_service->info().serviceType());
     }
 };
 
@@ -420,11 +425,11 @@ void DeviceStorage::checkDeviceTreeForUdnConflicts(
 {
    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (searchDeviceByUdn(device->m_device->deviceInfo().udn()))
+    if (searchDeviceByUdn(device->m_device->info().udn()))
     {
         throw HOperationFailedException(
             QString("Cannot host multiple devices with the same UDN [%1]").arg(
-                device->m_device->deviceInfo().udn().toSimpleUuid()));
+                device->m_device->info().udn().toSimpleUuid()));
     }
 
     const QList<HDeviceController*>* devices = device->embeddedDevices();
@@ -448,7 +453,7 @@ void DeviceStorage::addRootDevice(HDeviceController* root)
     m_rootDevices.push_back(root);
 
     HLOG_DBG(QString("New root device [%1] added. Current device count is %2").arg(
-        root->m_device->deviceInfo().friendlyName(), QString::number(m_rootDevices.size())));
+        root->m_device->info().friendlyName(), QString::number(m_rootDevices.size())));
 }
 
 bool DeviceStorage::removeRootDevice(HDeviceController* root)
@@ -460,7 +465,7 @@ bool DeviceStorage::removeRootDevice(HDeviceController* root)
 
     QMutexLocker locker(&m_rootDevicesMutex);
 
-    HDeviceInfo devInfo = root->m_device->deviceInfo();
+    HDeviceInfo devInfo = root->m_device->info();
 
     bool ok = m_rootDevices.removeOne(root);
     if (!ok)
@@ -485,7 +490,7 @@ QPair<QUrl, QImage> DeviceStorage::seekIcon(
     Q_ASSERT(device);
 
     QList<QPair<QUrl, QImage> > icons =
-        device->m_device->deviceInfo().icons();
+        device->m_device->info().icons();
 
     for (qint32 i = 0; i < icons.size(); ++i)
     {

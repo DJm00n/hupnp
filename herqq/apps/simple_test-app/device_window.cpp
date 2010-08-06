@@ -30,6 +30,8 @@
 #include <HStateVariable>
 #include <HActionArguments>
 #include <HActionArguments>
+#include <HActionsSetupData>
+#include <HServicesSetupData>
 #include <HWritableStateVariable>
 #include <HDeviceHostConfiguration>
 
@@ -49,25 +51,24 @@ HTestService::~HTestService()
 {
 }
 
-HService::HActionMap HTestService::createActions()
+HActionsSetupData HTestService::createActions()
 {
-    HActionMap retVal;
+    HActionsSetupData retVal;
 
     //
     // This is where it is defined what are to be called when the actions
     // identified by their names are invoked.
 
     // In this example, public member functions are used.
-    retVal["Echo"]     = HActionInvoke(this, &HTestService::echoAction);
-    retVal["Register"] = HActionInvoke(this, &HTestService::registerAction);
-    retVal["Chargen"]  = HActionInvoke(this, &HTestService::chargenAction);
+    retVal.insert("Echo", HActionInvoke(this, &HTestService::echoAction));
+    retVal.insert("Register", HActionInvoke(this, &HTestService::registerAction));
+    retVal.insert("Chargen", HActionInvoke(this, &HTestService::chargenAction));
 
     return retVal;
 }
 
 qint32 HTestService::echoAction(
-    const HActionArguments& inArgs,
-    HActionArguments* outArgs)
+    const HActionArguments& inArgs, HActionArguments* outArgs)
 {
     // Simple implementation of the echo service:
     // merely echos the received message back to the invoker.
@@ -81,7 +82,7 @@ qint32 HTestService::echoAction(
     // This signal is sent so that the user interface can react to this
     // particular invocation somehow.
 
-    return HAction::Success();
+    return HAction::Success;
 }
 
 qint32 HTestService::registerAction(
@@ -124,7 +125,7 @@ qint32 HTestService::registerAction(
     // This signal is sent so that the user interface can react to this
     // particular invocation somehow.
 
-    return HAction::Success();
+    return HAction::Success;
 }
 
 qint32 HTestService::chargenAction(
@@ -142,7 +143,7 @@ qint32 HTestService::chargenAction(
     // This signal is sent so that the user interface can react to this
     // particular invocation somehow.
 
-    return HAction::Success();
+    return HAction::Success;
 }
 
 /*******************************************************************************
@@ -157,12 +158,14 @@ HTestDevice::~HTestDevice()
 {
 }
 
-HDevice::HServiceMap HTestDevice::createServices()
+HServicesSetupData* HTestDevice::createServices()
 {
-    HDevice::HServiceMap retVal;
+    HServicesSetupData* retVal = new HServicesSetupData();
 
-    retVal[HResourceType("urn:herqq-org:service:HTestService:1")] =
-        new HTestService();
+    retVal->insert(
+        HServiceId("urn:herqq-org:serviceId:HTestService"),
+        HResourceType("urn:herqq-org:service:HTestService:1"),
+        new HTestService());
 
     // This UPnP device has a single service identified by serviceId
     // "urn:herqq-org:service:HTestService:1", which is mapped to our
@@ -222,7 +225,7 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
     // since we know there is at least one device if the initialization succeeded...
 
     HService* service =
-        m_testDevice->serviceById(HServiceId("urn:upnp-org:serviceId:HTestService"));
+        m_testDevice->serviceById(HServiceId("urn:herqq-org:serviceId:HTestService"));
 
     // our user interface is supposed to react when our actions are invoked, so
     // let's connect the signal introduced in HTestService to this class.

@@ -702,7 +702,6 @@ HSsdp::HSsdp(const QByteArray& loggingIdentifier, QObject* parent) :
 
 HSsdp::~HSsdp()
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     delete h_ptr;
 }
 

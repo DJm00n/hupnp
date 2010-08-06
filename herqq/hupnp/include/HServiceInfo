@@ -1,0 +1,6 @@
+#ifndef H_SERVICEINFO_
+#define H_SERVICEINFO_
+
+#include "../src/hupnp_core/dataelements/hserviceinfo.h"
+
+#endif // H_SERVICEINFO_

@@ -38,10 +38,10 @@
 #include <QUrl>
 #include <QList>
 #include <QMutex>
-#include <QTimer>
-#include <QHostAddress>
-#include <QDomDocument>
+#include <QString>
 #include <QScopedPointer>
+
+class QTimer;
 
 namespace Herqq
 {
@@ -68,10 +68,7 @@ private:
 
 public:
 
-    inline HDeviceStatus() :
-        m_bootId(0), m_configId(0), m_searchPort(0), m_online(true)
-    {
-    }
+    HDeviceStatus();
 
     inline qint32 bootId() const { return m_bootId; }
     inline qint32 configId() const { return m_configId; }
@@ -104,7 +101,7 @@ public: // attributes
 
     HDevice*                    q_ptr;
     QList<QUrl>                 m_locations;
-    QDomDocument                m_deviceDescription;
+    QString                     m_deviceDescription;
 
     mutable QMutex m_locationsMutex;
 
@@ -180,10 +177,7 @@ public:
         return &m_device->h_ptr->m_embeddedDevices;
     }
 
-    inline qint32 deviceTimeoutInSecs() const
-    {
-        return m_statusNotifier->interval() / 1000;
-    }
+    qint32 deviceTimeoutInSecs() const;
 
     inline HDeviceController* parentDevice() const
     {

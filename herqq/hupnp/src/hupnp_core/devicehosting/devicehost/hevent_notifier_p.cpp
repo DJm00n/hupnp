@@ -31,6 +31,8 @@
 
 #include "../../dataelements/hudn.h"
 #include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hserviceinfo.h"
+#include "../../dataelements/hstatevariableinfo.h"
 
 #include "../../http/hhttp_messaginginfo_p.h"
 
@@ -70,7 +72,8 @@ void getCurrentValues(QByteArray& msgBody, const HService* service)
         HStateVariable* stateVar = *ci;
         Q_ASSERT(stateVar);
 
-        if (stateVar->eventingType() == HStateVariable::NoEvents)
+        const HStateVariableInfo& info = stateVar->info();
+        if (info.eventingType() == HStateVariableInfo::NoEvents)
         {
             continue;
         }
@@ -78,7 +81,7 @@ void getCurrentValues(QByteArray& msgBody, const HService* service)
         QDomElement propertyElem =
             dd.createElementNS("urn:schemas-upnp-org:event-1-0", "e:property");
 
-        QDomElement variableElem = dd.createElement(stateVar->name());
+        QDomElement variableElem = dd.createElement(info.name());
         variableElem.appendChild(dd.createTextNode(stateVar->value().toString()));
 
         propertyElem.appendChild(variableElem);
@@ -149,10 +152,11 @@ void EventNotifier::shutdown()
 
 namespace
 {
-inline bool isSameService(HService* srv1, HService* srv2)
+bool isSameService(HService* srv1, HService* srv2)
 {
-    return srv1->parentDevice()->deviceInfo().udn() == srv2->parentDevice()->deviceInfo().udn() &&
-           srv1->scpdUrl() == srv2->scpdUrl();
+    return srv1->parentDevice()->info().udn() ==
+           srv2->parentDevice()->info().udn() &&
+           srv1->info().scpdUrl() == srv2->info().scpdUrl();
 }
 }
 
@@ -206,8 +210,10 @@ StatusCode EventNotifier::addSubscriber(
             sreq.callbacks().contains(rc->location()))
         {
             HLOG_WARN(QString(
-                "subscriber [%1] to the specified service URL [%2] already exists").arg(
-                    rc->location().toString(), service->scpdUrl().toString()));
+                "subscriber [%1] to the specified service URL [%2] already "
+                "exists").arg(
+                    rc->location().toString(),
+                    service->info().scpdUrl().toString()));
 
             return PreconditionFailed;
         }

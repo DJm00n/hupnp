@@ -58,6 +58,7 @@ class HServiceProxyPrivate;
 class H_UPNP_CORE_EXPORT HServiceProxy :
     public HService
 {
+Q_OBJECT
 H_DISABLE_COPY(HServiceProxy)
 H_DECLARE_PRIVATE(HServiceProxy)
 
@@ -67,7 +68,7 @@ private:
      * Overriding this method has no effect. At client-side every action
      * invocation is always directed by HUPnP to the UPnP device over the network.
      */
-    virtual HActionMap createActions();
+    virtual HActionsSetupData createActions();
 
 protected:
 

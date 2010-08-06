@@ -22,12 +22,11 @@
 #ifndef HSERVICE_H_
 #define HSERVICE_H_
 
-#include "hactioninvoke.h"
+#include "hasyncop.h"
 #include "../general/hdefs_p.h"
 #include "../general/hupnp_fwd.h"
 
 #include <QList>
-#include <QHash>
 #include <QObject>
 
 class QUrl;
@@ -64,17 +63,17 @@ class HServiceController;
  * stateVariableByName().
  *
  * The class exposes all the details in the device description concerning a
- * service, such as the serviceId() and serviceType(). You can also get the
- * various URLs found in the device description:
- * \li scpdUrl() returns the URL for fetching the service description,
- * \li controlUrl() returns the URL to be used in action invocation and
- * \li eventSubUrl() returns the URL used in event (un)subscriptions.
+ * service through info(), which returns a const reference to a HServiceInfo
+ * instance. From this class you can retrieve the \e serviceId and \e serviceType
+ * along with various URLs found in the device description, such as the:
+ * \li \e scpdUrl, which returns the URL for fetching the service description,
+ * \li \e controlUrl, which returns the URL to be used in action invocation and
+ * \li \e eventSubUrl, which returns the URL used in event (un)subscriptions.
  *
  * However, the above URLs usually provide informational value only, since
  * HUPnP provides a simpler interface for everything those URLs expose:
- * \li You can retrieve a service description of a service simply
- * by calling serviceDescription().
- * \li Action invocation is abstracted into HAction.
+ * \li You can retrieve the service description of a service using description().
+ * \li Action invocation is abstracted into the HAction class.
  * \li You can receive all the event notifications from a UPnP service by connecting
  * to the stateChanged() signal. You do not need to worry about UPnP eventing at all,
  * since HUPnP handles that for you.
@@ -85,8 +84,9 @@ class HServiceController;
  * services, you need to write corresponding \c %HService classes,
  * which you instantiate in your HDevice::createServices() method.
  *
- * Writing a custom \c %HService is simple, since you are required to implement
- * createActions() only. This is the place where you plug-in the functionality
+ * Writing a custom \c %HService is simple, since usually you are required
+ * to override createActions() only. That is, if your service defines actions.
+ * This is the place where you plug-in the functionality
  * of your UPnP device by providing the implementations of the UPnP actions
  * defined in your service description documents.
  *
@@ -96,35 +96,40 @@ class HServiceController;
  *
  * #include "myswitchpower.h" // your code
  *
- * Herqq::Upnp::HService::HActionMap MySwitchPower::createActions()
+ * Herqq::Upnp::HActionsSetupData MySwitchPower::createActions()
  * {
- *     Herqq::Upnp::HService::HActionMap retVal;
+ *     Herqq::Upnp::HActionsSetupData retVal;
  *
- *     retVal["SetTarget"] =
- *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::setTarget);
+ *     retVal.insert(
+ *         "SetTarget",
+ *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::setTarget));
  *
- *     retVal["GetTarget"] =
- *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getTarget);
+ *     retVal.insert(
+ *         "GetTarget",
+ *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getTarget));
  *
- *     retVal["GetStatus"] =
- *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getStatus);
+ *     retVal.insert(
+ *         "GetStatus",
+ *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getStatus));
  *
- *     // the above binds member functions to the specified action names.
- *     // however, you could also use normal functions and functors
+ *     // The above binds member functions to the specified action names.
+ *     // However, you could also use normal functions and functors.
  *
  *     return retVal;
  * }
  *
  * \endcode
  *
- * In the above example three member functions of a fictional class named \c MySwitchPower
- * are bound to actions named \c SetTarget, \c GetTarget and \c GetStatus.
- * These action names have to be defined in the service's description file and similarly,
- * every action name found in the service's description file has to have an implementation
- * bound and returned by the createActions(). The above example uses member functions
- * as arguments to Herqq::Upnp::HActionInvoke, but you can use other <em>callable entities</em> as well,
- * such as normal functions and functors.
- *
+ * In the above example three member functions of a fictional class named
+ * \c MySwitchPower are bound to actions named \c SetTarget,
+ * \c GetTarget and \c GetStatus. In this particular case, these action names
+ * have to be defined in the service's description document, but that is not
+ * necessarily always the case (more on that later).
+ * On the other hand, every action defined in the description document is
+ * \b always required to have an implementation bound and returned by the
+ * createActions(). The above example uses member functions as arguments to
+ * Herqq::Upnp::HActionInvoke, but you can use other
+ * <em>callable entities</em> as well, such as normal functions and functors.
  * Once set up properly, it is these callable entities that are called whenever
  * the corresponding actions are invoked.
  *
@@ -134,7 +139,7 @@ class HServiceController;
  *
  * \sa devicemodel
  *
- * \remark the methods introduced in this class are thread-safe, but the \c QObject
+ * \remarks the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.
  */
 class H_UPNP_CORE_EXPORT HService :
@@ -146,38 +151,87 @@ H_DECLARE_PRIVATE(HService)
 friend class HObjectCreator;
 friend class HServiceController;
 
-public: // typedefs
-
-    /*!
-     * A type definition for a map holding the UPnP action names (HAction::name())
-     * as keys and callable entities named Herqq::Upnp::HActionInvoke as values.
-     *
-     * This type definition is used as a return value of private HService::createActions()
-     * method to convey information about the UPnP actions the service exports
-     * to HUPnP during the object initialization.
-     *
-     * \sa HAction, HActionInvoke, createActions()
-     */
-    typedef QHash<QString, HActionInvoke> HActionMap;
-
-private:
+protected:
 
     /*!
      * Creates and returns the actions the service exposes.
      *
-     * Every descendant has to override this.
+     * It is very important to note that every descendant that specifies
+     * actions has to override this. In addition, the override of this method
+     * should always call the implementation of the super class too. For instance,
      *
-     * This method is called once when the device is being initialized by the
-     * host that is managing this instance.
+     * \code
+     *
+     * void HService::HActionsSetupData MyServiceType::createActions()
+     * {
+     *     HActionsSetupData retVal = SuperClass::createActions();
+     *
+     *     // create and add the actions of this class to the "retVal" variable
+     *
+     *     return retVal;
+     * }
+     *
+     * \endcode
+     *
+     * Most commonly this method is called only once when the instance
+     * is being initialized by the managing host (HDeviceHost or HControlPoint).
      *
      * \return the actions that this \c %HService exposes.
      *
-     * \remark The base class takes the ownership of the created actions and will
-     * delete them upon destruction. Because of that, you can store the
-     * addresses of the created actions and use them safely throughout the lifetime
-     * of the containing service object. However, you cannot delete them.
+     * \remarks The HService base class takes the ownership of the created
+     * objects and will delete them upon its destruction. Because of that,
+     * you can store the addresses of the created objects and use them safely
+     * throughout the lifetime of this service. However, you \b cannot delete them.
      */
-    virtual HActionMap createActions() = 0;
+    virtual HActionsSetupData createActions();
+
+    /*!
+     * Creates and returns setup information about the state variables
+     * the service exposes.
+     *
+     * The purpose of this method is to enable the custom HService to pass
+     * information of its state variables to HUPnP, which uses that information
+     * -if available- to verify that service descriptions are properly setup
+     * in respect to the custom HService class. The benefit of this is that
+     * your HService class can rest assured that once it is up and running all
+     * the required state variables are properly defined in the service description.
+     * This is important for two reasons:
+     * - at server side the service description is the mechanism used to marshal
+     * device model information to clients. If the service description does not
+     * accurately reflect the back-end classes, the client side may not be able
+     * to correctly invoke the server-side.
+     * - at client side HUPnP can use this information to verify
+     * that the server-side is publishing a device in a way the client-side
+     * understands.
+     *
+     * In any case, overriding this method is always optional, but if you
+     * override it, remember to call the implementation of the super class too.
+     * For instance,
+     *
+     * \code
+     *
+     * void HStateVariablesSetupData MyServiceType::createActions()
+     * {
+     *     HStateVariablesSetupData retVal = SuperClass::stateVariablesSetupData();
+     *
+     *     // modify the "retVal" as desired.
+     *
+     *     return retVal;
+     * }
+     *
+     * \endcode
+     *
+     * Most commonly this method is called only once when the instance
+     * is being initialized by the managing host (HDeviceHost or HControlPoint).
+     *
+     * \return the actions that this \c %HService exposes.
+     *
+     * \remarks The HService base class takes the ownership of the created
+     * objects and will delete them upon its destruction. Because of that,
+     * you can store the addresses of the created objects and use them safely
+     * throughout the lifetime of this service. However, you \b cannot delete them.
+     */
+    virtual HStateVariablesSetupData stateVariablesSetupData() const;
 
     /*!
      * Provides an opportunity to do post-construction initialization routines
@@ -198,11 +252,15 @@ private:
      * set up, you can override this method. This method is called \b once
      * right after the base \c %HService is fully initialized.
      *
+     * \param errDescription
+     *
+     * \return \e true in case the initialization succeeded.
+     *
      * \note It is advisable to keep the constructors of the descendants of
      * \c %HService small and fast, and do more involved initialization routines
      * here.
      */
-    virtual void finalizeInit();
+    virtual bool finalizeInit(QString* errDescription);
 
 protected:
 
@@ -210,6 +268,8 @@ protected:
 
     /*!
      * Creates a new instance.
+     *
+     * Default constructor for derived classes.
      */
     HService();
 
@@ -224,6 +284,8 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     virtual ~HService() = 0;
 
@@ -235,55 +297,20 @@ public:
     HDevice* parentDevice() const;
 
     /*!
-     * Returns the service identifier found in the device description file.
+     * Returns information about the service that is read from the
+     * device description.
      *
-     * \return the service identifier found in the device description file.
+     * \return information about the service that is read from the
+     * device description.
      */
-    HServiceId serviceId() const;
-
-    /*!
-     * Returns the type of the service found in the device description file.
-     *
-     * \return the type of the service found in the device description file.
-     */
-    HResourceType serviceType() const;
-
-    /*!
-     * Returns the URL for service description.
-     *
-     * This is the URL where the service description can be retrieved.
-     * This is defined in the device description.
-     *
-     * \return the URL for service description.
-     */
-    QUrl scpdUrl() const;
-
-    /*!
-     * Returns the URL for control.
-     *
-     * This is the URL to which the action invocations must be sent.
-     * This is defined in the device description.
-     *
-     * \return the URL for control.
-     */
-    QUrl controlUrl() const;
-
-    /*!
-     * Returns the URL for eventing.
-     *
-     * This is the URL to which subscriptions and un-subscriptions are sent.
-     * This is defined in the device description.
-     *
-     * \return the URL for eventing.
-     */
-    QUrl eventSubUrl() const;
+    const HServiceInfo& info() const;
 
     /*!
      * Returns the full service description.
      *
-     * \return full service description.
+     * \return the full service description.
      */
-    QString serviceDescription() const;
+    const QString& description() const;
 
     /*!
      * Returns the actions the service supports.
@@ -337,10 +364,10 @@ public:
      * Indicates whether or not the service contains state variables that
      * are evented.
      *
-     * \return true in case the service contains one or more state variables that
-     * are evented.
+     * \return \e true in case the service contains one or more state variables
+     * that are evented.
      *
-     * \remark in case the service is not evented, the stateChanged() signal
+     * \remarks in case the service is not evented, the stateChanged() signal
      * will never be emitted and the notifyListeners() method does nothing.
      */
     bool isEvented() const;
@@ -356,11 +383,18 @@ public Q_SLOTS:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted when the state of one or more state variables has changed.
+     * This signal is emitted when the state of one or more state variables
+     * has changed.
      *
      * \param source specifies the source of the event.
      */
     void stateChanged(const Herqq::Upnp::HService* source);
+
+    /*!
+     * This signal is emitted when an action contained by this service has been
+     * invoked by HUPnP and the invocation has been completed or failed.
+     */
+    void invokeComplete(Herqq::Upnp::HAsyncOp op);
 };
 
 }

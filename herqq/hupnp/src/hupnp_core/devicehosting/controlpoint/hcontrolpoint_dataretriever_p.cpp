@@ -32,7 +32,6 @@
 #include <QUrl>
 #include <QImage>
 #include <QTcpSocket>
-#include <QDomDocument>
 #include <QHttpRequestHeader>
 #include <QHttpResponseHeader>
 
@@ -123,7 +122,7 @@ QByteArray HDataRetriever::retrieveData(
     return body;
 }
 
-QDomDocument HDataRetriever::retrieveServiceDescription(
+QString HDataRetriever::retrieveServiceDescription(
     const QUrl& deviceLocation, const QUrl& scpdUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -132,18 +131,16 @@ QDomDocument HDataRetriever::retrieveServiceDescription(
         "Attempting to fetch a service description for [%1] from: [%2]").arg(
             scpdUrl.toString(), deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, scpdUrl, true);
-
-    QDomDocument dd;
+    /*QDomDocument dd;
     QString errMsg; qint32 errLine = 0;
     if (!dd.setContent(data, false, &errMsg, &errLine))
     {
         throw HParseException(
             QString("Could not parse the service description: [%1] @ line [%2]").
             arg(errMsg, QString::number(errLine)));
-    }
+    }*/
 
-    return dd;
+    return QString::fromUtf8(retrieveData(deviceLocation, scpdUrl, true));
 }
 
 QImage HDataRetriever::retrieveIcon(
@@ -167,7 +164,7 @@ QImage HDataRetriever::retrieveIcon(
     return image;
 }
 
-QDomDocument HDataRetriever::retrieveDeviceDescription(
+QString HDataRetriever::retrieveDeviceDescription(
     const QUrl& deviceLocation)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -176,18 +173,7 @@ QDomDocument HDataRetriever::retrieveDeviceDescription(
         "Attempting to fetch a device description from: [%1]").arg(
             deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, QUrl(), false);
-
-    QDomDocument dd;
-    QString errMsg; qint32 errLine = 0;
-    if (!dd.setContent(data, false, &errMsg, &errLine))
-    {
-        throw InvalidDeviceDescription(QString(
-            "Could not parse the device description file: [%1] @ line [%2]:\n[%3]").arg(
-                errMsg, QString::number(errLine), QString::fromUtf8(data)));
-    }
-
-    return dd;
+    return QString::fromUtf8(retrieveData(deviceLocation, QUrl(), false));
 }
 
 }

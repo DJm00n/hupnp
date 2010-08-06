@@ -163,7 +163,7 @@ public:
      *
      * \sa isValid()
      */
-    explicit HResourceType(const QString& resourceTypeAsStr);
+    HResourceType(const QString& resourceTypeAsStr);
 
     /*!
      * Destroys the instance.

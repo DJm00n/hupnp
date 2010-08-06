@@ -31,24 +31,22 @@
 //
 
 #include "hdevicecreator.h"
+
 #include "controlpoint/hdeviceproxy_creator.h"
 
 #include "../general/hdefs_p.h"
 #include "../general/hupnp_fwd.h"
+#include "../devicemodel/hactioninvoke.h"
 
-#include "../../utils/hfunctor.h"
-#include "../devicemodel/hservice.h"
-#include "../devicemodel/hactionarguments.h"
+#include "../../utils/hthreadpool_p.h"
 
 #include <QUrl>
 #include <QList>
-#include <QImage>
 #include <QString>
-#include <QDomElement>
 #include <QDomDocument>
-#include <QSharedPointer>
 
-class QThreadPool;
+class QImage;
+class QDomElement;
 
 namespace Herqq
 {
@@ -58,20 +56,20 @@ namespace Upnp
 
 class HActionController;
 class HDeviceController;
+class HActionInvokeProxy;
 class HServiceController;
-class HSharedActionInvoker;
 class HStateVariableController;
 
 //
 //
 //
 typedef Functor<
-    HActionInvoke, H_TYPELIST_1(HAction*)> ActionInvokeCreator;
+    HActionInvokeProxy*, H_TYPELIST_1(HAction*)> HActionInvokeProxyCreator;
 
 //
 //
 //
-typedef Functor<QDomDocument, H_TYPELIST_2(const QUrl&, const QUrl&)>
+typedef Functor<QString, H_TYPELIST_2(const QUrl&, const QUrl&)>
     ServiceDescriptionFetcher;
 
 //
@@ -100,10 +98,10 @@ public:
     virtual HDevice* createDefaultDevice(const HDeviceInfo&);
     virtual HService* createDefaultService(const HResourceType&);
 
-    QDomDocument m_deviceDescription;
+    QString m_deviceDescription;
     QList<QUrl> m_deviceLocations;
 
-    ActionInvokeCreator m_actionInvokeCreator;
+    HActionInvokeProxyCreator m_actionInvokeProxyCreator;
     // provides the possibility to intercept (and override) the user defined
     // action invocations
 
@@ -115,15 +113,13 @@ public:
 
     bool m_appendUdnToDeviceLocation;
 
-    QHash<HUdn, HSharedActionInvoker*>* m_sharedActionInvokers;
-
     IconFetcher m_iconFetcher;
 
     bool m_strictParsing;
 
     bool m_stateVariablesAreImmutable;
 
-    QThreadPool* m_threadPool;
+    HThreadPool* m_threadPool;
 
     QByteArray m_loggingIdentifier;
 };
@@ -193,28 +189,35 @@ private:
 
 private:
 
-    void initService(HService* service, const QDomElement& serviceDefinition);
+    void initService(
+        HService*, const QDomElement& serviceDefinition, HServiceSetup*);
 
-    QList<QPair<QUrl, QImage> > parseIconList(const QDomElement& iconListElement);
+    QList<QPair<QUrl, QImage> > parseIconList(
+        const QDomElement& iconListElement);
+
     HDeviceInfo* parseDeviceInfo(const QDomElement& deviceElement);
-    void parseServiceDescription(HService* service);
+    void parseServiceDescription(HService*);
 
     HActionController* parseAction(
         HService* parentService,
         const QDomElement& actionElement,
-        const HService::HActionMap& definedActions);
+        const HActionsSetupData&);
 
     HStateVariableController* parseStateVariable(
-        HService* parentService, const QDomElement& stateVariableElement);
+        HService* parentService,
+        const QDomElement& stateVariableElement,
+        const HStateVariablesSetupData&);
 
     QList<HServiceController*> parseServiceList(
-        const QDomElement& serviceListElement, HDevice* device);
+        const QDomElement& serviceListElement, HDevice*);
 
-    HDeviceController* parseDevice(const QDomElement& deviceElement);
+    HDeviceController* parseDevice(
+        const QDomElement& deviceElement,
+        HDevicesSetupData* embeddedDevicesSetup = 0);
 
 public:
 
-    HObjectCreator(const HObjectCreationParameters& creationParameters);
+    HObjectCreator(const HObjectCreationParameters&);
 
     HDeviceController* createRootDevice();
     // Initializes the creation of the HUPnP's device model for a particular

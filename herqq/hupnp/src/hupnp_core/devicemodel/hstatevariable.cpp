@@ -21,12 +21,10 @@
 
 #include "hstatevariable.h"
 #include "hstatevariable_p.h"
-#include "hservice.h"
 #include "hwritable_statevariable.h"
 #include "hreadable_statevariable.h"
 
 #include "../general/hupnp_global_p.h"
-#include "../datatypes/hdatatype_mappings_p.h"
 
 #include "../../utils/hlogger_p.h"
 
@@ -53,7 +51,7 @@ namespace Upnp
  * HStateVariableEventPrivate
  *******************************************************************************/
 HStateVariableEventPrivate::HStateVariableEventPrivate() :
-    m_eventSource(0)
+    m_eventSource()
 {
 }
 
@@ -70,21 +68,23 @@ HStateVariableEvent::HStateVariableEvent() :
 }
 
 HStateVariableEvent::HStateVariableEvent(
-    HStateVariable* eventSource, const QVariant& previousValue,
+    const HStateVariableInfo& eventSource, const QVariant& previousValue,
     const QVariant& newValue)
         : h_ptr(new HStateVariableEventPrivate())
 {
     HLOG(H_AT, H_FUN);
 
-    if (!eventSource)
+    if (!eventSource.isValid())
     {
         HLOG_WARN("Event source is not defined");
         return;
     }
 
-    if (!eventSource->isValidValue(newValue))
+    if (!eventSource.isValidValue(newValue))
     {
-        HLOG_WARN(QString("The specified new value [%1] is invalid").arg(newValue.toString()));
+        HLOG_WARN(QString("The specified new value [%1] is invalid").arg(
+            newValue.toString()));
+
         return;
     }
 
@@ -94,8 +94,10 @@ HStateVariableEvent::HStateVariableEvent(
 }
 
 HStateVariableEvent::HStateVariableEvent(const HStateVariableEvent& other)
-    : h_ptr(new HStateVariableEventPrivate(*other.h_ptr))
+    : h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HStateVariableEventPrivate(*other.h_ptr);
 }
 
 HStateVariableEvent::~HStateVariableEvent()
@@ -103,8 +105,11 @@ HStateVariableEvent::~HStateVariableEvent()
     delete h_ptr;
 }
 
-HStateVariableEvent& HStateVariableEvent::operator=(const HStateVariableEvent& other)
+HStateVariableEvent& HStateVariableEvent::operator=(
+    const HStateVariableEvent& other)
 {
+    Q_ASSERT(&other != this);
+
     HStateVariableEventPrivate* newHptr =
         new HStateVariableEventPrivate(*other.h_ptr);
 
@@ -114,13 +119,12 @@ HStateVariableEvent& HStateVariableEvent::operator=(const HStateVariableEvent& o
     return *this;
 }
 
-bool HStateVariableEvent::isEmpty() const
+bool HStateVariableEvent::isValid() const
 {
-    return !h_ptr->m_eventSource && h_ptr->m_previousValue.isNull() &&
-            h_ptr->m_newValue.isNull();
+    return h_ptr->m_eventSource.isValid();
 }
 
-HStateVariable* HStateVariableEvent::eventSource() const
+const HStateVariableInfo& HStateVariableEvent::eventSource() const
 {
     return h_ptr->m_eventSource;
 }
@@ -149,12 +153,6 @@ HStateVariableController::~HStateVariableController()
     delete m_stateVariable;
 }
 
-bool HStateVariableController::isValidValue(
-    const QVariant& value, QVariant* convertedValue) const
-{
-    return m_stateVariable->isValidValue(value, convertedValue);
-}
-
 bool HStateVariableController::setValue(const QVariant& newValue)
 {
     return m_stateVariable->setValue(newValue);
@@ -164,13 +162,7 @@ bool HStateVariableController::setValue(const QVariant& newValue)
  * HStateVariablePrivate
  *******************************************************************************/
 HStateVariablePrivate::HStateVariablePrivate() :
-    m_name(),
-    m_dataType(HUpnpDataTypes::Undefined),
-    m_variantDataType(QVariant::Invalid),
-    m_defaultValue(),
-    m_eventingType(HStateVariable::NoEvents),
-    m_allowedValueList(),
-    m_allowedValueRange(),
+    m_info(),
     m_value(),
     m_valueMutex(QMutex::Recursive),
     m_parentService(0)
@@ -181,167 +173,28 @@ HStateVariablePrivate::~HStateVariablePrivate()
 {
 }
 
-void HStateVariablePrivate::setName(const QString& name)
-{
-    HLOG(H_AT, H_FUN);
-
-    verifyName(name);
-    m_name = name;
-}
-
-void HStateVariablePrivate::setDataType(HUpnpDataTypes::DataType dt)
-{
-    HLOG(H_AT, H_FUN);
-
-    m_dataType = dt;
-    m_variantDataType = convertToVariantType(m_dataType);
-    m_defaultValue = QVariant(m_variantDataType);
-    m_value = QVariant(m_variantDataType);
-}
-
-QVariant HStateVariablePrivate::checkValue(const QVariant& value)
-{
-    HLOG(H_AT, H_FUN);
-
-    QVariant acceptableValue(value);
-
-    if (m_dataType == HUpnpDataTypes::Undefined)
-    {
-        throw HIllegalArgumentException(
-            QString("Data type of the state variable [%1] is not defined.").arg(
-                m_name));
-    }
-
-    if (value.type() != m_variantDataType)
-    {
-        if (m_variantDataType == QVariant::Url)
-        {
-            // for some reason, QVariant does not provide automatic conversion between
-            // QUrl and other types (this includes QString, unfortunately) and until it does,
-            // this has to be handled as a special case.
-
-            QUrl valueAsUrl(value.toString());
-            if (!valueAsUrl.isValid())
-            {
-                throw HIllegalArgumentException(
-                    QString("Invalid value for a URL type: [%1]").arg(
-                        value.toString()));
-            }
-
-            acceptableValue = valueAsUrl;
-        }
-        else if (!acceptableValue.convert(m_variantDataType))
-        {
-            throw HIllegalArgumentException("Data type mismatch.");
-        }
-    }
-
-    if (m_dataType == HUpnpDataTypes::string && m_allowedValueList.size())
-    {
-        if (m_allowedValueList.indexOf(value.toString()) < 0)
-        {
-            throw HIllegalArgumentException(
-                "Value is not included in the allowed values list.");
-        }
-    }
-    else if (HUpnpDataTypes::isRational(m_dataType) && !m_allowedValueRange.isNull())
-    {
-        qreal tmp = value.toDouble();
-        if (tmp < m_allowedValueRange.minimum().toDouble() ||
-            tmp > m_allowedValueRange.maximum().toDouble())
-        {
-            throw HIllegalArgumentException(
-                "Value is not within the specified allowed values range.");
-        }
-    }
-    else if (HUpnpDataTypes::isNumeric(m_dataType) && !m_allowedValueRange.isNull())
-    {
-        qlonglong tmp = value.toLongLong();
-        if (tmp < m_allowedValueRange.minimum().toLongLong() ||
-            tmp > m_allowedValueRange.maximum().toLongLong())
-        {
-            throw HIllegalArgumentException(
-                "Value is not within the specified allowed values range.");
-        }
-    }
-
-    return acceptableValue;
-}
-
-void HStateVariablePrivate::setDefaultValue(const QVariant& defVal)
-{
-    if (defVal.isNull() || !defVal.isValid() ||
-       ((m_dataType == HUpnpDataTypes::string && m_allowedValueList.size()) &&
-        defVal.toString().isEmpty()))
-    {
-        // according to the UDA, default value is OPTIONAL.
-        return;
-    }
-
-    checkValue(defVal);
-    m_defaultValue = defVal;
-    m_value = m_defaultValue;
-}
-
-void HStateVariablePrivate::setEventingType(
-    HStateVariable::EventingType eventingType)
-{
-    m_eventingType = eventingType;
-}
-
-void HStateVariablePrivate::setAllowedValueList(
-    const QStringList& allowedValueList)
-{
-    HLOG(H_AT, H_FUN);
-
-    if (m_dataType != HUpnpDataTypes::string)
-    {
-        throw HIllegalArgumentException(
-            "Cannot define allowed values list when data type is not \"string\"");
-    }
-
-    m_allowedValueList = allowedValueList;
-}
-
-void HStateVariablePrivate::setAllowedValueRange(
-    HValueRange allowedValueRange)
-{
-    HLOG(H_AT, H_FUN);
-
-    if (!HUpnpDataTypes::isNumeric(m_dataType))
-    {
-        throw HIllegalArgumentException(
-            "Cannot define allowed value range when data type is not numeric");
-    }
-
-    if (allowedValueRange.minimum().type() != m_variantDataType)
-    {
-        throw HIllegalArgumentException("Data type mismatch.");
-    }
-
-    m_allowedValueRange = allowedValueRange;
-}
-
-bool HStateVariablePrivate::setValue(const QVariant& value)
+bool HStateVariablePrivate::setValue(const QVariant& value, QString* err)
 {
     HLOG(H_AT, H_FUN);
 
     if (value == m_value)
     {
+        if (err)
+        {
+            *err = QString("The new and the old value are equal: [%1]").arg(
+                value.toString());
+        }
         return false;
     }
 
-    try
+    QVariant convertedValue;
+    if (m_info.isValidValue(value, &convertedValue, err))
     {
-        m_value = checkValue(value);
-    }
-    catch(HException& ex)
-    {
-        HLOG_WARN(ex.reason());
-        return false;
+        m_value = convertedValue;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 /*******************************************************************************
@@ -365,63 +218,20 @@ HStateVariable::HStateVariable(HStateVariablePrivate& dd, HService* parent) :
     h_ptr->m_parentService = parent;
 }
 
-void HStateVariable::init(
-    const QString& name, HUpnpDataTypes::DataType datatype,
-    const QVariant& defaultValue, EventingType eventingType)
+bool HStateVariable::init(const HStateVariableInfo& info)
 {
-    HLOG(H_AT, H_FUN);
+    if (!info.isValid())
+    {
+        return false;
+    }
 
-    h_ptr->setName        (name);
-    h_ptr->setDataType    (datatype);
-    // make sure the data type is set before setting any values; some validity
-    // checks rely on it
-
-    h_ptr->setDefaultValue(defaultValue);
-    h_ptr->setEventingType(eventingType);
-}
-
-void HStateVariable::init(
-    const QString& name, const QVariant& defaultValue,
-    const QStringList& allowedValueList, EventingType eventingType)
-{
-    HLOG(H_AT, H_FUN);
-
-    h_ptr->setName            (name);
-    h_ptr->setDataType        (HUpnpDataTypes::string);
-    // make sure the data type is set before setting any values; some validity
-    // checks rely on it
-
-    h_ptr->setAllowedValueList(allowedValueList);
-
-    h_ptr->setDefaultValue    (defaultValue);
-    h_ptr->setEventingType    (eventingType);
-}
-
-void HStateVariable::init(
-    const QString& name, HUpnpDataTypes::DataType datatype,
-    const QVariant& defaultValue, const QVariant& minimumValue,
-    const QVariant& maximumValue, const QVariant& stepValue,
-    EventingType eventingType)
-{
-    HLOG(H_AT, H_FUN);
-
-    h_ptr->setName(name);
-    h_ptr->setDataType(datatype);
-    // make sure the data type is set before setting any values; some validity
-    // checks rely on it
-
-    h_ptr->setAllowedValueRange(
-        HValueRange::fromVariant(
-            convertToVariantType(datatype), minimumValue, maximumValue, stepValue));
-
-    h_ptr->setDefaultValue(defaultValue);
-    h_ptr->setEventingType(eventingType);
+    h_ptr->m_info = info;
+    setValue(info.defaultValue());
+    return true;
 }
 
 HStateVariable::~HStateVariable()
 {
-    HLOG(H_AT, H_FUN);
-
     delete h_ptr;
 }
 
@@ -431,80 +241,15 @@ HService* HStateVariable::parentService() const
     return h_ptr->m_parentService;
 }
 
-QString HStateVariable::name() const
-{
-    return h_ptr->m_name;
-}
-
-HUpnpDataTypes::DataType HStateVariable::dataType() const
-{
-    return h_ptr->m_dataType;
-}
-
-HStateVariable::EventingType HStateVariable::eventingType() const
-{
-    return h_ptr->m_eventingType;
-}
-
-QStringList HStateVariable::allowedValueList() const
-{
-    return h_ptr->m_allowedValueList;
-}
-
-QVariant HStateVariable::minimumValue() const
-{
-    return h_ptr->m_allowedValueRange.minimum();
-}
-
-QVariant HStateVariable::maximumValue() const
-{
-    return h_ptr->m_allowedValueRange.maximum();
-}
-
-QVariant HStateVariable::stepValue() const
-{
-    return h_ptr->m_allowedValueRange.step();
-}
-
-QVariant HStateVariable::defaultValue() const
-{
-    return h_ptr->m_defaultValue;
-}
-
-bool HStateVariable::isValidValue(
-    const QVariant& value, QVariant* convertedValue) const
-{
-    HLOG(H_AT, H_FUN);
-
-    try
-    {
-        if (convertedValue)
-        {
-            *convertedValue = h_ptr->checkValue(value);
-        }
-        else
-        {
-            h_ptr->checkValue(value);
-        }
-    }
-    catch(HException&)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 QVariant HStateVariable::value() const
 {
     QMutexLocker lock(&h_ptr->m_valueMutex);
     return h_ptr->m_value;
 }
 
-bool HStateVariable::isConstrained() const
+const HStateVariableInfo& HStateVariable::info() const
 {
-    return !h_ptr->m_allowedValueList.isEmpty() ||
-           !h_ptr->m_allowedValueRange.isNull();
+    return h_ptr->m_info;
 }
 
 HWritableStateVariable* HStateVariable::writable()
@@ -519,7 +264,7 @@ HReadableStateVariable* HStateVariable::readable()
 
 bool HStateVariable::setValue(const QVariant& newValue)
 {
-    HLOG(H_AT, H_FUN);
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
 
     QMutexLocker lock(&h_ptr->m_valueMutex);
 
@@ -530,9 +275,9 @@ bool HStateVariable::setValue(const QVariant& newValue)
         return false;
     }
 
-    if (h_ptr->m_eventingType != NoEvents)
+    if (h_ptr->m_info.eventingType() != HStateVariableInfo::NoEvents)
     {
-        HStateVariableEvent event(this, oldValue, newValue);
+        HStateVariableEvent event(info(), oldValue, newValue);
         lock.unlock();
         emit valueChanged(event);
     }

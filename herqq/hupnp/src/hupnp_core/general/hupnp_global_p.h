@@ -35,10 +35,11 @@
 #include "../devicemodel/hserviceproxy.h"
 
 #include <QUrl>
+#include <QPair>
+#include <QList>
 #include <QMutex>
 #include <QString>
 #include <QTcpSocket>
-#include <QMutexLocker>
 #include <QHostAddress>
 #include <QScopedPointer>
 
@@ -93,18 +94,7 @@ public:
 
     ~HSysInfo();
 
-    inline static HSysInfo& instance()
-    {
-        QMutexLocker lock(&s_initMutex);
-
-        if (s_instance)
-        {
-            return *s_instance;
-        }
-
-        s_instance.reset(new HSysInfo());
-        return *s_instance;
-    }
+    static HSysInfo& instance();
 
     //
     //
@@ -141,7 +131,7 @@ QString toString(const QDomElement&);
 //
 //
 //
-void verifySpecVersion(const QDomElement& rootElement);
+bool verifySpecVersion(const QDomElement& rootElement, QString* err = 0);
 
 //
 //
@@ -151,7 +141,7 @@ qint32 readConfigId(const QDomElement& rootElement);
 //
 //
 //
-QString verifyName(const QString& name);
+bool verifyName(const QString& name, QString* err=0);
 
 //
 // Returns the provided URLs as a string following format "#N URL\n",
@@ -171,20 +161,7 @@ inline QString peerAsStr(const QTcpSocket& sock)
 //
 //
 //
-inline QString extractBaseUrl(const QString& url)
-{
-    if (url.endsWith('/'))
-    {
-        return url;
-    }
-    else if (!url.contains('/'))
-    {
-        return "";
-    }
-
-    QString base = url.section('/', 0, -2, QString::SectionIncludeTrailingSep);
-    return base;
-}
+QString extractBaseUrl(const QString& url);
 
 //
 //

@@ -20,14 +20,10 @@
  */
 
 #include "haction.h"
-#include "hservice.h"
 #include "haction_p.h"
-#include "../general/hupnp_global_p.h"
 
 #include "../../utils/hlogger_p.h"
-#include "../../utils/hexceptions_p.h"
 
-#include <QThreadPool>
 #include <QMutexLocker>
 
 #include <QMetaType>
@@ -54,43 +50,119 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HSharedActionInvoker::Invocation
+ * HInvocation
 ********************************************************************************/
-HSharedActionInvoker::Invocation::Invocation(
-    Herqq::Upnp::HActionPrivate* action, const HActionArguments& iArgs) :
-        m_action(action), m_iargs(iArgs), m_invokeId(), m_waitCond(),
-        m_outArgs(*m_action->m_outputArguments), m_hasListener(0),
+HInvocation::HInvocation(
+    HActionPrivate* action, const HActionArguments& iArgs) :
+        m_action(action), m_inArgs(iArgs), m_invokeId(), m_waitCond(),
+        m_outArgs(m_action->m_info->outputArguments()), m_hasListener(0),
         m_completed(false)
 {
     Q_UNUSED(test)
 }
 
-void HSharedActionInvoker::Invocation::run()
+HInvocation::~HInvocation()
 {
-    m_invokeId.setReturnValue(m_action->m_actionInvoke(m_iargs, &m_outArgs));
+}
+
+/*******************************************************************************
+ * HActionInvoker
+********************************************************************************/
+HActionInvoker::HActionInvoker(HActionPrivate* action) :
+    m_action(action)
+{
+    Q_ASSERT(m_action);
+}
+
+HActionInvoker::~HActionInvoker()
+{
+}
+
+/*******************************************************************************
+ * HAsyncInvocation
+********************************************************************************/
+HAsyncInvocation::HAsyncInvocation(
+    HActionPrivate* action, const HActionArguments& iArgs) :
+        HInvocation(action, iArgs)
+{
+}
+
+HAsyncInvocation::~HAsyncInvocation()
+{
+}
+
+/*******************************************************************************
+ * HAsyncActionInvoker
+********************************************************************************/
+HAsyncActionInvoker::HAsyncActionInvoker(HActionPrivate* action) :
+    HActionInvoker(action)
+{
+    Q_ASSERT(action->m_actionInvokeProxy);
+    action->m_actionInvokeProxy->setCallback(
+        HActionInvokeCallback(this, &HAsyncActionInvoker::invokeComplete));
+}
+
+HAsyncActionInvoker::~HAsyncActionInvoker()
+{
+    delete m_action->m_actionInvokeProxy;
+}
+
+bool HAsyncActionInvoker::invokeComplete(HAsyncOp op)
+{
+    Q_ASSERT(!op.isNull());
+    m_action->onActionInvocationComplete(op);
+    return true;
+}
+
+HAsyncInvocation* HAsyncActionInvoker::runAction(const HActionArguments& iArgs)
+{
+    HAsyncInvocation* inv = new HAsyncInvocation(m_action, iArgs);
+    m_action->m_actionInvokeProxy->beginInvoke(inv);
+    return inv;
+}
+
+/*******************************************************************************
+ * HSyncInvocation
+********************************************************************************/
+HSyncInvocation::HSyncInvocation(
+    HActionPrivate* action, const HActionArguments& iArgs) :
+        HRunnable(),
+        HInvocation(action, iArgs)
+{
+}
+
+HSyncInvocation::~HSyncInvocation()
+{
+}
+
+void HSyncInvocation::run()
+{
+    Q_ASSERT(m_action->m_actionInvoke);
+    m_invokeId.setReturnValue((*m_action->m_actionInvoke)(m_inArgs, &m_outArgs));
     m_action->onActionInvocationComplete(m_invokeId);
 }
 
 /*******************************************************************************
- * HSharedActionInvoker
+ * HSyncActionInvoker
 ********************************************************************************/
-HSharedActionInvoker::HSharedActionInvoker(QThreadPool* tp) :
-    m_threadPool(tp)
+HSyncActionInvoker::HSyncActionInvoker(HActionPrivate* action, HThreadPool* tp) :
+    HActionInvoker(action),
+        m_threadPool(tp)
 {
+    Q_ASSERT(m_threadPool);
+    Q_ASSERT(m_action->m_actionInvoke);
 }
 
-HSharedActionInvoker::~HSharedActionInvoker()
+HSyncActionInvoker::~HSyncActionInvoker()
 {
+    delete m_action->m_actionInvoke;
 }
 
-HSharedActionInvoker::Invocation* HSharedActionInvoker::runAction(
-    HActionPrivate* action, const HActionArguments& iArgs)
+HSyncInvocation* HSyncActionInvoker::runAction(const HActionArguments& iArgs)
 {
-    Invocation* invocation = new Invocation(action, iArgs);
+    HSyncInvocation* invocation = new HSyncInvocation(m_action, iArgs);
     invocation->setAutoDelete(false);
-
     m_threadPool->start(invocation);
-
     return invocation;
 }
 
@@ -111,46 +183,66 @@ HActionController::~HActionController()
 qint32 HActionController::invoke(
     const HActionArguments& iargs, HActionArguments* oargs)
 {
-    return m_action->h_ptr->m_actionInvoke(iargs, oargs);
+    return (*m_action->h_ptr->m_actionInvoke)(iargs, oargs);
+}
+
+/*******************************************************************************
+ * HActionInvokeProxy
+ ******************************************************************************/
+HActionInvokeProxy::HActionInvokeProxy() :
+    m_callback()
+{
+}
+
+HActionInvokeProxy::~HActionInvokeProxy()
+{
 }
 
 /*******************************************************************************
  * HActionPrivate
  ******************************************************************************/
 HActionPrivate::HActionPrivate() :
-    q_ptr(0), m_name(), m_inputArguments(0), m_outputArguments(0),
-    m_hasRetValArg(false), m_parentService(0), m_actionInvoke(),
-    m_sharedActionInvoker(0), m_invocations(), m_invocationsMutex()
+    q_ptr(0), m_info(), m_parentService(0), m_actionInvoke(),
+    m_actionInvoker(0), m_invocations(), m_invocationsMutex()
 {
 }
 
 HActionPrivate::~HActionPrivate()
 {
+    delete m_actionInvoker;
 }
 
 void HActionPrivate::onActionInvocationComplete(const HAsyncOp& id)
 {
     QMutexLocker lock(&m_invocationsMutex);
 
-    QPair<InvocationPtrT, HActionInvokeCallback> invocation =
-        m_invocations.value(id.id());
+    InvocationInfo invocationInfo = m_invocations.value(id.id());
 
-    Q_ASSERT(invocation.first);
+    Q_ASSERT(invocationInfo.invocation);
 
-    invocation.first->m_completed = true;
-    invocation.first->m_waitCond.wakeAll();
+    invocationInfo.invocation->m_completed = true;
+    invocationInfo.invocation->m_waitCond.wakeAll();
 
     lock.unlock();
 
-    bool sendEvent = true;
-    if (invocation.second)
+    if (invocationInfo.execArgs &&
+        invocationInfo.execArgs->execType() == HExecArgs::FireAndForget)
     {
-        sendEvent = invocation.second(id);
+        qint32 count = m_invocations.remove(
+            invocationInfo.invocation->m_invokeId.id());
+        Q_ASSERT(count == 1); Q_UNUSED(count)
+        return;
+    }
+
+    bool sendEvent = true;
+    if (invocationInfo.callback)
+    {
+        sendEvent = invocationInfo.callback(id);
     }
 
     if (sendEvent)
     {
-        emit q_ptr->invokeComplete(invocation.first->m_invokeId);
+        emit q_ptr->invokeComplete(invocationInfo.invocation->m_invokeId);
     }
 }
 
@@ -161,26 +253,30 @@ bool HActionPrivate::waitForInvocation(
 
     QMutexLocker lock(&m_invocationsMutex);
 
-    QPair<InvocationPtrT, HActionInvokeCallback> invocation =
-        m_invocations.value(waitResult->id());
-
-    if (!invocation.first)
+    InvocationInfo invocationInfo = m_invocations.value(waitResult->id());
+    if (!invocationInfo.invocation)
     {
         // no invocation matches the specified ID
         waitResult->setWaitCode(HAsyncOp::WaitInvalidId);
         return false;
     }
+    else if (invocationInfo.execArgs &&
+             invocationInfo.execArgs->execType() == HExecArgs::FireAndForget)
+    {
+        waitResult->setWaitCode(HAsyncOp::WaitInvalidOperation);
+        return false;
+    }
 
-    if (!invocation.first->m_hasListener.testAndSetAcquire(0, 1))
+    if (!invocationInfo.invocation->m_hasListener.testAndSetAcquire(0, 1))
     {
         waitResult->setWaitCode(HAsyncOp::WaitListenerRegisteredAlready);
         return false;
     }
 
-    if (!invocation.first->isCompleted())
+    if (!invocationInfo.invocation->isCompleted())
     {
         bool b =
-            invocation.first->m_waitCond.wait(
+            invocationInfo.invocation->m_waitCond.wait(
                 &m_invocationsMutex,
                 waitResult->waitTimeout() < 0 ?
                     ULONG_MAX : waitResult->waitTimeout());
@@ -192,46 +288,37 @@ bool HActionPrivate::waitForInvocation(
         }
     }
 
-    if (outArgs && invocation.first->m_invokeId.returnValue() == HAction::Success())
+    if (outArgs && invocationInfo.invocation->m_invokeId.returnValue() == HAction::Success)
     {
-        *outArgs = invocation.first->m_outArgs;
+        *outArgs = invocationInfo.invocation->m_outArgs;
     }
 
-    waitResult->setReturnValue(invocation.first->m_invokeId.returnValue());
+    waitResult->setReturnValue(invocationInfo.invocation->m_invokeId.returnValue());
 
-    qint32 count = m_invocations.remove(invocation.first->m_invokeId.id());
+    qint32 count = m_invocations.remove(invocationInfo.invocation->m_invokeId.id());
     Q_ASSERT(count == 1); Q_UNUSED(count)
 
     waitResult->setWaitCode(HAsyncOp::WaitSuccess);
-    return waitResult->returnValue() == HAction::Success();
-}
-
-HAsyncOp HActionPrivate::invoke(const HActionArguments& inArgs)
-{
-    QMutexLocker lock(&m_invocationsMutex);
-
-    HSharedActionInvoker::Invocation* invocation =
-        m_sharedActionInvoker->runAction(this, inArgs);
-
-    Q_ASSERT(invocation);
-
-    m_invocations.insert(
-        invocation->m_invokeId.id(),
-        qMakePair(InvocationPtrT(invocation), HActionInvokeCallback()));
-
-    return invocation->m_invokeId;
+    return waitResult->returnValue() == HAction::Success;
 }
 
 HAsyncOp HActionPrivate::invoke(
-    const HActionArguments& inArgs, const HActionInvokeCallback& cb)
+    const HActionArguments& inArgs, HExecArgs* execArgs)
+{
+    return invoke(inArgs, HActionInvokeCallback(), execArgs);
+}
+
+HAsyncOp HActionPrivate::invoke(
+    const HActionArguments& inArgs, const HActionInvokeCallback& cb,
+    HExecArgs* execArgs)
 {
     QMutexLocker lock(&m_invocationsMutex);
 
-    HSharedActionInvoker::Invocation* invocation =
-        m_sharedActionInvoker->runAction(this, inArgs);
+    HInvocation* invocation = m_actionInvoker->runAction(inArgs);
 
     m_invocations.insert(
-        invocation->m_invokeId.id(), qMakePair(InvocationPtrT(invocation), cb));
+        invocation->m_invokeId.id(),
+        InvocationInfo(HInvocationPtrT(invocation), cb, execArgs));
 
     return invocation->m_invokeId;
 }
@@ -243,64 +330,47 @@ bool HActionPrivate::setActionInvoke(const HActionInvoke& actionInvoke)
         return false;
     }
 
-    m_actionInvoke = actionInvoke;
+    if (m_actionInvoke) { delete m_actionInvoke; }
+    m_actionInvoke = new HActionInvoke(actionInvoke);
 
     return true;
 }
 
-bool HActionPrivate::setSharedInvoker(HSharedActionInvoker* sharedInvoker)
+bool HActionPrivate::setInvoker(HActionInvoker* arg)
 {
-    if (!sharedInvoker)
+    if (!arg)
     {
         return false;
     }
 
-    m_sharedActionInvoker = sharedInvoker;
+    m_actionInvoker = arg;
 
     return true;
 }
 
-bool HActionPrivate::setName(const QString& name)
+bool HActionPrivate::setInfo(const HActionInfo& info)
 {
-    m_name = verifyName(name);
-    return true;
-}
-
-bool HActionPrivate::setInputArgs(const HActionArguments& inputArguments)
-{
-    m_inputArguments.reset(new HActionArguments(inputArguments));
-    return true;
-}
-
-bool HActionPrivate::setOutputArgs(
-    const HActionArguments& outputArguments, bool hasRetValArg)
-{
-    m_outputArguments.reset(new HActionArguments(outputArguments));
-
-    if (!m_outputArguments->size() && hasRetValArg)
+    if (!info.isValid())
     {
         return false;
     }
 
-    m_hasRetValArg = hasRetValArg;
+    m_info.reset(new HActionInfo(info));
     return true;
 }
 
 /*******************************************************************************
  * HAction
  ******************************************************************************/
-HAction::HAction(const QString& name, HService* parent) :
-    QObject(parent),
+HAction::HAction(const HActionInfo& info, HService* parent) :
+    QObject(reinterpret_cast<QObject*>(parent)),
         h_ptr(new HActionPrivate())
 {
     Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
+    Q_ASSERT_X(info.isValid(), H_AT, "Action information must be defined.");
     h_ptr->m_parentService = parent;
 
-    if (!h_ptr->setName(name))
-    {
-        throw HIllegalArgumentException("name");
-    }
-
+    h_ptr->m_info.reset(new HActionInfo(info));
     h_ptr->q_ptr = this;
 }
 
@@ -314,41 +384,26 @@ HService* HAction::parentService() const
     return h_ptr->m_parentService;
 }
 
-QString HAction::name() const
+const HActionInfo& HAction::info() const
 {
-    return h_ptr->m_name;
-}
-
-HActionArguments HAction::inputArguments() const
-{
-    return *h_ptr->m_inputArguments;
-}
-
-HActionArguments HAction::outputArguments() const
-{
-    return *h_ptr->m_outputArguments;
-}
-
-QString HAction::returnArgumentName() const
-{
-    return h_ptr->m_hasRetValArg ? h_ptr->m_outputArguments->get(0)->name() : "";
+    return *h_ptr->m_info;
 }
 
 HAsyncOp HAction::beginInvoke(
-    const HActionArguments& inArgs)
+    const HActionArguments& inArgs, HExecArgs* execArgs)
 {
-    return h_ptr->invoke(inArgs);
+    return h_ptr->invoke(inArgs, execArgs);
 }
 
 HAsyncOp HAction::beginInvoke(
     const HActionArguments& inArgs,
-    const HActionInvokeCallback& completionCallback)
+    const HActionInvokeCallback& completionCallback,
+    HExecArgs* execArgs)
 {
-    return h_ptr->invoke(inArgs, completionCallback);
+    return h_ptr->invoke(inArgs, completionCallback, execArgs);
 }
 
-bool HAction::waitForInvoke(
-    HAsyncOp* waitResult, HActionArguments* outArgs)
+bool HAction::waitForInvoke(HAsyncOp* waitResult, HActionArguments* outArgs)
 {
     Q_ASSERT_X(waitResult, H_AT, "A valid pointer to waitResult variable has to be provided");
     return h_ptr->waitForInvocation(waitResult, outArgs);
@@ -358,8 +413,7 @@ qint32 HAction::invoke(
     const HActionArguments& inArgs, HActionArguments* outArgs)
 {
     HAsyncOp id = beginInvoke(inArgs);
-    bool b = waitForInvoke(&id, outArgs);
-    H_ASSERT(b);
+    waitForInvoke(&id, outArgs);
 
     return id.returnValue();
 }
@@ -370,39 +424,39 @@ QString HAction::errorCodeToString(qint32 errCode)
     {
         return "Success";
     }
-    else if (errCode == InvalidArgs())
+    else if (errCode == InvalidArgs)
     {
         return "InvalidArgs";
     }
-    else if (errCode == ArgumentValueInvalid())
+    else if (errCode == ArgumentValueInvalid)
     {
         return "ArgumentValueInvalid";
     }
-    else if (errCode == ArgumentValueOutOfRange())
+    else if (errCode == ArgumentValueOutOfRange)
     {
         return "ArgumentValueOutOfRange";
     }
-    else if (errCode == OptionalActionNotImplemented())
+    else if (errCode == OptionalActionNotImplemented)
     {
         return "OptionalActionNotImplemented";
     }
-    else if (errCode == OutOfMemory())
+    else if (errCode == OutOfMemory)
     {
         return "OutOfMemory";
     }
-    else if (errCode == HumanInterventionRequired())
+    else if (errCode == HumanInterventionRequired)
     {
         return "HumanInterventionRequired";
     }
-    else if (errCode == StringArgumentTooLong())
+    else if (errCode == StringArgumentTooLong)
     {
         return "StringArgumentTooLong";
     }
-    else if (errCode == ActionFailed())
+    else if (errCode == ActionFailed)
     {
         return "ActionFailed";
     }
-    else if (errCode == UndefinedFailure())
+    else if (errCode == UndefinedFailure)
     {
         return "UndefinedFailure";
     }

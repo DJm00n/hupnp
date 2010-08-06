@@ -28,7 +28,6 @@
 #include <QByteArray>
 
 class QImage;
-class QDomDocument;
 
 namespace Herqq
 {
@@ -54,12 +53,12 @@ public:
     DeviceHostDataRetriever(
         const QByteArray& loggingId, const QUrl& rootDir);
 
-    QDomDocument retrieveServiceDescription(
+    QString retrieveServiceDescription(
         const QUrl& deviceLocation, const QUrl& scpdUrl);
 
     QImage retrieveIcon(const QUrl& deviceLocation, const QUrl& iconUrl);
 
-    QDomDocument retrieveDeviceDescription(const QString& filePath);
+    QString retrieveDeviceDescription(const QString& filePath);
 };
 
 }

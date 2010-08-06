@@ -457,6 +457,8 @@ public:
 
     Functor& operator=(const Functor& other)
     {
+        Q_ASSERT(&other != this);
+
         Impl* newImpl = other.m_impl ? Impl::clone(other.m_impl) : 0;
         delete m_impl;
         m_impl = newImpl;
@@ -465,8 +467,10 @@ public:
     }
 
     Functor(const Functor& other) :
-        m_impl(other.m_impl ? Impl::clone(other.m_impl) : 0)
+        m_impl(0)
     {
+        Q_ASSERT(&other != this);
+        m_impl = other.m_impl ? Impl::clone(other.m_impl) : 0;
     }
 
     ReturnValue operator()()

@@ -214,6 +214,19 @@ H_UPNP_CORE_EXPORT bool operator==(const HServiceId&, const HServiceId&);
  */
 H_UPNP_CORE_EXPORT bool operator!=(const HServiceId&, const HServiceId&);
 
+/*!
+ * Returns a value that can be used as a unique key in a hash-map identifying
+ * the resource type object.
+ *
+ * \param key specifies the <em>service ID</em> from which the hash value is created.
+ *
+ * \return a value that can be used as a unique key in a hash-map identifying
+ * the resource type object.
+ *
+ * \relates HServiceId
+ */
+H_UPNP_CORE_EXPORT quint32 qHash(const HServiceId& key);
+
 }
 }
 

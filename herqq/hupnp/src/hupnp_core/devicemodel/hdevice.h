@@ -26,16 +26,16 @@
 #include "../general/hupnp_fwd.h"
 #include "../dataelements/hresourcetype.h"
 
+#include <QObject>
+
+class QUrl;
+class QString;
+
 template<typename T, typename U>
 class QHash;
 
 template<typename T>
 class QList;
-
-#include <QObject>
-
-class QUrl;
-class QString;
 
 namespace Herqq
 {
@@ -66,24 +66,27 @@ class HDeviceController;
  *
  * The most common uses of \c %HDevice involve reading the various device information
  * elements originally set in the device description file and enumerating the
- * exposed services. By calling deviceInfo() you get an Herqq::Upnp::HDeviceInfo object from
+ * exposed services. By calling info() you get an Herqq::Upnp::HDeviceInfo object from
  * which you can read all the informational elements found in the device description.
- * Calling services() gives you a list of Herqq::Upnp::HService instances the device exposes.
- * Note that it is the services that contain the functionality and runtime status of the device.
+ * Calling services() gives you a list of Herqq::Upnp::HService instances the
+ * device exposes. Note that it is the services that contain the functionality
+ * and runtime status of the device.
  *
  * Some devices also contain embedded devices, which you can get by calling
  * embeddedDevices().
  *
- * You can retrieve the device's description file by calling deviceDescription() or
+ * You can retrieve the device's description file by calling description() or
  * you can manually read it from any of the locations returned by locations(). If
  * the device is an embedded device, it always has a parent defined, which you can
  * get by calling parentDevice().
  *
  * <h2>Sub-classing</h2>
  *
- * Sub-classing an \c %HDevice is simple. All you need to do is override the
- * HDevice::createServices() method in which you create objects of service types according
- * to the device's device description file.
+ * First of all, you only need to subclass HDevice when your custom UPnP device
+ * defines UPnP services. Second, if your device defines UPnP services,
+ * the only thing you need to do is to override the HDevice::createServices().
+ * This virtual method is used to create HService instances that
+ * represent the service types defined in the device description document.
  *
  * As an example, consider the following snippet in which is shown the
  * createServices() method from a fictional device named \c DimmableLight:
@@ -93,15 +96,19 @@ class HDeviceController;
  * #include "switchpowerimpl.h" // this would be your code
  * #include "dimmingimpl.h"     // this would be your code
  *
- * Herqq::Upnp::HDevice::HServiceMap DimmableLight::createServices()
+ * Herqq::Upnp::HServicesSetupData* DimmableLight::createServices()
  * {
- *   Herqq::Upnp::HDevice::HServiceMap retVal;
+ *   Herqq::Upnp::HServicesSetupData* retVal = new HServicesSetupData();
  *
- *   retVal[Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1")]   =
- *       new SwitchPowerImpl(); // your type
+ *   retVal->insert(
+ *       Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
+ *       Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
+ *       new SwitchPowerImpl()); // your type
  *
- *   retVal[Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:Dimming:1")] =
- *       new DimmingImpl(); // your type
+ *   retVal->insert(
+ *       Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:Dimming"),
+ *       Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:Dimming:1"),
+ *       new DimmingImpl()); // your type
  *
  *   return retVal;
  * }
@@ -109,13 +116,13 @@ class HDeviceController;
  * \endcode
  *
  * The above code maps your types, namely \c SwitchPowerImpl and \c DimmingImpl
- * to the <em>UPnP service types</em> identified by the strings
- * <c>urn:schemas-upnp-org:service:SwitchPower:1</c> and
- * <c>urn:schemas-upnp-org:service:Dimming:1</c>, respectively.
- * The HDevice::createServices() method is called when the device type is being
- * initialized. If any of those service types are not in the device description file,
- * or you didn't map a type to a service type found in the device description, the
- * device creation will fail.
+ * to the <em>UPnP service types</em> identified by the <em>service IDs</em>
+ * <c>urn:schemas-upnp-org:serviceId:SwitchPower</c> and
+ * <c>urn:schemas-upnp-org:serviceId:Dimming</c> respectively.
+ * Normally, only HUPnP calls HDevice::createServices() and HUPnP does that
+ * once when the device type is being initialized. If any of those service types
+ * are not in the device description file or you didn't map a type to a
+ * service type found in the device description, the device creation will fail.
  *
  * \headerfile hdevice.h HDevice
  *
@@ -207,38 +214,73 @@ public: // enums
         BaseUrl
     };
 
-public: // typedefs
-
-    /*!
-     * A type definition for a map holding HResourceTypes as keys and
-     * pointers to HServices as values.
-     *
-     * This type definition is used as a return value of private HDevice::createServices()
-     * method to convey information about the UPnP services the device exports
-     * to HUPnP during the object initialization.
-     *
-     * \sa HDevice, HService
-     */
-    typedef QHash<HResourceType, HService*> HServiceMap;
-
-private:
+protected:
 
     /*!
      * Creates the services that this UPnP device provides.
      *
-     * Every descendant has to override this.
+     * It is very important to note that every descendant that specifies
+     * services \b has to override this. In addition, the override of this method
+     * should always call the implementation of the super class too. For instance,
      *
-     * This method is called once when the device is being initialized by the
-     * host that is managing this instance.
+     * \code
+     *
+     * void HServicesSetupData* MyDeviceType::createServices()
+     * {
+     *     HServicesSetupData* retVal = SuperClass::createServices();
+     *
+     *     // create and add the services of this device to the "retVal" variable
+     *
+     *     return retVal;
+     * }
+     *
+     * \endcode
+     *
+     * Most commonly this method is called only once when the instance
+     * is being initialized by the managing host (HDeviceHost or HControlPoint).
      *
      * \return the services that this HDevice provides.
      *
-     * \remarks The base class takes the ownership of the created services and will
-     * delete them upon destruction. Because of that, you can store the
-     * addresses of the created services and use them safely throughout the lifetime
-     * of the containing device object. However, you cannot delete them.
+     * \remarks The HDevice base class takes the ownership of the created
+     * objects and will delete them upon its destruction. Because of that,
+     * you can store the addresses of the created objects and use them safely
+     * throughout the lifetime of this device. However, you \b cannot delete them.
      */
-    virtual HServiceMap createServices() = 0;
+    virtual HServicesSetupData* createServices();
+
+    /*!
+     * Creates the embedded devices that this UPnP device provides.
+     *
+     * It is important to note that every descendant that specifies
+     * embedded devices \b should override this. In case it is overridden,
+     * the override of this method should always call the implementation
+     * of the super class too. For instance,
+     *
+     * \code
+     *
+     * void HDevicesSetupData* MyDeviceType::createEmbeddedDevices()
+     * {
+     *     HDevicesSetupData* retVal = SuperClass::createEmbeddedDevices();
+     *
+     *     // create and add the embedded devices of this device to the
+     *     // "retVal" variable
+     *
+     *     return retVal;
+     * }
+     *
+     * \endcode
+     *
+     * Most commonly this method is called only once when the instance
+     * is being initialized by the managing host (HDeviceHost or HControlPoint).
+     *
+     * \return the services that this HDevice provides.
+     *
+     * \remarks The HDevice base class takes the ownership of the created
+     * objects and will delete them upon its destruction. Because of that,
+     * you can store the addresses of the created objects and use them safely
+     * throughout the lifetime of this device. However, you \b cannot delete them.
+     */
+    virtual HDevicesSetupData* createEmbeddedDevices();
 
     /*!
      * Provides the opportunity to do post-construction initialization routines
@@ -259,11 +301,15 @@ private:
      * set up, you can override this method. This method is called \b once
      * right after the base \c %HDevice is fully initialized.
      *
+     * \param errDescription
+     *
+     * \return \e true in case the initialization succeeded.
+     *
      * \note It is advisable to keep the constructors of the descendants of
      * \c %HDevice small and fast, and do more involved initialization routines
      * here.
      */
-    virtual void finalizeInit();
+    virtual bool finalizeInit(QString* errDescription);
 
 protected:
 
@@ -277,6 +323,8 @@ protected:
     HDevice(HDevicePrivate& dd);
 
     /*!
+     * Creates a new instance.
+     *
      * Default constructor for derived classes.
      */
     HDevice();
@@ -284,6 +332,8 @@ protected:
 public:
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     virtual ~HDevice() = 0;
@@ -365,21 +415,23 @@ public:
     HDevices embeddedDevices() const;
 
     /*!
-     * Returns information about the device that is read from the device description.
+     * Returns information about the device that is read from the
+     * device description.
      *
-     * \return information about the device that is read from the device description.
+     * \return information about the device that is read from the
+     * device description.
      */
-    HDeviceInfo deviceInfo() const;
+    const HDeviceInfo& info() const;
 
     /*!
-     * Returns the full device description of the device.
+     * Returns the UPnP device description of this device.
      *
-     * \return full device description that is associated to this device.
+     * \return the UPnP device description that is associated to this device.
      *
      * \remarks an embedded device returns the same device description as
      * its root device.
      */
-    QString deviceDescription() const;
+    const QString& description() const;
 
     /*!
      * Returns a list of locations where the device is currently available.

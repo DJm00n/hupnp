@@ -22,14 +22,11 @@
 #include "hdevicehost_dataretriever_p.h"
 
 #include "../hdevicehosting_exceptions_p.h"
-
 #include "../../../utils/hlogger_p.h"
-#include "../../../utils/hexceptions_p.h"
 
 #include <QFile>
 #include <QImage>
 #include <QString>
-#include <QDomDocument>
 
 namespace Herqq
 {
@@ -43,7 +40,7 @@ DeviceHostDataRetriever::DeviceHostDataRetriever(
 {
 }
 
-QDomDocument DeviceHostDataRetriever::retrieveServiceDescription(
+QString DeviceHostDataRetriever::retrieveServiceDescription(
     const QUrl& /*deviceLocation*/, const QUrl& scpdUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -75,16 +72,7 @@ QDomDocument DeviceHostDataRetriever::retrieveServiceDescription(
                 fullScpdPath));
     }
 
-    QDomDocument dd;
-    QString errMsg; qint32 errLine = 0;
-    if (!dd.setContent(&file, false, &errMsg, &errLine))
-    {
-        throw InvalidServiceDescription(
-            QString("Could not parse the service description file [%1]: %2 @ line %3").
-            arg(fullScpdPath, errMsg, QString::number(errLine)));
-    }
-
-    return dd;
+    return QString::fromUtf8(file.readAll());
 }
 
 QImage DeviceHostDataRetriever::retrieveIcon(
@@ -122,7 +110,7 @@ QImage DeviceHostDataRetriever::retrieveIcon(
     return icon;
 }
 
-QDomDocument DeviceHostDataRetriever::retrieveDeviceDescription(
+QString DeviceHostDataRetriever::retrieveDeviceDescription(
     const QString& filePath)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -135,16 +123,16 @@ QDomDocument DeviceHostDataRetriever::retrieveDeviceDescription(
                 filePath));
     }
 
-    QDomDocument dd;
+    /*QDomDocument dd;
     QString errMsg; qint32 errLine = 0;
     if (!dd.setContent(&file, false, &errMsg, &errLine))
     {
         throw InvalidDeviceDescription(
             QString("Could not parse the device description file: [%1] @ line %2").
             arg(errMsg, QString::number(errLine)));
-    }
+    }*/
 
-    return dd;
+    return QString::fromUtf8(file.readAll());
 
 }
 

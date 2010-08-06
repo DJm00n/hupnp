@@ -22,10 +22,7 @@
 #include "hdeviceinfo.h"
 #include "hdeviceinfo_p.h"
 
-#include <QUrl>
-#include <QList>
 #include <QImage>
-#include <QString>
 #include <QMetaType>
 
 static bool registerMetaTypes()
@@ -58,6 +55,170 @@ HDeviceInfoPrivate::~HDeviceInfoPrivate()
 {
 }
 
+bool HDeviceInfoPrivate::setDeviceType(const HResourceType& deviceType)
+{
+    if (!deviceType.isValid())
+    {
+        return false;
+    }
+
+    if (deviceType.type() != HResourceType::StandardDeviceType &&
+        deviceType.type() != HResourceType::VendorSpecifiedDeviceType)
+    {
+        return false;
+    }
+
+    m_deviceType = deviceType;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setFriendlyName(const QString& friendlyName)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (friendlyName.isEmpty())
+    {
+        return false;
+    }
+
+    if (friendlyName.size() > 64)
+    {
+        HLOG_WARN(QString(
+            "friendlyName longer than 64 characters").arg(friendlyName));
+    }
+
+    m_friendlyName = friendlyName;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setManufacturer(const QString& manufacturer)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (manufacturer.isEmpty())
+    {
+        return false;
+    }
+
+    if (manufacturer.size() > 64)
+    {
+        HLOG_WARN(QString(
+            "manufacturer longer than 64 characters").arg(manufacturer));
+    }
+
+    m_manufacturer = manufacturer;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setModelDescription(const QString& modelDescription)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (modelDescription.size() > 128)
+    {
+        HLOG_WARN(QString(
+            "modelDescription longer than 64 characters").arg(modelDescription));
+    }
+
+    m_modelDescription = modelDescription;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setModelName(const QString& modelName)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (modelName.isEmpty())
+    {
+        return false;
+    }
+
+    if (modelName.size() > 32)
+    {
+        HLOG_WARN(QString(
+            "modelName longer than 32 characters: [%1]").arg(modelName));
+    }
+
+    m_modelName = modelName;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setModelNumber(const QString& modelNumber)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (modelNumber.size() > 32)
+    {
+        HLOG_WARN(QString(
+            "modelNumber longer than 32 characters: [%1]").arg(modelNumber));
+    }
+
+    m_modelNumber = modelNumber;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setSerialNumber(const QString& serialNumber)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (serialNumber.size() > 64)
+    {
+        HLOG_WARN(QString(
+            "serialNumber longer than 64 characters: [%1]").arg(serialNumber));
+    }
+
+    m_serialNumber = serialNumber;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setUpc(const QString& upc)
+{
+    HLOG(H_AT, H_FUN);
+
+    if (upc.isEmpty())
+    {
+        // UPC is optional, so if it is not provided at all, that is okay.
+        return false;
+    }
+
+    // even if something is provided, we only warn the user of possible error.
+    // (since upc is optional)
+
+    if (upc.size() > 13 || upc.size() < 12)
+    {
+        // a white-space and a hyphen in the middle are acceptable
+        HLOG_WARN_NONSTD(QString(
+            "UPC should be 12-digit, all-numeric code. Encountered: [%1].").arg(
+                upc));
+    }
+    else
+    {
+        for(qint32 i = 0; i < upc.size(); ++i)
+        {
+            QChar ch = upc[i];
+
+            if ((i == 6 && !ch.isSpace() && ch != '-' && upc.size() == 13) ||
+                !ch.isDigit())
+            {
+                HLOG_WARN_NONSTD(QString(
+                    "UPC should be 12-digit, all-numeric code. "
+                    "Ignoring invalid value [%1].").arg(upc));
+
+                break;
+            }
+        }
+    }
+
+    m_upc = upc;
+    return true;
+}
+
+bool HDeviceInfoPrivate::setIcons(const QList<QPair<QUrl, QImage> >& icons)
+{
+    m_icons = icons;
+    return true;
+}
+
 /*******************************************************************************
  * HDeviceInfo
  ******************************************************************************/
@@ -67,12 +228,16 @@ HDeviceInfo::HDeviceInfo() :
 }
 
 HDeviceInfo::HDeviceInfo(const HDeviceInfo& other) :
-    h_ptr(new HDeviceInfoPrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HDeviceInfoPrivate(*other.h_ptr);
 }
 
 HDeviceInfo& HDeviceInfo::operator=(const HDeviceInfo& other)
 {
+    Q_ASSERT(&other != this);
+
     HDeviceInfoPrivate* newHptr = new HDeviceInfoPrivate(*other.h_ptr);
 
     delete h_ptr;

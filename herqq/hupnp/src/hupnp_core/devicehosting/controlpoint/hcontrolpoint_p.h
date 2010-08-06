@@ -32,11 +32,13 @@
 
 #include "hcontrolpoint.h"
 #include "hdevicebuild_p.h"
+#include "hactioninvoke_proxy_p.h"
 #include "hevent_subscriptionmanager_p.h"
 
 #include "../habstracthost_p.h"
 #include "../../devicemodel/hdevice.h"
 #include "../../devicemodel/hservice.h"
+#include "../../devicemodel/hactioninvoke.h"
 
 #include "../../ssdp/hssdp.h"
 #include "../../ssdp/hssdp_p.h"
@@ -82,7 +84,8 @@ private:
 
 protected:
 
-    virtual void incomingNotifyMessage(MessagingInfo&, const NotifyRequest&);
+    virtual void incomingNotifyMessage(
+        MessagingInfo&, const NotifyRequest&, HRunnable*);
 
 public:
 
@@ -120,6 +123,28 @@ public:
 };
 
 //
+// Thread class used by the HControlPoint to run action invocations
+//
+class HControlPointThread :
+    public QThread
+{
+H_DISABLE_COPY(HControlPointThread)
+
+private:
+
+    volatile bool m_exit;
+
+protected:
+
+    virtual void run();
+
+public:
+
+    HControlPointThread();
+    void quit();
+};
+
+//
 // Implementation details of HControlPoint
 //
 class H_UPNP_CORE_EXPORT HControlPointPrivate :
@@ -145,7 +170,7 @@ private:
     bool addRootDevice(HDeviceController* device);
     void subscribeToEvents(HDeviceController*);
 
-    HActionInvoke createActionInvoker(HAction*);
+    HActionInvokeProxy* createActionInvoker(HAction*);
 
     void processDeviceOnline(HDeviceController*, bool newDevice);
 
@@ -184,10 +209,13 @@ public:
 
     HControlPoint* q_ptr;
 
+    QScopedPointer<HControlPointThread> m_controlPointThread;
+
     HControlPointPrivate();
     virtual ~HControlPointPrivate();
 
-    HDeviceController* buildDevice(const QUrl& deviceLocation, qint32 maxAge);
+    HDeviceController* buildDevice(
+        const QUrl& deviceLocation, qint32 maxAge, QString* err);
 };
 
 }

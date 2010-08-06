@@ -25,8 +25,6 @@
 #include "../../general/hupnp_global_p.h"
 #include "../../../utils/hmisc_utils_p.h"
 
-#include <QFile>
-
 namespace Herqq
 {
 
@@ -37,7 +35,8 @@ namespace Upnp
  * HDeviceConfigurationPrivate
  ******************************************************************************/
 HDeviceConfigurationPrivate::HDeviceConfigurationPrivate() :
-    m_pathToDeviceDescriptor(), m_cacheControlMaxAgeInSecs(1800),
+    m_pathToDeviceDescriptor(),
+    m_cacheControlMaxAgeInSecs(1800),
     m_deviceCreator()
 {
 }
@@ -55,19 +54,24 @@ HDeviceConfiguration::~HDeviceConfiguration()
     delete h_ptr;
 }
 
-HDeviceConfiguration* HDeviceConfiguration::doClone() const
+HDeviceConfiguration* HDeviceConfiguration::newInstance() const
 {
     return new HDeviceConfiguration();
 }
 
+void HDeviceConfiguration::doClone(HDeviceConfiguration* target) const
+{
+    target->h_ptr->m_cacheControlMaxAgeInSecs = h_ptr->m_cacheControlMaxAgeInSecs;
+    target->h_ptr->m_deviceCreator            = h_ptr->m_deviceCreator;
+    target->h_ptr->m_pathToDeviceDescriptor   = h_ptr->m_pathToDeviceDescriptor;
+}
+
 HDeviceConfiguration* HDeviceConfiguration::clone() const
 {
-    HDeviceConfiguration* newClone = doClone();
+    HDeviceConfiguration* newClone = newInstance();
     if (!newClone) { return 0; }
 
-    newClone->h_ptr->m_cacheControlMaxAgeInSecs = h_ptr->m_cacheControlMaxAgeInSecs;
-    newClone->h_ptr->m_deviceCreator            = h_ptr->m_deviceCreator;
-    newClone->h_ptr->m_pathToDeviceDescriptor   = h_ptr->m_pathToDeviceDescriptor;
+    doClone(newClone);
 
     return newClone;
 }
@@ -77,16 +81,10 @@ QString HDeviceConfiguration::pathToDeviceDescription() const
     return h_ptr->m_pathToDeviceDescriptor;
 }
 
-bool HDeviceConfiguration::setPathToDeviceDescription(
+void HDeviceConfiguration::setPathToDeviceDescription(
     const QString& pathToDeviceDescriptor)
 {
-    if (!QFile::exists(pathToDeviceDescriptor))
-    {
-        return false;
-    }
-
     h_ptr->m_pathToDeviceDescriptor = pathToDeviceDescriptor;
-    return true;
 }
 
 void HDeviceConfiguration::setCacheControlMaxAge(qint32 maxAgeInSecs)
@@ -115,7 +113,8 @@ HDeviceCreator HDeviceConfiguration::deviceCreator() const
     return h_ptr->m_deviceCreator;
 }
 
-bool HDeviceConfiguration::setDeviceCreator(const HDeviceCreator& deviceCreator)
+bool HDeviceConfiguration::setDeviceCreator(
+    const HDeviceCreator& deviceCreator)
 {
     if (deviceCreator)
     {
@@ -135,9 +134,11 @@ bool HDeviceConfiguration::isValid() const
  * HDeviceHostConfigurationPrivate
  ******************************************************************************/
 HDeviceHostConfigurationPrivate::HDeviceHostConfigurationPrivate() :
-    m_collection(), m_individualAdvertisementCount(2),
-    m_subscriptionExpirationTimeout(0), m_networkAddresses()//,
-    //m_threadingModel(HDeviceHostConfiguration::MultiThreaded)
+    m_collection(),
+    m_individualAdvertisementCount(2),
+    m_subscriptionExpirationTimeout(0),
+    m_networkAddresses(),
+    m_threadingModel(HDeviceHostConfiguration::MultiThreaded)
 {
     QHostAddress ha = findBindableHostAddress();
     m_networkAddresses.append(ha);
@@ -158,31 +159,47 @@ HDeviceHostConfiguration::HDeviceHostConfiguration(
     add(arg);
 }
 
-HDeviceHostConfiguration* HDeviceHostConfiguration::doClone() const
-{
-    return new HDeviceHostConfiguration();
-}
-
-HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
-{
-    HDeviceHostConfiguration* newClone = doClone();
-    if (!newClone) { return 0; }
-
-    foreach(const HDeviceConfiguration* arg, h_ptr->m_collection)
-    {
-        newClone->add(*arg);
-    }
-
-    newClone->h_ptr->m_individualAdvertisementCount =
-        h_ptr->m_individualAdvertisementCount;
-
-    return newClone;
-}
-
 HDeviceHostConfiguration::~HDeviceHostConfiguration()
 {
     qDeleteAll(h_ptr->m_collection);
     delete h_ptr;
+}
+
+HDeviceHostConfiguration* HDeviceHostConfiguration::newInstance() const
+{
+    return new HDeviceHostConfiguration();
+}
+
+void HDeviceHostConfiguration::doClone(HDeviceHostConfiguration* target) const
+{
+    target->h_ptr->m_individualAdvertisementCount =
+        h_ptr->m_individualAdvertisementCount;
+
+    target->h_ptr->m_networkAddresses = h_ptr->m_networkAddresses;
+
+    target->h_ptr->m_subscriptionExpirationTimeout =
+        h_ptr->m_subscriptionExpirationTimeout;
+
+    target->h_ptr->m_threadingModel = h_ptr->m_threadingModel;
+
+    QList<const HDeviceConfiguration*> confCollection;
+    foreach(const HDeviceConfiguration* conf, h_ptr->m_collection)
+    {
+        confCollection.append(conf->clone());
+    }
+
+    qDeleteAll(target->h_ptr->m_collection);
+    target->h_ptr->m_collection = confCollection;
+}
+
+HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
+{
+    HDeviceHostConfiguration* newClone = newInstance();
+    if (!newClone) { return 0; }
+
+    doClone(newClone);
+
+    return newClone;
 }
 
 bool HDeviceHostConfiguration::add(const HDeviceConfiguration& arg)
@@ -226,11 +243,10 @@ qint32 HDeviceHostConfiguration::subscriptionExpirationTimeout() const
     return h_ptr->m_subscriptionExpirationTimeout;
 }
 
-/*HDeviceHostConfiguration::ThreadingModel
-    HDeviceHostConfiguration::threadingModel() const
+HDeviceHostConfiguration::ThreadingModel HDeviceHostConfiguration::threadingModel() const
 {
     return h_ptr->m_threadingModel;
-}*/
+}
 
 void HDeviceHostConfiguration::setSubscriptionExpirationTimeout(qint32 arg)
 {
@@ -256,10 +272,10 @@ bool HDeviceHostConfiguration::setNetworkAddressesToUse(
     return true;
 }
 
-/*void HDeviceHostConfiguration::setThreadingModel(ThreadingModel arg)
+void HDeviceHostConfiguration::setThreadingModel(ThreadingModel arg)
 {
     h_ptr->m_threadingModel = arg;
-}*/
+}
 
 bool HDeviceHostConfiguration::isEmpty() const
 {

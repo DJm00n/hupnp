@@ -156,12 +156,17 @@ HResourceAvailable::HResourceAvailable(
 }
 
 HResourceAvailable::HResourceAvailable(const HResourceAvailable& other) :
-    h_ptr(new HResourceAvailablePrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HResourceAvailablePrivate(*other.h_ptr);
 }
 
-HResourceAvailable& HResourceAvailable::operator=(const HResourceAvailable& other)
+HResourceAvailable& HResourceAvailable::operator=(
+    const HResourceAvailable& other)
 {
+    Q_ASSERT(&other != this);
+
     HResourceAvailablePrivate* newDptr =
         new HResourceAvailablePrivate(*other.h_ptr);
 
@@ -442,12 +447,16 @@ HResourceUpdate::HResourceUpdate(
 }
 
 HResourceUpdate::HResourceUpdate(const HResourceUpdate& other) :
-    h_ptr(new HResourceUpdatePrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HResourceUpdatePrivate(*other.h_ptr);
 }
 
 HResourceUpdate& HResourceUpdate::operator=(const HResourceUpdate& other)
 {
+    Q_ASSERT(&other != this);
+
     HResourceUpdatePrivate* newDptr = new HResourceUpdatePrivate(*other.h_ptr);
 
     delete h_ptr;
@@ -603,12 +612,16 @@ HDiscoveryRequest::HDiscoveryRequest(
 }
 
 HDiscoveryRequest::HDiscoveryRequest(const HDiscoveryRequest& other) :
-    h_ptr(new HDiscoveryRequestPrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HDiscoveryRequestPrivate(*other.h_ptr);
 }
 
 HDiscoveryRequest& HDiscoveryRequest::operator=(const HDiscoveryRequest& other)
 {
+    Q_ASSERT(&other != this);
+
     HDiscoveryRequestPrivate* newDptr =
         new HDiscoveryRequestPrivate(*other.h_ptr);
 
@@ -751,12 +764,16 @@ HDiscoveryResponse::HDiscoveryResponse(
 }
 
 HDiscoveryResponse::HDiscoveryResponse(const HDiscoveryResponse& other) :
-    h_ptr(new HDiscoveryResponsePrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HDiscoveryResponsePrivate(*other.h_ptr);
 }
 
 HDiscoveryResponse& HDiscoveryResponse::operator=(const HDiscoveryResponse& other)
 {
+    Q_ASSERT(&other != this);
+
     HDiscoveryResponsePrivate* newDptr =
         new HDiscoveryResponsePrivate(*other.h_ptr);
 

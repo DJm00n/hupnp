@@ -41,8 +41,12 @@ HSid::HSid(const QUuid& sid) :
 }
 
 HSid::HSid(const HSid& other) :
-    m_value(other.m_value), m_valueAsStr(other.m_valueAsStr)
+    m_value(), m_valueAsStr()
 {
+    Q_ASSERT(&other != this);
+
+    m_value = other.m_value;
+    m_valueAsStr = other.m_valueAsStr;
 }
 
 HSid::HSid(const QString& sid) :
@@ -73,6 +77,8 @@ HSid::~HSid()
 
 HSid& HSid::operator=(const HSid& other)
 {
+    Q_ASSERT(&other != this);
+
     m_value = other.m_value;
     m_valueAsStr = other.m_valueAsStr;
     return *this;

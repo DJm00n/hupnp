@@ -22,6 +22,7 @@
 #include "hserviceid.h"
 
 #include "../../utils/hlogger_p.h"
+#include "../../utils/hmisc_utils_p.h"
 
 #include <QString>
 #include <QStringList>
@@ -128,12 +129,16 @@ HServiceId::HServiceId(const QString& serviceId) :
 }
 
 HServiceId::HServiceId(const HServiceId& other) :
-    h_ptr(new HServiceIdPrivate(*other.h_ptr))
+    h_ptr(0)
 {
+    Q_ASSERT(&other != this);
+    h_ptr = new HServiceIdPrivate(*other.h_ptr);
 }
 
 HServiceId& HServiceId::operator=(const HServiceId& other)
 {
+    Q_ASSERT(&other != this);
+
     HServiceIdPrivate* newHptr = new HServiceIdPrivate(*other.h_ptr);
     delete h_ptr;
     h_ptr = newHptr;
@@ -209,6 +214,12 @@ bool operator==(const HServiceId& sid1, const HServiceId& sid2)
 bool operator!=(const HServiceId& sid1, const HServiceId& sid2)
 {
     return !(sid1 == sid2);
+}
+
+quint32 qHash(const HServiceId& key)
+{
+    QByteArray data = key.toString().toLocal8Bit();
+    return hash(data.constData(), data.size());
 }
 
 }

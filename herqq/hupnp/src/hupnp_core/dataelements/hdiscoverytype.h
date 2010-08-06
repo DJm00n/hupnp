@@ -23,6 +23,7 @@
 #define HDISCOVERYTYPE_H_
 
 #include "../general/hdefs_p.h"
+#include "../general/hupnp_fwd.h"
 
 class QString;
 
@@ -32,8 +33,6 @@ namespace Herqq
 namespace Upnp
 {
 
-class HUdn;
-class HResourceType;
 class HDiscoveryTypePrivate;
 
 /*!

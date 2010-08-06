@@ -193,7 +193,7 @@ public:
         QList<QUrl> locations = rootDevice->m_device->locations();
         foreach(const QUrl& location, locations)
         {
-            HUdn udn(rootDevice->m_device->deviceInfo().udn());
+            HUdn udn(rootDevice->m_device->info().udn());
             HDiscoveryType usn(udn, true);
 
             announcements.push_back(AnnouncementType(rootDevice, usn, location));
@@ -210,7 +210,7 @@ public:
         QList<QUrl> locations = device->m_device->locations();
         foreach(const QUrl& location, locations)
         {
-            HDeviceInfo deviceInfo = device->m_device->deviceInfo();
+            HDeviceInfo deviceInfo = device->m_device->info();
 
             HUdn udn = deviceInfo.udn();
             HDiscoveryType usn(udn);
@@ -226,7 +226,7 @@ public:
             const QList<HServiceController*>* services = device->services();
             foreach(HServiceController* service, *services)
             {
-                usn.setResourceType(service->m_service->serviceType());
+                usn.setResourceType(service->m_service->info().serviceType());
                 announcements.push_back(AnnouncementType(device, usn, location));
             }
         }

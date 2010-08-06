@@ -30,13 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
+#include "hdevicehost_configuration.h"
+
 #include "../hdevicecreator.h"
-#include "../../../utils/hglobal.h"
 
 #include <QList>
 #include <QString>
 #include <QHostAddress>
-#include <QScopedPointer>
 
 namespace Herqq
 {
@@ -81,7 +81,7 @@ public:
 
     QList<QHostAddress> m_networkAddresses;
 
-    //HDeviceHostConfiguration::ThreadingModel m_threadingModel;
+    HDeviceHostConfiguration::ThreadingModel m_threadingModel;
 
     HDeviceHostConfigurationPrivate();
 };

@@ -300,42 +300,35 @@ NotifyRequest::RetVal parseData(
     //QDomNodeList propertySetNodes =
       //  dd.elementsByTagNameNS("urn:schemas-upnp.org:event-1-0", "propertyset");
 
-    QDomNodeList propertySetNodes = dd.elementsByTagName("propertyset");
+    QDomElement propertySetElement = dd.firstChildElement("propertyset");
 
-    if (propertySetNodes.size() != 1)
+    if (propertySetElement.isNull())
     {
         return NotifyRequest::InvalidContents;
     }
 
-    QDomNodeList propertyNodeList =
-        propertySetNodes.at(0).toElement().elementsByTagName("property");
+    QDomElement propertyElement =
+        propertySetElement.firstChildElement("property");
         //propertySetNodes.at(0).toElement().elementsByTagNameNS(
           //  "urn:schemas-upnp.org:event-1-0", "property");
 
-    if (!propertyNodeList.size())
-    {
-        return NotifyRequest::InvalidContents;
-    }
-
     QList<QPair<QString, QString> > tmp;
-
-    for (int i = 0; i < propertyNodeList.size(); ++i)
+    while(!propertyElement.isNull())
     {
-        QDomElement propertyElement   = propertyNodeList.at(i).toElement();
-        QDomNodeList variableElements = propertyElement.childNodes();
-        if (variableElements.size() <= 0)
+        QDomElement variableElement = propertyElement.firstChildElement();
+        if (variableElement.isNull())
         {
             return NotifyRequest::InvalidContents;
         }
 
-        QDomElement variableElement = variableElements.at(0).toElement();
         QDomText variableValue = variableElement.firstChild().toText();
         tmp.push_back(
             qMakePair(variableElement.localName(), variableValue.data()));
+
+        propertyElement = propertyElement.nextSiblingElement("property");
     }
 
     parsedData = tmp;
-
     return NotifyRequest::Success;
 }
 }

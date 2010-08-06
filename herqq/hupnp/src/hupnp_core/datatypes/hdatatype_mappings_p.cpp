@@ -35,7 +35,7 @@ SoapType::SoapType(
         QtSoapSimpleType()
 {
     Q_ASSERT(!name.isEmpty());
-    Q_ASSERT(value.isValid());
+    Q_ASSERT_X(value.isValid(), "", name.toLocal8Bit());
     Q_ASSERT(dt != HUpnpDataTypes::Undefined);
 
     n = QtSoapQName(name);

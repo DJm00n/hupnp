@@ -30,23 +30,21 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hupnp_global.h"
-
 #include "haction.h"
+#include "hexecargs.h"
 #include "hactioninvoke.h"
 #include "hactionarguments.h"
+
+#include "../../utils/hthreadpool_p.h"
+#include "../dataelements/hactioninfo.h"
 
 #include <QHash>
 #include <QUuid>
 #include <QMutex>
-#include <QObject>
 #include <QString>
-#include <QRunnable>
 #include <QWaitCondition>
-#include <QScopedPointer>
 #include <QSharedPointer>
-
-class QThreadPool;
+#include <QScopedPointer>
 
 namespace Herqq
 {
@@ -55,52 +53,147 @@ namespace Upnp
 {
 
 //
-// This class enables asynchronous action invocation amongst actions within
-// a device.
+// The base class for synchronous and asynchronous invocation objects.
+// The purpose of this class is to contain information about the action invocation
+// required to run the operation to completion.
 //
-class HSharedActionInvoker
+class HInvocation
 {
-H_DISABLE_COPY(HSharedActionInvoker)
-friend class HActionPrivate;
-
-    //
-    //
-    //
-    class Invocation :
-        public QRunnable
-    {
-    H_DISABLE_COPY(Invocation)
-
-    public:
-
-        HActionPrivate* m_action;
-        HActionArguments m_iargs;
-        HAsyncOp m_invokeId;
-        QWaitCondition m_waitCond;
-        HActionArguments m_outArgs;
-
-        QAtomicInt m_hasListener;
-
-        volatile bool m_completed;
-
-    public:
-
-        Invocation(HActionPrivate*, const HActionArguments&);
-        virtual void run();
-
-        inline bool isCompleted() { return m_completed; }
-    };
-
-private:
-
-    QThreadPool* m_threadPool;
+H_DISABLE_COPY(HInvocation)
 
 public:
 
-    HSharedActionInvoker(QThreadPool*);
-    ~HSharedActionInvoker();
+    HActionPrivate* const m_action;
+    const HActionArguments m_inArgs;
+    HAsyncOp m_invokeId;
+    QWaitCondition m_waitCond;
+    HActionArguments m_outArgs;
 
-    Invocation* runAction(HActionPrivate*, const HActionArguments&);
+    QAtomicInt m_hasListener;
+
+    volatile bool m_completed;
+
+public:
+
+    HInvocation(HActionPrivate*, const HActionArguments& inArgs);
+    virtual ~HInvocation() = 0;
+
+    inline bool isCompleted() { return m_completed; }
+};
+
+//
+// The base class for synchronous and asynchronous action invocation runners.
+// These classes start the action invocation operations.
+//
+class HActionInvoker
+{
+H_DISABLE_COPY(HActionInvoker)
+friend class HActionPrivate;
+
+protected:
+
+    HActionPrivate* m_action;
+
+public:
+
+    HActionInvoker(HActionPrivate*);
+    virtual ~HActionInvoker();
+
+    virtual HInvocation* runAction(const HActionArguments&) = 0;
+};
+
+//
+// This class contains the data needed to run an asynchronous action invocation.
+//
+class HAsyncInvocation :
+    public HInvocation
+{
+H_DISABLE_COPY(HAsyncInvocation)
+
+public:
+
+    HAsyncInvocation(HActionPrivate*, const HActionArguments&);
+    virtual ~HAsyncInvocation();
+};
+
+//
+// This class runs the asynchronous action invocations.
+//
+class HAsyncActionInvoker :
+    public HActionInvoker
+{
+H_DISABLE_COPY(HAsyncActionInvoker)
+friend class HActionPrivate;
+
+private:
+
+    bool invokeComplete(HAsyncOp);
+
+public:
+
+    HAsyncActionInvoker(HActionPrivate*);
+    virtual ~HAsyncActionInvoker();
+
+    virtual HAsyncInvocation* runAction(const HActionArguments&);
+};
+
+//
+// This class contains the data needed to run a synchronous action invocation.
+//
+class HSyncInvocation :
+    public HRunnable,
+    public HInvocation
+{
+H_DISABLE_COPY(HSyncInvocation)
+public:
+
+    HSyncInvocation(HActionPrivate*, const HActionArguments&);
+    virtual ~HSyncInvocation();
+    virtual void run();
+};
+
+//
+// This class runs the synchronous action invocations.
+//
+class HSyncActionInvoker :
+    public HActionInvoker
+{
+H_DISABLE_COPY(HSyncActionInvoker)
+friend class HActionPrivate;
+
+private:
+
+    HThreadPool* m_threadPool;
+
+public:
+
+    HSyncActionInvoker(HActionPrivate*, HThreadPool*);
+    virtual ~HSyncActionInvoker();
+
+    virtual HSyncInvocation* runAction(const HActionArguments&);
+};
+
+//
+//
+//
+class HActionInvokeProxy
+{
+H_DISABLE_COPY(HActionInvokeProxy)
+
+protected:
+
+    HActionInvokeCallback m_callback;
+
+public:
+
+    HActionInvokeProxy();
+    virtual ~HActionInvokeProxy();
+    virtual bool beginInvoke(HAsyncInvocation*) = 0;
+
+    inline void setCallback(const HActionInvokeCallback& cb)
+    {
+        m_callback = cb;
+    }
 };
 
 //
@@ -121,9 +214,7 @@ public:
     HActionController(HAction* action);
     virtual ~HActionController();
 
-    qint32 invoke(
-        const Herqq::Upnp::HActionArguments&,
-        Herqq::Upnp::HActionArguments*);
+    qint32 invoke(const HActionArguments&, HActionArguments*);
 };
 
 //
@@ -133,7 +224,8 @@ class HActionPrivate
 {
 H_DECLARE_PUBLIC(HAction)
 H_DISABLE_COPY(HActionPrivate)
-friend class HSharedActionInvoker::Invocation;
+friend class HSyncInvocation;
+friend class HAsyncActionInvoker;
 
 private:
 
@@ -142,25 +234,74 @@ private:
     bool waitForInvocation(
         HAsyncOp* waitResult, HActionArguments* outArgs);
 
-    HAsyncOp invoke(const HActionArguments& inArgs);
-    HAsyncOp invoke(const HActionArguments&, const HActionInvokeCallback&);
+    HAsyncOp invoke(
+        const HActionArguments& inArgs, HExecArgs* execArgs);
+
+    HAsyncOp invoke(
+        const HActionArguments& inArgs, const HActionInvokeCallback&,
+        HExecArgs* execArgs);
 
 public:
 
     HAction* q_ptr;
-    QString m_name;
-    QScopedPointer<HActionArguments> m_inputArguments;
-    QScopedPointer<HActionArguments> m_outputArguments;
-    bool m_hasRetValArg;
+    QScopedPointer<HActionInfo> m_info;
 
     HService* m_parentService;
-    HActionInvoke m_actionInvoke;
 
-    HSharedActionInvoker* m_sharedActionInvoker;
+    union
+    {
+        HActionInvoke* m_actionInvoke;
+        HActionInvokeProxy* m_actionInvokeProxy;
+    };
 
-    typedef QSharedPointer<HSharedActionInvoker::Invocation> InvocationPtrT;
+    HActionInvoker* m_actionInvoker;
 
-    QHash<QUuid, QPair<InvocationPtrT, HActionInvokeCallback> > m_invocations;
+    typedef QSharedPointer<HInvocation> HInvocationPtrT;
+
+    struct InvocationInfo
+    {
+        HInvocationPtrT invocation;
+        HActionInvokeCallback callback;
+        HExecArgs* execArgs;
+
+        InvocationInfo() :
+            invocation(0), callback(), execArgs(0)
+        {
+        }
+
+        ~InvocationInfo()
+        {
+            delete execArgs;
+        }
+
+        InvocationInfo(const InvocationInfo& other) :
+            invocation(other.invocation), callback(other.callback),
+            execArgs(other.execArgs ? new HExecArgs(*other.execArgs) : 0)
+        {
+            Q_ASSERT(&other != this);
+        }
+
+        InvocationInfo& operator=(const InvocationInfo& other)
+        {
+            Q_ASSERT(&other != this);
+
+            invocation = other.invocation;
+            callback = other.callback;
+            if (execArgs) { delete execArgs; }
+            execArgs = other.execArgs ? new HExecArgs(*other.execArgs) : 0;
+            return *this;
+        }
+
+        InvocationInfo(
+            const HInvocationPtrT& invocation, const HActionInvokeCallback& cb,
+            HExecArgs* eargs) :
+                invocation(invocation), callback(cb),
+                execArgs(eargs ? new HExecArgs(*eargs) : 0)
+        {
+        }
+    };
+
+    QHash<QUuid, InvocationInfo> m_invocations;
     QMutex m_invocationsMutex;
 
 public:
@@ -168,13 +309,9 @@ public:
     HActionPrivate();
     ~HActionPrivate();
 
-    bool setName      (const QString& name);
-    bool setInputArgs (const HActionArguments& inputArguments);
-    bool setOutputArgs(
-        const HActionArguments& outputArguments, bool hasRetValArg);
-
-    bool setActionInvoke(const HActionInvoke& ai);
-    bool setSharedInvoker(HSharedActionInvoker*);
+    bool setInfo(const HActionInfo&);
+    bool setActionInvoke(const HActionInvoke&);
+    bool setInvoker(HActionInvoker*);
 };
 
 }
