@@ -69,7 +69,7 @@ public:
         QHttpHeader& hdr, const QByteArray& body, MessagingInfo&,
         ContentType = Undefined);
 
-    inline static QByteArray createResponse(StatusCode, MessagingInfo&)
+    inline static QByteArray createResponse(StatusCode sc, MessagingInfo& mi)
     {
         return createResponse(sc, mi, QByteArray());
     }
