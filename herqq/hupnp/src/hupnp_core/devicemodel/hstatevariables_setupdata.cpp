@@ -35,20 +35,29 @@ namespace Upnp
  * HStateVariableSetup
  ******************************************************************************/
 HStateVariableSetup::HStateVariableSetup() :
-    m_name(), m_inclusionRequirement(), m_maxRate()
+    m_name(), m_version(0), m_inclusionRequirement(), m_maxRate()
 {
 }
 
 HStateVariableSetup::HStateVariableSetup(
     const QString& name, HInclusionRequirement ireq) :
-        m_name(), m_inclusionRequirement(ireq), m_maxRate(-1)
+        m_name(), m_version(1), m_inclusionRequirement(ireq), m_maxRate(-1)
 {
     setName(name);
 }
 
 HStateVariableSetup::HStateVariableSetup(
-    const QString& name, qint32 maxRate, HInclusionRequirement ireq) :
-        m_name(), m_inclusionRequirement(ireq), m_maxRate(maxRate)
+    const QString& name, qint32 version, HInclusionRequirement ireq) :
+        m_name(), m_version(version), m_inclusionRequirement(ireq), m_maxRate(-1)
+{
+    setName(name);
+}
+
+HStateVariableSetup::HStateVariableSetup(
+    const QString& name, qint32 maxRate, qint32 version,
+    HInclusionRequirement ireq) :
+        m_name(), m_version(version), m_inclusionRequirement(ireq),
+        m_maxRate(maxRate)
 {
     setName(name);
 }
@@ -75,18 +84,6 @@ HStateVariablesSetupData::HStateVariablesSetupData(
     DefaultInclusionPolicy policy) :
         m_setupData(), m_defaultInclusionPolicy(policy)
 {
-}
-
-bool HStateVariablesSetupData::insert(
-    const QString& stateVarName, HInclusionRequirement ireq)
-{
-    if (m_setupData.contains(stateVarName))
-    {
-        return false;
-    }
-
-    m_setupData.insert(stateVarName, HStateVariableSetup(stateVarName, ireq));
-    return true;
 }
 
 bool HStateVariablesSetupData::insert(const HStateVariableSetup& setupData)

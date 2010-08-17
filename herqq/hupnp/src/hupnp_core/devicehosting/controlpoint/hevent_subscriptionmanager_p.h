@@ -30,7 +30,6 @@
 #include <QList>
 #include <QHash>
 #include <QUuid>
-#include <QMutex>
 #include <QObject>
 
 namespace Herqq
@@ -57,7 +56,6 @@ private:
 
     QHash<QUuid, HEventSubscription*> m_subscribtionsByUuid;
     QHash<HUdn, QList<HEventSubscription*>* > m_subscriptionsByUdn;
-    mutable QMutex m_subscribtionsMutex;
 
 private:
 
@@ -106,7 +104,7 @@ public:
     bool remove(HServiceProxy*);
     void removeAll();
 
-    bool onNotify(const QUuid& id, MessagingInfo& mi, const NotifyRequest& req);
+    StatusCode onNotify(const QUuid& id, const NotifyRequest& req);
 };
 
 }

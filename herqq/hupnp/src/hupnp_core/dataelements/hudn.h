@@ -23,6 +23,7 @@
 #define HUDN_H_
 
 #include "../general/hdefs_p.h"
+#include "../general/hupnp_global.h"
 
 #include <QUuid>
 #include <QMetaType>
@@ -50,9 +51,12 @@ namespace Upnp
  */
 class H_UPNP_CORE_EXPORT HUdn
 {
+friend H_UPNP_CORE_EXPORT quint32 qHash(const HUdn&);
+friend H_UPNP_CORE_EXPORT bool operator==(const HUdn&, const HUdn&);
+
 private:
 
-    QUuid m_value;
+    QString m_value;
 
 public:
 
@@ -99,16 +103,27 @@ public:
     /*!
      * Indicates if the UDN is defined or not.
      *
-     * \return true in case the UDN is defined.
+     * \param checkLevel specifies whether the check should be done strictly
+     * according to the UDA specifications (1.0 & 1.1). That is, the UDN
+     * has to contain a proper UUID. If \c checkLevel is \e false the UDN is
+     * considered valid if it is not empty.
+     *
+     * \return true in case the UDN is valid considering the \c checkLevel argument.
      */
-    inline bool isValid() const { return !m_value.isNull(); }
+    inline bool isValid(HValidityCheckLevel checkLevel) const
+    {
+        return checkLevel == StrictChecks ? !value().isNull() : !m_value.isEmpty();
+    }
 
     /*!
      * Returns the UUID component of the UDN.
      *
      * \return the UUID component of the UDN.
+     *
+     * \remarks if the UDN is not strictly valid, i.e. isValid(true) returns
+     * \e false, this method will return a null \c QUuid.
      */
-    inline QUuid value() const { return m_value; }
+    QUuid value() const;
 
     /*!
      * Returns the complete UDN value.

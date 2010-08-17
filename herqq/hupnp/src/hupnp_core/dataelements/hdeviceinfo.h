@@ -24,6 +24,7 @@
 
 #include "../general/hdefs_p.h"
 #include "../general/hupnp_fwd.h"
+#include "../general/hupnp_global.h"
 
 #include <QPair>
 
@@ -98,8 +99,12 @@ public:
      * unique identifier for the device, regardless if the device is root
      * or embedded. The specified UDN has to be valid.
      *
+     * \param checkLevel specifies the level of strictness used in validating
+     * the specified arguments. This parameter is optional.
+     *
      * \param err specifies a pointer to a \c QString that contains
-     * an error description in case the construction failed. This is optional.
+     * an error description in case the construction failed.
+     * This parameter is optional.
      *
      * \remarks in case any of the provided arguments does not meet the
      * specified requirements, the created object is \e invalid.
@@ -112,6 +117,7 @@ public:
         const QString& manufacturer,
         const QString& modelName,
         const HUdn&    udn,
+        HValidityCheckLevel checkLevel = StrictChecks,
         QString* err = 0);
 
     /*!
@@ -155,6 +161,9 @@ public:
      * \param presentationUrl specifies the URL for HTML-based user interface
      * for controlling and/or viewing device status.
      *
+     * \param checkLevel specifies the level of strictness used in validating
+     * the specified arguments. This parameter is optional.
+     *
      * \param err specifies a pointer to a \c QString that contains
      * an error description in case the construction failed. This is optional.
      *
@@ -177,6 +186,7 @@ public:
         const QString& upc,
         const QList<QPair<QUrl, QImage> >& icons,
         const QUrl&    presentationUrl,
+        HValidityCheckLevel checkLevel = StrictChecks,
         QString* err = 0);
 
     /*!
@@ -205,9 +215,12 @@ public:
      *
      * A valid object contains the mandatory data of a device description.
      *
+     * \param level specifies the level of strictness used in validating
+     * the object. This parameter is optional and the default level is strict.
+     *
      * \return \e true in case the object is valid.
      */
-    bool isValid() const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Sets the URL for the web site of the manufacturer.
@@ -301,7 +314,7 @@ public:
      *
      * \return the type of the device found in the device description file.
      */
-    HResourceType deviceType() const;
+    const HResourceType& deviceType() const;
 
     /*!
      * Returns short description for end user.
@@ -376,7 +389,7 @@ public:
      *
      * \remarks the UDN is same over time for a specific device instance.
      */
-    HUdn udn() const;
+    const HUdn& udn() const;
 
     /*!
      * Returns the Universal Product Code.

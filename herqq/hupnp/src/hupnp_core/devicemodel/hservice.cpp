@@ -178,8 +178,8 @@ bool HServicePrivate::updateVariables(
         const HStateVariableInfo& info =
             stateVar->m_stateVariable->info();
 
-        bool ok = stateVar->setValue(convertToRightVariantType(
-            variables[i].second, info.dataType()));
+        bool ok = stateVar->setValue(
+            convertToRightVariantType(variables[i].second, info.dataType()));
 
         if (ok)
         {

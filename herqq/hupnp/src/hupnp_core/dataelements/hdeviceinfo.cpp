@@ -252,6 +252,7 @@ HDeviceInfo::HDeviceInfo(
     const QString& manufacturer,
     const QString& modelName,
     const HUdn&    udn,
+    HValidityCheckLevel checkLevel,
     QString* err) :
         h_ptr(new HDeviceInfoPrivate())
 {
@@ -274,7 +275,7 @@ HDeviceInfo::HDeviceInfo(
     {
         errTmp = QString("Invalid model name: [%1]").arg(modelName);
     }
-    else if (!tmp.setUdn(udn))
+    else if (!tmp.setUdn(udn, checkLevel))
     {
         errTmp = QString("Invalid UDN: [%1]").arg(udn.toString());
     }
@@ -306,6 +307,7 @@ HDeviceInfo::HDeviceInfo(
     const QString& upc,
     const QList<QPair<QUrl, QImage> >& icons,
     const QUrl&    presentationUrl,
+    HValidityCheckLevel checkLevel,
     QString* err) :
         h_ptr(new HDeviceInfoPrivate())
 {
@@ -328,7 +330,7 @@ HDeviceInfo::HDeviceInfo(
     {
         errTmp = QString("Invalid model name: [%1]").arg(modelName);
     }
-    else if (!tmp.setUdn(udn))
+    else if (!tmp.setUdn(udn, checkLevel))
     {
         errTmp = QString("Invalid UDN: [%1]").arg(udn.toString());
     }
@@ -362,9 +364,10 @@ HDeviceInfo::~HDeviceInfo()
     delete h_ptr;
 }
 
-bool HDeviceInfo::isValid() const
+bool HDeviceInfo::isValid(HValidityCheckLevel level) const
 {
-    return h_ptr->m_deviceType.isValid();
+    return h_ptr->m_deviceType.isValid() &&
+           h_ptr->m_udn.isValid(level);
 }
 
 void HDeviceInfo::setManufacturerUrl(const QUrl& arg)
@@ -407,12 +410,12 @@ void HDeviceInfo::setPresentationUrl(const QUrl& arg)
     h_ptr->setPresentationUrl(arg);
 }
 
-HResourceType HDeviceInfo::deviceType() const
+const HResourceType& HDeviceInfo::deviceType() const
 {
     return h_ptr->m_deviceType;
 }
 
-QString HDeviceInfo::friendlyName () const
+QString HDeviceInfo::friendlyName() const
 {
     return h_ptr->m_friendlyName;
 }
@@ -452,7 +455,7 @@ QString HDeviceInfo::serialNumber() const
     return h_ptr->m_serialNumber;
 }
 
-HUdn HDeviceInfo::udn() const
+const HUdn& HDeviceInfo::udn() const
 {
     return h_ptr->m_udn;
 }

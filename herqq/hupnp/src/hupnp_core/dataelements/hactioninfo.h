@@ -163,7 +163,7 @@ public:
      *
      * \return the name of the action.
      */
-    const QString& name() const;
+    QString name() const;
 
     /*!
      * Returns the input arguments the action expects.

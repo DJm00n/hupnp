@@ -34,20 +34,36 @@ namespace Upnp
  * HActionSetup
  ******************************************************************************/
 HActionSetup::HActionSetup() :
-    m_name(), m_inclusionRequirement(InclusionRequirementUnknown),
+    m_name(), m_version(0), m_inclusionRequirement(InclusionRequirementUnknown),
     m_actionInvoke()
 {
 }
 
 HActionSetup::HActionSetup(const QString& name, HInclusionRequirement ireq) :
-    m_name(name), m_inclusionRequirement(ireq), m_actionInvoke()
+    m_name(name), m_version(1), m_inclusionRequirement(ireq), m_actionInvoke()
+{
+}
+
+HActionSetup::HActionSetup(
+    const QString& name, qint32 version, HInclusionRequirement ireq) :
+        m_name(name), m_version(version), m_inclusionRequirement(ireq),
+        m_actionInvoke()
 {
 }
 
 HActionSetup::HActionSetup(
     const QString& name, const HActionInvoke& invoke,
     HInclusionRequirement ireq) :
-        m_name(name), m_inclusionRequirement(ireq), m_actionInvoke(invoke)
+        m_name(name), m_version(1), m_inclusionRequirement(ireq),
+        m_actionInvoke(invoke)
+{
+}
+
+HActionSetup::HActionSetup(
+    const QString& name, const HActionInvoke& invoke, qint32 version,
+    HInclusionRequirement ireq) :
+        m_name(name), m_version(version), m_inclusionRequirement(ireq),
+        m_actionInvoke(invoke)
 {
 }
 
@@ -78,31 +94,6 @@ bool HActionsSetupData::insert(const HActionSetup& setupInfo)
     }
 
     m_actionSetupInfos.insert(setupInfo.name(), setupInfo);
-    return true;
-}
-
-bool HActionsSetupData::insert(
-    const QString& actionName, HInclusionRequirement ireq)
-{
-    if (m_actionSetupInfos.contains(actionName))
-    {
-        return false;
-    }
-
-    m_actionSetupInfos.insert(actionName, HActionSetup(actionName, ireq));
-    return true;
-}
-
-bool HActionsSetupData::insert(
-    const QString& name, const HActionInvoke& invoke,
-    HInclusionRequirement ireq)
-{
-    if (m_actionSetupInfos.contains(name))
-    {
-        return false;
-    }
-
-    m_actionSetupInfos.insert(name, HActionSetup(name, invoke, ireq));
     return true;
 }
 

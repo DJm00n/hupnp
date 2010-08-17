@@ -125,7 +125,7 @@ void HDeviceHostPrivate::createRootDevices()
             IconFetcher(
                 &dataRetriever, &DeviceHostDataRetriever::retrieveIcon);
 
-        creatorParams.m_strictParsing = true;
+        creatorParams.m_strictness = StrictChecks;
         creatorParams.m_stateVariablesAreImmutable = false;
         creatorParams.m_threadPool = m_threadPool;
         creatorParams.m_loggingIdentifier = m_loggingIdentifier;

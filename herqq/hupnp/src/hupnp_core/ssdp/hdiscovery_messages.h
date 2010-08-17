@@ -23,6 +23,7 @@
 #define DISCOVERY_MSGS_H_
 
 #include "../general/hdefs_p.h"
+#include "../general/hupnp_global.h"
 
 class QUrl;
 class QString;
@@ -150,14 +151,14 @@ public:
     /*!
      * Indicates whether or not the object contains valid announcement information.
      *
-     * \param strict indicates whether the check should be strictly according
+     * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
      * are known to be poorly implemented in some UPnP software.
      *
      * \return \e true in case the objects contains valid announcement
      * information in terms of the requested strictness.
      */
-    bool isValid(bool strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Returns the server tokens.
@@ -324,14 +325,14 @@ public:
     /*!
      * Indicates whether or not the object contains valid announcement information.
      *
-     * \param strict indicates whether the check should be strictly according
+     * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
      * are known to be poorly implemented in some UPnP software.
      *
      * \return \e true in case the objects contains valid announcement
      * information in terms of the requested strictness.
      */
-    bool isValid(bool strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Returns the Unique Service Name.
@@ -477,14 +478,14 @@ public:
     /*!
      * Indicates whether or not the object contains valid announcement information.
      *
-     * \param strict indicates whether the check should be strictly according
+     * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
      * are known to be poorly implemented in some UPnP software.
      *
      * \return \e true in case the objects contains valid announcement
      * information in terms of the requested strictness.
      */
-    bool isValid(bool strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Returns the location of the announced device.
@@ -637,14 +638,14 @@ public:
     /*!
      * Indicates whether or not the object contains valid announcement information.
      *
-     * \param strict indicates whether the check should be strictly according
+     * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
      * are known to be poorly implemented in some UPnP software.
      *
      * \return \e true in case the objects contains valid announcement
      * information in terms of the requested strictness.
      */
-    bool isValid(bool strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Returns the Search Target of the request.
@@ -807,14 +808,14 @@ public:
    /*!
      * Indicates whether or not the object contains valid announcement information.
      *
-     * \param strict indicates whether the check should be strictly according
+     * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
      * are known to be poorly implemented in some UPnP software.
      *
      * \return \e true in case the objects contains valid announcement
      * information in terms of the requested strictness.
      */
-    bool isValid(bool strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Returns the server tokens.

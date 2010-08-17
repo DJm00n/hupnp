@@ -418,6 +418,10 @@ void EventNotifier::initialNotify(ServiceEventSubscriberPtrT rc, MessagingInfo& 
     if (mi.socket().state() == QTcpSocket::ConnectedState)
     {
         mi.socket().disconnectFromHost();
+        if (mi.socket().state() != QAbstractSocket::UnconnectedState)
+        {
+            mi.socket().waitForDisconnected(100);
+        }
     }
 
     rc->initialNotify(msgBody);

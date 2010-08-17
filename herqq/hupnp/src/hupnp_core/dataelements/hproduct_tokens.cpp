@@ -64,21 +64,17 @@ HProductToken::~HProductToken()
 {
 }
 
-QString HProductToken::toString() const
+bool HProductToken::isValid(HValidityCheckLevel checkLevel) const
 {
-    if (!isValid())
-    {
-        return QString();
-    }
+    bool looselyValid = !m_token.isEmpty() && !m_productVersion.isEmpty();
 
-    return QString("%1/%2").arg(m_token, m_productVersion);
-}
-
-bool HProductToken::isValidUpnpToken()
-{
-    if (!isValid())
+    if (!looselyValid)
     {
         return false;
+    }
+    else if (checkLevel == LooseChecks)
+    {
+        return true;
     }
 
     if (token().compare("UPnP", Qt::CaseInsensitive) != 0)
@@ -94,9 +90,19 @@ bool HProductToken::isValidUpnpToken()
            (vrs[2] == '0' || vrs[2] == '1'));
 }
 
+QString HProductToken::toString() const
+{
+    if (!isValid(LooseChecks))
+    {
+        return QString();
+    }
+
+    return QString("%1/%2").arg(m_token, m_productVersion);
+}
+
 qint32 HProductToken::minorVersion()
 {
-    if (!isValid())
+    if (!isValid(LooseChecks))
     {
         return -1;
     }
@@ -119,7 +125,7 @@ qint32 HProductToken::minorVersion()
 
 qint32 HProductToken::majorVersion()
 {
-    if (!isValid())
+    if (!isValid(LooseChecks))
     {
         return -1;
     }
@@ -191,8 +197,14 @@ private:
                 }
 
                 HProductToken newToken(token, buf.left(lastDelim));
-                if (newToken.isValid()) { productTokens.append(newToken); }
-                else                    { return false;                   }
+                if (newToken.isValid(LooseChecks))
+                {
+                    productTokens.append(newToken);
+                }
+                else
+                {
+                    return false;
+                }
 
                 token = buf.mid(lastDelim+1);
                 version.clear(); buf.clear(); j = -1;
@@ -208,15 +220,21 @@ private:
         }
 
         HProductToken newToken(token, buf);
-        if (newToken.isValid()) { productTokens.append(newToken); }
-        else                    { return false;                   }
+        if (newToken.isValid(LooseChecks))
+        {
+            productTokens.append(newToken);
+        }
+        else
+        {
+            return false;
+        }
 
         // at this point the provided token string is parsed into
         // valid token/version pairs, but it is not known if the tokens string
         // contained the UPnP token + we should inform the user if
         // non-std input was given.
 
-        if (productTokens.size() < 3 || !productTokens[1].isValidUpnpToken())
+        if (productTokens.size() < 3 || !productTokens[1].isValid(StrictChecks))
         {
             HLOG_WARN_NONSTD(QString(
                 "The specified token string [%1] is not formed according "
@@ -289,7 +307,7 @@ public:
                     m_originalTokenString.mid(slash,
                         nextDelim < 0 ? -1 : nextDelim-slash));
 
-                if (token.isValidUpnpToken())
+                if (token.isValid(StrictChecks))
                 {
                     m_productTokens.push_back(token);
                 }

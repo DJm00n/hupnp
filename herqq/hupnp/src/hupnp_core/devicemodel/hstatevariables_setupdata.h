@@ -54,6 +54,7 @@ class H_UPNP_CORE_EXPORT HStateVariableSetup
 private:
 
     QString m_name;
+    qint32 m_version;
     HInclusionRequirement m_inclusionRequirement;
     qint32 m_maxRate;
 
@@ -75,9 +76,30 @@ public:
      * state variable.
      *
      * \sa isValid()
+     *
+     * \remarks the version() is set to 1.
      */
     HStateVariableSetup(
-        const QString& name, HInclusionRequirement incReq = InclusionMandatory);
+        const QString& name,
+        HInclusionRequirement incReq = InclusionMandatory);
+
+    /*!
+     * Creates a new instance.
+     *
+     * \param name specifies the name of the state variable.
+     *
+     * \param version specifies the UPnP service version in which the
+     * state variable was first specified.
+     *
+     * \param incReq specifies the \e inclusion \e requirement of the
+     * state variable.
+     *
+     * \sa isValid()
+     */
+    HStateVariableSetup(
+        const QString& name,
+        qint32 version,
+        HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
      * Creates a new instance.
@@ -87,6 +109,9 @@ public:
      * \param maxRate specifies the maximum rate at which an
      * evented state variable may send events.
      *
+     * \param version specifies the UPnP service version in which the
+     * state variable was first specified.
+     *
      * \param incReq specifies the \e inclusion \e requirement of the
      * state variable.
      *
@@ -95,74 +120,26 @@ public:
     HStateVariableSetup(
         const QString& name,
         qint32 maxRate,
+        qint32 version,
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HStateVariableSetup();
 
     /*!
-     * Returns the name of the state variable.
-     *
-     * \return the name of the state variable.
-     */
-    inline const QString& name() const
-    {
-        return m_name;
-    }
-
-    /*!
-     * Sets the name of the state variable.
-     *
-     * \param name specifies the name of the state variable.
-     *
-     * \param err is a pointer to a \c QString that contains an error description
-     * in case the name could not be set. This is an optional parameter.
-     *
-     * \return \e true in case the specified name was successfully set.
-     */
-    bool setName(const QString& name, QString* err = 0);
-
-    /*!
-     * Returns the maximum rate at which an evented state variable may send events.
-     *
-     * \return the maximum rate at which an evented state variable may send events.
-     */
-    inline qint32 maxEventRate() const
-    {
-        return m_maxRate;
-    }
-
-    /*!
-     * Sets the maximum rate at which an evented state variable may send events.
-     *
-     * \param arg specifies the maximum rate at which an evented
-     * state variable may send events.
-     */
-    inline void setMaxEventRate(qint32 arg)
-    {
-        m_maxRate = arg < 0 ? -1 : arg;
-    }
-
-    /*!
      * Returns the <em>inclusion requirement</em> of the state variable.
      *
      * \return the <em>inclusion requirement</em> of the state variable.
+     *
+     * \sa setInclusionRequirement()
      */
     inline HInclusionRequirement inclusionRequirement() const
     {
         return m_inclusionRequirement;
-    }
-
-    /*!
-     * Sets the <em>inclusion requirement</em> of the state variable.
-     *
-     * \param arg specifies the <em>inclusion requirement</em> of the state variable.
-     */
-    inline void setInclusionRequirement(HInclusionRequirement arg)
-    {
-        m_inclusionRequirement = arg;
     }
 
     /*!
@@ -174,7 +151,102 @@ public:
     inline bool isValid() const
     {
         return !m_name.isEmpty() &&
+                m_version > 0 &&
                 m_inclusionRequirement != InclusionRequirementUnknown;
+    }
+
+    /*!
+     * Returns the maximum rate at which an evented state variable may
+     * send events.
+     *
+     * \return the maximum rate at which an evented state variable may
+     * send events.
+     *
+     * \sa setMaxEventRate()
+     */
+    inline qint32 maxEventRate() const
+    {
+        return m_maxRate;
+    }
+
+    /*!
+     * Returns the name of the state variable.
+     *
+     * \return the name of the state variable.
+     *
+     * \sa setName()
+     */
+    inline QString name() const
+    {
+        return m_name;
+    }
+
+    /*!
+     * Returns the UPnP service version in which the state variable
+     * was first specified.
+     *
+     * \return the UPnP service version in which the state variable
+     * was first specified.
+     *
+     * \sa setVersion()
+     */
+    inline qint32 version() const
+    {
+        return m_version;
+    }
+
+    /*!
+     * Sets the name of the state variable.
+     *
+     * \param name specifies the name of the state variable.
+     *
+     * \param err is a pointer to a \c QString that contains an error description
+     * in case the name could not be set. This is an optional parameter.
+     *
+     * \return \e true in case the specified name was successfully set.
+     *
+     * \sa name()
+     */
+    bool setName(const QString& name, QString* err = 0);
+
+    /*!
+     * Sets the maximum rate at which an evented state variable may send events.
+     *
+     * \param arg specifies the maximum rate at which an evented
+     * state variable may send events.
+     *
+     * \sa maxEventRate()
+     */
+    inline void setMaxEventRate(qint32 arg)
+    {
+        m_maxRate = arg < 0 ? -1 : arg;
+    }
+
+    /*!
+     * Sets the <em>inclusion requirement</em> of the state variable.
+     *
+     * \param arg specifies the <em>inclusion requirement</em> of the
+     * state variable.
+     *
+     * \sa inclusionRequirement()
+     */
+    inline void setInclusionRequirement(HInclusionRequirement arg)
+    {
+        m_inclusionRequirement = arg;
+    }
+
+    /*!
+     * Specifies the UPnP service version in which the state variable
+     * was first specified.
+     *
+     * \param version specifies the UPnP service version in which the
+     * state variable was first specified.
+     *
+     * \sa version()
+     */
+    inline void setVersion(qint32 version)
+    {
+        m_version = version;
     }
 };
 
@@ -188,7 +260,7 @@ public:
  *
  * \remarks this class is not thread-safe.
  *
- * \sa HActionSetup
+ * \sa HStateVariableSetup
  */
 class H_UPNP_CORE_EXPORT HStateVariablesSetupData
 {
@@ -203,12 +275,14 @@ public:
     enum DefaultInclusionPolicy
     {
         /*!
-         * The unknown state variable should be accepted.
+         * The unknown state variable will be accepted.
          */
         Accept,
 
         /*!
-         * The unknown state variable should be rejected.
+         * The unknown state variable will be rejected, which will abort
+         * the build of a device tree in case such a state variable
+         * is encountered.
          */
         Deny
     };
@@ -231,40 +305,6 @@ public:
     HStateVariablesSetupData(DefaultInclusionPolicy defIncPol = Accept);
 
     /*!
-     * Creates and inserts a new item based on the provided arguments.
-     *
-     * \param name specifies the name of the item.
-     * \param incReq specifies the inclusion requirement of the new item.
-     *
-     * \return \e true in case a new item was created and added.
-     * No item is created if the instance already contains an item
-     * that has name equal to \c name.
-     */
-    bool insert(
-        const QString& name,
-        HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Inserts a new item.
-     *
-     * \param newItem specifies the item to be added.
-     *
-     * \return \e true in case the item was added. The item will not be added
-     * if the instance already contains an item that has the
-     * same name as the \c newItem.
-     */
-    bool insert(const HStateVariableSetup& newItem);
-
-    /*!
-     * Removes an existing item.
-     *
-     * \param name specifies the name of the item to be removed.
-     *
-     * \return \e true in case the item was found and removed.
-     */
-    bool remove(const QString& name);
-
-    /*!
      * Returns the default inclusion policy.
      *
      * The default inclusion policy specifies the action to take when a
@@ -276,17 +316,17 @@ public:
     DefaultInclusionPolicy defaultInclusionPolicy() const;
 
     /*!
-     * Sets the inclusion requirement element of an item.
+     * Indicates if the instance contains an item that has the
+     * specified name.
      *
      * \param name specifies the name of the item.
      *
-     * \param incReq specifies the inclusion requirement value.
+     * \return \e true when the instance contains an item that
+     * has the specified name.
      *
-     * \return \e true when the item was found and the inclusion requirement
-     * element was set.
+     * \sa get(), isEmpty()
      */
-    bool setInclusionRequirement(
-        const QString& name, HInclusionRequirement incReq);
+    bool contains(const QString& name) const;
 
     /*!
      * Retrieves an item.
@@ -296,19 +336,17 @@ public:
      * \return the item with the specified name. Note that the returned item
      * is invalid, i.e. HStateVariableSetup::isValid() returns false in case no item
      * with the specified name was found.
+     *
+     * \sa contains(), isEmpty()
      */
     HStateVariableSetup get(const QString& name) const;
 
     /*!
-     * Indicates if the instance contains an item that has the
-     * specified name.
+     * Indicates if the object is empty.
      *
-     * \param name specifies the name of the item.
-     *
-     * \return \e true when the instance contains an item that
-     * has the specified name.
+     * \return \e true in case the instance has no items.
      */
-    bool contains(const QString& name) const;
+    bool isEmpty() const;
 
     /*!
      * Returns the names of the contained items.
@@ -325,11 +363,41 @@ public:
     qint32 size() const;
 
     /*!
-     * Indicates if the object is empty.
+     * Inserts a new item.
      *
-     * \return \e true in case the instance has no items.
+     * \param newItem specifies the item to be added.
+     *
+     * \return \e true in case the item was added. The item will not be added
+     * if the instance already contains an item that has the
+     * same name as the \c newItem.
+     *
+     * \sa remove()
      */
-    bool isEmpty() const;
+    bool insert(const HStateVariableSetup& newItem);
+
+    /*!
+     * Removes an existing item.
+     *
+     * \param name specifies the name of the item to be removed.
+     *
+     * \return \e true in case the item was found and removed.
+     *
+     * \sa insert()
+     */
+    bool remove(const QString& name);
+
+    /*!
+     * Sets the inclusion requirement element of an item.
+     *
+     * \param name specifies the name of the item.
+     *
+     * \param incReq specifies the inclusion requirement value.
+     *
+     * \return \e true when the item was found and the inclusion requirement
+     * element was set.
+     */
+    bool setInclusionRequirement(
+        const QString& name, HInclusionRequirement incReq);
 };
 
 }

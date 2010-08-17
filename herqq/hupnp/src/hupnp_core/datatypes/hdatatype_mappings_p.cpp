@@ -201,7 +201,6 @@ QVariant convertToRightVariantType(
     {
         bool ok = false;
         retVal = value.toInt(&ok);
-        Q_ASSERT(ok);
         break;
     }
 
@@ -211,7 +210,6 @@ QVariant convertToRightVariantType(
     {
         bool ok = false;
         retVal = value.toUInt(&ok);
-        Q_ASSERT(ok);
         break;
     }
 
@@ -223,7 +221,6 @@ QVariant convertToRightVariantType(
     {
         bool ok = false;
         retVal = value.toDouble(&ok);
-        Q_ASSERT(ok);
         break;
     }
 
@@ -233,7 +230,6 @@ QVariant convertToRightVariantType(
     case HUpnpDataTypes::date:
     {
         retVal = QDate::fromString(value, Qt::ISODate);
-        Q_ASSERT(retVal.isValid());
         break;
     }
 
@@ -241,7 +237,6 @@ QVariant convertToRightVariantType(
     case HUpnpDataTypes::dateTimeTz:
     {
         retVal = QDateTime::fromString(value, Qt::ISODate);
-        Q_ASSERT(retVal.isValid());
         break;
     }
 
@@ -249,7 +244,6 @@ QVariant convertToRightVariantType(
     case HUpnpDataTypes::timeTz:
     {
         retVal = QTime::fromString(value, Qt::ISODate);
-        Q_ASSERT(retVal.isValid());
         break;
     }
 
@@ -267,10 +261,6 @@ QVariant convertToRightVariantType(
         {
             retVal = false;
         }
-        else
-        {
-            Q_ASSERT(false);
-        }
 
         break;
     }
@@ -284,7 +274,6 @@ QVariant convertToRightVariantType(
     case HUpnpDataTypes::uri:
     {
         retVal = QUrl(value);
-        Q_ASSERT(retVal.isValid());
         break;
     }
 

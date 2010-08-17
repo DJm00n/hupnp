@@ -66,26 +66,6 @@ private:
 public:
 
     /*!
-     * This enumeration is used to specify the strictness of argument validation.
-     */
-    enum ValidityChecks
-    {
-        /*!
-         * The arguments are validated strictly according to either UDA
-         * v1.0 or v1.1 specifications.
-         */
-        Strict,
-
-        /*!
-         * The validation allows slight deviations from the UDA specifications
-         * in an attempt to improve interoperability. The accepted exceptions
-         * have been encountered in other UPnP software that are popular enough
-         * to warrant the exceptional behavior.
-         */
-        Loose
-    };
-
-    /*!
      * Creates a new, empty instance.
      *
      * \sa isValid()
@@ -111,10 +91,10 @@ public:
      * \param scpdUrl specifies the URL for service description.
      *
      * \param incReq specifies whether the service is required or optional.
-     * This is optional.
+     * This parameter is optional.
      *
      * \param checkLevel specifies the level of strictness used in validating
-     * the specified arguments. This is optional.
+     * the specified arguments. This parameter is optional.
      *
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.
@@ -131,7 +111,7 @@ public:
         const QUrl& eventSubUrl,
         const QUrl& scpdUrl,
         HInclusionRequirement incReq = InclusionMandatory,
-        ValidityChecks checkLevel = Strict,
+        HValidityCheckLevel checkLevel = StrictChecks,
         QString* err = 0);
 
     /*!
@@ -165,25 +145,25 @@ public:
      * A valid object contains the mandatory data of a UPnP service.
      *
      * \param level specifies the level of strictness used in validating
-     * the object. This is optional and by default the level is set to strict.
+     * the object. This parameter is optional and the default level is strict.
      *
      * \return \e true in case the object is valid.
      */
-    bool isValid(ValidityChecks level = Strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Returns the service identifier found in the device description file.
      *
      * \return the service identifier found in the device description file.
      */
-    HServiceId serviceId() const;
+    const HServiceId& serviceId() const;
 
     /*!
      * Returns the type of the service found in the device description file.
      *
      * \return the type of the service found in the device description file.
      */
-    HResourceType serviceType() const;
+    const HResourceType& serviceType() const;
 
     /*!
      * Returns the URL for service description.

@@ -101,12 +101,6 @@ HEventSubscription::HEventSubscription(
         Qt::DirectConnection);
 
     Q_ASSERT(ok);
-
-    ok = connect(
-        this, SIGNAL(resubscribeRequired_()),
-        this, SLOT(resubscribe()));
-
-    Q_ASSERT(ok);
 }
 
 HEventSubscription::~HEventSubscription()
@@ -227,6 +221,18 @@ void HEventSubscription::msgIoComplete(HHttpAsyncOperation* op)
     }
 
     delete op;
+
+    if (m_currentOpType == Op_Subscribe || m_currentOpType == Op_Renew)
+    {
+        foreach(const NotifyRequest& req, m_queuedNotifications)
+        {
+            if (processNotify(req) != Ok)
+            {
+                break;
+            }
+        }
+        m_queuedNotifications.clear();
+    }
 
     if (m_nextOpType != Op_None)
     {
@@ -515,31 +521,18 @@ void HEventSubscription::subscribe()
     }
 }
 
-bool HEventSubscription::onNotify(MessagingInfo& mi, const NotifyRequest& req)
+StatusCode HEventSubscription::processNotify(const NotifyRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    if (!m_subscribed)
-    {
-        HLOG_WARN("Ignoring notify: subscription inactive.");
-        return false;
-    }
-
     HLOG_DBG(QString("Processing notification [sid: %1, seq: %2].").arg(
         m_sid.toString(), QString::number(req.seq())));
-
-    HHttpHandler http(m_loggingIdentifier);
 
     if (m_sid != req.sid())
     {
         HLOG_WARN(QString("Invalid SID [%1]").arg(req.sid().toString()));
-
-        mi.setKeepAlive(false);
-        http.send(mi, PreconditionFailed);
-        return false;
+        return PreconditionFailed;
     }
 
-    QMutexLocker locker(&m_seqLock);
     qint32 seq = req.seq();
     if (seq != m_seq)
     {
@@ -551,8 +544,8 @@ bool HEventSubscription::onNotify(MessagingInfo& mi, const NotifyRequest& req)
         // in this case the received sequence number does not match to what is
         // expected. UDA instructs to re-subscribe in this scenario.
 
-        emit resubscribeRequired_();
-        return false;
+        resubscribe();
+        return PreconditionFailed;
     }
 
     if (m_service->updateVariables(req.variables(), m_seq > 0))
@@ -562,16 +555,31 @@ bool HEventSubscription::onNotify(MessagingInfo& mi, const NotifyRequest& req)
                 m_sid.toString(), QString::number(m_seq)));
 
         ++m_seq;
-        http.send(mi, Ok);
-
-        return true;
+        return Ok;
     }
 
     HLOG_WARN(QString("Notify failed. State variable(s) were not updated."));
-    mi.setKeepAlive(false);
-    http.send(mi, InternalServerError);
+    return InternalServerError;
+}
 
-    return false;
+StatusCode HEventSubscription::onNotify(const NotifyRequest& req)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    if (!m_subscribed)
+    {
+        if (m_currentOpType == Op_Subscribe || m_currentOpType == Op_Renew)
+        {
+            m_queuedNotifications.append(req);
+            return Ok;
+        }
+        else
+        {
+            HLOG_WARN("Ignoring notify: subscription inactive.");
+            return PreconditionFailed;
+        }
+    }
+
+    return processNotify(req);
 }
 
 void HEventSubscription::unsubscribe_done(HHttpAsyncOperation* /*op*/)

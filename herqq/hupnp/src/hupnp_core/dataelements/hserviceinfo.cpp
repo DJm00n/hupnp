@@ -72,12 +72,12 @@ HServiceInfo::HServiceInfo(
     const QUrl& eventSubUrl,
     const QUrl& scpdUrl,
     HInclusionRequirement inclusionRequirement,
-    ValidityChecks validityChecks,
+    HValidityCheckLevel checkLevel,
     QString* err) :
         h_ptr(new HServiceInfoPrivate())
 {
     QString errTmp;
-    if (!serviceId.isValid(validityChecks == Strict))
+    if (!serviceId.isValid(checkLevel))
     {
         errTmp = "Invalid service ID";
     }
@@ -137,17 +137,17 @@ HServiceInfo::~HServiceInfo()
     delete h_ptr;
 }
 
-bool HServiceInfo::isValid(ValidityChecks strictness) const
+bool HServiceInfo::isValid(HValidityCheckLevel checkLevel) const
 {
-    return h_ptr->m_serviceId.isValid(strictness == Strict);
+    return h_ptr->m_serviceId.isValid(checkLevel);
 }
 
-HServiceId HServiceInfo::serviceId() const
+const HServiceId& HServiceInfo::serviceId() const
 {
     return h_ptr->m_serviceId;
 }
 
-HResourceType HServiceInfo::serviceType() const
+const HResourceType& HServiceInfo::serviceType() const
 {
     return h_ptr->m_serviceType;
 }

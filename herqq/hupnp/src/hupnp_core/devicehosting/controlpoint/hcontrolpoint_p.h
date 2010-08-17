@@ -82,6 +82,10 @@ private:
 
     HControlPointPrivate* m_owner;
 
+private Q_SLOTS:
+
+    void notify_slot(const QString*, const NotifyRequest*, StatusCode*, HRunnable*);
+
 protected:
 
     virtual void incomingNotifyMessage(
@@ -91,6 +95,10 @@ public:
 
     explicit ControlPointHttpServer(HControlPointPrivate*);
     virtual ~ControlPointHttpServer();
+
+Q_SIGNALS:
+
+    void notify_sig(const QString*, const NotifyRequest*, StatusCode*, HRunnable*);
 };
 
 //

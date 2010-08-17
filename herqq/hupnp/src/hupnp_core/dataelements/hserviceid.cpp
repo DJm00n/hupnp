@@ -151,9 +151,9 @@ HServiceId::~HServiceId()
     delete h_ptr;
 }
 
-bool HServiceId::isValid(bool strict) const
+bool HServiceId::isValid(HValidityCheckLevel checkLevel) const
 {
-    if (!strict)
+    if (checkLevel == LooseChecks)
     {
         return !h_ptr->m_suffix.isEmpty();
     }
@@ -165,7 +165,7 @@ bool HServiceId::isValid(bool strict) const
 
 bool HServiceId::isStandardType() const
 {
-    if (!isValid(false))
+    if (!isValid(LooseChecks))
     {
         return false;
     }
@@ -175,7 +175,7 @@ bool HServiceId::isStandardType() const
 
 QString HServiceId::urn(bool completeUrn) const
 {
-    if (!isValid(false))
+    if (!isValid(LooseChecks))
     {
         return QString();
     }
@@ -193,7 +193,7 @@ QString HServiceId::urn(bool completeUrn) const
 
 QString HServiceId::suffix() const
 {
-    if (!isValid(false))
+    if (!isValid(LooseChecks))
     {
         return QString();
     }
@@ -208,7 +208,39 @@ QString HServiceId::toString() const
 
 bool operator==(const HServiceId& sid1, const HServiceId& sid2)
 {
-    return sid1.toString() == sid2.toString();
+    // This check is made first, since most often it is the suffix that is
+    // different, if anything.
+    if (sid1.h_ptr->m_suffix != sid2.h_ptr->m_suffix)
+    {
+        return false;
+    }
+
+    // The rest of the checks are lengthy because the
+    // "serviceId" component has to be ignored and the "domain" part cannot be
+    // strictly compared...
+    // The operator is supposed to test for logical equivalence and since
+    // some notable UPnP software fails to specify both the serviceId and
+    // the domain components right, they have to be ignored.
+
+    QStringList elems1 = sid1.h_ptr->m_elements;
+    QStringList elems2 = sid2.h_ptr->m_elements;
+    if (elems1.size() != elems2.size())
+    {
+        return false;
+    }
+
+    for(qint32 i = 0; i < elems1.size() - 1; ++i)
+    {
+        if (i != 1 && i != 2)
+        {
+            if (elems1.at(i) != elems2.at(i))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool operator!=(const HServiceId& sid1, const HServiceId& sid2)
@@ -218,7 +250,20 @@ bool operator!=(const HServiceId& sid1, const HServiceId& sid2)
 
 quint32 qHash(const HServiceId& key)
 {
-    QByteArray data = key.toString().toLocal8Bit();
+    // See the comments within == operator. The serviceId component is not
+    // part of the hash for the same reason.
+
+    QString tmp;
+    QStringList elems = key.h_ptr->m_elements;
+    for(qint32 i = 0; i < elems.size() - 1; ++i)
+    {
+        if (i != 1 && i != 2)
+        {
+            tmp.append(elems.at(i));
+        }
+    }
+
+    QByteArray data = tmp.toLocal8Bit();
     return hash(data.constData(), data.size());
 }
 

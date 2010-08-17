@@ -36,6 +36,7 @@
 
 #include "../general/hdefs_p.h"
 #include "../general/hupnp_fwd.h"
+#include "../general/hupnp_global.h"
 #include "../devicemodel/hactioninvoke.h"
 
 #include "../../utils/hthreadpool_p.h"
@@ -115,7 +116,7 @@ public:
 
     IconFetcher m_iconFetcher;
 
-    bool m_strictParsing;
+    HValidityCheckLevel m_strictness;
 
     bool m_stateVariablesAreImmutable;
 

@@ -118,6 +118,7 @@ DeviceHostHttpServer::DeviceHostHttpServer(
 DeviceHostHttpServer::~DeviceHostHttpServer()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    close();
 }
 
 void DeviceHostHttpServer::processSubscription_slot(

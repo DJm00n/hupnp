@@ -67,7 +67,7 @@ public:
         return true;
     }
 
-    bool parse(const QString& arg)
+    bool parse(const QString& arg, HValidityCheckLevel checkLevel)
     {
         HLOG(H_AT, H_FUN);
 
@@ -78,7 +78,7 @@ public:
         if (indx == 41) // the length of "uuid:UUID" is 41
         {
             udn = HUdn(tmp.left(41));
-            if (!udn.isValid())
+            if (!udn.isValid(checkLevel))
             {
                 return false;
             }
@@ -103,7 +103,7 @@ public:
             return false;
         }
 
-        if (!udn.isValid())
+        if (!udn.isValid(checkLevel))
         {
             if (parsed[0] == "ssdp" && parsed[1] == "all")
             {
@@ -117,7 +117,7 @@ public:
         {
             m_udn = udn;
 
-            if (m_udn.isValid())
+            if (m_udn.isValid(checkLevel))
             {
                 m_type = HDiscoveryType::SpecificRootDevice;
                 m_contents = QString("%1::upnp:rootdevice").arg(udn.toString());
@@ -132,7 +132,7 @@ public:
         else if (parsed[0] == "uuid")
         {
             udn = HUdn(parsed[1]);
-            if (udn.isValid())
+            if (udn.isValid(checkLevel))
             {
                 m_udn = udn;
                 m_type = HDiscoveryType::SpecificDevice;
@@ -145,7 +145,7 @@ public:
         if (parse(resourceType))
         {
             m_udn = udn;
-            if (m_udn.isValid())
+            if (m_udn.isValid(checkLevel))
             {
                 m_type = resourceType.isDeviceType() ?
                      HDiscoveryType::SpecificDeviceWithType :
@@ -170,9 +170,10 @@ public:
         return false;
     }
 
-    void setState(const HUdn& udn, const HResourceType& rt)
+    void setState(
+        const HUdn& udn, const HResourceType& rt, HValidityCheckLevel checkLevel)
     {
-        if (udn.isValid())
+        if (udn.isValid(checkLevel))
         {
             switch(rt.type())
             {
@@ -240,10 +241,11 @@ HDiscoveryType::HDiscoveryType() :
 {
 }
 
-HDiscoveryType::HDiscoveryType(const HUdn& udn, bool isRootDevice) :
-    h_ptr(new HDiscoveryTypePrivate())
+HDiscoveryType::HDiscoveryType(
+    const HUdn& udn, bool isRootDevice, HValidityCheckLevel checkLevel) :
+        h_ptr(new HDiscoveryTypePrivate())
 {
-    if (udn.isValid())
+    if (udn.isValid(checkLevel))
     {
         if (isRootDevice)
         {
@@ -274,10 +276,11 @@ HDiscoveryType::HDiscoveryType(const HResourceType& resourceType) :
 }
 
 HDiscoveryType::HDiscoveryType(
-    const HUdn& udn, const HResourceType& resourceType) :
+    const HUdn& udn, const HResourceType& resourceType,
+    HValidityCheckLevel checkLevel) :
         h_ptr(new HDiscoveryTypePrivate())
 {
-    if (h_ptr->parse(resourceType) && udn.isValid())
+    if (h_ptr->parse(resourceType) && udn.isValid(checkLevel))
     {
         h_ptr->m_udn = udn;
         h_ptr->m_contents =
@@ -289,10 +292,11 @@ HDiscoveryType::HDiscoveryType(
     }
 }
 
-HDiscoveryType::HDiscoveryType(const QString& resource) :
-    h_ptr(new HDiscoveryTypePrivate())
+HDiscoveryType::HDiscoveryType(
+    const QString& resource, HValidityCheckLevel checkLevel) :
+        h_ptr(new HDiscoveryTypePrivate())
 {
-    h_ptr->parse(resource);
+    h_ptr->parse(resource, checkLevel);
 }
 
 HDiscoveryType::~HDiscoveryType()
@@ -326,24 +330,24 @@ HDiscoveryType::Type HDiscoveryType::type() const
     return h_ptr->m_type;
 }
 
-HUdn HDiscoveryType::udn() const
+const HUdn& HDiscoveryType::udn() const
 {
     return h_ptr->m_udn;
 }
 
-void HDiscoveryType::setUdn(const HUdn& udn)
+void HDiscoveryType::setUdn(const HUdn& udn, HValidityCheckLevel checkLevel)
 {
-    h_ptr->setState(udn, h_ptr->m_resourceType);
+    h_ptr->setState(udn, h_ptr->m_resourceType, checkLevel);
 }
 
-HResourceType HDiscoveryType::resourceType() const
+const HResourceType& HDiscoveryType::resourceType() const
 {
     return h_ptr->m_resourceType;
 }
 
 void HDiscoveryType::setResourceType(const HResourceType& resource)
 {
-    h_ptr->setState(h_ptr->m_udn, resource);
+    h_ptr->setState(h_ptr->m_udn, resource, LooseChecks);
 }
 
 QString HDiscoveryType::toString() const

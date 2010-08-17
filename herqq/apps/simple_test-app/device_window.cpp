@@ -60,9 +60,20 @@ HActionsSetupData HTestService::createActions()
     // identified by their names are invoked.
 
     // In this example, public member functions are used.
-    retVal.insert("Echo", HActionInvoke(this, &HTestService::echoAction));
-    retVal.insert("Register", HActionInvoke(this, &HTestService::registerAction));
-    retVal.insert("Chargen", HActionInvoke(this, &HTestService::chargenAction));
+    bool ok = retVal.insert(HActionSetup(
+        "Echo", HActionInvoke(this, &HTestService::echoAction)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    ok = retVal.insert(HActionSetup(
+        "Register", HActionInvoke(this, &HTestService::registerAction)));
+
+    Q_ASSERT(ok);
+
+    ok = retVal.insert(HActionSetup(
+        "Chargen", HActionInvoke(this, &HTestService::chargenAction)));
+
+    Q_ASSERT(ok);
 
     return retVal;
 }
@@ -162,10 +173,10 @@ HServicesSetupData* HTestDevice::createServices()
 {
     HServicesSetupData* retVal = new HServicesSetupData();
 
-    retVal->insert(
+    retVal->insert(new HServiceSetup(
         HServiceId("urn:herqq-org:serviceId:HTestService"),
         HResourceType("urn:herqq-org:service:HTestService:1"),
-        new HTestService());
+        new HTestService()));
 
     // This UPnP device has a single service identified by serviceId
     // "urn:herqq-org:service:HTestService:1", which is mapped to our

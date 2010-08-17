@@ -93,7 +93,6 @@ private:
     // the unique identifier of the subscription created by the upnp device
 
     qint32 m_seq;
-    QMutex m_seqLock;
     // the sequence number which is incremented upon each notify
 
     HTimeout m_desiredTimeout;
@@ -135,9 +134,9 @@ private:
     OperationType m_currentOpType;
     OperationType m_nextOpType;
 
-    volatile bool m_subscribed;
+    bool m_subscribed;
 
-    //QScopedPointer<HHttpAsyncOperation> m_currentOp;
+    QList<NotifyRequest> m_queuedNotifications;
 
 private Q_SLOTS:
 
@@ -145,10 +144,8 @@ private Q_SLOTS:
     void announcementTimeout();
 
     void connected();
-    void resubscribe();
     void msgIoComplete(HHttpAsyncOperation*);
 
-    void renewSubscription();
     void error(QAbstractSocket::SocketError);
 
 private:
@@ -159,15 +156,15 @@ private:
     void unsubscribe_done(HHttpAsyncOperation*);
 
     void runNextOp();
+    void resubscribe();
+    void renewSubscription();
+    StatusCode processNotify(const NotifyRequest&);
 
 Q_SIGNALS:
 
     void subscribed(HEventSubscription*);
     void subscriptionFailed(HEventSubscription*);
     void unsubscribed(HEventSubscription*);
-
-    void resubscribeRequired_();
-    // private signal
 
 public:
 
@@ -193,7 +190,7 @@ public:
     void subscribe();
     void unsubscribe(qint32 msecsToWait=0);
     void resetSubscription();
-    bool onNotify(MessagingInfo&, const NotifyRequest&);
+    StatusCode onNotify(const NotifyRequest&);
 
     SubscriptionStatus subscriptionStatus() const;
 };

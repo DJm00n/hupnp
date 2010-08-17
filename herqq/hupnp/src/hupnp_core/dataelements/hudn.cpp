@@ -42,12 +42,12 @@ HUdn::HUdn() :
 }
 
 HUdn::HUdn(const QUuid& value) :
-    m_value(value)
+    m_value(value.toString().remove('{').remove('}'))
 {
 }
 
 HUdn::HUdn(const QString& value) :
-    m_value(value.simplified().remove("uuid:", Qt::CaseInsensitive))
+    m_value(value.simplified())
 {
 }
 
@@ -55,29 +55,43 @@ HUdn::~HUdn()
 {
 }
 
-QString HUdn::toString() const
+QUuid HUdn::value() const
 {
-    if (m_value.isNull())
+    if (m_value.startsWith("uuid:"))
     {
-        return QString();
+        return QUuid(m_value.mid(5));
     }
 
-    return QString("uuid:").append(m_value.toString().remove('{').remove('}'));
+    return QUuid(m_value);
+}
+
+QString HUdn::toString() const
+{
+    if (m_value.isEmpty())
+    {
+        return m_value;
+    }
+    else if (m_value.startsWith("uuid:"))
+    {
+        return m_value;
+    }
+
+    return QString("uuid:").append(m_value);
 }
 
 QString HUdn::toSimpleUuid() const
 {
-    if (m_value.isNull())
+    if (m_value.startsWith("uuid:"))
     {
-        return QString();
+        return m_value.mid(5);
     }
 
-    return m_value.toString().remove('{').remove('}');
+    return m_value;
 }
 
 bool operator==(const HUdn& udn1, const HUdn& udn2)
 {
-    return udn1.value() == udn2.value();
+    return udn1.toString() == udn2.toString();
 }
 
 bool operator!=(const HUdn& udn1, const HUdn& udn2)
@@ -87,7 +101,7 @@ bool operator!=(const HUdn& udn1, const HUdn& udn2)
 
 quint32 qHash(const HUdn& key)
 {
-    QByteArray data = key.value().toString().toLocal8Bit();
+    QByteArray data = key.toString().toLocal8Bit();
     return hash(data.constData(), data.size());
 }
 

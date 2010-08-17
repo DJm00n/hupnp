@@ -91,6 +91,7 @@ HResourceAvailablePrivate::~HResourceAvailablePrivate()
 HResourceAvailable::HResourceAvailable() :
     h_ptr(new HResourceAvailablePrivate())
 {
+    Q_UNUSED(test)
 }
 
 HResourceAvailable::HResourceAvailable(
@@ -181,10 +182,10 @@ HResourceAvailable::~HResourceAvailable()
     delete h_ptr;
 }
 
-bool HResourceAvailable::isValid(bool strict) const
+bool HResourceAvailable::isValid(HValidityCheckLevel level) const
 {
     return (h_ptr->m_usn.type() != HDiscoveryType::Undefined) &&
-           (strict ? h_ptr->m_serverTokens.isValid() : true);
+           (level == StrictChecks ? h_ptr->m_serverTokens.isValid() : true);
 }
 
 HProductTokens HResourceAvailable::serverTokens() const
@@ -329,9 +330,9 @@ HEndpoint HResourceUnavailable::location() const
     return h_ptr->m_sourceLocation;
 }
 
-bool HResourceUnavailable::isValid(bool strict) const
+bool HResourceUnavailable::isValid(HValidityCheckLevel level) const
 {
-    Q_UNUSED(strict)
+    Q_UNUSED(level)
     return h_ptr->m_usn.type() != HDiscoveryType::Undefined;
     // if the object is valid, the USN is valid
 }
@@ -469,9 +470,9 @@ HResourceUpdate::~HResourceUpdate()
     delete h_ptr;
 }
 
-bool HResourceUpdate::isValid(bool strict) const
+bool HResourceUpdate::isValid(HValidityCheckLevel level) const
 {
-    Q_UNUSED(strict)
+    Q_UNUSED(level)
     return h_ptr->m_usn.type() != HDiscoveryType::Undefined;
     // if the object is valid, the USN is valid
 }
@@ -636,10 +637,10 @@ HDiscoveryRequest::~HDiscoveryRequest()
     delete h_ptr;
 }
 
-bool HDiscoveryRequest::isValid(bool strict) const
+bool HDiscoveryRequest::isValid(HValidityCheckLevel level) const
 {
     return (h_ptr->m_st.type() != HDiscoveryType::Undefined) &&
-           (strict ? h_ptr->m_userAgent.isValid() : true);
+           (level == StrictChecks ? h_ptr->m_userAgent.isValid() : true);
 }
 
 HDiscoveryType HDiscoveryRequest::searchTarget() const
@@ -725,8 +726,9 @@ HDiscoveryResponse::HDiscoveryResponse(
         HLOG_WARN("Unique Service Name (USN) is not defined");
         return;
     }
-    else if (!usn.udn().isValid())
+    else if (!usn.udn().isValid(LooseChecks))
     {
+        // TODO should this be a parameter?
         HLOG_WARN(QString("Unique Service Name (USN) is missing the "
             "Unique Device Name (UDN): [%1]").arg(usn.toString()));
         return;
@@ -788,10 +790,10 @@ HDiscoveryResponse::~HDiscoveryResponse()
     delete h_ptr;
 }
 
-bool HDiscoveryResponse::isValid(bool strict) const
+bool HDiscoveryResponse::isValid(HValidityCheckLevel level) const
 {
     return (h_ptr->m_usn.type() != HDiscoveryType::Undefined) &&
-           (strict ? h_ptr->m_serverTokens.isValid() : true);
+           (level == StrictChecks ? h_ptr->m_serverTokens.isValid() : true);
 }
 
 HProductTokens HDiscoveryResponse::serverTokens() const

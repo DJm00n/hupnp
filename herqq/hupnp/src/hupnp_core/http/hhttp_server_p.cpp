@@ -569,6 +569,11 @@ void HHttpServer::close()
             "The HTTP Server has to be shutdown in the thread in which "
             "it is currently located.");
 
+    if (m_exiting)
+    {
+        return;
+    }
+
     m_exiting = true;
 
     foreach(Server* server, m_servers)

@@ -23,6 +23,7 @@
 #define HPRODUCT_TOKENS_H
 
 #include "../general/hdefs_p.h"
+#include "../general/hupnp_global.h"
 
 #include <QString>
 
@@ -81,6 +82,8 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     ~HProductToken();
 
@@ -88,12 +91,19 @@ public:
      * Indicates if the object is valid, i.e both the token and the product
      * version are defined.
      *
-     * \return true in case both the \e token and <em>product version</em> are appropriately
-     * specified.
+     * \param level specifies whether the contents of the object are checked
+     * for strict validity. Only an object that is strictly valid
+     * contains information as defined in the UDA. In other words,
+     * a strictly valid product token takes the form
+     * <c>UPnP/majorVersion.minorVersion</c>, where currently major version is
+     * always 1 and minor version is either 0 or 1.
+     *
+     * \return true in case both the \e token and <em>product version</em>
+     * are appropriately specified.
      *
      * \sa token(), productVersion()
      */
-    inline bool isValid() const { return !m_token.isEmpty(); }
+    bool isValid(HValidityCheckLevel checkLevel) const;
 
     /*!
      * Returns the \e token part.
@@ -130,7 +140,7 @@ public:
     /*!
      * Indicates if the provided product token is a valid \e UPnP \ token.
      *
-     * A valid \e UPnP \e token takes the form <c>UPnP/majorVersion.minorVersion</c>.
+     *
      *
      * \return \e true in case the provided token object represents a valid
      * \e UPnP \e token.
@@ -251,11 +261,15 @@ public:
     explicit HProductTokens(const QString& arg);
 
     /*!
+     * Copy constructor.
+     *
      * Creates a copy of the other object.
      */
     HProductTokens(const HProductTokens&);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HProductTokens();

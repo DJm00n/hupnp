@@ -55,21 +55,43 @@ namespace Upnp
 /*******************************************************************************
  * ControlPointHttpServer
  ******************************************************************************/
-ControlPointHttpServer::ControlPointHttpServer(
-    HControlPointPrivate* owner) :
-        HHttpServer(owner->m_loggingIdentifier, owner),
-            m_owner(owner)
+ControlPointHttpServer::ControlPointHttpServer(HControlPointPrivate* owner) :
+    HHttpServer(owner->m_loggingIdentifier, owner),
+        m_owner(owner)
 {
     Q_ASSERT(m_owner);
+
+    bool ok = connect(
+        this,
+        SIGNAL(notify_sig(
+            const QString*, const NotifyRequest*, StatusCode*, HRunnable*)),
+        this,
+        SLOT(notify_slot(
+            const QString*, const NotifyRequest*, StatusCode*, HRunnable*)));
+    Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
 ControlPointHttpServer::~ControlPointHttpServer()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    close();
+}
+
+void ControlPointHttpServer::notify_slot(
+    const QString* id, const NotifyRequest* req, StatusCode* sc,
+    HRunnable* runner)
+{
+    Q_ASSERT(id);
+    Q_ASSERT(sc);
+    Q_ASSERT(req);
+    Q_ASSERT(runner);
+
+    *sc = m_owner->m_eventSubscriber->onNotify(*id, *req);
+    runner->signalTaskComplete();
 }
 
 void ControlPointHttpServer::incomingNotifyMessage(
-    MessagingInfo& mi, const NotifyRequest& req, HRunnable*)
+    MessagingInfo& mi, const NotifyRequest& req, HRunnable* runner)
 {
     // note that currently this method is always executed in a thread from a
     // thread pool
@@ -82,18 +104,27 @@ void ControlPointHttpServer::incomingNotifyMessage(
     if (m_owner->m_initializationStatus != 2)
     {
         HLOG_DBG("The control point is not ready to accept notifications. Ignoring.");
-
         return;
     }
 
+    StatusCode statusCode = Ok;
     QString serviceCallbackId = req.callback().path().remove('/');
 
-    if (!m_owner->m_eventSubscriber->onNotify(serviceCallbackId, mi, req))
+    emit notify_sig(&serviceCallbackId, &req, &statusCode, runner);
+
+    if (runner->wait() == HRunnable::Exiting)
     {
         mi.setKeepAlive(false);
-        m_httpHandler.send(mi, BadRequest);
+        m_httpHandler.send(mi, InternalServerError);
         return;
     }
+
+    if (statusCode != Ok)
+    {
+        mi.setKeepAlive(false);
+    }
+
+    m_httpHandler.send(mi, statusCode);
 }
 
 /*******************************************************************************
@@ -217,7 +248,7 @@ HDeviceController* HControlPointPrivate::buildDevice(
         creatorParams.m_iconFetcher =
             IconFetcher(&dataRetriever, &HDataRetriever::retrieveIcon);
 
-        creatorParams.m_strictParsing = false;
+        creatorParams.m_strictness = LooseChecks;
         creatorParams.m_stateVariablesAreImmutable = true;
         creatorParams.m_threadPool = m_threadPool;
         creatorParams.m_loggingIdentifier = m_loggingIdentifier;
@@ -578,6 +609,8 @@ void HControlPointPrivate::doClear()
 
     m_eventSubscriber->cancelAll(100);
     m_eventSubscriber->removeAll();
+
+    m_server->close();
 
     m_threadPool->shutdown();
     // ensure that no threads created by this thread pool are running when we

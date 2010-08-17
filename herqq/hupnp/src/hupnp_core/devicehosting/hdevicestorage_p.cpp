@@ -175,7 +175,7 @@ public:
 
     bool test(const HResourceType& resType) const
     {
-        return m_resourceType.compare(resType, m_versionMatch);
+        return resType.compare(m_resourceType, m_versionMatch);
     }
 
     bool operator()(HDeviceController* device) const

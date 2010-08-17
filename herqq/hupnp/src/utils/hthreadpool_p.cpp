@@ -129,10 +129,11 @@ void HThreadPool::start(HRunnable* runnable)
     runnable->m_status = HRunnable::WaitingNewTask;
     runnable->m_owner = this;
 
-    m_threadPool->start(runnable);
-
     QMutexLocker locker(&m_runnablesMutex);
     m_runnables.append(runnable);
+    locker.unlock();
+
+    m_threadPool->start(runnable);
 }
 
 void HThreadPool::shutdown()

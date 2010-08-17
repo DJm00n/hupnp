@@ -54,13 +54,14 @@ class H_UPNP_CORE_EXPORT HActionSetup
 private:
 
     QString m_name;
+    qint32 m_version;
     HInclusionRequirement m_inclusionRequirement;
     HActionInvoke m_actionInvoke;
 
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * Creates a new, invalid instance.
      *
      * \sa isValid()
      */
@@ -74,9 +75,29 @@ public:
      * \param incReq specifies the \e inclusion \e requirement of the action.
      *
      * \sa isValid()
+     *
+     * \remarks the version() is set to 1.
+     */
+    explicit HActionSetup(
+        const QString& name,
+        HInclusionRequirement incReq = InclusionMandatory);
+
+    /*!
+     * Creates a new instance.
+     *
+     * \param name specifies the name of the action.
+     *
+     * \param version specifies the UPnP service version in which the action
+     * was first specified.
+     *
+     * \param incReq specifies the \e inclusion \e requirement of the action.
+     *
+     * \sa isValid()
      */
     HActionSetup(
-        const QString& name, HInclusionRequirement incReq = InclusionMandatory);
+        const QString& name,
+        qint32 version,
+        HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
      * Creates a new instance.
@@ -89,19 +110,112 @@ public:
      * \param incReq specifies the \e inclusion \e requirement of the action.
      *
      * \sa isValid()
+     *
+     * \remarks the version() is set to 1.
      */
     HActionSetup(
-        const QString& name, const HActionInvoke& invoke,
+        const QString& name,
+        const HActionInvoke& invoke,
         HInclusionRequirement incReq = InclusionMandatory);
+
+    /*!
+     * Creates a new instance.
+     *
+     * \param name specifies the name of the action.
+     *
+     * \param invoke specifies the callable entity that is called when the
+     * action is invoked. This is used only at server side.
+     *
+     * \param version specifies the UPnP service version in which the action
+     * was first specified.
+     *
+     * \param incReq specifies the \e inclusion \e requirement of the action.
+     *
+     * \sa isValid()
+     */
+    HActionSetup(
+        const QString& name,
+        const HActionInvoke& invoke,
+        qint32 version,
+        HInclusionRequirement incReq = InclusionMandatory);
+
+    /*!
+     * Returns the callable entity that is called when the
+     * action is invoked.
+     *
+     * \remarks This is used only at server side.
+     *
+     * \sa setActionInvoke()
+     */
+    inline HActionInvoke actionInvoke() const
+    {
+        return m_actionInvoke;
+    }
+
+    /*!
+     * Returns the <em>inclusion requirement</em> of the action.
+     *
+     * \return the <em>inclusion requirement</em> of the action.
+     *
+     * \sa setInclusionRequirement()
+     */
+    inline HInclusionRequirement inclusionRequirement() const
+    {
+        return m_inclusionRequirement;
+    }
+
+    /*!
+     * Indicates if the object is valid.
+     *
+     * \return \e true in case the object is valid, that is,
+     * the name(), version() and the inclusionRequirement() are properly defined.
+     */
+    inline bool isValid() const
+    {
+        return !m_name.isEmpty() && m_version > 0 &&
+                m_inclusionRequirement != InclusionRequirementUnknown;
+    }
 
     /*!
      * Returns the name of the action.
      *
      * \return the name of the action.
+     *
+     * \sa setName()
      */
-    inline const QString& name() const
+    inline QString name() const
     {
         return m_name;
+    }
+
+    /*!
+     * Returns the UPnP service version in which the action
+     * was first specified.
+     *
+     * \return the UPnP service version in which the action
+     * was first specified.
+     *
+     * \sa setVersion()
+     */
+    inline qint32 version() const
+    {
+        return m_version;
+    }
+
+    /*!
+     * Specifies the callable entity that is called when the
+     * action is invoked.
+     *
+     * \param arg specifies the callable entity that is called when the
+     * action is invoked.
+     *
+     * \remarks This is used only at server side.
+     *
+     * \sa actionInvoke()
+     */
+    inline void setActionInvoke(const HActionInvoke& arg)
+    {
+        m_actionInvoke = arg;
     }
 
     /*!
@@ -113,23 +227,17 @@ public:
      * in case the name could not be set. This is an optional parameter.
      *
      * \return \e true in case the specified name was successfully set.
+     *
+     * \sa name()
      */
     bool setName(const QString& name, QString* err = 0);
 
-    /*!
-     * Returns the <em>inclusion requirement</em> of the action.
-     *
-     * \return the <em>inclusion requirement</em> of the action.
-     */
-    inline HInclusionRequirement inclusionRequirement() const
-    {
-        return m_inclusionRequirement;
-    }
-
-    /*!
+     /*!
      * Sets the <em>inclusion requirement</em> of the action.
      *
      * \param arg specifies the <em>inclusion requirement</em> of the action.
+     *
+     * \sa inclusionRequirement()
      */
     inline void setInclusionRequirement(HInclusionRequirement arg)
     {
@@ -137,40 +245,17 @@ public:
     }
 
     /*!
-     * Returns the callable entity that is called when the
-     * action is invoked.
+     * Specifies the UPnP service version in which the action
+     * was first specified.
      *
-     * \remarks This is used only at server side.
+     * \param version specifies the UPnP service version in which the action
+     * was first specified.
+     *
+     * \sa version()
      */
-    inline const HActionInvoke& actionInvoke() const
+    inline void setVersion(qint32 version)
     {
-        return m_actionInvoke;
-    }
-
-    /*!
-     * Specifies the callable entity that is called when the
-     * action is invoked.
-     *
-     * \param arg specifies the callable entity that is called when the
-     * action is invoked.
-     *
-     * \remarks This is used only at server side.
-     */
-    inline void setActionInvoke(const HActionInvoke& arg)
-    {
-        m_actionInvoke = arg;
-    }
-
-    /*!
-     * Indicates if the object is valid.
-     *
-     * \return \e true in case the object is valid, that is,
-     * the name and the inclusion requirement are properly defined.
-     */
-    inline bool isValid() const
-    {
-        return !m_name.isEmpty() &&
-                m_inclusionRequirement != InclusionRequirementUnknown;
+        m_version = version;
     }
 };
 
@@ -210,39 +295,10 @@ public:
      * \return \e true in case the item was added. The item will not be added
      * if the instance already contains an item with the
      * same name as \c newItem.
+     *
+     * \sa remove()
      */
     bool insert(const HActionSetup& newItem);
-
-    /*!
-     * Creates and inserts a new item based on the provided arguments.
-     *
-     * \param name specifies the name of the new item.
-     *
-     * \param incReq specifies whether the action is required or optional.
-     *
-     * \return \e true in case a new item was created was added.
-     * No item is created if the instance already contains an item
-     * with the same name as the new item.
-     */
-    bool insert(
-        const QString& name, HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Creates and inserts a new item based on the provided arguments.
-     *
-     * \param name specifies the name of the new item.
-     *
-     * \param invoke specifies the callable entity that is called when the
-     * action is invoked. This is used only at server side.
-     *
-     * \param incReq specifies whether the action is required or optional.
-     *
-     * \return \e true in case a new item was created was added.
-     * No item is created if the instance already contains an action setup
-     * object that has the same name as the new item.
-     */
-    bool insert(const QString& name, const HActionInvoke& invoke,
-        HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
      * Removes an existing item.
@@ -250,6 +306,8 @@ public:
      * \param name specifies the name of the item to be removed.
      *
      * \return \e true in case the item was found and removed.
+     *
+     * \sa insert()
      */
     bool remove(const QString& name);
 
@@ -261,24 +319,30 @@ public:
      * \return the item with the specified name. Note that the returned item
      * is invalid, i.e. HActionSetup::isValid() returns false in case no item
      * with the specified name was found.
+     *
+     * \sa contains()
      */
     HActionSetup get(const QString& name) const;
 
     /*!
-     * Sets the callable entity that is called when the
-     * action is invoked. This is used only at server side.
+     * This is a convenience method for setting the callable entity that is
+     * called when the action is invoked.
      *
      * \param name specifies the name of the item.
      *
      * \param actionInvoke specifies the callable entity.
      *
      * \return \e true in case the item was found and its callable entity was set.
+     *
+     * \remark
+     * HActionInvoke is a server-side concept.
      */
     bool setInvoke(
         const QString& name, const HActionInvoke& actionInvoke);
 
     /*!
-     * Sets the inclusion requirement element of an item.
+     * This is a convenience method for setting the inclusion requirement
+     * element of an item.
      *
      * \param name specifies the name of the item.
      *
@@ -296,6 +360,8 @@ public:
      * \param name specifies the name of the item.
      *
      * \return \e true when the instance contains an item with the specified name.
+     *
+     * \sa get()
      */
     bool contains(const QString& name) const;
 

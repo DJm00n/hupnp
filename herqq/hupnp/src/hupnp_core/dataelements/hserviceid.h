@@ -23,6 +23,7 @@
 #define HSERVICEID_H_
 
 #include "../general/hdefs_p.h"
+#include "../general/hupnp_global.h"
 
 class QString;
 
@@ -69,6 +70,9 @@ class HServiceIdPrivate;
  */
 class H_UPNP_CORE_EXPORT HServiceId
 {
+friend H_UPNP_CORE_EXPORT bool operator==(const HServiceId&, const HServiceId&);
+friend H_UPNP_CORE_EXPORT quint32 qHash(const HServiceId& key);
+
 private:
 
     HServiceIdPrivate* h_ptr;
@@ -134,14 +138,14 @@ public:
     /*!
      * Indicates if the service identifier is properly defined.
      *
-     * \param strict specifies whether the contents of the object are checked
+     * \param level specifies whether the contents of the object are checked
      * for strict validity. Only an object that is strictly valid contains information
      * as defined in the UDA.
      *
      * \return \e true in case the object is considered valid in terms
      * of the requested strictness.
      */
-    bool isValid(bool strict) const;
+    bool isValid(HValidityCheckLevel level) const;
 
     /*!
      * Indicates whether the service identifier belongs to a standard service

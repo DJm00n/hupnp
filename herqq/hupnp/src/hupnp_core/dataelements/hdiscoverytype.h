@@ -24,6 +24,7 @@
 
 #include "../general/hdefs_p.h"
 #include "../general/hupnp_fwd.h"
+#include "../general/hupnp_global.h"
 
 class QString;
 
@@ -36,7 +37,7 @@ namespace Upnp
 class HDiscoveryTypePrivate;
 
 /*!
- * A class that that depicts the different <em>discovery types</em> used in
+ * A class that depicts the different <em>discovery types</em> used in
  * UPnP networking.
  *
  * The <em>UPnP discovery</em> is based on SSDP messages that provide information
@@ -166,7 +167,7 @@ public:
 
         /*!
          * The discovery type is <c>"urn:schemas-upnp-org:service:serviceType:ver"</c> or
-         * <c>"urn:domain-name:service:serviceType:ver"</c>s.
+         * <c>"urn:domain-name:service:serviceType:ver"</c>.
          *
          * This is used when the discovery type specifies services of certain type.
          *
@@ -213,9 +214,14 @@ public:
      * HDiscoveryType::SpecificRootDevice. If the value is \e false the
      * type is set to HDiscoveryType::SpecificDevice.
      *
+     * \param checkLevel specifies the level of strictness used in validating
+     * the specified arguments. This parameter is optional.
+     *
      * \sa type()
      */
-    explicit HDiscoveryType(const HUdn& udn, bool isRootDevice=false);
+    explicit HDiscoveryType(
+        const HUdn& udn, bool isRootDevice=false,
+        HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
      * Creates a new instance.
@@ -243,11 +249,17 @@ public:
      * Otherwise the type() is set to HDiscoveryType::Undefined.
      *
      * \param udn specifies the Unique Device Name.
+     *
      * \param resourceType specifies the resource type.
+     *
+     * \param checkLevel specifies the level of strictness used in validating
+     * the specified arguments. This parameter is optional.
      *
      * \sa type(), udn(), resourceType()
      */
-    HDiscoveryType(const HUdn& udn, const HResourceType& resourceType);
+    HDiscoveryType(
+        const HUdn& udn, const HResourceType& resourceType,
+        HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
      * Creates a new instance.
@@ -255,6 +267,9 @@ public:
      * \param resource specifies the contents of the object. In case the
      * the provided argument cannot be parsed to a valid resource identifier the
      * type() is set to HDiscoveryType::Undefined.
+     *
+     * \param checkLevel specifies the level of strictness used in validating
+     * the specified arguments. This parameter is optional.
      *
      * Valid string formats are:
      *
@@ -273,7 +288,8 @@ public:
      * The content inside square brackets (uuid:device-UUID) is optional and does
      * not have to be provided.
      */
-    explicit HDiscoveryType(const QString& resource);
+    explicit HDiscoveryType(
+        const QString& resource, HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
      * Destroys the instance.
@@ -309,7 +325,7 @@ public:
      *
      * \sa setUdn()
      */
-    HUdn udn() const;
+    const HUdn& udn() const;
 
     /*!
      * Sets the UDN of the object.
@@ -318,11 +334,17 @@ public:
      * For instance, if the object did not have UDN set before,
      * changing the UDN will change the type() of the object.
      *
-     * \param udn specifies the new UDN.
+     * \param udn specifies the new UDN. The specified UDN has to be valid
+     * in terms of the level of validity checks being run. Otherwise the UDN
+     * will not be set.
+     *
+     * \param checkLevel specifies the level of strictness used in validating
+     * the specified UDN. This parameter is optional, but by default
+     * the UDN is verified strictly.
      *
      * \sa udn()
      */
-    void setUdn(const HUdn& udn);
+    void setUdn(const HUdn& udn, HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
      * Returns the resource type associated with this identifier, if any.
@@ -333,7 +355,7 @@ public:
      *
      * \sa setResourceType()
      */
-    HResourceType resourceType() const;
+    const HResourceType& resourceType() const;
 
     /*!
      * Sets the resource type of the object.
@@ -360,7 +382,7 @@ public:
      * \return an object, which type is set to HDiscoveryType::RootDevices.
      *
      * \remarks this is only a helper method. A logically equivalent object
-     * can be constructed * with the string <c>"upnp:rootdevice"</c>.
+     * can be constructed with the string <c>"upnp:rootdevice"</c>.
      */
     static HDiscoveryType createDiscoveryTypeForRootDevices();
 

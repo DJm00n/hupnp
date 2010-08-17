@@ -64,7 +64,7 @@ HObjectCreationParameters::HObjectCreationParameters() :
     m_deviceTimeoutInSecs(0),
     m_appendUdnToDeviceLocation(false),
     m_iconFetcher(),
-    m_strictParsing(true),
+    m_strictness(StrictChecks),
     m_stateVariablesAreImmutable(false),
     m_threadPool(0),
     m_loggingIdentifier()
@@ -86,7 +86,7 @@ HObjectCreationParameters* HObjectCreationParameters::clone() const
     newObj->m_deviceTimeoutInSecs = m_deviceTimeoutInSecs;
     newObj->m_appendUdnToDeviceLocation = m_appendUdnToDeviceLocation;
     newObj->m_iconFetcher = m_iconFetcher;
-    newObj->m_strictParsing = m_strictParsing;
+    newObj->m_strictness = m_strictness;
     newObj->m_stateVariablesAreImmutable = m_stateVariablesAreImmutable;
     newObj->m_threadPool = m_threadPool;
     newObj->m_loggingIdentifier = m_loggingIdentifier;
@@ -276,13 +276,10 @@ void HObjectCreator::initService(
         serviceId, resourceType, controlUrl, eventSubUrl, scpdUrl,
         setupInfo ?
             setupInfo->inclusionRequirement() : InclusionRequirementUnknown,
-        m_creationParameters->m_strictParsing ?
-            HServiceInfo::Strict : HServiceInfo::Loose,
+        m_creationParameters->m_strictness,
         &err);
 
-    if (!serviceInfo.isValid(
-            m_creationParameters->m_strictParsing ? HServiceInfo::Strict :
-                                                    HServiceInfo::Loose))
+    if (!serviceInfo.isValid(m_creationParameters->m_strictness))
     {
         throw HParseException(QString("%1:\n%2").arg(
             err, toString(serviceDefinition)));
@@ -344,10 +341,19 @@ void HObjectCreator::parseServiceDescription(HService* service)
 
     if (stateVariableElement.isNull())
     {
-       throw HParseException(QString(
-           "Service [%1] does not have a single <stateVariable>. Each service MUST "
-           "have at least 1 state variable").arg(
-                service->info().serviceId().toString()));
+        QString err = QString(
+            "Service [%1] does not have a single <stateVariable> element. "
+            "Each service MUST have at least one state variable").arg(
+                service->info().serviceId().toString());
+
+        if (m_creationParameters->m_strictness == StrictChecks)
+        {
+            throw HParseException(err);
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(err);
+        }
     }
 
     HStateVariablesSetupData stateVariablesSetup =
@@ -382,7 +388,8 @@ void HObjectCreator::parseServiceDescription(HService* service)
         foreach(const QString& name, stateVariablesSetup.names())
         {
             HStateVariableSetup svSetup = stateVariablesSetup.get(name);
-            if (svSetup.inclusionRequirement() == InclusionMandatory)
+            if (svSetup.inclusionRequirement() == InclusionMandatory &&
+                svSetup.version() <= service->info().serviceType().version())
             {
                 throw HParseException(QString(
                     "Service description is missing a mandatory state variable "
@@ -402,10 +409,17 @@ void HObjectCreator::parseServiceDescription(HService* service)
 
     if (actionElement.isNull())
     {
-       throw HParseException(QString(
-           "Service [%1] has <actionList> element that has no <action> elements."
-           "If your service has no actions, do NOT define <actionList>.").arg(
-               service->info().serviceId().toString()));
+        QString err = QString(
+            "Service [%1] has <actionList> element that has no <action> "
+            "elements.").arg(service->info().serviceId().toString());
+        if (m_creationParameters->m_strictness == StrictChecks)
+        {
+            throw HParseException(err);
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(err);
+        }
     }
 
     HActionsSetupData actions = service->createActions();
@@ -435,7 +449,8 @@ void HObjectCreator::parseServiceDescription(HService* service)
         foreach(const QString& name, actions.names())
         {
             HActionSetup setupInfo = actions.get(name);
-            if (setupInfo.inclusionRequirement() == InclusionMandatory)
+            if (setupInfo.inclusionRequirement() == InclusionMandatory &&
+                setupInfo.version() <= service->info().serviceType().version())
             {
                 throw HParseException(QString(
                     "Service description for [%1] is missing a mandatory action "
@@ -557,8 +572,40 @@ HStateVariableController* HObjectCreator::parseStateVariable(
                 QString minimumStr =
                     readElementValue("minimum", allowedValueRangeElement);
 
+                if (minimumStr.isEmpty())
+                {
+                    QString err = QString("State variable [%1] is missing a "
+                        "mandatory <minimum> element within <allowedValueRange>.").arg(name);
+
+                    if (m_creationParameters->m_strictness == StrictChecks)
+                    {
+                        throw InvalidServiceDescription(err);
+                    }
+                    else
+                    {
+                        HLOG_WARN_NONSTD(err);
+                        minimumStr = QString::number(INT_MIN);
+                    }
+                }
+
                 QString maximumStr =
                     readElementValue("maximum", allowedValueRangeElement);
+
+                if (maximumStr.isEmpty())
+                {
+                    QString err = QString("State variable [%1] is missing a "
+                        "mandatory <maximum> element within <allowedValueRange>.").arg(name);
+
+                    if (m_creationParameters->m_strictness == StrictChecks)
+                    {
+                        throw InvalidServiceDescription(err);
+                    }
+                    else
+                    {
+                        HLOG_WARN_NONSTD(err);
+                        maximumStr = QString::number(INT_MAX);
+                    }
+                }
 
                 QString stepStr =
                     readElementValue("step", allowedValueRangeElement);
@@ -633,7 +680,7 @@ HStateVariableController* HObjectCreator::parseStateVariable(
     catch(HException& ex)
     {
         throw HParseException(
-            QString("Failed to parse stateVariable [%1]: %2").arg(
+            QString("Failed to parse <stateVariable> [%1]: %2").arg(
                 name, ex.reason()));
     }
 
@@ -924,7 +971,7 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
 
             if (icon.isNull())
             {
-                if (m_creationParameters->m_strictParsing)
+                if (m_creationParameters->m_strictness == StrictChecks)
                 {
                     throw HParseException(
                         QString("Could not create icon from [%1]").arg(
@@ -945,14 +992,15 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
         }
         catch(HException& /*ex*/)
         {
-            if (m_creationParameters->m_strictParsing)
+            if (m_creationParameters->m_strictness == StrictChecks)
             {
                 throw;
             }
 
             HLOG_WARN(QString(
-                "Failed to create an icon [%1] specified in the device description."
-                "Ignoring, since strict parsing is not enabled.").arg(iconUrl.toString()));
+                "Failed to create an icon [%1] specified in the device description. "
+                "Ignoring, since strict parsing is not enabled.").arg(
+                    iconUrl.toString()));
         }
 
         iconElement = iconElement.nextSiblingElement("icon");
@@ -1009,7 +1057,8 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
     QString tmp =
         readElementValue("presentationURL", deviceElement, &wasDefined);
 
-    if (m_creationParameters->m_strictParsing && wasDefined && tmp.isEmpty())
+    if (m_creationParameters->m_strictness == StrictChecks &&
+        wasDefined && tmp.isEmpty())
     {
         throw InvalidDeviceDescription(
             "Presentation URL has to be defined, if the corresponding element is used.");
@@ -1033,9 +1082,10 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
             upc,
             icons,
             presentationUrl,
+            m_creationParameters->m_strictness,
             &err));
 
-    if (!deviceInfo->isValid())
+    if (!deviceInfo->isValid(m_creationParameters->m_strictness))
     {
         throw InvalidDeviceDescription(
             QString("Invalid device description: %1").arg(err));
@@ -1073,7 +1123,7 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
             HResourceType serviceType =
                 HResourceType(readElementValue("serviceType", serviceElement));
 
-            if (!serviceId.isValid(m_creationParameters->m_strictParsing))
+            if (!serviceId.isValid(m_creationParameters->m_strictness))
             {
                 throw InvalidDeviceDescription(
                     QString("Service ID is invalid:\n%1.").arg(
@@ -1132,7 +1182,8 @@ QList<HServiceController*> HObjectCreator::parseServiceList(
             foreach(const HServiceId& serviceId, services->serviceIds())
             {
                 HServiceSetup* setupInfo = services->get(serviceId);
-                if (setupInfo->inclusionRequirement() == InclusionMandatory)
+                if (setupInfo->inclusionRequirement() == InclusionMandatory &&
+                    setupInfo->version() <= device->info().deviceType().version())
                 {
                     throw InvalidDeviceDescription(QString(
                         "Device description is missing a mandatory service: [%1]").arg(
@@ -1290,22 +1341,25 @@ HDeviceController* HObjectCreator::parseDevice(
 
     if (embeddedDevicesSetupLocal.data())
     {
-        // if a device has explicitly defined embedded devices, we have to check if
-        // any of them has been marked as "mandatory". in such a case the
-        // device description doc has to have a definition for it.
+        const HDeviceInfo& tmpDevInfo = retVal->m_device->info();
+
+        // If a device has explicitly defined embedded devices, we have to check if
+        // any of them has been marked as "mandatory" for the device version
+        // in question. In such a case the device description doc has to have
+        // a definition for it.
         // --------
-        // note, if every explicitly defined device was also present in the description,
+        // Note, if every explicitly defined device was also present in the description,
         // the list will be empty at this point.
         foreach(const HResourceType& rt, embeddedDevicesSetupLocal->deviceTypes())
         {
-            if (embeddedDevicesSetupLocal->get(rt)->inclusionRequirement() ==
-                InclusionMandatory)
+            HDeviceSetup* setup =  embeddedDevicesSetupLocal->get(rt);
+            if (setup->inclusionRequirement() == InclusionMandatory &&
+                setup->version() <= tmpDevInfo.deviceType().version())
             {
                 throw InvalidDeviceDescription(QString(
                     "Device description for device [%1] is missing a mandatory "
                     "embedded device [%2]").arg(
-                        retVal->m_device->info().deviceType().toString(),
-                        rt.toString()));
+                        tmpDevInfo.deviceType().toString(), rt.toString()));
             }
         }
     }

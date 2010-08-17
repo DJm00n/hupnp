@@ -208,6 +208,7 @@ void HActionProxy::msgIoComplete(HHttpAsyncOperation* op)
         if (!arg.isValid())
         {
             invocationDone(HAction::UndefinedFailure);
+            return;
         }
 
         HActionArgument* userArg =

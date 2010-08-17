@@ -31,6 +31,7 @@
 //
 
 #include "hudn.h"
+#include "hdeviceinfo.h"
 #include "hresourcetype.h"
 
 #include "../../utils/hlogger_p.h"
@@ -93,9 +94,9 @@ public: // methods
 
     bool setSerialNumber(const QString& serialNumber);
 
-    inline bool setUdn(const HUdn& udn)
+    inline bool setUdn(const HUdn& udn, HValidityCheckLevel checkLevel)
     {
-        if (!udn.isValid())
+        if (!udn.isValid(checkLevel))
         {
             return false;
         }

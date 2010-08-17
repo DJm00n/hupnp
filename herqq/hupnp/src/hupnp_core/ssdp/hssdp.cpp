@@ -261,7 +261,7 @@ HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(
         date,
         location,
         HProductTokens(server),
-        HDiscoveryType(usn),
+        HDiscoveryType(usn, LooseChecks),
         bootId,
         hdr.hasKey("CONFIGID.UPNP.ORG") ? configId : 0,
         // ^^ configid is optional even in UDA v1.1 ==> cannot provide -1
@@ -294,10 +294,12 @@ HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(
             QString("MAN header field is invalid: [%1].").arg(man));
     }
 
-    return HDiscoveryRequest(mx, HDiscoveryType(st), HProductTokens(ua));
+    return HDiscoveryRequest(
+        mx, HDiscoveryType(st, LooseChecks), HProductTokens(ua));
 }
 
-HResourceAvailable HSsdpPrivate::parseDeviceAvailable(const QHttpRequestHeader& hdr)
+HResourceAvailable HSsdpPrivate::parseDeviceAvailable(
+    const QHttpRequestHeader& hdr)
 {
     QString host          = hdr.value("HOST");
     QString server        = hdr.value("SERVER");
@@ -336,7 +338,7 @@ HResourceAvailable HSsdpPrivate::parseDeviceAvailable(const QHttpRequestHeader& 
         maxAge,
         location,
         HProductTokens(server),
-        HDiscoveryType(usn),
+        HDiscoveryType(usn, LooseChecks),
         bootId,
         configId,
         searchPort);
@@ -366,7 +368,8 @@ HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(
 
     checkHost(host);
 
-    return HResourceUnavailable(HDiscoveryType(usn), bootId, configId);
+    return HResourceUnavailable(
+        HDiscoveryType(usn, LooseChecks), bootId, configId);
 }
 
 HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
@@ -409,7 +412,7 @@ HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
 
     return HResourceUpdate(
         location,
-        HDiscoveryType(usn),
+        HDiscoveryType(usn, LooseChecks),
         bootId,
         configId,
         nextBootId,
@@ -443,7 +446,7 @@ void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)
     if (m_allowedMessages & HSsdp::DiscoveryResponse)
     {
         HDiscoveryResponse rcvdMsg = parseDiscoveryResponse(hdr);
-        if (!rcvdMsg.isValid(false))
+        if (!rcvdMsg.isValid(LooseChecks))
         {
             HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
                 source.toString(), msg));
@@ -472,7 +475,7 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& source)
         if (m_allowedMessages & HSsdp::DeviceAvailable)
         {
             HResourceAvailable rcvdMsg = parseDeviceAvailable(hdr);
-            if (!rcvdMsg.isValid(false))
+            if (!rcvdMsg.isValid(LooseChecks))
             {
                 HLOG_WARN(QString(
                     "Ignoring an invalid ssdp:alive announcement:\n%1").arg(msg));
@@ -488,7 +491,7 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& source)
         if (m_allowedMessages & HSsdp::DeviceUnavailable)
         {
             HResourceUnavailable rcvdMsg = parseDeviceUnavailable(hdr);
-            if (!rcvdMsg.isValid(false))
+            if (!rcvdMsg.isValid(LooseChecks))
             {
                 HLOG_WARN(QString(
                     "Ignoring an invalid ssdp:byebye announcement:\n%1").arg(msg));
@@ -504,7 +507,7 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& source)
         if (m_allowedMessages & HSsdp::DeviceUpdate)
         {
             HResourceUpdate rcvdMsg = parseDeviceUpdate(hdr);
-            if (!rcvdMsg.isValid(false))
+            if (!rcvdMsg.isValid(LooseChecks))
             {
                 HLOG_WARN(QString(
                     "Ignoring invalid ssdp:update announcement:\n%1").arg(msg));
@@ -540,7 +543,7 @@ void HSsdpPrivate::processSearch(
             HSsdp::MulticastDiscovery : HSsdp::UnicastDiscovery;
 
         HDiscoveryRequest rcvdMsg = parseDiscoveryRequest(hdr);
-        if (!rcvdMsg.isValid(false))
+        if (!rcvdMsg.isValid(LooseChecks))
         {
             HLOG_WARN(QString("Ignoring invalid message from [%1]: %2").arg(
                 source.toString(), msg));
@@ -801,7 +804,7 @@ qint32 send(HSsdpPrivate* hptr, const Msg& msg, const HEndpoint& receiver,
             qint32 count)
 {
     HLOG(H_AT, H_FUN);
-    if (!msg.isValid(true) || receiver.isNull() || count < 0 ||
+    if (!msg.isValid(StrictChecks) || receiver.isNull() || count < 0 ||
         !hptr->isInitialized())
     {
         return -1;

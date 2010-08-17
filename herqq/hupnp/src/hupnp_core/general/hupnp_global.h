@@ -37,8 +37,60 @@ namespace Upnp
 {
 
 /*!
- * This enumeration specifies how a component of the \ref devicemodel should
- * be treated in terms of inclusion.
+ * This enumeration is used to specify the strictness of argument validation.
+ */
+enum HValidityCheckLevel
+{
+    /*!
+     * The arguments are validated strictly according to the UDA
+     * v1.0 and v1.1 specifications.
+     */
+    StrictChecks,
+
+    /*!
+     * The validation allows slight deviations from the UDA specifications
+     * in an attempt to improve interoperability. The accepted exceptions
+     * have been encountered in other UPnP software that are popular enough
+     * to warrant the exceptional behavior.
+     */
+    LooseChecks
+};
+
+/*!
+ * This enumeration specifies whether a component of the \ref devicemodel is
+ * mandatory within a specific UPnP device.
+ *
+ * In more detail, any component of the device model
+ * (a device, a service, a state variable or an action) may be specified as
+ * a mandatory or an optional part of a UPnP device; for example,
+ * a UPnP device may have two mandatory embedded devices and one
+ * optional embedded device. The same applies to the other components as well.
+ *
+ * When HUPnP builds an object model of a UPnP device, this information can be
+ * used in validating a description document, or verifying that the provided
+ * implementation (HDevice, HDeviceProxy, HService and HServiceProxy derivatives)
+ * accurately depict a description document.
+ *
+ * For instance, if the author of a subclass of a server-side HService has
+ * specified that a particular action is mandatory, the user of the class,
+ * who is the one that provides the description document, has to make sure that
+ * the description document also contains the definition of the action.
+ *
+ * These types of mappings are optional, but they are highly useful in case
+ * the component is to be used as a public part of a library.
+ * They help to ensure that the implementation back-end reflects the used
+ * description documents appropriately. This is important, as it is the
+ * description documents that are transferred from servers to clients and it is
+ * these documents that advertise what a particular UPnP device supports and
+ * is capable of doing.
+ *
+ * From the client's perspective they are also useful in defining requirements
+ * for a particular device type. For instance, if you are an author of a
+ * HDeviceProxy or HServiceProxy derivative class and you have written
+ * the component to work using a specific configuration that requires the
+ * presence of certain actions and state variables on the server side, HUPnP
+ * can use these requirements to filter devices that are suitable in terms
+ * of advertised capabilities.
  */
 enum HInclusionRequirement
 {
@@ -51,7 +103,7 @@ enum HInclusionRequirement
     InclusionRequirementUnknown = 0,
 
     /*!
-     * This value indicates that the component has to be specified and valid.
+     * This value indicates that the component has to be appropriately specified.
      * It is a critical error if the component is missing.
      */
     InclusionMandatory,

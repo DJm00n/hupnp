@@ -34,7 +34,7 @@ namespace Upnp
  * HServiceSetup
  ******************************************************************************/
 HServiceSetup::HServiceSetup() :
-    m_serviceId(), m_serviceType(), m_service(0),
+    m_serviceId(), m_serviceType(), m_service(0), m_version(0),
     m_inclusionReq(InclusionRequirementUnknown)
 {
 }
@@ -45,6 +45,18 @@ HServiceSetup::HServiceSetup(
         m_serviceId(id),
         m_serviceType(serviceType),
         m_service(0),
+        m_version(1),
+        m_inclusionReq(ireq)
+{
+}
+
+HServiceSetup::HServiceSetup(
+    const HServiceId& id, const HResourceType& serviceType, qint32 version,
+    HInclusionRequirement ireq) :
+        m_serviceId(id),
+        m_serviceType(serviceType),
+        m_service(0),
+        m_version(version),
         m_inclusionReq(ireq)
 {
 }
@@ -55,6 +67,18 @@ HServiceSetup::HServiceSetup(
         m_serviceId(id),
         m_serviceType(serviceType),
         m_service(service),
+        m_version(1),
+        m_inclusionReq(ireq)
+{
+}
+
+HServiceSetup::HServiceSetup(
+    const HServiceId& id, const HResourceType& serviceType,
+    HService* service, qint32 version, HInclusionRequirement ireq) :
+        m_serviceId(id),
+        m_serviceType(serviceType),
+        m_service(service),
+        m_version(version),
         m_inclusionReq(ireq)
 {
 }
@@ -64,9 +88,11 @@ HServiceSetup::~HServiceSetup()
     delete m_service;
 }
 
-bool HServiceSetup::isValid(bool strict) const
+bool HServiceSetup::isValid(HValidityCheckLevel checkLevel) const
 {
-    return m_serviceId.isValid(strict) && m_serviceType.isValid() &&
+    return m_serviceId.isValid(checkLevel) &&
+           m_serviceType.isValid() &&
+           m_version > 0 &&
            m_inclusionReq != InclusionRequirementUnknown;
 }
 
@@ -85,45 +111,20 @@ HServicesSetupData::~HServicesSetupData()
 
 bool HServicesSetupData::insert(HServiceSetup* setupInfo)
 {
-    Q_ASSERT(setupInfo);
+    if (!setupInfo || !setupInfo->isValid(StrictChecks))
+    {
+        delete setupInfo;
+        return false;
+    }
 
-    HServiceId id = setupInfo->serviceId();
+    const HServiceId& id = setupInfo->serviceId();
     if (m_serviceSetupInfos.contains(id))
     {
+        delete setupInfo;
         return false;
     }
 
     m_serviceSetupInfos.insert(id, setupInfo);
-    return true;
-}
-
-bool HServicesSetupData::insert(
-    const HServiceId& serviceId, const HResourceType& serviceType,
-    HInclusionRequirement ireq)
-{
-    if (m_serviceSetupInfos.contains(serviceId))
-    {
-        return false;
-    }
-
-    HServiceSetup* setupInfo = new HServiceSetup(serviceId, serviceType, ireq);
-    m_serviceSetupInfos.insert(serviceId, setupInfo);
-    return true;
-}
-
-bool HServicesSetupData::insert(
-    const HServiceId& serviceId, const HResourceType& serviceType,
-    HService* service, HInclusionRequirement ireq)
-{
-    if (m_serviceSetupInfos.contains(serviceId))
-    {
-        return false;
-    }
-
-    HServiceSetup* setupInfo =
-        new HServiceSetup(serviceId, serviceType, service, ireq);
-
-    m_serviceSetupInfos.insert(serviceId, setupInfo);
     return true;
 }
 

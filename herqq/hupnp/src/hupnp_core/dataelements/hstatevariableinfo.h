@@ -130,7 +130,7 @@ public:
      * state variable. This is optional.
      *
      * \param incReq specifies whether the service is required or optional.
-     * This is optional.
+     * This parameter is optional.
      *
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.
@@ -157,7 +157,7 @@ public:
      * state variable. This is optional.
      *
      * \param incReq specifies whether the service is required or optional.
-     * This is optional.
+     * This parameter is optional.
      *
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.
@@ -186,7 +186,7 @@ public:
      * state variable. This is optional.
      *
      * \param incReq specifies whether the service is required or optional.
-     * This is optional.
+     * This parameter is optional.
      *
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.
@@ -221,7 +221,7 @@ public:
      * state variable. This is optional.
      *
      * \param incReq specifies whether the service is required or optional.
-     * This is optional.
+     * This parameter is optional.
      *
      * \param err specifies a pointer to a \c QString that will contain
      * an error description in case the construction failed. This is optional.

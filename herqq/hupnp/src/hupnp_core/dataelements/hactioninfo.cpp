@@ -113,7 +113,7 @@ HActionInfo& HActionInfo::operator=(const HActionInfo& other)
     return *this;
 }
 
-const QString& HActionInfo::name() const
+QString HActionInfo::name() const
 {
     return h_ptr->m_name;
 }

@@ -35,19 +35,35 @@ namespace Upnp
  ******************************************************************************/
 HDeviceSetup::HDeviceSetup() :
     m_deviceType(), m_device(0),
+    m_version(0),
     m_inclusionReq(InclusionRequirementUnknown)
 {
 }
 
 HDeviceSetup::HDeviceSetup(
     const HResourceType& type, HInclusionRequirement incReq) :
-        m_deviceType(type), m_device(0), m_inclusionReq(incReq)
+        m_deviceType(type), m_device(0), m_version(1), m_inclusionReq(incReq)
+{
+}
+
+HDeviceSetup::HDeviceSetup(
+    const HResourceType& type, qint32 version, HInclusionRequirement incReq) :
+        m_deviceType(type), m_device(0), m_version(version),
+        m_inclusionReq(incReq)
 {
 }
 
 HDeviceSetup::HDeviceSetup(
     const HResourceType& type, HDevice* device, HInclusionRequirement ireq) :
-        m_deviceType(type), m_device(device), m_inclusionReq(ireq)
+        m_deviceType(type), m_device(device), m_version(1), m_inclusionReq(ireq)
+{
+}
+
+HDeviceSetup::HDeviceSetup(
+    const HResourceType& type, HDevice* device, qint32 version,
+    HInclusionRequirement ireq) :
+        m_deviceType(type), m_device(device), m_version(version),
+        m_inclusionReq(ireq)
 {
 }
 
@@ -83,45 +99,18 @@ bool HDevicesSetupData::insert(HDeviceSetup* setupInfo)
 {
     if (!setupInfo || !setupInfo->isValid())
     {
+        delete setupInfo;
         return false;
     }
 
     HResourceType id = setupInfo->deviceType();
     if (m_deviceSetupInfos.contains(id))
     {
+        delete setupInfo;
         return false;
     }
 
     m_deviceSetupInfos.insert(id, setupInfo);
-    return true;
-}
-
-bool HDevicesSetupData::insert(
-    const HResourceType& deviceType, HInclusionRequirement ireq)
-{
-    if (!deviceType.isValid() || m_deviceSetupInfos.contains(deviceType))
-    {
-        return false;
-    }
-
-    HDeviceSetup* setupInfo = new HDeviceSetup(deviceType, ireq);
-    m_deviceSetupInfos.insert(deviceType, setupInfo);
-    return true;
-}
-
-bool HDevicesSetupData::insert(
-    const HResourceType& deviceType, HDevice* device,
-    HInclusionRequirement ireq)
-{
-    if (!deviceType.isValid() || m_deviceSetupInfos.contains(deviceType))
-    {
-        return false;
-    }
-
-    HDeviceSetup* setupInfo =
-        new HDeviceSetup(deviceType, device, ireq);
-
-    m_deviceSetupInfos.insert(deviceType, setupInfo);
     return true;
 }
 

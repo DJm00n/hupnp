@@ -81,7 +81,7 @@ HSsdpMessageCreator::~HSsdpMessageCreator()
 
 QByteArray HSsdpMessageCreator::create(const HResourceUpdate& msg)
 {
-    if (!msg.isValid(true))
+    if (!msg.isValid(StrictChecks))
     {
         return QByteArray();
     }
@@ -115,7 +115,7 @@ QByteArray HSsdpMessageCreator::create(const HResourceUpdate& msg)
 
 QByteArray HSsdpMessageCreator::create(const HDiscoveryRequest& msg)
 {
-    if (!msg.isValid(true))
+    if (!msg.isValid(StrictChecks))
     {
         return QByteArray();
     }
@@ -135,7 +135,7 @@ QByteArray HSsdpMessageCreator::create(const HDiscoveryRequest& msg)
 
 QByteArray HSsdpMessageCreator::create(const HDiscoveryResponse& msg)
 {
-    if (!msg.isValid(true))
+    if (!msg.isValid(StrictChecks))
     {
         return QByteArray();
     }
@@ -169,7 +169,7 @@ QByteArray HSsdpMessageCreator::create(const HDiscoveryResponse& msg)
 
 QByteArray HSsdpMessageCreator::create(const HResourceAvailable& msg)
 {
-    if (!msg.isValid(true))
+    if (!msg.isValid(StrictChecks))
     {
         return QByteArray();
     }
@@ -204,7 +204,7 @@ QByteArray HSsdpMessageCreator::create(const HResourceAvailable& msg)
 
 QByteArray HSsdpMessageCreator::create(const HResourceUnavailable& msg)
 {
-    if (!msg.isValid(true))
+    if (!msg.isValid(StrictChecks))
     {
         return QByteArray();
     }
