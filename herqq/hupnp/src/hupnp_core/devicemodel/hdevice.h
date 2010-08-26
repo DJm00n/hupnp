@@ -22,11 +22,11 @@
 #ifndef HDEVICE_H_
 #define HDEVICE_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 #include "../dataelements/hresourcetype.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 class QUrl;
 class QString;

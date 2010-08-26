@@ -26,7 +26,7 @@
 #include "../../general/hupnp_global.h"
 #include "../../dataelements/hresourcetype.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 namespace Herqq
 {

@@ -34,7 +34,7 @@
 
 #include "controlpoint/hdeviceproxy_creator.h"
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 #include "../general/hupnp_global.h"
 #include "../devicemodel/hactioninvoke.h"

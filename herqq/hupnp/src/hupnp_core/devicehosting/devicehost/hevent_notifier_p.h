@@ -31,7 +31,7 @@
 //
 
 #include "../../http/hhttp_p.h"
-#include "../../general/hdefs_p.h"
+#include "../../general/hdefs.h"
 
 #include <QList>
 #include <QMutex>

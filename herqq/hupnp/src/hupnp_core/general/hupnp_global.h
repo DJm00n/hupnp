@@ -22,7 +22,7 @@
 #ifndef HUPNP_GLOBAL_H_
 #define HUPNP_GLOBAL_H_
 
-#include "hdefs_p.h"
+#include "hdefs.h"
 #include "hupnp_fwd.h"
 
 /*!

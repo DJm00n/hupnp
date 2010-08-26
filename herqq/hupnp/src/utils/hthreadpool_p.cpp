@@ -145,6 +145,7 @@ void HThreadPool::shutdown()
         m_runnables.at(i)->signalExit();
     }
     m_runnables.clear();
+    locker.unlock();
 
     m_threadPool->waitForDone();
 }

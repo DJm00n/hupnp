@@ -23,9 +23,9 @@
 #ifndef HENDPOINT_H
 #define HENDPOINT_H
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 
-#include <QHostAddress>
+#include <QtNetwork/QHostAddress>
 
 class QUrl;
 

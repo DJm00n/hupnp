@@ -22,7 +22,7 @@
 #ifndef HACTIONINVOKE_H_
 #define HACTIONINVOKE_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../../utils/hfunctor.h"
 
 /*!

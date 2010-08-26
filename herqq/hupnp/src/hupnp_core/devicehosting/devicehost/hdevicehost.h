@@ -22,12 +22,12 @@
 #ifndef HDEVICEHOST_H_
 #define HDEVICEHOST_H_
 
-#include "../../general/hdefs_p.h"
+#include "../../general/hdefs.h"
 #include "../../general/hupnp_fwd.h"
 #include "../../devicemodel/hdevice.h"
 #include "../../general/hupnp_global.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 namespace Herqq
 {

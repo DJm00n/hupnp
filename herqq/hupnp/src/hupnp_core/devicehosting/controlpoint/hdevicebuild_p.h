@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../../general/hdefs_p.h"
+#include "../../general/hdefs.h"
 #include "../../dataelements/hudn.h"
 #include "../../devicemodel/hdevice_p.h"
 

@@ -22,9 +22,9 @@
 #ifndef MULTICAST_SOCKET_H_
 #define MULTICAST_SOCKET_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 
-#include <QUdpSocket>
+#include <QtNetwork/QUdpSocket>
 
 namespace Herqq
 {

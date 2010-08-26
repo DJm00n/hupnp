@@ -35,7 +35,7 @@
 
 #include "../hdevicestorage_p.h"
 
-#include "../../general/hdefs_p.h"
+#include "../../general/hdefs.h"
 #include "../../http/hhttp_server_p.h"
 
 #include "../../devicemodel/haction_p.h"

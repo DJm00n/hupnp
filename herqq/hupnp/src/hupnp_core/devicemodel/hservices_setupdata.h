@@ -28,8 +28,8 @@
 #include "../dataelements/hserviceinfo.h"
 #include "../dataelements/hresourcetype.h"
 
-#include <QHash>
-#include <QString>
+#include <QtCore/QHash>
+#include <QtCore/QString>
 
 template<typename T>
 class QSet;

@@ -22,12 +22,12 @@
 #ifndef HSTATEVARIABLE_H_
 #define HSTATEVARIABLE_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 #include "../datatypes/hupnp_datatypes.h"
 
-#include <QObject>
-#include <QVariant>
+#include <QtCore/QObject>
+#include <QtCore/QVariant>
 
 class QStringList;
 

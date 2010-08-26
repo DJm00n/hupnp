@@ -22,7 +22,7 @@
 #ifndef DISCOVERY_MSGS_H_
 #define DISCOVERY_MSGS_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_global.h"
 
 class QUrl;

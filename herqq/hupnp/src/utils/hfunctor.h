@@ -56,7 +56,7 @@
 #ifndef H_FUNCTOR_H_
 #define H_FUNCTOR_H_
 
-#include <QtGlobal>
+#include <QtCore/QtGlobal>
 
 namespace Herqq
 {

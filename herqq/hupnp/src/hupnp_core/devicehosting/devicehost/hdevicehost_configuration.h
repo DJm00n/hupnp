@@ -23,7 +23,7 @@
 #define HDEVICEHOST_CONFIGURATION_H_
 
 #include "../hdevicecreator.h"
-#include "../../general/hdefs_p.h"
+#include "../../general/hdefs.h"
 #include "../../general/hupnp_global.h"
 
 class QString;

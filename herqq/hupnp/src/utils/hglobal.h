@@ -22,7 +22,7 @@
 #ifndef HGLOBAL_H_
 #define HGLOBAL_H_
 
-#include <QtGlobal>
+#include <QtCore/QtGlobal>
 
 #define H_DISABLE_COPY(Class) \
     Class(const Class& clazz); \

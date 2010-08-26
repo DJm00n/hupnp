@@ -162,23 +162,13 @@ bool HControlPointSsdpHandler::incomingDeviceUnavailableAnnouncement(
 /*******************************************************************************
  * HControlPointThread
  ******************************************************************************/
-HControlPointThread::HControlPointThread() :
-    m_exit(false)
+HControlPointThread::HControlPointThread()
 {
 }
 
 void HControlPointThread::run()
 {
-    if (!m_exit)
-    {
-        exec();
-    }
-}
-
-void HControlPointThread::quit()
-{
-    m_exit = true;
-    QThread::quit();
+    exec();
 }
 
 /*******************************************************************************
@@ -902,7 +892,11 @@ void HControlPoint::quit()
     h_ptr->clear();
 
     h_ptr->m_controlPointThread->quit();
-    h_ptr->m_controlPointThread->wait();
+    while(!h_ptr->m_controlPointThread->wait(10) &&
+          !h_ptr->m_controlPointThread->isFinished())
+    {
+        h_ptr->m_controlPointThread->quit();
+    }
     h_ptr->m_controlPointThread.reset(0);
 
     HLOG_INFO("Shut down.");

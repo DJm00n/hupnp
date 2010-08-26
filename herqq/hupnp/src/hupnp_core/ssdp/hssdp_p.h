@@ -31,7 +31,7 @@
 //
 
 #include "hssdp.h"
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../socket/hendpoint.h"
 #include "../socket/hmulticast_socket.h"
 

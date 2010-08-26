@@ -22,7 +22,7 @@
 #ifndef HACTIONARGUMENTS_H_
 #define HACTIONARGUMENTS_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../datatypes/hupnp_datatypes.h"
 #include "../dataelements/hstatevariableinfo.h"
 
@@ -35,8 +35,8 @@ class QList;
 template<typename T>
 class QVector;
 
-#include <QString>
-#include <QVariant>
+#include <QtCore/QString>
+#include <QtCore/QVariant>
 
 namespace Herqq
 {

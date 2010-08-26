@@ -23,11 +23,11 @@
 #define HSERVICE_H_
 
 #include "hasyncop.h"
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 
-#include <QList>
-#include <QObject>
+#include <QtCore/QList>
+#include <QtCore/QObject>
 
 class QUrl;
 class QString;

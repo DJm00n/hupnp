@@ -31,7 +31,7 @@
 //
 
 #include "hhttp_p.h"
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
 
 #include <QByteArray>

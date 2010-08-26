@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../hupnp_core/general/hdefs_p.h"
+#include "../hupnp_core/general/hdefs.h"
 
 #include <QList>
 #include <QMutex>

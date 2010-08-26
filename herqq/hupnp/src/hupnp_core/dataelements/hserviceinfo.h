@@ -22,7 +22,7 @@
 #ifndef HSERVICEINFO_H_
 #define HSERVICEINFO_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 #include "../general/hupnp_global.h"
 

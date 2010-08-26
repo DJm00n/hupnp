@@ -25,8 +25,8 @@
 #include "hactioninvoke.h"
 #include "../general/hupnp_global.h"
 
-#include <QHash>
-#include <QString>
+#include <QtCore/QHash>
+#include <QtCore/QString>
 
 template<typename T>
 class QSet;

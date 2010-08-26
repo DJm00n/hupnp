@@ -22,7 +22,7 @@
 #ifndef HDEVICEHOST_DATARETRIEVER_P_H_
 #define HDEVICEHOST_DATARETRIEVER_P_H_
 
-#include "../../general/hdefs_p.h"
+#include "../../general/hdefs.h"
 
 #include <QUrl>
 #include <QByteArray>

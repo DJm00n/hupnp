@@ -23,7 +23,7 @@
 #define HACTIONINVOKE_CALLBACK_H_
 
 #include "hasyncop.h"
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../../utils/hfunctor.h"
 
 /*!

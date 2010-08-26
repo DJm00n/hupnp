@@ -22,7 +22,7 @@
 #ifndef HCLONABLE_H_
 #define HCLONABLE_H_
 
-#include "hdefs_p.h"
+#include "hdefs.h"
 
 namespace Herqq
 {
@@ -88,6 +88,8 @@ protected:
 public:
 
     /*!
+     * Creates a new instance.
+     *
      * Creates a new instance.
      */
     HClonable();

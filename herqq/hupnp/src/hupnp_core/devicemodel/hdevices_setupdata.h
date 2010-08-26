@@ -26,8 +26,8 @@
 #include "../general/hupnp_global.h"
 #include "../dataelements/hresourcetype.h"
 
-#include <QHash>
-#include <QString>
+#include <QtCore/QHash>
+#include <QtCore/QString>
 
 template<typename T>
 class QSet;

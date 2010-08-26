@@ -22,10 +22,10 @@
 #ifndef HSSDP_H_
 #define HSSDP_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 class QUrl;
 class QString;

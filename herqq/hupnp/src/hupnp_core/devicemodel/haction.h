@@ -24,12 +24,12 @@
 
 #include "hactioninvoke_callback.h"
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_fwd.h"
 
 class QString;
 
-#include <QObject>
+#include <QtCore/QObject>
 
 namespace Herqq
 {
@@ -121,13 +121,6 @@ public:
          * Action invocation succeeded.
          */
         Success = 200,
-
-        /*!
-         * \brief Action invocation failed due to the action lacking an implementation.
-         *
-         * Action invocation failed due to the action lacking an implementation.
-         */
-        NotImplemented = 0xffffffff,
 
         /*!
          * Action invocation failed due to:

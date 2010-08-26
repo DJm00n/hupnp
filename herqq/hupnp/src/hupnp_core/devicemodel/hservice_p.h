@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HUPNP_SERVICE_P_H_
-#define HUPNP_SERVICE_P_H_
+#ifndef HSERVICE_P_H_
+#define HSERVICE_P_H_
 
 //
 // !! Warning !!
@@ -132,4 +132,4 @@ public: // methods
 }
 }
 
-#endif /* HUPNP_SERVICE_P_H_ */
+#endif /* HSERVICE_P_H_ */

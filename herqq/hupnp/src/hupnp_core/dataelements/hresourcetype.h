@@ -22,10 +22,10 @@
 #ifndef HRESOURCE_TYPE_H_
 #define HRESOURCE_TYPE_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 
-#include <QMetaType>
-#include <QStringList>
+#include <QtCore/QMetaType>
+#include <QtCore/QStringList>
 
 namespace Herqq
 {

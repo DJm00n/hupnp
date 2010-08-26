@@ -26,7 +26,7 @@
 #include "../../utils/hglobal.h"
 #include "../../utils/hfunctor.h"
 
-#include <QObject>
+#include <QtCore/QObject>
 
 namespace Herqq
 {

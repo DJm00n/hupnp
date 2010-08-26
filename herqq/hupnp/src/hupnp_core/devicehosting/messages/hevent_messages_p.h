@@ -20,7 +20,7 @@
  */
 
 #ifndef HEVENT_MESSAGES_H_
-#define HEVENT_MESSAGES_H_
+#define HEVENT_MESSAGES_H_ 
 
 //
 // !! Warning !!

@@ -138,10 +138,6 @@ class HControlPointThread :
 {
 H_DISABLE_COPY(HControlPointThread)
 
-private:
-
-    volatile bool m_exit;
-
 protected:
 
     virtual void run();
@@ -149,7 +145,6 @@ protected:
 public:
 
     HControlPointThread();
-    void quit();
 };
 
 //

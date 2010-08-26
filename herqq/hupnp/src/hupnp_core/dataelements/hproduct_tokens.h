@@ -22,10 +22,10 @@
 #ifndef HPRODUCT_TOKENS_H
 #define HPRODUCT_TOKENS_H
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_global.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 template<typename T>
 class QVector;
@@ -42,7 +42,7 @@ namespace Upnp
  *
  * \headerfile hproduct_tokens.h HProductToken
  *
- * \remark this class is not thread-safe, but it is lightweight to be used by-value.
+ * \remarks this class is not thread-safe, but it is lightweight to be used by-value.
  *
  * \ingroup dataelements
  */

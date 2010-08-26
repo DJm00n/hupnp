@@ -24,8 +24,8 @@
 
 #include "../general/hupnp_global.h"
 
-#include <QUuid>
-#include <QSharedPointer>
+#include <QtCore/QUuid>
+#include <QtCore/QSharedPointer>
 
 namespace Herqq
 {

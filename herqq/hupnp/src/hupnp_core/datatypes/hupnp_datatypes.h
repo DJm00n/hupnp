@@ -22,9 +22,9 @@
 #ifndef HUPNP_DATATYPES_H_
 #define HUPNP_DATATYPES_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 class QUrl;
 class QDate;

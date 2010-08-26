@@ -22,11 +22,11 @@
 #ifndef HUDN_H_
 #define HUDN_H_
 
-#include "../general/hdefs_p.h"
+#include "../general/hdefs.h"
 #include "../general/hupnp_global.h"
 
-#include <QUuid>
-#include <QMetaType>
+#include <QtCore/QUuid>
+#include <QtCore/QMetaType>
 
 namespace Herqq
 {
