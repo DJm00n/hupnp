@@ -30,13 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../../general/hdefs.h"
+#include "../../general/hupnp_defs.h"
 #include "../messages/hevent_messages_p.h"
 #include "../../http/hhttp_asynchandler_p.h"
 
-#include <QQueue>
-#include <QTimer>
-#include <QObject>
+#include <QtCore/QQueue>
+#include <QtCore/QTimer>
+#include <QtCore/QObject>
 
 class QByteArray;
 class QTcpSocket;

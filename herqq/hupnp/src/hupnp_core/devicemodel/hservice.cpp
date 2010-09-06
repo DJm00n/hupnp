@@ -25,13 +25,15 @@
 #include "hstatevariables_setupdata.h"
 
 #include "haction_p.h"
+#include "hstatevariable.h"
+#include "hstatevariable_p.h"
 
 #include "../../utils/hlogger_p.h"
 
 #include "../datatypes/hupnp_datatypes.h"
 #include "../datatypes/hdatatype_mappings_p.h"
 
-#include <QByteArray>
+#include <QtCore/QByteArray>
 
 namespace Herqq
 {

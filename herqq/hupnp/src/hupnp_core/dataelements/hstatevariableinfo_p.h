@@ -35,9 +35,9 @@
 #include "../general/hupnp_global.h"
 #include "../datatypes/hupnp_datatypes.h"
 
-#include <QString>
-#include <QVariant>
-#include <QStringList>
+#include <QtCore/QString>
+#include <QtCore/QVariant>
+#include <QtCore/QStringList>
 
 namespace Herqq
 {

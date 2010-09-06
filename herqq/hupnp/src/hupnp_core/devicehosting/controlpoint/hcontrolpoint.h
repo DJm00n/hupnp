@@ -22,11 +22,13 @@
 #ifndef HCONTROLPOINT_H_
 #define HCONTROLPOINT_H_
 
-#include "../../devicemodel/hdevice.h"
-#include "../../general/hupnp_global.h"
-#include "../../dataelements/hresourcetype.h"
+#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HResourceType>
 
 #include <QtCore/QObject>
+
+class QNetworkReply;
+class QAuthenticator;
 
 namespace Herqq
 {
@@ -72,7 +74,7 @@ class HControlPointConfiguration;
  *
  * // myclass.h
 
- * #include <HControlPoint>
+ * #include <HUpnpCore/HControlPoint>
  *
  * class MyClass :
  *     public QObject
@@ -96,7 +98,7 @@ class HControlPointConfiguration;
  * // myclass.cpp
  *
  * #include "myclass.h"
- * #include <HDeviceProxy>
+ * #include <HUpnpCore/HDeviceProxy>
  *
  * MyClass::MyClass(QObject* parent) :
  *     QObject(parent), m_controlPoint(new Herqq::Upnp::HControlPoint(this))
@@ -883,6 +885,28 @@ public Q_SLOTS:
     void quit();
 
 Q_SIGNALS:
+
+    /*!
+     * This signal is emitted whenever a final server requests authentication
+     * before it delivers the requested contents.
+     *
+     * This signal is relayed from the underlying \c QNetworkAccessManager,
+     * which is used by the \c %HControlPoint to run HTTP messaging.
+     * As specified in the reference documentation of QNetworkAccessManager,
+     * <em>the slot connected to this signal should fill the credentials
+     * for the contents (which can be determined by inspecting the reply object)
+     * in the authenticator object. \c QNetworkAccessManager will cache the
+     * credentials internally and will send the same values if the server
+     * requires authentication again, without emitting the authenticationRequired() signal.
+     * If it rejects the credentials, this signal will be emitted again.</em>
+     *
+     * \param reply specifies the requested contents.
+     *
+     * \param authenticator specifies the authenticator object to which the
+     * user should fill in the credentials.
+     */
+    void authenticationRequired(
+        QNetworkReply* reply, QAuthenticator* authenticator);
 
     /*!
      * This signal is emitted when the initial subscription to the specified

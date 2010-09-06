@@ -1,6 +1,0 @@
-#ifndef H_READABLE_STATEVARIABLE_
-#define H_READABLE_STATEVARIABLE_
-
-#include "../src/hupnp_core/devicemodel/hreadable_statevariable.h"
-
-#endif // H_READABLE_STATEVARIABLE_

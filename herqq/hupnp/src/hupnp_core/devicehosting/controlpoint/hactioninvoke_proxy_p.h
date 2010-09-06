@@ -31,17 +31,17 @@
 //
 
 #include "../../general/hupnp_fwd.h"
-#include "../../http/hhttp_asynchandler_p.h"
 
 #include "../../devicemodel/haction_p.h"
 #include "../../devicemodel/hactionarguments.h"
 
-#include <QUrl>
-#include <QMutex>
-#include <QQueue>
-#include <QString>
-#include <QTcpSocket>
-#include <QScopedPointer>
+#include <QtCore/QUrl>
+#include <QtCore/QMutex>
+#include <QtCore/QQueue>
+#include <QtCore/QString>
+#include <QtCore/QScopedPointer>
+#include <QtNetwork/QNetworkReply>
+#include <QtNetwork/QNetworkAccessManager>
 
 namespace Herqq
 {
@@ -76,13 +76,6 @@ private:
     HActionArguments m_outArgs;
     // used to validate the arguments coming from the real action.
 
-    QScopedPointer<HHttpAsyncHandler> m_http;
-    // object that enables easier asynchronous invocation over http using
-    // the event loop
-
-    QScopedPointer<QTcpSocket> m_sock;
-    // persistent socket for communication
-
     const QByteArray m_loggingIdentifier;
 
     QList<QUrl> m_locations;
@@ -92,23 +85,23 @@ private:
 
     HAsyncInvocation* m_invocationInProgress;
 
-    MessagingInfo m_messagingInfo;
+    QNetworkAccessManager& m_nam;
+    QNetworkReply* m_reply;
 
     HActionInvokeProxyImpl* m_owner;
 
 private:
 
-    bool connectToHost();
     void invocationDone(qint32 rc);
 
 private slots:
 
     void invoke_slot();
 
-    void error(QAbstractSocket::SocketError);
+    void error(QNetworkReply::NetworkError);
 
     void send();
-    void msgIoComplete(HHttpAsyncOperation*);
+    void finished();
 
 Q_SIGNALS:
 
@@ -119,6 +112,7 @@ public:
     HActionProxy(
         const QByteArray& loggingIdentifier,
         HAction* action,
+        QNetworkAccessManager& nam,
         HActionInvokeProxyImpl* owner);
 
     virtual ~HActionProxy();
@@ -146,8 +140,8 @@ private:
 public:
 
     HActionInvokeProxyImpl(
-        const QByteArray& loggingIdentifier,
-        HAction* action, QThread* parentThread);
+        const QByteArray& loggingIdentifier, HAction* action,
+        QNetworkAccessManager& nam, QThread* parentThread);
 
     virtual ~HActionInvokeProxyImpl();
     virtual bool beginInvoke(HAsyncInvocation*);

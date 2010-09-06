@@ -22,7 +22,7 @@
 
 #include "mainwindow.h"
 
-#include <HUpnp>
+#include <HUpnpCore/HUpnp>
 
 #include <QtTest>
 #include <QtDebug>

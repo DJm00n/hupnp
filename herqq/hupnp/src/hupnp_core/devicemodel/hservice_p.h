@@ -30,20 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hupnp_fwd.h"
+#include <HUpnpCore/HServiceInfo>
 
-#include "haction.h"
-#include "hservice.h"
-#include "hstatevariable.h"
-#include "hstatevariable_p.h"
-
-#include "../dataelements/hserviceinfo.h"
-
-#include <QUrl>
-#include <QHash>
-#include <QList>
-#include <QMutex>
-#include <QString>
+#include <QtCore/QUrl>
+#include <QtCore/QHash>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QString>
 
 class QByteArray;
 
@@ -52,6 +45,9 @@ namespace Herqq
 
 namespace Upnp
 {
+
+class HActionController;
+class HStateVariableController;
 
 //
 // This is an internal class that provides more powerful interface for interacting

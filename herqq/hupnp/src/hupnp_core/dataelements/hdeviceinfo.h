@@ -22,9 +22,7 @@
 #ifndef HDEVICEINFO_H_
 #define HDEVICEINFO_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QPair>
 

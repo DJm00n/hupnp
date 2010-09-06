@@ -34,9 +34,9 @@
 
 #include "../hdevicecreator.h"
 
-#include <QList>
-#include <QString>
-#include <QHostAddress>
+#include <QtCore/QList>
+#include <QtCore/QString>
+#include <QtNetwork/QHostAddress>
 
 namespace Herqq
 {

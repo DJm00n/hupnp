@@ -22,8 +22,8 @@
 #ifndef HDEVICECREATOR_H_
 #define HDEVICECREATOR_H_
 
-#include "../general/hupnp_fwd.h"
-#include "../../utils/hfunctor.h"
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HFunctor>
 
 /*!
  * \file

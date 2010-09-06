@@ -22,7 +22,7 @@
 #ifndef HUPNP_DATATYPES_H_
 #define HUPNP_DATATYPES_H_
 
-#include "../general/hdefs.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QString>
 

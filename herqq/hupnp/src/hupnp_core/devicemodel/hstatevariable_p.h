@@ -32,9 +32,9 @@
 
 #include "../dataelements/hstatevariableinfo.h"
 
-#include <QMutex>
-#include <QString>
-#include <QVariant>
+#include <QtCore/QMutex>
+#include <QtCore/QString>
+#include <QtCore/QVariant>
 
 namespace Herqq
 {
@@ -43,6 +43,7 @@ namespace Upnp
 {
 
 class HService;
+class HStateVariable;
 
 //
 // Implementation details of HStateVariableEvent
@@ -51,7 +52,7 @@ class HStateVariableEventPrivate
 {
 public:
 
-    HStateVariableInfo m_eventSource;
+    HStateVariable* m_eventSource;
     QVariant m_previousValue;
     QVariant m_newValue;
 

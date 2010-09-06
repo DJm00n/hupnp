@@ -22,8 +22,8 @@
 #ifndef HSTATEVARIABLEINFO_H_
 #define HSTATEVARIABLEINFO_H_
 
-#include "../general/hupnp_global.h"
-#include "../datatypes/hupnp_datatypes.h"
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HUpnpDatatypes>
 
 class QString;
 class QVariant;

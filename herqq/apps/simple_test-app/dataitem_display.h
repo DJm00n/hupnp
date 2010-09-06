@@ -25,8 +25,8 @@
 
 #include "controlpoint_navigatoritem.h"
 
-#include <HUdn>
-#include <HUpnp>
+#include <HUpnpCore/HUdn>
+#include <HUpnpCore/HUpnp>
 
 #include <QList>
 #include <QPair>

@@ -22,7 +22,7 @@
 #ifndef HREADABLE_STATEVARIABLE_H_
 #define HREADABLE_STATEVARIABLE_H_
 
-#include "hstatevariable.h"
+#include <HUpnpCore/HStateVariable>
 
 namespace Herqq
 {

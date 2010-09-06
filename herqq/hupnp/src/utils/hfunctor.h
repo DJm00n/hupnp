@@ -53,8 +53,8 @@
  * http://loki-lib.sourceforge.net/ and Andrei's book Modern C++ Design.
  */
 
-#ifndef H_FUNCTOR_H_
-#define H_FUNCTOR_H_
+#ifndef HFUNCTOR_H_
+#define HFUNCTOR_H_
 
 #include <QtCore/QtGlobal>
 
@@ -538,4 +538,4 @@ public:
 
 }
 
-#endif /* H_FUNCTOR_H_ */
+#endif /* HFUNCTOR_H_ */

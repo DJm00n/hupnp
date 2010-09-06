@@ -29,7 +29,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include <QNetworkProxy>
+#include <QtNetwork/QNetworkProxy>
 
 namespace Herqq
 {

@@ -22,9 +22,8 @@
 #ifndef HEVENT_CONNECTORS_H_
 #define HEVENT_CONNECTORS_H_
 
-#include "hupnp_fwd.h"
-#include "../../utils/hglobal.h"
-#include "../../utils/hfunctor.h"
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HFunctor>
 
 #include <QtCore/QObject>
 

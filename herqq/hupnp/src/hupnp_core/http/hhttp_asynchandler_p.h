@@ -30,19 +30,19 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hdefs.h"
+#include "../general/hupnp_defs.h"
 
 #include "hhttp_p.h"
 #include "hhttp_messaginginfo_p.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
 
-#include <QHash>
-#include <QUuid>
-#include <QObject>
-#include <QByteArray>
-#include <QAbstractSocket>
-#include <QHttpRequestHeader>
-#include <QHttpResponseHeader>
+#include <QtCore/QHash>
+#include <QtCore/QUuid>
+#include <QtCore/QObject>
+#include <QtCore/QByteArray>
+#include <QtNetwork/QAbstractSocket>
+#include <QtNetwork/QHttpRequestHeader>
+#include <QtNetwork/QHttpResponseHeader>
 
 class QtSoapMessage;
 

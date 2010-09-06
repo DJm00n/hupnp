@@ -19,14 +19,12 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HSERVICESETUPINFO_H_
-#define HSERVICESETUPINFO_H_
+#ifndef HSERVICES_SETUPDATA_H_
+#define HSERVICES_SETUPDATA_H_
 
-#include "../general/hupnp_global.h"
-
-#include "../dataelements/hserviceid.h"
-#include "../dataelements/hserviceinfo.h"
-#include "../dataelements/hresourcetype.h"
+#include <HUpnpCore/HServiceId>
+#include <HUpnpCore/HServiceInfo>
+#include <HUpnpCore/HResourceType>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
@@ -457,4 +455,4 @@ public:
 }
 }
 
-#endif /* HSERVICESETUPINFO_H_ */
+#endif /* HSERVICES_SETUPDATA_H_ */

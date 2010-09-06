@@ -23,8 +23,8 @@
 #ifndef CONTROLPOINT_NAVIGATORITEM_H_
 #define CONTROLPOINT_NAVIGATORITEM_H_
 
-#include <HUpnp>
-#include <HDevice>
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HDevice>
 
 #include <QString>
 

@@ -22,15 +22,15 @@
 
 #include "controlpoint_navigatoritem.h"
 
-#include <HAction>
-#include <HDevice>
-#include <HService>
-#include <HServiceId>
-#include <HActionInfo>
-#include <HDeviceInfo>
-#include <HServiceInfo>
-#include <HStateVariable>
-#include <HStateVariableInfo>
+#include <HUpnpCore/HAction>
+#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HService>
+#include <HUpnpCore/HServiceId>
+#include <HUpnpCore/HActionInfo>
+#include <HUpnpCore/HDeviceInfo>
+#include <HUpnpCore/HServiceInfo>
+#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HStateVariableInfo>
 
 #include <QUrl>
 #include <QList>

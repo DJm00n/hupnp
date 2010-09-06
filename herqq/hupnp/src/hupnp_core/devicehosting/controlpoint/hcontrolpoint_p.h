@@ -45,21 +45,10 @@
 #include "../../http/hhttp_server_p.h"
 #include "../../ssdp/hdiscovery_messages.h"
 
-#include <QUuid>
-#include <QMutex>
-#include <QScopedPointer>
-
-class QString;
-class QtSoapMessage;
-class QHttpRequestHeader;
-
-//
-// !! Warning !!
-//
-// This file is not part of public API and it should
-// never be included in client code. The contents of this file may
-// change or the file may be removed without of notice.
-//
+#include <QtCore/QUuid>
+#include <QtCore/QMutex>
+#include <QtCore/QScopedPointer>
+#include <QtNetwork/QNetworkAccessManager>
 
 namespace Herqq
 {
@@ -137,6 +126,14 @@ class HControlPointThread :
     public QThread
 {
 H_DISABLE_COPY(HControlPointThread)
+friend class HControlPointPrivate;
+
+private:
+
+    QNetworkAccessManager* m_nam;
+    // the nam used by the objects residing in this thread.
+
+    HControlPointPrivate* m_cp;
 
 protected:
 
@@ -144,7 +141,7 @@ protected:
 
 public:
 
-    HControlPointThread();
+    HControlPointThread(HControlPointPrivate*);
 };
 
 //
@@ -157,6 +154,7 @@ Q_OBJECT
 H_DECLARE_PUBLIC(HControlPoint)
 H_DISABLE_COPY(HControlPointPrivate)
 friend class DeviceBuildTask;
+friend class HControlPointThread;
 friend class HControlPointSsdpHandler;
 
 private:
@@ -167,6 +165,9 @@ private:
 private Q_SLOTS:
 
     void deviceModelBuildDone(const Herqq::Upnp::HUdn&);
+
+    void authenticationRequired(
+        QNetworkReply* reply, QAuthenticator* authenticator);
 
 private:
 

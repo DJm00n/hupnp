@@ -37,8 +37,8 @@
 
 #include "../../utils/hthreadpool_p.h"
 
-#include <QObject>
-#include <QAtomicInt>
+#include <QtCore/QObject>
+#include <QtCore/QAtomicInt>
 
 class QString;
 

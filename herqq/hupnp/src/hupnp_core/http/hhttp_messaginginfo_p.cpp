@@ -21,10 +21,10 @@
 
 #include "hhttp_messaginginfo_p.h"
 
-#include <QUrl>
-#include <QList>
-#include <QTcpSocket>
-#include <QHostAddress>
+#include <QtCore/QUrl>
+#include <QtCore/QList>
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
 
 namespace Herqq
 {

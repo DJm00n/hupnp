@@ -1,0 +1,6 @@
+#ifndef H_WRITABLE_STATEVARIABLE_
+#define H_WRITABLE_STATEVARIABLE_
+
+#include "public/hwritable_statevariable.h"
+
+#endif // H_WRITABLE_STATEVARIABLE_

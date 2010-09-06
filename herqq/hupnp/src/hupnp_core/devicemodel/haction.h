@@ -22,14 +22,11 @@
 #ifndef HACTION_H_
 #define HACTION_H_
 
-#include "hactioninvoke_callback.h"
-
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
-
-class QString;
+#include <HUpnpCore/HActionInvokeCallback>
 
 #include <QtCore/QObject>
+
+class QString;
 
 namespace Herqq
 {

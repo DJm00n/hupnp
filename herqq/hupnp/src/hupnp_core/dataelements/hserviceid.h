@@ -22,12 +22,11 @@
 #ifndef HSERVICEID_H_
 #define HSERVICEID_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_global.h"
-
-class QString;
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QMetaType>
+
+class QString;
 
 namespace Herqq
 {

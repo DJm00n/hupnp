@@ -28,8 +28,9 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QMetaType>
-#include <QMutexLocker>
+#include <QtCore/QThread>
+#include <QtCore/QMetaType>
+#include <QtCore/QMutexLocker>
 
 static bool registerMetaTypes()
 {
@@ -51,7 +52,7 @@ namespace Upnp
  * HStateVariableEventPrivate
  *******************************************************************************/
 HStateVariableEventPrivate::HStateVariableEventPrivate() :
-    m_eventSource()
+    m_eventSource(0), m_previousValue(), m_newValue()
 {
 }
 
@@ -68,25 +69,21 @@ HStateVariableEvent::HStateVariableEvent() :
 }
 
 HStateVariableEvent::HStateVariableEvent(
-    const HStateVariableInfo& eventSource, const QVariant& previousValue,
+    HStateVariable* eventSource, const QVariant& previousValue,
     const QVariant& newValue)
         : h_ptr(new HStateVariableEventPrivate())
 {
     HLOG(H_AT, H_FUN);
 
-    if (!eventSource.isValid())
+    if (!eventSource || !eventSource->info().isValid())
     {
         HLOG_WARN("Event source is not defined");
         return;
     }
 
-    if (!eventSource.isValidValue(newValue))
-    {
-        HLOG_WARN(QString("The specified new value [%1] is invalid").arg(
-            newValue.toString()));
-
-        return;
-    }
+    Q_ASSERT(eventSource->info().isValidValue(newValue));
+    // HStateVariable should not be generating events with invalid values ==>
+    // assert is enough.
 
     h_ptr->m_eventSource   = eventSource;
     h_ptr->m_previousValue = previousValue;
@@ -121,10 +118,13 @@ HStateVariableEvent& HStateVariableEvent::operator=(
 
 bool HStateVariableEvent::isValid() const
 {
-    return h_ptr->m_eventSource.isValid();
+    return h_ptr->m_eventSource &&
+           h_ptr->m_eventSource->info().isValid() &&
+           h_ptr->m_previousValue.isValid() &&
+           h_ptr->m_newValue.isValid();
 }
 
-const HStateVariableInfo& HStateVariableEvent::eventSource() const
+HStateVariable* HStateVariableEvent::eventSource() const
 {
     return h_ptr->m_eventSource;
 }
@@ -277,7 +277,7 @@ bool HStateVariable::setValue(const QVariant& newValue)
 
     if (h_ptr->m_info.eventingType() != HStateVariableInfo::NoEvents)
     {
-        HStateVariableEvent event(info(), oldValue, newValue);
+        HStateVariableEvent event(this, oldValue, newValue);
         lock.unlock();
         emit valueChanged(event);
     }

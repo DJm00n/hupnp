@@ -31,11 +31,11 @@
 //
 
 #include "hhttp_p.h"
-#include "../general/hdefs.h"
+#include "../general/hupnp_defs.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
 
-#include <QByteArray>
-#include <QAtomicInt>
+#include <QtCore/QByteArray>
+#include <QtCore/QAtomicInt>
 
 class QHttpHeader;
 class QHttpRequestHeader;

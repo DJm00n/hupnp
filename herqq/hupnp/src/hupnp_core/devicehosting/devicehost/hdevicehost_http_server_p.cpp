@@ -34,10 +34,12 @@
 
 #include "../../../utils/hlogger_p.h"
 
-#include <QUrl>
-#include <QPair>
-#include <QImage>
-#include <QHttpRequestHeader>
+#include <QtGui/QImage>
+
+#include <QtCore/QUrl>
+#include <QtCore/QPair>
+
+#include <QtNetwork/QHttpRequestHeader>
 
 namespace Herqq
 {

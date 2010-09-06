@@ -23,8 +23,8 @@
 
 #include "../../utils/hmisc_utils_p.h"
 
-#include <QString>
-#include <QByteArray>
+#include <QtCore/QString>
+#include <QtCore/QByteArray>
 
 /*!
  * \defgroup dataelements Data Elements

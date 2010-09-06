@@ -22,8 +22,7 @@
 #ifndef HACTIONINFO_H_
 #define HACTIONINFO_H_
 
-#include "../general/hupnp_fwd.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 class QString;
 

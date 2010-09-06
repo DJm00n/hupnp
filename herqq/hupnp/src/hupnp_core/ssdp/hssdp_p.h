@@ -31,13 +31,13 @@
 //
 
 #include "hssdp.h"
-#include "../general/hdefs.h"
+#include "../general/hupnp_defs.h"
 #include "../socket/hendpoint.h"
 #include "../socket/hmulticast_socket.h"
 
 #include "hdiscovery_messages.h"
 
-#include <QByteArray>
+#include <QtCore/QByteArray>
 
 class QUrl;
 class QString;

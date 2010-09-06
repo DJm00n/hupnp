@@ -29,11 +29,11 @@
 #include "../socket/hendpoint.h"
 #include "../../utils/hlogger_p.h"
 
-#include <QHostAddress>
-#include <QMetaType>
-#include <QDateTime>
-#include <QString>
-#include <QUrl>
+#include <QtNetwork/QHostAddress>
+#include <QtCore/QMetaType>
+#include <QtCore/QDateTime>
+#include <QtCore/QString>
+#include <QtCore/QUrl>
 
 static bool registerMetaTypes()
 {

@@ -30,8 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../../general/hdefs.h"
-#include "hdeviceproxy_creator.h"
+#include <HUpnpCore/HDeviceProxyCreator>
 
 class QHostAddress;
 

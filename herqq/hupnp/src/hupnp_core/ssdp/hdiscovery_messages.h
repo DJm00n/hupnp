@@ -19,11 +19,10 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISCOVERY_MSGS_H_
-#define DISCOVERY_MSGS_H_
+#ifndef HDISCOVERY_MSGS_H_
+#define HDISCOVERY_MSGS_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 class QUrl;
 class QString;
@@ -909,4 +908,4 @@ H_UPNP_CORE_EXPORT bool operator!=(
 }
 }
 
-#endif /* DISCOVERY_MSGS_H_ */
+#endif /* HDISCOVERY_MSGS_H_ */

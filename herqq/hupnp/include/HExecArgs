@@ -1,6 +1,0 @@
-#ifndef H_EXECARGS_
-#define H_EXECARGS_
-
-#include "../src/hupnp_core/devicemodel/hexecargs.h"
-
-#endif // H_EXECARGS_

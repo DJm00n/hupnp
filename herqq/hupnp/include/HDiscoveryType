@@ -1,6 +1,0 @@
-#ifndef H_DISCOVERYTYPE_
-#define H_DISCOVERYTYPE_
-
-#include "../src/hupnp_core/dataelements/hdiscoverytype.h"
-
-#endif // H_DISCOVERYTYPE_

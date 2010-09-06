@@ -22,7 +22,7 @@
 #ifndef HEXECARGS_H_
 #define HEXECARGS_H_
 
-#include "../general/hdefs.h"
+#include <HUpnpCore/HUpnp>
 
 namespace Herqq
 {

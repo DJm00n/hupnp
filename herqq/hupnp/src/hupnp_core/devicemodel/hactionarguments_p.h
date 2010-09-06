@@ -25,10 +25,10 @@
 #include "hactionarguments.h"
 #include "../datatypes/hupnp_datatypes.h"
 
-#include <QUrl>
-#include <QVector>
-#include <QString>
-#include <QVariant>
+#include <QtCore/QUrl>
+#include <QtCore/QVector>
+#include <QtCore/QString>
+#include <QtCore/QVariant>
 
 //
 // !! Warning !!

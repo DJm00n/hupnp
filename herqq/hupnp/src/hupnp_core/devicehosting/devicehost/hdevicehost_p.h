@@ -33,7 +33,7 @@
 #include "hdevicehost.h"
 #include "../habstracthost_p.h"
 
-#include <QScopedPointer>
+#include <QtCore/QScopedPointer>
 
 namespace Herqq
 {

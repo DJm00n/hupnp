@@ -22,8 +22,8 @@
 #include "hserviceinfo.h"
 #include "hserviceinfo_p.h"
 
-#include <QString>
-#include <QMetaType>
+#include <QtCore/QString>
+#include <QtCore/QMetaType>
 
 static bool registerMetaTypes()
 {

@@ -23,7 +23,7 @@
 
 #include "../general/hupnp_global_p.h"
 
-#include <QSet>
+#include <QtCore/QSet>
 
 namespace Herqq
 {

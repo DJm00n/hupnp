@@ -25,8 +25,8 @@
 
 #include "i_dataholder.h"
 
-#include <HUpnp>
-#include <HAsyncOp>
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HAsyncOp>
 
 #include <QHash>
 #include <QString>

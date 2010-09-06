@@ -30,8 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-#include <QUrl>
-#include <QString>
+#include <QtCore/QUrl>
+#include <QtCore/QString>
+
 #include <QtSoapMessage>
 
 namespace Herqq

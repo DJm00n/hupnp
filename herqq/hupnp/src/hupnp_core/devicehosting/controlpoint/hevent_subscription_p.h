@@ -34,15 +34,16 @@
 #include "../messages/hevent_messages_p.h"
 #include "../../http/hhttp_asynchandler_p.h"
 
-#include "../../general/hdefs.h"
+#include "../../general/hupnp_defs.h"
 #include "../../general/hupnp_fwd.h"
 
-#include <QUrl>
-#include <QList>
-#include <QMutex>
-#include <QTimer>
-#include <QTcpSocket>
-#include <QByteArray>
+#include <QtCore/QUrl>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QTimer>
+#include <QtCore/QByteArray>
+
+#include <QtNetwork/QTcpSocket>
 
 namespace Herqq
 {

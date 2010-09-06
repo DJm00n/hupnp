@@ -23,7 +23,7 @@
 #ifndef HENDPOINT_H
 #define HENDPOINT_H
 
-#include "../general/hdefs.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtNetwork/QHostAddress>
 

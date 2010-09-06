@@ -22,8 +22,8 @@
 #include "hdeviceinfo.h"
 #include "hdeviceinfo_p.h"
 
-#include <QImage>
-#include <QMetaType>
+#include <QtGui/QImage>
+#include <QtCore/QMetaType>
 
 static bool registerMetaTypes()
 {

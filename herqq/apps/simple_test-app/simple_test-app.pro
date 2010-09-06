@@ -3,10 +3,10 @@ TARGET   = HUpnpSimpleTestApp
 QT      += network testlib xml
 CONFIG  += warn_on
 
-INCLUDEPATH += ./../../hupnp/include
+INCLUDEPATH += ../../hupnp/include
 
-LIBS += -L"./../../hupnp/bin" -lHUpnp \
-        -L"./../../hupnp/lib/qtsoap-2.7-opensource/lib"
+LIBS += -L"../../hupnp/bin" -lHUpnp \
+        -L"../../hupnp/lib/qtsoap-2.7-opensource/lib"
 
 win32 {
     debug {
@@ -15,11 +15,12 @@ win32 {
     else {
         LIBS += -lQtSolutions_SOAP-2.7
     }
-    
+
     LIBS += -lws2_32
 }
 else {
     LIBS += -lQtSolutions_SOAP-2.7
+    !macx:QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN
 }
 
 macx {
@@ -30,7 +31,7 @@ macx {
 OBJECTS_DIR = obj
 MOC_DIR = obj
 
-DESTDIR = ./../../hupnp/bin
+DESTDIR = ../../hupnp/bin
 
 HEADERS += \
     mainwindow.h \

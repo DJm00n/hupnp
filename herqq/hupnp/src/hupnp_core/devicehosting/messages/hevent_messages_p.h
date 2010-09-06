@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HEVENT_MESSAGES_H_
-#define HEVENT_MESSAGES_H_ 
+#ifndef HEVENT_MESSAGES_P_H_
+#define HEVENT_MESSAGES_P_H_
 
 //
 // !! Warning !!
@@ -34,13 +34,13 @@
 #include "hsid_p.h"
 #include "htimeout_p.h"
 
-#include "../../dataelements/hproduct_tokens.h"
+#include <HUpnpCore/HProductTokens>
 
-#include <QUrl>
-#include <QList>
-#include <QPair>
-#include <QDateTime>
-#include <QByteArray>
+#include <QtCore/QUrl>
+#include <QtCore/QList>
+#include <QtCore/QPair>
+#include <QtCore/QDateTime>
+#include <QtCore/QByteArray>
 
 class QString;
 
@@ -302,4 +302,4 @@ public:
 }
 }
 
-#endif /* HEVENT_MESSAGES_H_ */
+#endif /* HEVENT_MESSAGES_P_H_ */

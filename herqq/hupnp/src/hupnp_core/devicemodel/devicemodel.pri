@@ -25,6 +25,12 @@ HEADERS += \
     $$SRC_LOC/devicemodel/hreadable_statevariable.h \
     $$SRC_LOC/devicemodel/hstatevariables_setupdata.h
 
+EXPORTED_PRIVATE_HEADERS += \
+    $$SRC_LOC/devicemodel/hdevice_p.h \
+    $$SRC_LOC/devicemodel/hdeviceproxy_p.h \
+    $$SRC_LOC/devicemodel/hservice_p.h \
+    $$SRC_LOC/devicemodel/hserviceproxy_p.h
+
 SOURCES += \
     $$SRC_LOC/devicemodel/haction.cpp \
     $$SRC_LOC/devicemodel/hactions_setupdata.cpp \

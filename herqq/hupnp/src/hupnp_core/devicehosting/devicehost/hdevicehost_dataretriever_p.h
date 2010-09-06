@@ -22,10 +22,10 @@
 #ifndef HDEVICEHOST_DATARETRIEVER_P_H_
 #define HDEVICEHOST_DATARETRIEVER_P_H_
 
-#include "../../general/hdefs.h"
+#include "../../general/hupnp_defs.h"
 
-#include <QUrl>
-#include <QByteArray>
+#include <QtCore/QUrl>
+#include <QtCore/QByteArray>
 
 class QImage;
 

@@ -28,8 +28,8 @@
 
 #include "../general/hupnp_global_p.h"
 
-#include <QHttpRequestHeader>
-#include <QHttpResponseHeader>
+#include <QtNetwork/QHttpRequestHeader>
+#include <QtNetwork/QHttpResponseHeader>
 
 #include <QtSoapMessage>
 

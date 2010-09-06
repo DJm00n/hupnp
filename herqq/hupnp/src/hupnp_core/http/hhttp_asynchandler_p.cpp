@@ -25,7 +25,8 @@
 
 #include "../general/hupnp_global_p.h"
 
-#include <QTcpSocket>
+#include <QtNetwork/QTcpSocket>
+
 #include <QtSoapMessage>
 
 namespace Herqq

@@ -22,8 +22,7 @@
 #ifndef HWRITABLE_STATEVARIABLE_H_
 #define HWRITABLE_STATEVARIABLE_H_
 
-#include "hstatevariable.h"
-#include "../general/hdefs.h"
+#include <HUpnpCore/HStateVariable>
 
 class QMutexLocker;
 
@@ -55,7 +54,7 @@ class HWritableStateVariablePrivate;
  *
  * \remark
  * the methods introduced in this class are thread-safe, but the \c QObject
- * base class is largely not.
+ * ancestor is largely not.
  */
 class H_UPNP_CORE_EXPORT HWritableStateVariable :
     public HStateVariable
@@ -100,7 +99,7 @@ public:
      * \retval true in case the new value was successfully set.
      * \retval false in case the new value could not be set.
      *
-     * \remark the new value will be set if the value:
+     * \remarks the new value will be set if the value:
      *  - does not violate the defined constraints
      *  - has the same variant type or the type of the new value can be converted
      *  to the same variant type

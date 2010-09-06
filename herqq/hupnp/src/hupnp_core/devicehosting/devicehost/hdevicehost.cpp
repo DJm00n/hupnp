@@ -38,7 +38,7 @@
 #include "../../../utils/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
 
-#include <QImage>
+#include <QtGui/QImage>
 
 #include <ctime>
 

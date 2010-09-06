@@ -35,7 +35,7 @@
 
 #include "../general/hupnp_global.h"
 
-#include <QUrl>
+#include <QtCore/QUrl>
 
 namespace Herqq
 {

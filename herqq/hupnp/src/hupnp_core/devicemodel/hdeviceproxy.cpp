@@ -22,7 +22,9 @@
 #include "hdeviceproxy.h"
 #include "hdeviceproxy_p.h"
 
+#include "hservice.h"
 #include "hservice_p.h"
+#include "hserviceproxy.h"
 
 namespace Herqq
 {

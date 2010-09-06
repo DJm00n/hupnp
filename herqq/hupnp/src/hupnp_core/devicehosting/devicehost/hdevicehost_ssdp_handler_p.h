@@ -37,7 +37,7 @@
 
 #include "../../socket/hendpoint.h"
 
-#include <QList>
+#include <QtCore/QList>
 
 namespace Herqq
 {

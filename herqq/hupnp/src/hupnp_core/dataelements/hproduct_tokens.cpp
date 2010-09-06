@@ -23,8 +23,8 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QRegExp>
-#include <QVector>
+#include <QtCore/QRegExp>
+#include <QtCore/QVector>
 
 namespace Herqq
 {

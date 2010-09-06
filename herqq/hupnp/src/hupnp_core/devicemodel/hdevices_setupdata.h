@@ -22,9 +22,7 @@
 #ifndef HDEVICES_SETUPDATA_H_
 #define HDEVICES_SETUPDATA_H_
 
-#include "../general/hupnp_fwd.h"
-#include "../general/hupnp_global.h"
-#include "../dataelements/hresourcetype.h"
+#include <HUpnpCore/HResourceType>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>

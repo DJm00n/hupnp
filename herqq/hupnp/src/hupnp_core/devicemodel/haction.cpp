@@ -24,10 +24,10 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QMutexLocker>
+#include <QtCore/QMutexLocker>
 
-#include <QMetaType>
-#include <QAtomicInt>
+#include <QtCore/QMetaType>
+#include <QtCore/QAtomicInt>
 
 static bool registerMetaTypes()
 {

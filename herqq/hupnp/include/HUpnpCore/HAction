@@ -1,0 +1,6 @@
+#ifndef H_ACTION_
+#define H_ACTION_
+
+#include "public/haction.h"
+
+#endif // H_ACTION_

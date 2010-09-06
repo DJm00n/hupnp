@@ -27,10 +27,10 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QTextStream>
-#include <QDomElement>
-#include <QMutexLocker>
-#include <QNetworkInterface>
+#include <QtXml/QDomElement>
+#include <QtCore/QTextStream>
+#include <QtCore/QMutexLocker>
+#include <QtNetwork/QNetworkInterface>
 
 #if defined(Q_OS_LINUX)
 #include <sys/utsname.h>

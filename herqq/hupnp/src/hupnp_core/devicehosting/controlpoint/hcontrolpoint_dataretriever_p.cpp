@@ -29,11 +29,13 @@
 #include "../../../utils/hlogger_p.h"
 #include "../../general/hupnp_global_p.h"
 
-#include <QUrl>
-#include <QImage>
-#include <QTcpSocket>
-#include <QHttpRequestHeader>
-#include <QHttpResponseHeader>
+#include <QtGui/QImage>
+
+#include <QtCore/QUrl>
+
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHttpRequestHeader>
+#include <QtNetwork/QHttpResponseHeader>
 
 namespace Herqq
 {

@@ -22,8 +22,8 @@
 #ifndef HNT_H_
 #define HNT_H_
 
-#include <QPair>
-#include <QString>
+#include <QtCore/QPair>
+#include <QtCore/QString>
 
 namespace Herqq
 {

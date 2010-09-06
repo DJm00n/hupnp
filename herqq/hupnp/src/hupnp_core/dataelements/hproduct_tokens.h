@@ -22,8 +22,7 @@
 #ifndef HPRODUCT_TOKENS_H
 #define HPRODUCT_TOKENS_H
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QString>
 

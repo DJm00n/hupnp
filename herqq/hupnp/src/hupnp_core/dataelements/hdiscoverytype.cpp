@@ -26,8 +26,8 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QString>
-#include <QStringList>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 
 namespace Herqq
 {

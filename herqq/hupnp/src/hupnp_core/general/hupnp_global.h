@@ -22,8 +22,8 @@
 #ifndef HUPNP_GLOBAL_H_
 #define HUPNP_GLOBAL_H_
 
-#include "hdefs.h"
-#include "hupnp_fwd.h"
+#include <HUpnpCore/public/hupnp_fwd.h>
+#include <HUpnpCore/public/hupnp_defs.h>
 
 /*!
  * \file

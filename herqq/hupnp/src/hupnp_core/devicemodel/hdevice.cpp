@@ -29,8 +29,8 @@
 #include "../dataelements/hserviceid.h"
 #include "../dataelements/hdeviceinfo.h"
 
-#include <QTimer>
-#include <QString>
+#include <QtCore/QTimer>
+#include <QtCore/QString>
 
 /*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation
  *
@@ -415,8 +415,8 @@
  *
  * \code
  *
- * #include <HDevice>
- * #include <HService>
+ * #include <HUpnpCore/HDevice>
+ * #include <HUpnpCore/HService>
  *
  * class MyBinaryLightDevice :
  *    public Herqq::Upnp::HDevice
@@ -454,8 +454,8 @@
  *
  * #include "mybinarylight.h"
  *
- * #include <HActionsSetupData>
- * #include <HServicesSetupData>
+ * #include <HUpnpCore/HActionsSetupData>
+ * #include <HUpnpCore/HServicesSetupData>
  *
  * using namespace Herqq::Upnp;
  *
@@ -524,7 +524,7 @@
  *
  * \code
  *
- * #include <HService>
+ * #include <HUpnpCore/HService>
  *
  * class MySwitchPowerService :
  *    public Herqq::Upnp::HService
@@ -561,9 +561,9 @@
  *
  * #include "mybinarylight.h"
  *
- * #include <HAction>
- * #include <HStateVariable>
- * #include <HActionArguments>
+ * #include <HUpnpCore/HAction>
+ * #include <HUpnpCore/HStateVariable>
+ * #include <HUpnpCore/HActionArguments>
  *
  * using namespace Herqq::Upnp;
  *
@@ -1049,7 +1049,7 @@ const HDeviceInfo& HDevice::info() const
     return *h_ptr->m_upnpDeviceInfo;
 }
 
-const QString& HDevice::description() const
+QString HDevice::description() const
 {
     return h_ptr->m_deviceDescription;
 }

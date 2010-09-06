@@ -22,8 +22,8 @@
 #ifndef HSID_H_
 #define HSID_H_
 
-#include <QUuid>
-#include <QString>
+#include <QtCore/QUuid>
+#include <QtCore/QString>
 
 //
 // !! Warning !!

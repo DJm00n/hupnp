@@ -22,9 +22,7 @@
 #ifndef HSTATEVARIABLE_H_
 #define HSTATEVARIABLE_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
-#include "../datatypes/hupnp_datatypes.h"
+#include <HUpnpCore/HUpnpDatatypes>
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
@@ -54,7 +52,7 @@ class HStateVariableController;
  * of changes in its value. You can see if a state variable is evented by checking
  * the HStateVariableInfo object using info() and you can connect to the signal
  * valueChanged() to be notified when the value of the state variable changes.
- * Note, however, that only evented state variables emit the valueChanged() signal.
+ * Note, only evented state variables emit the valueChanged() signal.
  *
  * \headerfile hstatevariable.h HStateVariable
  *
@@ -62,8 +60,10 @@ class HStateVariableController;
  *
  * \sa HReadableStateVariable, HWritableStateVariable, HService
  *
- * \remarks the methods introduced in this class are thread-safe, but the \c QObject
- * base class is largely not.
+ * \remarks The methods introduced in this class are thread-safe, but the \c QObject
+ * base class is largely not. However, the signal valueChanged() has thread affinity
+ * and any connections to it \b must be done in the thread where
+ * the instance of HStateVariable resides.
  */
 class H_UPNP_CORE_EXPORT HStateVariable :
     public QObject
@@ -177,6 +177,9 @@ Q_SIGNALS:
      * This signal is emitted when the value of the state variable has changed.
      *
      * \param event specifies information about the event that occurred.
+     *
+     * \remarks This signal has thread affinity to the thread where the object
+     * resides. Do not connect to this signal from other threads.
      */
     void valueChanged(const Herqq::Upnp::HStateVariableEvent& event);
 };
@@ -186,7 +189,7 @@ class HStateVariableEventPrivate;
 /*!
  * A class used to transfer HStateVariable event information.
  *
- * \headerfile hstatevariable.h HStateVariable
+ * \headerfile hstatevariable.h HStateVariableEvent
  *
  * \sa HStateVariable::valueChanged()
  *
@@ -201,9 +204,11 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * Creates a new, invalid instance.
      *
-     * Creates a new, empty instance.
+     * Creates a new, invalid instance.
+     *
+     * \sa isValid()
      */
     HStateVariableEvent();
 
@@ -217,13 +222,14 @@ public:
      * \param newValue specifies the newly set value.
      *
      * \remarks in case the previousValue and newValue contains a different data
-     * types, the values are ignored and the object is set to empty. Similarly, if
-     * the eventSource is not defined, the object is constructed empty.
+     * types, the values are ignored and the object will be invalid. Similarly, if
+     * the eventSource is not defined, the object will be invalid.
      *
-     * \sa isEmpty()
+     * \sa isValid()
      */
     HStateVariableEvent(
-        const HStateVariableInfo& eventSource, const QVariant& previousValue,
+        HStateVariable* eventSource,
+        const QVariant& previousValue,
         const QVariant& newValue);
 
     /*!
@@ -247,19 +253,19 @@ public:
     HStateVariableEvent& operator=(const HStateVariableEvent&);
 
     /*!
-     * Indicates whether or not the object contains any information.
+     * Indicates whether the object is valid.
      *
-     * \return true in case previousValue() and newValue() return a null QVariant and
-     * eventSource() returns null.
+     * \return \e true in case previousValue() and newValue() return a valid
+     * \c QVariant and eventSource() is defined.
      */
     bool isValid() const;
 
     /*!
      * Returns the source state variable that generated the event.
      *
-     * \return the source state variable of the event.
+     * \return the source state variable that generated the event.
      */
-    const HStateVariableInfo& eventSource() const;
+    HStateVariable* eventSource() const;
 
     /*!
      * Returns the previous value of the state variable.

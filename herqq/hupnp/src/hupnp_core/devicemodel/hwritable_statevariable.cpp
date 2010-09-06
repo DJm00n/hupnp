@@ -22,7 +22,7 @@
 #include "hwritable_statevariable.h"
 #include "hstatevariable_p.h"
 
-#include <QMutexLocker>
+#include <QtCore/QMutexLocker>
 
 namespace Herqq
 {

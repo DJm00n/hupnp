@@ -36,9 +36,9 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QUrl>
-#include <QList>
-#include <QString>
+#include <QtCore/QUrl>
+#include <QtCore/QList>
+#include <QtCore/QString>
 
 namespace Herqq
 {

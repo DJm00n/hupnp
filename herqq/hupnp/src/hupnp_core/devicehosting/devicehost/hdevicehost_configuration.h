@@ -22,9 +22,7 @@
 #ifndef HDEVICEHOST_CONFIGURATION_H_
 #define HDEVICEHOST_CONFIGURATION_H_
 
-#include "../hdevicecreator.h"
-#include "../../general/hdefs.h"
-#include "../../general/hupnp_global.h"
+#include <HUpnpCore/HDeviceCreator>
 
 class QString;
 class QHostAddress;

@@ -31,7 +31,7 @@
 #include "../../../utils/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
 
-#include <QTcpSocket>
+#include <QtNetwork/QTcpSocket>
 
 namespace Herqq
 {

@@ -32,7 +32,7 @@
 
 #include "../devicemodel/hactionarguments.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 namespace Herqq
 {

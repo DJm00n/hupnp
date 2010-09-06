@@ -23,7 +23,7 @@
 #ifndef CONTROLPOINT_WINDOW_H
 #define CONTROLPOINT_WINDOW_H
 
-#include <HUpnp>
+#include <HUpnpCore/HUpnp>
 
 #include <QModelIndex>
 #include <QtGui/QMainWindow>

@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hdevice_p.h"
+#include <HUpnpCore/private/hdevice_p.h>
 
 namespace Herqq
 {

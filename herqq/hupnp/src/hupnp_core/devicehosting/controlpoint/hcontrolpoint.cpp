@@ -41,10 +41,11 @@
 #include "../../../utils/hsysutils_p.h"
 #include "../../../utils/hexceptions_p.h"
 
-#include <QUrl>
-#include <QImage>
-#include <QString>
-#include <QMutexLocker>
+#include <QtGui/QImage>
+
+#include <QtCore/QUrl>
+#include <QtCore/QString>
+#include <QtCore/QMutexLocker>
 
 namespace Herqq
 {
@@ -162,13 +163,26 @@ bool HControlPointSsdpHandler::incomingDeviceUnavailableAnnouncement(
 /*******************************************************************************
  * HControlPointThread
  ******************************************************************************/
-HControlPointThread::HControlPointThread()
+HControlPointThread::HControlPointThread(HControlPointPrivate* cp) :
+    m_nam(0), m_cp(cp)
 {
+    Q_ASSERT(cp);
 }
 
 void HControlPointThread::run()
 {
+    m_nam = new QNetworkAccessManager();
+
+    bool ok = connect(
+        m_nam,
+        SIGNAL(authenticationRequired(QNetworkReply*, QAuthenticator*)),
+        m_cp,
+        SLOT(authenticationRequired(QNetworkReply*, QAuthenticator*)),
+        Qt::BlockingQueuedConnection);
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
     exec();
+    delete m_nam; m_nam = 0;
 }
 
 /*******************************************************************************
@@ -198,7 +212,9 @@ HActionInvokeProxy* HControlPointPrivate::createActionInvoker(HAction* action)
 {
     HActionInvokeProxyImpl* retVal =
         new HActionInvokeProxyImpl(
-            m_loggingIdentifier, action, m_controlPointThread.data());
+            m_loggingIdentifier, action,
+            *m_controlPointThread->m_nam,
+            m_controlPointThread.data());
 
     return retVal;
 }
@@ -582,6 +598,13 @@ void HControlPointPrivate::deviceModelBuildDone(const Herqq::Upnp::HUdn& udn)
     m_deviceBuildTasks.remove(udn);
 }
 
+void HControlPointPrivate::authenticationRequired(
+    QNetworkReply* reply, QAuthenticator* authenticator)
+{
+    H_Q(HControlPoint);
+    emit q->authenticationRequired(reply, authenticator);
+}
+
 void HControlPointPrivate::doClear()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -830,7 +853,7 @@ bool HControlPoint::init()
             HLOG_DBG("Omitting initial device discovery as configured");
         }
 
-        h_ptr->m_controlPointThread.reset(new HControlPointThread());
+        h_ptr->m_controlPointThread.reset(new HControlPointThread(h_ptr));
         h_ptr->m_controlPointThread->start();
 
         h_ptr->setState(HAbstractHostPrivate::Initialized);

@@ -38,8 +38,8 @@
 
 #include "../../../utils/hlogger_p.h"
 
-#include <QTcpSocket>
-#include <QDomDocument>
+#include <QtXml/QDomDocument>
+#include <QtNetwork/QTcpSocket>
 
 namespace Herqq
 {

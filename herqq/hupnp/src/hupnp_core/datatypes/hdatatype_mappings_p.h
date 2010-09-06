@@ -32,7 +32,8 @@
 
 #include "hupnp_datatypes.h"
 
-#include <QVariant>
+#include <QtCore/QVariant>
+
 #include <QtSoapType>
 #include <QtSoapSimpleType>
 

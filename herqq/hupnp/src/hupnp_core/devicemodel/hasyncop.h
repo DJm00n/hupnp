@@ -22,7 +22,7 @@
 #ifndef HASYNCOP_H_
 #define HASYNCOP_H_
 
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QUuid>
 #include <QtCore/QSharedPointer>
@@ -210,6 +210,9 @@ public:
     *
     * \param waitCode specifies the initial wait code for the operation.
     * The default is HAsyncOp::WaitSuccess.
+    *
+    * \remarks if the specified \a waitCode is not HAsyncOp::WaitSuccess no ID
+    * is created and as such isNull() will return \e true.
     *
     * \sa isNull()
     */

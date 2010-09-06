@@ -30,9 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hdefs.h"
+#include "../general/hupnp_defs.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 class QUrl;
 

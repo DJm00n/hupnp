@@ -22,7 +22,7 @@
 #include "hactionarguments.h"
 #include "hactionarguments_p.h"
 
-#include <QMetaType>
+#include <QtCore/QMetaType>
 
 static bool registerMetaTypes()
 {

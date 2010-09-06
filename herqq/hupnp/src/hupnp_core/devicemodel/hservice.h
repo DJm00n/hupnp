@@ -22,9 +22,7 @@
 #ifndef HSERVICE_H_
 #define HSERVICE_H_
 
-#include "hasyncop.h"
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
+#include <HUpnpCore/HAsyncOp>
 
 #include <QtCore/QList>
 #include <QtCore/QObject>
@@ -139,8 +137,10 @@ class HServiceController;
  *
  * \sa devicemodel
  *
- * \remarks the methods introduced in this class are thread-safe, but the \c QObject
- * base class is largely not.
+ * \remarks The methods introduced in this class are thread-safe, but the \c QObject
+ * base class is largely not. However, the signal stateChanged() has thread affinity
+ * and any connections to it \b must be done in the thread where
+ * the instance of HService resides.
  */
 class H_UPNP_CORE_EXPORT HService :
     public QObject
@@ -387,14 +387,11 @@ Q_SIGNALS:
      * has changed.
      *
      * \param source specifies the source of the event.
+     *
+     * \remarks This signal has thread affinity to the thread where the object
+     * resides. Do not connect to this signal from other threads.
      */
     void stateChanged(const Herqq::Upnp::HService* source);
-
-    /*!
-     * This signal is emitted when an action contained by this service has been
-     * invoked by HUPnP and the invocation has been completed or failed.
-     */
-    void invokeComplete(Herqq::Upnp::HAsyncOp op);
 };
 
 }

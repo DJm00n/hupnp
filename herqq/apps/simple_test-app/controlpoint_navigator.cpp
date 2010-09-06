@@ -23,9 +23,9 @@
 #include "controlpoint_navigator.h"
 #include "controlpoint_navigatoritem.h"
 
-#include <HDevice>
-#include <HService>
-#include <HDeviceInfo>
+#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HService>
+#include <HUpnpCore/HDeviceInfo>
 
 #include <QVariant>
 #include <QModelIndex>

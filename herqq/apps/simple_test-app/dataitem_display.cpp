@@ -22,16 +22,16 @@
 
 #include "dataitem_display.h"
 
-#include <HDevice>
-#include <HAction>
-#include <HService>
-#include <HServiceId>
-#include <HActionInfo>
-#include <HDeviceInfo>
-#include <HServiceInfo>
-#include <HResourceType>
-#include <HStateVariable>
-#include <HActionArguments>
+#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HAction>
+#include <HUpnpCore/HService>
+#include <HUpnpCore/HServiceId>
+#include <HUpnpCore/HActionInfo>
+#include <HUpnpCore/HDeviceInfo>
+#include <HUpnpCore/HServiceInfo>
+#include <HUpnpCore/HResourceType>
+#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HActionArguments>
 
 #include <QUrl>
 #include <QStringList>

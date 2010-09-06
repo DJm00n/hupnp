@@ -22,8 +22,7 @@
 #ifndef HACTIONS_SETUPDATA_H_
 #define HACTIONS_SETUPDATA_H_
 
-#include "hactioninvoke.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HActionInvoke>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>

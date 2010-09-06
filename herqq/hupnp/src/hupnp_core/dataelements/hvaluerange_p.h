@@ -30,8 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
-#include <QString>
-#include <QVariant>
+#include <QtCore/QString>
+#include <QtCore/QVariant>
 
 namespace Herqq
 {

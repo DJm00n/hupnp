@@ -23,10 +23,12 @@
 
 #include "../../../utils/hlogger_p.h"
 
-#include <QRegExp>
-#include <QStringList>
-#include <QHostAddress>
-#include <QDomDocument>
+#include <QtXml/QDomDocument>
+
+#include <QtCore/QRegExp>
+#include <QtCore/QStringList>
+
+#include <QtNetwork/QHostAddress>
 
 namespace Herqq
 {

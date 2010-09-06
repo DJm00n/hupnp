@@ -26,13 +26,13 @@
 #include "genericinput.h"
 #include "allowedvaluelist_input.h"
 
-#include <HAction>
-#include <HDevice>
-#include <HService>
-#include <HActionInfo>
-#include <HStateVariable>
-#include <HActionArguments>
-#include <HActionArguments>
+#include <HUpnpCore/HAction>
+#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HService>
+#include <HUpnpCore/HActionInfo>
+#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HActionArguments>
+#include <HUpnpCore/HActionArguments>
 
 #include <QUuid>
 #include <QMessageBox>

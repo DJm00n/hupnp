@@ -31,13 +31,13 @@
 //
 
 #include "../../http/hhttp_p.h"
-#include "../../general/hdefs.h"
+#include "../../general/hupnp_defs.h"
 
-#include <QList>
-#include <QMutex>
-#include <QObject>
-#include <QByteArray>
-#include <QSharedPointer>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QObject>
+#include <QtCore/QByteArray>
+#include <QtCore/QSharedPointer>
 
 namespace Herqq
 {

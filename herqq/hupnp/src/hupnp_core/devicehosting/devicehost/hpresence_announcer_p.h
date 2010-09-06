@@ -48,7 +48,7 @@
 #include "../../dataelements/hdiscoverytype.h"
 #include "../../dataelements/hproduct_tokens.h"
 
-#include <QUrl>
+#include <QtCore/QUrl>
 
 namespace Herqq
 {

@@ -34,14 +34,15 @@
 #include "../devicemodel/hdeviceproxy.h"
 #include "../devicemodel/hserviceproxy.h"
 
-#include <QUrl>
-#include <QPair>
-#include <QList>
-#include <QMutex>
-#include <QString>
-#include <QTcpSocket>
-#include <QHostAddress>
-#include <QScopedPointer>
+#include <QtCore/QUrl>
+#include <QtCore/QPair>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QString>
+#include <QtCore/QScopedPointer>
+
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
 
 class QDomElement;
 
@@ -50,26 +51,6 @@ namespace Herqq
 
 namespace Upnp
 {
-
-inline HDeviceProxy* devToProxy(HDevice* device)
-{
-    return static_cast<HDeviceProxy*>(device);
-}
-
-inline const HDeviceProxy* devToProxy(const HDevice* device)
-{
-    return static_cast<const HDeviceProxy*>(device);
-}
-
-inline HServiceProxy* srvToProxy(HService* srv)
-{
-    return static_cast<HServiceProxy*>(srv);
-}
-
-inline const HServiceProxy* srvToProxy(const HService* srv)
-{
-    return static_cast<const HServiceProxy*>(srv);
-}
 
 //
 //
@@ -184,13 +165,13 @@ inline QString extractHostPart(const QUrl& arg)
 }
 
 //
-// Returns the part + query + fragment (== request in entirety) sections of the url
+// Returns the part + query (== request in entirety) sections of the url
 //
 inline QString extractRequestPart(const QUrl& arg)
 {
     return arg.toString(
         QUrl::RemoveAuthority | QUrl::RemovePassword | QUrl::RemoveUserInfo |
-        QUrl::RemoveScheme | QUrl::RemovePort);
+        QUrl::RemoveScheme | QUrl::RemovePort | QUrl::RemoveFragment);
 }
 
 //

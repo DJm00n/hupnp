@@ -1,6 +1,0 @@
-#ifndef H_SERVICE_
-#define H_SERVICE_
-
-#include "../src/hupnp_core/devicemodel/hservice.h"
-
-#endif // H_SERVICE_

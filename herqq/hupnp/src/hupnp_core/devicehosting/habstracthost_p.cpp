@@ -25,7 +25,7 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QMetaType>
+#include <QtCore/QMetaType>
 
 static bool registerMetaTypes()
 {
@@ -92,7 +92,7 @@ static bool test = registerMetaTypes();
  *
  * \code
  *
- * #include <HDeviceHost>
+ * #include <HUpnpCore/HDeviceHost>
  *
  * #include "my_hdevice.h" // your code
  *
@@ -139,7 +139,7 @@ static bool test = registerMetaTypes();
  *
  * \code
  *
- * #include <HControlPoint>
+ * #include <HUpnpCore/HControlPoint>
  *
  * #include "myhdeviceproxy.h" // your code
  *

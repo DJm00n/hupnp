@@ -22,10 +22,7 @@
 #ifndef HDEVICEHOST_H_
 #define HDEVICEHOST_H_
 
-#include "../../general/hdefs.h"
-#include "../../general/hupnp_fwd.h"
-#include "../../devicemodel/hdevice.h"
-#include "../../general/hupnp_global.h"
+#include <HUpnpCore/HDevice>
 
 #include <QtCore/QObject>
 
@@ -68,7 +65,7 @@ class HDeviceHostPrivate;
  *
  * // myclass.h
 
- * #include <HDeviceHost>
+ * #include <HUpnpCore/HDeviceHost>
  * #include <QObject>
  *
  * class MyClass :

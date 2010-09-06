@@ -35,9 +35,7 @@
 
 #include "../../../utils/hlogger_p.h"
 
-#include <QList>
-#include <QHttpRequestHeader>
-
+#include <QtCore/QList>
 #include <QtSoapMessage>
 
 namespace Herqq
@@ -51,19 +49,17 @@ namespace Upnp
  ******************************************************************************/
 HActionProxy::HActionProxy(
     const QByteArray& loggingIdentifier, HAction* action,
-    HActionInvokeProxyImpl* owner) :
+    QNetworkAccessManager& nam, HActionInvokeProxyImpl* owner) :
         QObject(),
             m_service(action->parentService()),
             m_actionName(action->info().name()),
             m_inArgs(action->info().inputArguments()),
             m_outArgs(action->info().outputArguments()),
-            m_http(new HHttpAsyncHandler(loggingIdentifier, this)),
-            m_sock(new QTcpSocket(this)),
             m_loggingIdentifier(loggingIdentifier),
             m_locations(),
             m_iNextLocationToTry(0),
             m_invocationInProgress(0),
-            m_messagingInfo(*m_sock, true, 30000),
+            m_nam(nam),
             m_owner(owner)
 {
     Q_ASSERT(m_owner);
@@ -74,33 +70,18 @@ HActionProxy::HActionProxy(
 
     ok = connect(this, SIGNAL(invoke_sig()), this, SLOT(invoke_slot()));
     Q_ASSERT(ok);
-
-    ok = connect(m_sock.data(), SIGNAL(connected()), this, SLOT(send()));
-    Q_ASSERT(ok);
-
-    ok = connect(
-        m_sock.data(), SIGNAL(error(QAbstractSocket::SocketError)),
-        this, SLOT(error(QAbstractSocket::SocketError)));
-    Q_ASSERT(ok);
-
-    ok = connect(
-        m_http.data(), SIGNAL(msgIoComplete(HHttpAsyncOperation*)),
-        this, SLOT(msgIoComplete(HHttpAsyncOperation*)));
-    Q_ASSERT(ok);
-
-    m_messagingInfo.setAutoDelete(false);
 }
 
 HActionProxy::~HActionProxy()
 {
 }
 
-void HActionProxy::error(QAbstractSocket::SocketError serr)
+void HActionProxy::error(QNetworkReply::NetworkError err)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (serr == QAbstractSocket::ConnectionRefusedError ||
-        serr == QAbstractSocket::HostNotFoundError)
+    if (err == QNetworkReply::ConnectionRefusedError ||
+        err == QNetworkReply::HostNotFoundError)
     {
         HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
             m_service->parentDevice()->info().udn().toSimpleUuid(),
@@ -109,59 +90,34 @@ void HActionProxy::error(QAbstractSocket::SocketError serr)
         m_iNextLocationToTry =
             m_iNextLocationToTry == m_locations.size() - 1 ? 0 :
                 m_iNextLocationToTry + 1;
-
-        connectToHost();
     }
 }
 
-bool HActionProxy::connectToHost()
-{
-    Q_ASSERT(m_sock.data());
-
-    QTcpSocket::SocketState state = m_sock->state();
-
-    if (state == QTcpSocket::ConnectedState)
-    {
-        return true;
-    }
-    else if (state == QTcpSocket::ConnectingState ||
-             state == QTcpSocket::HostLookupState)
-    {
-        return false;
-    }
-
-    Q_ASSERT(QThread::currentThread() == m_sock->thread());
-
-    Q_ASSERT(m_iNextLocationToTry < m_locations.size());
-    m_sock->connectToHost(
-        m_locations[m_iNextLocationToTry].host(),
-        m_locations[m_iNextLocationToTry].port());
-
-    return false;
-}
-
-void HActionProxy::msgIoComplete(HHttpAsyncOperation* op)
+void HActionProxy::finished()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    Q_ASSERT(op);
+    Q_ASSERT(m_reply);
 
-    op->deleteLater();
+    m_reply->deleteLater();
 
-    if (op->state() == HHttpAsyncOperation::Failed)
+    QVariant statusCode = m_reply->attribute(
+        QNetworkRequest::HttpStatusCodeAttribute);
+    if (statusCode.toInt() != 200)
     {
-        HLOG_WARN(QString("Action invocation failed: [%1]").arg(
-            op->messagingInfo()->lastErrorDescription()));
+        HLOG_WARN(QString("Action invocation failed. Server responded: [%1]").arg(
+            statusCode.toString()));
 
-        invocationDone(HAction::UndefinedFailure);
+        invocationDone(statusCode.toInt());
         return;
     }
 
+    QByteArray data = m_reply->readAll();
     QtSoapMessage response;
-    if (!response.setContent(op->dataRead()))
+    if (!response.setContent(data))
     {
         HLOG_WARN(QString(
             "Received an invalid SOAP message as a response to "
-            "action invocation: [%1]").arg(QString::fromUtf8(op->dataRead())));
+            "action invocation: [%1]").arg(QString::fromUtf8(data)));
 
         invocationDone(HAction::UndefinedFailure);
         return;
@@ -174,7 +130,9 @@ void HActionProxy::msgIoComplete(HHttpAsyncOperation* op)
                 response.faultString().toString(),
                 response.faultDetail().toString()));
 
-        invocationDone(HAction::UndefinedFailure);
+        QtSoapType errCode = response.faultDetail()["errorCode"];
+        invocationDone(errCode.isValid() ?
+            errCode.value().toInt() : HAction::UndefinedFailure);
         return;
     }
 
@@ -257,26 +215,31 @@ void HActionProxy::send()
         soapMsg.addMethodArgument(soapArg);
     }
 
-    QUrl baseUrl = m_locations[m_iNextLocationToTry];
-    QUrl controlUrl = resolveUri(baseUrl.path(), m_service->info().controlUrl());
+    QNetworkRequest req;
 
-    QHttpRequestHeader actionInvokeRequest("POST", controlUrl.toString());
-    actionInvokeRequest.setContentType("text/xml; charset=\"utf-8\"");
+    req.setHeader(
+        QNetworkRequest::ContentTypeHeader,
+        QString("text/xml; charset=\"utf-8\""));
 
     QString soapActionHdrField("\"");
     soapActionHdrField.append(m_service->info().serviceType().toString());
     soapActionHdrField.append("#").append(m_actionName).append("\"");
-    actionInvokeRequest.setValue("SOAPACTION", soapActionHdrField);
+    req.setRawHeader("SOAPAction", soapActionHdrField.toUtf8());
 
-    m_messagingInfo.setHostInfo(baseUrl);
+    QUrl url = resolveUri(
+        m_locations[m_iNextLocationToTry], m_service->info().controlUrl());
 
-    HHttpAsyncOperation* op =
-        m_http->msgIo(&m_messagingInfo, actionInvokeRequest, soapMsg);
+    req.setUrl(url);
 
-    if (!op)
-    {
-        invocationDone(HAction::ActionFailed);
-    }
+    m_reply = m_nam.post(req, soapMsg.toXmlString().toUtf8());
+
+    bool ok = connect(
+        m_reply, SIGNAL(error(QNetworkReply::NetworkError)),
+        this, SLOT(error(QNetworkReply::NetworkError)));
+    Q_ASSERT(ok);
+
+    ok = connect(m_reply, SIGNAL(finished()), this, SLOT(finished()));
+    Q_ASSERT(ok);
 }
 
 void HActionProxy::invoke_slot()
@@ -290,10 +253,7 @@ void HActionProxy::invoke_slot()
         m_iNextLocationToTry = 0;
     }
 
-    if (connectToHost())
-    {
-        send();
-    }
+    send();
 }
 
 void HActionProxy::beginInvoke(HAsyncInvocation* inv)
@@ -303,16 +263,15 @@ void HActionProxy::beginInvoke(HAsyncInvocation* inv)
 
     emit invoke_sig();
     // this is done to ensure that the invocation is run in the right thread
-    // (for performance reasons the same socket is used and in Qt, the sockets
-    // have thread affinity)
 }
 
 /*******************************************************************************
  * HActionInvokeProxyImpl
  ******************************************************************************/
 HActionInvokeProxyImpl::HActionInvokeProxyImpl(
-    const QByteArray& loggingIdentifier, HAction* action, QThread* parentThread) :
-        m_proxy(new HActionProxy(loggingIdentifier, action, this)),
+    const QByteArray& loggingIdentifier, HAction* action,
+    QNetworkAccessManager& nam, QThread* parentThread) :
+        m_proxy(new HActionProxy(loggingIdentifier, action, nam, this)),
         m_invocations(), m_invocationsMutex()
 {
     Q_ASSERT(parentThread);

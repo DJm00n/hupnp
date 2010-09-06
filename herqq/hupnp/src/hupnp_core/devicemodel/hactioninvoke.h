@@ -22,8 +22,8 @@
 #ifndef HACTIONINVOKE_H_
 #define HACTIONINVOKE_H_
 
-#include "../general/hdefs.h"
-#include "../../utils/hfunctor.h"
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HFunctor>
 
 /*!
  * \file
@@ -60,8 +60,8 @@ class HActionArguments;
  * \code
  *
  * #include <HActionInvoke>
- * #include <HActionArguments>
- * #include <HActionArguments>
+ * #include <HUpnpCore/HActionArguments>
+ * #include <HUpnpCore/HActionArguments>
  *
  * #include "myclass.h" // your code that contains declaration for MyClass
  *

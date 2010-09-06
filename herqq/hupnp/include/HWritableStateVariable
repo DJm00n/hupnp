@@ -1,6 +1,0 @@
-#ifndef H_WRITABLE_STATEVARIABLE_
-#define H_WRITABLE_STATEVARIABLE_
-
-#include "../src/hupnp_core/devicemodel/hwritable_statevariable.h"
-
-#endif // H_WRITABLE_STATEVARIABLE_

@@ -23,7 +23,7 @@
 #ifndef CONTROLPOINT_NAVIGATOR_H_
 #define CONTROLPOINT_NAVIGATOR_H_
 
-#include <HUpnp>
+#include <HUpnpCore/HUpnp>
 
 #include <QAbstractItemModel>
 

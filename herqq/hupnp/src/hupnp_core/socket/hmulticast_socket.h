@@ -22,7 +22,7 @@
 #ifndef MULTICAST_SOCKET_H_
 #define MULTICAST_SOCKET_H_
 
-#include "../general/hdefs.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtNetwork/QUdpSocket>
 

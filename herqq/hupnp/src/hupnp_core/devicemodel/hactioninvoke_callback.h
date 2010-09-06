@@ -22,9 +22,8 @@
 #ifndef HACTIONINVOKE_CALLBACK_H_
 #define HACTIONINVOKE_CALLBACK_H_
 
-#include "hasyncop.h"
-#include "../general/hdefs.h"
-#include "../../utils/hfunctor.h"
+#include <HUpnpCore/HAsyncOp>
+#include <HUpnpCore/HFunctor>
 
 /*!
  * \file
@@ -66,7 +65,7 @@ namespace Upnp
  *
  * \code
  *
- * #include <HAction>
+ * #include <HUpnpCore/HAction>
  *
  * #include "myclass.h" // your code that contains declaration for MyClass
  *

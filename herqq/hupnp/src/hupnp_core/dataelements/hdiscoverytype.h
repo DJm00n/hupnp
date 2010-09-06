@@ -22,9 +22,7 @@
 #ifndef HDISCOVERYTYPE_H_
 #define HDISCOVERYTYPE_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 class QString;
 

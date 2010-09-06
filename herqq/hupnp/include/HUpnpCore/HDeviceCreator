@@ -1,0 +1,6 @@
+#ifndef H_DEVICECREATOR_
+#define H_DEVICECREATOR_
+
+#include "public/hdevicecreator.h"
+
+#endif // H_DEVICECREATOR_

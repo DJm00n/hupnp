@@ -22,7 +22,7 @@
 #ifndef HCLONABLE_H_
 #define HCLONABLE_H_
 
-#include "hdefs.h"
+#include <HUpnpCore/HUpnp>
 
 namespace Herqq
 {

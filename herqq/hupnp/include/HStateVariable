@@ -1,7 +1,0 @@
-#ifndef H_STATEVARIABLE_
-#define H_STATEVARIABLE_
-
-#include "../src/hupnp_core/devicemodel/hstatevariable.h"
-#include "../src/hupnp_core/datatypes/hupnp_datatypes.h"
-
-#endif // H_STATEVARIABLE_

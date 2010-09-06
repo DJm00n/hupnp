@@ -33,13 +33,13 @@
 #include "../devicehosting/messages/hcontrol_messages_p.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
 
-#include <QUrl>
-#include <QTime>
-#include <QString>
-#include <QTcpSocket>
-#include <QByteArray>
-#include <QHttpRequestHeader>
-#include <QHttpResponseHeader>
+#include <QtCore/QUrl>
+#include <QtCore/QTime>
+#include <QtCore/QString>
+#include <QtCore/QByteArray>
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHttpRequestHeader>
+#include <QtNetwork/QHttpResponseHeader>
 
 namespace Herqq
 {

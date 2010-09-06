@@ -33,8 +33,8 @@
 #include "hdeviceproxy_creator.h"
 #include "../../../utils/hglobal.h"
 
-#include <QList>
-#include <QHostAddress>
+#include <QtCore/QList>
+#include <QtNetwork/QHostAddress>
 
 namespace Herqq
 {

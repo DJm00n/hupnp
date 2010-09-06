@@ -34,6 +34,7 @@
 #include "../devicemodel/haction_p.h"
 #include "../devicemodel/haction_p.h"
 #include "../devicemodel/hservice_p.h"
+#include "../devicemodel/hstatevariable_p.h"
 #include "../devicemodel/hactionarguments.h"
 #include "../devicemodel/hactions_setupdata.h"
 #include "../devicemodel/hdevices_setupdata.h"
@@ -44,8 +45,8 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QImage>
-#include <QDomElement>
+#include <QtGui/QImage>
+#include <QtXml/QDomElement>
 
 namespace Herqq
 {

@@ -30,14 +30,14 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hdefs.h"
+#include "../general/hupnp_defs.h"
 
 #include "hhttp_handler_p.h"
 #include "hhttp_messaginginfo_p.h"
 
 #include "../../utils/hthreadpool_p.h"
 
-#include <QTcpServer>
+#include <QtNetwork/QTcpServer>
 
 class QUrl;
 class QString;

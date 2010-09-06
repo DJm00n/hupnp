@@ -22,7 +22,7 @@
 #include "hservices_setupdata.h"
 #include "hservice.h"
 
-#include <QSet>
+#include <QtCore/QSet>
 
 namespace Herqq
 {

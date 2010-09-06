@@ -30,14 +30,14 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hdefs.h"
+#include "../general/hupnp_defs.h"
 #include "../general/hupnp_fwd.h"
 
 #include "../devicemodel/hdevice_p.h"
 
-#include <QList>
-#include <QMutex>
-#include <QByteArray>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QByteArray>
 
 namespace Herqq
 {

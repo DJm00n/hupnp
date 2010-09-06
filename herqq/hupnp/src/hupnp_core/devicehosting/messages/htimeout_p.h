@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include <QtGlobal>
+#include <QtCore/QtGlobal>
 
 class QString;
 

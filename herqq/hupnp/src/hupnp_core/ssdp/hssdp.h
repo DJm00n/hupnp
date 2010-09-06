@@ -22,8 +22,7 @@
 #ifndef HSSDP_H_
 #define HSSDP_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QObject>
 

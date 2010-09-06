@@ -22,7 +22,7 @@
 #ifndef HDEVICEPROXY_H_
 #define HDEVICEPROXY_H_
 
-#include "hdevice.h"
+#include <HUpnpCore/HDevice>
 
 namespace Herqq
 {

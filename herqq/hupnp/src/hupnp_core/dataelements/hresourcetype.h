@@ -22,7 +22,7 @@
 #ifndef HRESOURCE_TYPE_H_
 #define HRESOURCE_TYPE_H_
 
-#include "../general/hdefs.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QMetaType>
 #include <QtCore/QStringList>

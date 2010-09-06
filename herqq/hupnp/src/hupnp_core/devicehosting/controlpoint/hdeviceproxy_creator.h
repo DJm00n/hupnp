@@ -42,8 +42,8 @@
 #ifndef HDEVICEPROXY_CREATOR_H_
 #define HDEVICEPROXY_CREATOR_H_
 
-#include "../../general/hupnp_fwd.h"
-#include "../../../utils/hfunctor.h"
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HFunctor>
 
 /*!
  * \file
@@ -73,7 +73,7 @@ namespace Upnp
  *
  * \code
  *
- * #include <HDeviceProxyCreator>
+ * #include <HUpnpCore/HDeviceProxyCreator>
  *
  * #include "myclass.h"         // your code that contains the declaration for MyClass
  * #include "my_hdeviceproxy.h" // your code that contains the declaration of MyHDeviceProxy

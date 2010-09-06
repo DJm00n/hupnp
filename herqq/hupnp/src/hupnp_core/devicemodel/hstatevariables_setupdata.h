@@ -22,7 +22,7 @@
 #ifndef HSTATEVARIABLES_SETUPDATA_H_
 #define HSTATEVARIABLES_SETUPDATA_H_
 
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>

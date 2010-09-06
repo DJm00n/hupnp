@@ -23,7 +23,12 @@
 #include "hcontrolpoint_configuration.h"
 #include "hcontrolpoint_p.h"
 
+#include "../../general/hupnp_global_p.h"
+
 #include "../../devicemodel/hservice_p.h"
+#include "../../devicemodel/hdeviceproxy.h"
+#include "../../devicemodel/hserviceproxy.h"
+
 #include "../../dataelements/hserviceid.h"
 #include "../../dataelements/hdeviceinfo.h"
 

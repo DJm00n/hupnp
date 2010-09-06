@@ -22,7 +22,7 @@
 #include "hresourcetype.h"
 #include "../../utils/hmisc_utils_p.h"
 
-#include <QByteArray>
+#include <QtCore/QByteArray>
 
 namespace Herqq
 {

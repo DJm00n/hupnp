@@ -30,16 +30,13 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hdevice.h"
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
-#include "../general/hupnp_global_p.h"
+#include <HUpnpCore/HDevice>
 
-#include <QUrl>
-#include <QList>
-#include <QMutex>
-#include <QString>
-#include <QScopedPointer>
+#include <QtCore/QUrl>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QString>
+#include <QtCore/QScopedPointer>
 
 class QTimer;
 

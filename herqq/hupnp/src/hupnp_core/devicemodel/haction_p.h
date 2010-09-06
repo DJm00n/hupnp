@@ -38,13 +38,13 @@
 #include "../../utils/hthreadpool_p.h"
 #include "../dataelements/hactioninfo.h"
 
-#include <QHash>
-#include <QUuid>
-#include <QMutex>
-#include <QString>
-#include <QWaitCondition>
-#include <QSharedPointer>
-#include <QScopedPointer>
+#include <QtCore/QHash>
+#include <QtCore/QUuid>
+#include <QtCore/QMutex>
+#include <QtCore/QString>
+#include <QtCore/QWaitCondition>
+#include <QtCore/QSharedPointer>
+#include <QtCore/QScopedPointer>
 
 namespace Herqq
 {

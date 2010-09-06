@@ -23,7 +23,7 @@
 
 #include "../../utils/hmisc_utils_p.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 namespace Herqq
 {
@@ -32,9 +32,9 @@ namespace Upnp
 {
 
 HAsyncOp::HAsyncOp(AsyncWaitCode waitCode) :
-    m_id(QUuid::createUuid()),
-    m_waitTimeout(-1), m_waitCode(waitCode), m_returnValue(0),
-    m_userData(new volatile void*)
+    m_id(waitCode == WaitSuccess ? QUuid::createUuid() : QUuid()),
+        m_waitTimeout(-1), m_waitCode(waitCode), m_returnValue(0),
+        m_userData(new volatile void*)
 {
 }
 

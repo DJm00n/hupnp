@@ -23,17 +23,16 @@
 #include "device_window.h"
 #include "ui_device_window.h"
 
-#include <HUpnp>
-#include <HAction>
-#include <HServiceId>
-#include <HDeviceHost>
-#include <HStateVariable>
-#include <HActionArguments>
-#include <HActionArguments>
-#include <HActionsSetupData>
-#include <HServicesSetupData>
-#include <HWritableStateVariable>
-#include <HDeviceHostConfiguration>
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HAction>
+#include <HUpnpCore/HServiceId>
+#include <HUpnpCore/HDeviceHost>
+#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HActionArguments>
+#include <HUpnpCore/HActionsSetupData>
+#include <HUpnpCore/HServicesSetupData>
+#include <HUpnpCore/HWritableStateVariable>
+#include <HUpnpCore/HDeviceHostConfiguration>
 
 #include <QtDebug>
 #include <QDateTime>

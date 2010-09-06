@@ -21,10 +21,10 @@
 
 #include "hhttp_utils_p.h"
 
-#include <QUrl>
-#include <QList>
-#include <QByteArray>
-#include <QTcpSocket>
+#include <QtCore/QUrl>
+#include <QtCore/QList>
+#include <QtCore/QByteArray>
+#include <QtNetwork/QTcpSocket>
 
 namespace Herqq
 {

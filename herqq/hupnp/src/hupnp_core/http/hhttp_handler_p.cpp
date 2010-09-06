@@ -29,10 +29,10 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QTcpSocket>
-#include <QHostAddress>
-#include <QHttpRequestHeader>
-#include <QHttpResponseHeader>
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
+#include <QtNetwork/QHttpRequestHeader>
+#include <QtNetwork/QHttpResponseHeader>
 
 #include <QtSoapMessage>
 

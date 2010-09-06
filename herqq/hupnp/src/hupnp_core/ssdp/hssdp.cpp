@@ -33,12 +33,12 @@
 #include "../../utils/hexceptions_p.h"
 #include "../../utils/hmisc_utils_p.h"
 
-#include <QUrl>
-#include <QString>
-#include <QDateTime>
-#include <QHostAddress>
-#include <QHttpRequestHeader>
-#include <QHttpResponseHeader>
+#include <QtCore/QUrl>
+#include <QtCore/QString>
+#include <QtCore/QDateTime>
+#include <QtNetwork/QHostAddress>
+#include <QtNetwork/QHttpRequestHeader>
+#include <QtNetwork/QHttpResponseHeader>
 
 /*!
  * \defgroup ssdp Ssdp

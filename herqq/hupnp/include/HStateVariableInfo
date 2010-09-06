@@ -1,6 +1,0 @@
-#ifndef H_STATEVARIABLEINFO_
-#define H_STATEVARIABLEINFO_
-
-#include "../src/hupnp_core/dataelements/hstatevariableinfo.h"
-
-#endif // H_STATEVARIABLEINFO_

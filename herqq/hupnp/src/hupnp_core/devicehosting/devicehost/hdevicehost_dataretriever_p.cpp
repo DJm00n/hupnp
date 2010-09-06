@@ -24,9 +24,9 @@
 #include "../hdevicehosting_exceptions_p.h"
 #include "../../../utils/hlogger_p.h"
 
-#include <QFile>
-#include <QImage>
-#include <QString>
+#include <QtGui/QImage>
+#include <QtCore/QFile>
+#include <QtCore/QString>
 
 namespace Herqq
 {

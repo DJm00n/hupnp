@@ -27,10 +27,10 @@
 #include "../../devicemodel/hdevice.h"
 #include "../../general/hupnp_global.h"
 
-#include <QList>
-#include <QHash>
-#include <QUuid>
-#include <QObject>
+#include <QtCore/QList>
+#include <QtCore/QHash>
+#include <QtCore/QUuid>
+#include <QtCore/QObject>
 
 namespace Herqq
 {

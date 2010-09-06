@@ -84,42 +84,56 @@ class HResourceUnavailable;
 
 /*!
  * This is a type definition for a collection of Herqq::Upnp::HEndpoint instances.
+ *
+ * \sa HEndpoint
  */
 typedef QList<HEndpoint> HEndpoints;
 
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HService instances.
+ *
+ * \sa HService
  */
 typedef QList<HService*> HServices;
 
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HServiceProxy instances.
+ *
+ * \sa HServiceProxy
  */
 typedef QList<HServiceProxy*> HServiceProxies;
 
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HDevice instances.
+ *
+ * \sa HDevice
  */
 typedef QList<HDevice*> HDevices;
 
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HDeviceProxy instances.
+ *
+ * \sa HDeviceProxy
  */
 typedef QList<HDeviceProxy*> HDeviceProxies;
 
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HStateVariable instances.
+ *
+ * \sa HStateVariable
  */
 typedef QList<HStateVariable*> HStateVariables;
 
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HAction instances.
+ *
+ * \sa HAction
  */
 typedef QList<HAction*> HActions;
 

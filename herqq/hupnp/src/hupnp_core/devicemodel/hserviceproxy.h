@@ -22,7 +22,7 @@
 #ifndef HSERVICEPROXY_H_
 #define HSERVICEPROXY_H_
 
-#include "hservice.h"
+#include <HUpnpCore/HService>
 
 namespace Herqq
 {

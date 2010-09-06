@@ -22,9 +22,7 @@
 #ifndef HDEVICE_H_
 #define HDEVICE_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_fwd.h"
-#include "../dataelements/hresourcetype.h"
+#include <HUpnpCore/HResourceType>
 
 #include <QtCore/QObject>
 
@@ -431,7 +429,7 @@ public:
      * \remarks an embedded device returns the same device description as
      * its root device.
      */
-    const QString& description() const;
+    QString description() const;
 
     /*!
      * Returns a list of locations where the device is currently available.

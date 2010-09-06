@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hservice_p.h"
+#include <HUpnpCore/private/hservice_p.h>
 
 namespace Herqq
 {

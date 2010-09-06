@@ -22,8 +22,7 @@
 #ifndef HUDN_H_
 #define HUDN_H_
 
-#include "../general/hdefs.h"
-#include "../general/hupnp_global.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QUuid>
 #include <QtCore/QMetaType>

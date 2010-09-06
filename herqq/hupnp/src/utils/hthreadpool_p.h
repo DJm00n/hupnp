@@ -30,14 +30,14 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../hupnp_core/general/hdefs.h"
+#include "../hupnp_core/general/hupnp_defs.h"
 
-#include <QList>
-#include <QMutex>
-#include <QObject>
-#include <QAtomicInt>
-#include <QThreadPool>
-#include <QWaitCondition>
+#include <QtCore/QList>
+#include <QtCore/QMutex>
+#include <QtCore/QObject>
+#include <QtCore/QAtomicInt>
+#include <QtCore/QThreadPool>
+#include <QtCore/QWaitCondition>
 
 namespace Herqq
 {

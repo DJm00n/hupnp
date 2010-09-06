@@ -1,6 +1,0 @@
-#ifndef H_ACTIONINVOKE_
-#define H_ACTIONINVOKE_
-
-#include "../src/hupnp_core/devicemodel/hactioninvoke.h"
-
-#endif // H_ACTIONINVOKE_

@@ -23,9 +23,9 @@
 #ifndef DEVICE_WINDOW_H
 #define DEVICE_WINDOW_H
 
-#include <HUpnp>
-#include <HDevice>
-#include <HService>
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HService>
 
 #include <QtGui/QMainWindow>
 

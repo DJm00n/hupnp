@@ -21,6 +21,8 @@
 
 #include "hdevicestorage_p.h"
 
+#include "../general/hupnp_global_p.h"
+
 #include "../dataelements/hudn.h"
 #include "../dataelements/hdeviceinfo.h"
 
@@ -28,14 +30,17 @@
 #include "../../utils/hlogger_p.h"
 #include "../../utils/hexceptions_p.h"
 
+#include "../devicemodel/hservice.h"
 #include "../devicemodel/haction_p.h"
 #include "../devicemodel/hdevice_p.h"
 #include "../devicemodel/hservice_p.h"
 
-#include <QUrl>
-#include <QPair>
-#include <QImage>
-#include <QHostAddress>
+#include <QtGui/QImage>
+
+#include <QtCore/QUrl>
+#include <QtCore/QPair>
+
+#include <QtNetwork/QHostAddress>
 
 namespace Herqq
 {

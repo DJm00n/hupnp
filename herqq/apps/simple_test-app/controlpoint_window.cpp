@@ -11,7 +11,7 @@
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  HUpnpSimpleTestApp is distributed in the hope that it will be useful,
+ *  HUpnpSimpleTestApp is distributed in the hope that it will be useful, 
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
@@ -28,14 +28,14 @@
 #include "controlpoint_navigator.h"
 #include "controlpoint_navigatoritem.h"
 
-#include <HUdn>
-#include <HService>
-#include <HDeviceInfo>
-#include <HDeviceProxy>
-#include <HControlPoint>
-#include <HStateVariable>
-#include <HStateVariableInfo>
-#include <HControlPointConfiguration>
+#include <HUpnpCore/HUdn>
+#include <HUpnpCore/HService>
+#include <HUpnpCore/HDeviceInfo>
+#include <HUpnpCore/HDeviceProxy>
+#include <HUpnpCore/HControlPoint>
+#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HStateVariableInfo>
+#include <HUpnpCore/HControlPointConfiguration>
 
 using namespace Herqq::Upnp;
 
@@ -115,7 +115,7 @@ void ControlPointWindow::stateVariableChanged(
 {
     m_ui->status->append(QString(
         "State variable [%1] changed value from [%2] to [%3]").arg(
-            event.eventSource().name(), event.previousValue().toString(),
+            event.eventSource()->info().name(), event.previousValue().toString(),
             event.newValue().toString()));
 }
 
