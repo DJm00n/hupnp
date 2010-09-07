@@ -80,34 +80,64 @@ void HActionProxy::error(QNetworkReply::NetworkError err)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    if (err == QNetworkReply::ConnectionRefusedError ||
-        err == QNetworkReply::HostNotFoundError)
+    if (err == QNetworkReply::RemoteHostClosedError)
+    {
+        return;
+    }
+    else if (err == QNetworkReply::ConnectionRefusedError ||
+             err == QNetworkReply::HostNotFoundError)
     {
         HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
             m_service->parentDevice()->info().udn().toSimpleUuid(),
             m_locations[m_iNextLocationToTry].toString()));
 
-        m_iNextLocationToTry =
-            m_iNextLocationToTry == m_locations.size() - 1 ? 0 :
-                m_iNextLocationToTry + 1;
+        if (m_iNextLocationToTry < m_locations.size() - 1)
+        {
+            ++m_iNextLocationToTry;
+            deleteReply();
+            send();
+
+            return;
+        }
+
+        HLOG_WARN("Action invocation failed: Couldn't connect to the device");
+        m_iNextLocationToTry = 0;
     }
+    else
+    {
+        HLOG_WARN(QString(
+            "Action invocation failed: [%1]").arg(m_reply->errorString()));
+    }
+
+    deleteReply();
+    invocationDone(HAction::UndefinedFailure);
 }
 
 void HActionProxy::finished()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    Q_ASSERT(m_reply);
+    if (!m_reply)
+    {
+        return;
+    }
 
     m_reply->deleteLater();
 
-    QVariant statusCode = m_reply->attribute(
-        QNetworkRequest::HttpStatusCodeAttribute);
-    if (statusCode.toInt() != 200)
-    {
-        HLOG_WARN(QString("Action invocation failed. Server responded: [%1]").arg(
-            statusCode.toString()));
+    bool ok = false;
+    qint32 statusCode = m_reply->attribute(
+        QNetworkRequest::HttpStatusCodeAttribute).toInt(&ok);
 
-        invocationDone(statusCode.toInt());
+    if (ok && statusCode != 200)
+    {
+        // the status code might not be available if the remote host closed
+        // the connection.
+
+        HLOG_WARN(QString(
+            "Action invocation failed. Server responded: [%1, %2]").arg(
+                QString::number(statusCode), m_reply->attribute(
+                    QNetworkRequest::HttpReasonPhraseAttribute).toString()));
+
+        invocationDone(statusCode);
         return;
     }
 
@@ -183,6 +213,7 @@ void HActionProxy::invocationDone(qint32 rc)
 {
     m_invocationInProgress->m_invokeId.setReturnValue(rc);
     m_invocationInProgress = 0;
+    m_reply = 0;
     m_owner->invokeCompleted();
 }
 

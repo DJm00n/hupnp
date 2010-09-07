@@ -94,6 +94,11 @@ private:
 
     void invocationDone(qint32 rc);
 
+    inline void deleteReply()
+    {
+        if (m_reply) { m_reply->deleteLater(); m_reply = 0; }
+    }
+
 private slots:
 
     void invoke_slot();
