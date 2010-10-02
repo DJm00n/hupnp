@@ -37,6 +37,8 @@ namespace Herqq
 namespace Upnp
 {
 
+class HStateVariableSetupPrivate;
+
 /*!
  * This class is used to specify information that can be used to setup an
  * HStateVariable.
@@ -54,11 +56,7 @@ class H_UPNP_CORE_EXPORT HStateVariableSetup
 
 private:
 
-    QString m_name;
-    HUpnpDataTypes::DataType m_dt;
-    qint32 m_version;
-    HInclusionRequirement m_inclusionRequirement;
-    qint32 m_maxRate;
+    HStateVariableSetupPrivate* h_ptr;
 
 public:
 
@@ -108,6 +106,20 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
+     * Copy constructor.
+     *
+     * Creates a copy of \c other.
+     */
+    HStateVariableSetup(const HStateVariableSetup&);
+
+    /*!
+     * Assignment operator.
+     *
+     * Copies the contents of \c other to this.
+     */
+    HStateVariableSetup& operator=(const HStateVariableSetup&);
+
+    /*!
      * Destroys the instance.
      *
      * Destroys the instance.
@@ -121,10 +133,7 @@ public:
      *
      * \sa setInclusionRequirement()
      */
-    inline HInclusionRequirement inclusionRequirement() const
-    {
-        return m_inclusionRequirement;
-    }
+    HInclusionRequirement inclusionRequirement() const;
 
     /*!
      * Indicates if the object is valid.
@@ -132,12 +141,7 @@ public:
      * \return \e true in case the object is valid, that is,
      * both the name and the inclusion requirement are properly defined.
      */
-    inline bool isValid() const
-    {
-        return !m_name.isEmpty() &&
-                m_version > 0 &&
-                m_inclusionRequirement != InclusionRequirementUnknown;
-    }
+    bool isValid() const;
 
     /*!
      * Returns the maximum rate at which an evented state variable may
@@ -148,10 +152,7 @@ public:
      *
      * \sa setMaxEventRate()
      */
-    inline qint32 maxEventRate() const
-    {
-        return m_maxRate;
-    }
+    qint32 maxEventRate() const;
 
     /*!
      * Returns the name of the state variable.
@@ -160,10 +161,7 @@ public:
      *
      * \sa setName()
      */
-    inline QString name() const
-    {
-        return m_name;
-    }
+    QString name() const;
 
     /*!
      * Returns the data type of the state variable.
@@ -172,10 +170,7 @@ public:
      *
      * \sa setDataType()
      */
-    inline HUpnpDataTypes::DataType dataType() const
-    {
-        return m_dt;
-    }
+    HUpnpDataTypes::DataType dataType() const;
 
     /*!
      * Returns the UPnP service version in which the state variable
@@ -186,10 +181,7 @@ public:
      *
      * \sa setVersion()
      */
-    inline qint32 version() const
-    {
-        return m_version;
-    }
+    qint32 version() const;
 
     /*!
      * Sets the name of the state variable.
@@ -212,10 +204,7 @@ public:
      *
      * \sa dataType()
      */
-    inline void setDataType(HUpnpDataTypes::DataType dt)
-    {
-        m_dt = dt;
-    }
+    void setDataType(HUpnpDataTypes::DataType dt);
 
     /*!
      * Sets the maximum rate at which an evented state variable may send events.
@@ -225,10 +214,7 @@ public:
      *
      * \sa maxEventRate()
      */
-    inline void setMaxEventRate(qint32 arg)
-    {
-        m_maxRate = arg < 0 ? -1 : arg;
-    }
+    void setMaxEventRate(qint32 arg);
 
     /*!
      * Sets the <em>inclusion requirement</em> of the state variable.
@@ -238,10 +224,7 @@ public:
      *
      * \sa inclusionRequirement()
      */
-    inline void setInclusionRequirement(HInclusionRequirement arg)
-    {
-        m_inclusionRequirement = arg;
-    }
+    void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
      * Specifies the UPnP service version in which the state variable
@@ -252,10 +235,7 @@ public:
      *
      * \sa version()
      */
-    inline void setVersion(qint32 version)
-    {
-        m_version = version;
-    }
+    void setVersion(qint32 version);
 };
 
 /*!

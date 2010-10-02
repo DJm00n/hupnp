@@ -90,15 +90,14 @@ public:
     /*!
      * Creates a new instance.
      *
-     * \param name specifies the name of the action.
+     * \param name specifies the name of the argument.
      *
      * \param svSetup specifies setup information about the related state variable.
      *
-     * \param type specifies the type of the action argument.
+     * \param type specifies the type of the action argument. The default is
+     * HArgumentSetup::Input.
      *
      * \sa isValid()
-     *
-     * \remarks the version() is set to 1.
      */
     HArgumentSetup(
         const QString& name, const HStateVariableSetup& svSetup, Type type = Input);
