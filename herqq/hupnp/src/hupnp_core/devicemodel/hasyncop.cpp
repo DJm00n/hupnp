@@ -31,22 +31,50 @@ namespace Herqq
 namespace Upnp
 {
 
-HAsyncOp::HAsyncOp(AsyncWaitCode waitCode) :
-    m_id(waitCode == WaitSuccess ? QUuid::createUuid() : QUuid()),
-        m_waitTimeout(-1), m_waitCode(waitCode), m_returnValue(0),
-        m_userData(new volatile void*)
+HAsyncOp::HAsyncOp() :
+    m_id(QUuid::createUuid()),
+    m_waitTimeout(-1), m_waitCode(WaitSuccess), m_returnValue(0),
+    m_userData(new volatile void*),
+    m_errorDescription(0)
+{
+}
+
+HAsyncOp::HAsyncOp(qint32 rc, const QString& errorDescription) :
+    m_id(QUuid()),
+    m_waitTimeout(-1), m_waitCode(WaitInvalidObjectState), m_returnValue(rc),
+    m_userData(new volatile void*),
+    m_errorDescription(new QString(errorDescription))
 {
 }
 
 HAsyncOp::~HAsyncOp()
 {
+    delete m_errorDescription;
 }
 
 HAsyncOp::HAsyncOp(const HAsyncOp& other) :
     m_id(other.m_id), m_waitTimeout(other.m_waitTimeout),
     m_waitCode(other.m_waitCode), m_returnValue(other.m_returnValue),
-    m_userData(other.m_userData)
+    m_userData(other.m_userData),
+    m_errorDescription(
+        other.m_errorDescription ? new QString(*other.m_errorDescription) : 0)
 {
+}
+
+QString HAsyncOp::errorDescription() const
+{
+    return m_errorDescription ? QString(*m_errorDescription) : QString();
+}
+
+void HAsyncOp::setErrorDescription(const QString& arg)
+{
+    if (m_errorDescription)
+    {
+        delete m_errorDescription;
+        m_errorDescription = 0;
+    }
+
+    m_errorDescription = new QString(arg);
 }
 
 void HAsyncOp::setUserData(void* userData)
@@ -57,6 +85,11 @@ void HAsyncOp::setUserData(void* userData)
 void* HAsyncOp::userData() const
 {
     return const_cast<void*>(*m_userData);
+}
+
+HAsyncOp HAsyncOp::createInvalid(qint32 returnCode, const QString& errorDescr)
+{
+    return HAsyncOp(returnCode, errorDescr);
 }
 
 bool operator==(const HAsyncOp& arg1, const HAsyncOp& arg2)

@@ -39,7 +39,7 @@ class HDeviceProxyPrivate;
  * class, or a class derived from this is instantiated by HControlPoint
  * for each discovered UPnP device that is added into the control of an \c %HControlPoint.
  *
- * As an HDevice, the \c %HDeviceProxy relies fully on the HUPnP \ref devicemodel
+ * As an HDevice, the \c %HDeviceProxy relies fully on the HUPnP \ref hupnp_devicemodel
  * and thus it is used similarly to server-side \c %HDevice classes.
  * Unlike the \c %HDevice at server-side, however, the \c %HDeviceProxy at
  * client-side is usually only responsible of providing helper methods for accessing
@@ -61,7 +61,7 @@ class HDeviceProxyPrivate;
  *
  * \headerfile hdeviceproxy.h HDeviceProxy
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.

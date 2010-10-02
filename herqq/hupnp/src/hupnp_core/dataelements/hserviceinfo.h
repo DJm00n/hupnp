@@ -45,7 +45,7 @@ class HServiceInfoPrivate;
  *
  * \headerfile hserviceinfo.h HServiceInfo
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  *
  * \remarks this class is not thread-safe.
  *

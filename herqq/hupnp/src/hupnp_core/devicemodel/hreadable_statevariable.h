@@ -33,13 +33,13 @@ namespace Upnp
 /*!
  * Class that provides \e read-only access to a state variable.
  *
- * \c %HReadableStateVariable is a core component of the HUPnP \ref devicemodel
+ * \c %HReadableStateVariable is a core component of the HUPnP \ref hupnp_devicemodel
  * and it models a UPnP state variable, which allows \e read-only access. Typically,
  * instances of this class are available only on client-side.
  *
  * \headerfile hreadable_statevariable.h HReadableStateVariable
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa devicehosting, \ref statevariables,
  * HStateVariable, HWritableStateVariable, HService

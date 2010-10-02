@@ -108,7 +108,7 @@ namespace Upnp
  *
  * \headerfile hactioninvoke_callback.h HActionInvokeCallback
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  */
 typedef Functor<bool, H_TYPELIST_1(HAsyncOp)> HActionInvokeCallback;
 

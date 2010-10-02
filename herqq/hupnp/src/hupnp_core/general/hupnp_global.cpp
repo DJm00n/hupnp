@@ -51,6 +51,18 @@ namespace Herqq
 namespace Upnp
 {
 
+/*!
+ * \defgroup hupnp_core HUPnP Core
+ * HUPnP Core is a library that provides an implementation of the
+ * <a href="http://www.upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf">
+ * UPnP Device Architecture version 1.1 specification</a>.
+ */
+
+/*!
+ * \defgroup hupnp_common Common
+ * \ingroup hupnp_core
+ */
+
 void SetLoggingLevel(HLogLevel level)
 {
     HLogger::setTraceLevel(static_cast<HLogger::HLogLevel>(level));

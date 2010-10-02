@@ -39,14 +39,14 @@ class HDeviceHostPrivate;
  *
  * \headerfile hdevicehost.h HDeviceHost
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  *
  * As the name implies, this is the class in the HUPnP library
  * used to expose UPnP devices to UPnP control points.
  * The class \e hosts instances of HDevice, which means that the class takes
  * care of all of the UPnP mechanics detaching the HDevice from it. This separation
  * leaves the HDevice to model the UPnP device structure and to focus on the functionality
- * of the specific device type. This is what the HUPnP \ref devicemodel
+ * of the specific device type. This is what the HUPnP \ref hupnp_devicemodel
  * is all about.
  *
  * Hosting a device is simple, assuming you have the necessary device and service
@@ -429,7 +429,7 @@ class HDeviceHostRuntimeStatusPrivate;
  *
  * \headerfile hdevicehost.h HDeviceHostRuntimeStatus
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  *
  * \sa HDeviceHost
  */

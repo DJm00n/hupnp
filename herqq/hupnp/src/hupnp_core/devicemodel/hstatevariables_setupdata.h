@@ -23,6 +23,7 @@
 #define HSTATEVARIABLES_SETUPDATA_H_
 
 #include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HUpnpDataTypes>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
@@ -42,7 +43,7 @@ namespace Upnp
  *
  * \headerfile hstatevariables_setupdata.h HStateVariableSetup
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HStateVariablesSetupData, HStateVariable
  *
@@ -54,6 +55,7 @@ class H_UPNP_CORE_EXPORT HStateVariableSetup
 private:
 
     QString m_name;
+    HUpnpDataTypes::DataType m_dt;
     qint32 m_version;
     HInclusionRequirement m_inclusionRequirement;
     qint32 m_maxRate;
@@ -72,6 +74,8 @@ public:
      *
      * \param name specifies the name of the state variable.
      *
+     * \param dt specifies the data type of the state variable.
+     *
      * \param incReq specifies the \e inclusion \e requirement of the
      * state variable.
      *
@@ -81,6 +85,7 @@ public:
      */
     HStateVariableSetup(
         const QString& name,
+        HUpnpDataTypes::DataType dt,
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
@@ -98,28 +103,7 @@ public:
      */
     HStateVariableSetup(
         const QString& name,
-        qint32 version,
-        HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Creates a new instance.
-     *
-     * \param name specifies the name of the state variable.
-     *
-     * \param maxRate specifies the maximum rate at which an
-     * evented state variable may send events.
-     *
-     * \param version specifies the UPnP service version in which the
-     * state variable was first specified.
-     *
-     * \param incReq specifies the \e inclusion \e requirement of the
-     * state variable.
-     *
-     * \sa isValid()
-     */
-    HStateVariableSetup(
-        const QString& name,
-        qint32 maxRate,
+        HUpnpDataTypes::DataType dt,
         qint32 version,
         HInclusionRequirement incReq = InclusionMandatory);
 
@@ -182,6 +166,18 @@ public:
     }
 
     /*!
+     * Returns the data type of the state variable.
+     *
+     * \return the data type of the state variable.
+     *
+     * \sa setDataType()
+     */
+    inline HUpnpDataTypes::DataType dataType() const
+    {
+        return m_dt;
+    }
+
+    /*!
      * Returns the UPnP service version in which the state variable
      * was first specified.
      *
@@ -208,6 +204,18 @@ public:
      * \sa name()
      */
     bool setName(const QString& name, QString* err = 0);
+
+    /*!
+     * Sets the data type of the state variable.
+     *
+     * \param dt specifies the data type of the state variable.
+     *
+     * \sa dataType()
+     */
+    inline void setDataType(HUpnpDataTypes::DataType dt)
+    {
+        m_dt = dt;
+    }
 
     /*!
      * Sets the maximum rate at which an evented state variable may send events.
@@ -256,7 +264,7 @@ public:
  *
  * \headerfile hstatevariables_setupdata.h HStateVariablesSetupData
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks this class is not thread-safe.
  *

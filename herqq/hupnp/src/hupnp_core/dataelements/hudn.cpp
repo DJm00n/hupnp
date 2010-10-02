@@ -26,10 +26,6 @@
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
 
-/*!
- * \defgroup dataelements Data Elements
- */
-
 namespace Herqq
 {
 

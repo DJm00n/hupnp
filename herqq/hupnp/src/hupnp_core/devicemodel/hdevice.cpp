@@ -125,6 +125,15 @@
  * function Herqq::Upnp::SetLoggingLevel() with a desired \e level argument.
  * Include <c><HUpnp></c> to use the Herqq::Upnp::SetLoggingLevel().
  *
+ * \subsection deployment Deployment
+ *
+ * You can run \c make \c install after compiling the project to copy the
+ * public headers and created dynamic libraries into \c hupnp/deploy folder. More
+ * specifically, \c hupnp/deploy/include will contain all the public headers and
+ * \c hupnp/deploy/bin/ will contain the dynamic libraries. This may be useful
+ * to you in case you do not  want to include the full HUPnP source tree with
+ * your software.
+ *
  * \section gettingstarted Getting Started
  *
  * Often the best explanation is demonstration.
@@ -139,14 +148,15 @@
  *
  * For more detailed information, you can check
  *
- * \li \ref devicemodel for the details of the HUPnP device model and
- * \li \ref devicehosting for the details of hosting a device.
+ * \li \ref hupnp_devicemodel for the details of the HUPnP device model and
+ * \li \ref hupnp_devicehosting for the details of hosting a device.
  *
  * From there, the API reference is the way to go.
  */
 
 /*!
- * \defgroup devicemodel Device Model
+ * \defgroup hupnp_devicemodel Device Model
+ * \ingroup hupnp_core
  *
  * \brief This page explains the concept of HUPnP Device Model, which is the
  * logical object hierarchy of HUPnP representing the UPnP Device Architecture.
@@ -222,7 +232,7 @@
  *
  * Basic use is about interacting with already created objects that comprise the device model.
  * To get started you need to initialize either a device host or a control point
- * and retrieve a list of root devices from it. See \ref devicehosting for more
+ * and retrieve a list of root devices from it. See \ref hupnp_devicehosting for more
  * information about device hosts and control points. Once you have a
  * root device you can interact with any of its
  * embedded devices, services, state variables and actions until:
@@ -691,7 +701,7 @@
  * \subsection some_notes_about_switchpower_example Some closing notes
  *
  * First of all, you may want to skim the discussion in
- * \ref devicemodel and \ref devicehosting to fully understand
+ * \ref hupnp_devicemodel and \ref hupnp_devicehosting to fully understand
  * the comments in the example above. That being said, perhaps the
  * most important issues of building a custom UPnP device using HUPnP
  * can be summarized to:
@@ -739,7 +749,7 @@
  * In any case, the above example demonstrates a fully standard-compliant implementation
  * of \b BinaryLight:1. The next step is to publish your \c HDevice in the network
  * for UPnP control points to discover. You can find the instructions for that
- * in Herqq::Upnp::HDeviceHost and \ref devicehosting.
+ * in Herqq::Upnp::HDeviceHost and \ref hupnp_devicehosting.
  */
 
 namespace Herqq

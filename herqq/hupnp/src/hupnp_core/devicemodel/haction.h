@@ -41,7 +41,7 @@ class HActionController;
 /*!
  * \brief A class that represents a UPnP action found in a UPnP service.
  *
- * \c %HAction is a core component of the HUPnP \ref devicemodel
+ * \c %HAction is a core component of the HUPnP \ref hupnp_devicemodel
  * and it models a UPnP action. The UPnP Device Architecture specifies a UPnP
  * action as command, which takes one or more input or output arguments and that
  * may have a return value. In a way, a UPnP action is an abstraction
@@ -67,7 +67,7 @@ class HActionController;
  *
  * \headerfile haction.h HAction
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HActionInfo, HService
  *
@@ -120,12 +120,26 @@ public:
         Success = 200,
 
         /*!
+         * Invalid action.
+         *
+         * The specified action was not found.
+         */
+        InvalidAction = 401,
+
+        /*!
          * Action invocation failed due to:
          * \li not enough arguments,
          * \li arguments in wrong order,
          * \li one or more arguments have wrong data type
          */
         InvalidArgs = 402,
+
+        /*!
+         * \brief The current state of the service prevents the action invocation.
+         *
+         * The current state of the service prevents the action invocation.
+         */
+        ActionFailed = 501,
 
         /*!
          * \brief Action invocation failed due to an invalid argument value.
@@ -169,13 +183,6 @@ public:
          * too long for the device to handle properly.
          */
         StringArgumentTooLong = 605,
-
-        /*!
-         * \brief The current state of the service prevents the action invocation.
-         *
-         * The current state of the service prevents the action invocation.
-         */
-        ActionFailed = 501,
 
         /*!
          * \brief Action invocation failed, but the exact cause could not be determined.

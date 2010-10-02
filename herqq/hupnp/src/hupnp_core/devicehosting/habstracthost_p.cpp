@@ -38,7 +38,8 @@ static bool registerMetaTypes()
 static bool test = registerMetaTypes();
 
 /*!
- * \defgroup devicehosting Device Hosting
+ * \defgroup hupnp_devicehosting Device Hosting
+ * \ingroup hupnp_core
  *
  * \brief This page explains the concept of device hosts, which encapsulate the
  * technical details of UPnP networking.
@@ -47,7 +48,7 @@ static bool test = registerMetaTypes();
  *
  * The logical core of HUPnP is divided into two major modules; a collection of
  * classes that enable the \e hosting of UPnP device model and the collection of
- * classes that form up the \ref devicemodel. The separation is very distinct. The
+ * classes that form up the \ref hupnp_devicemodel. The separation is very distinct. The
  * device hosts provide the technical foundation for the UPnP networking. They
  * encapsulate and implement the protocols the UPnP Device Architecture
  * specification details. The device model, on the other hand, is about the logical
@@ -66,7 +67,7 @@ static bool test = registerMetaTypes();
  * client. The \c HDeviceHost \e publishes instances of \c HDevice for
  * UPnP control points to use and the \c HControlPoint \e uses instances of
  * \c HDevice to communicate with UPnP devices. But as implied,
- * they both use and expose the HUPnP \ref devicemodel.
+ * they both use and expose the HUPnP \ref hupnp_devicemodel.
  *
  * \note While a Herqq::Upnp::HDevice published by a \c HDeviceHost is always
  * usable by UPnP control points over the network, the same device can also

@@ -1,0 +1,6 @@
+#ifndef H_ARGUMENTS_SETUPDATA_
+#define H_ARGUMENTS_SETUPDATA_
+
+#include "public/harguments_setupdata.h"
+
+#endif // H_ARGUMENTS_SETUPDATA_

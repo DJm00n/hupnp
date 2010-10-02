@@ -41,7 +41,8 @@
 #include <QtNetwork/QHttpResponseHeader>
 
 /*!
- * \defgroup ssdp Ssdp
+ * \defgroup hupnp_ssdp Ssdp
+ * \ingroup hupnp_core
  *
  * \brief This page provides information about the HUPnP's classes that provide the
  * SSDP functionality required for the discovery phase of the UPnP Device Architecture.

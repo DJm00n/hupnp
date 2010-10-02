@@ -71,14 +71,21 @@ public:
 
     QAtomicInt m_hasListener;
 
-    volatile bool m_completed;
+    enum Status
+    {
+        NotStarted = 0,
+        Running = 1,
+        Finished = 2
+    };
+
+    volatile Status m_status;
 
 public:
 
     HInvocation(HActionPrivate*, const HActionArguments& inArgs);
     virtual ~HInvocation() = 0;
 
-    inline bool isCompleted() { return m_completed; }
+    inline bool isCompleted() { return m_status == Finished; }
 };
 
 //

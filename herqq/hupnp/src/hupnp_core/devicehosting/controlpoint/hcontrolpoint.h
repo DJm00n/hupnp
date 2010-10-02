@@ -44,7 +44,7 @@ class HControlPointConfiguration;
  *
  * \headerfile hcontrolpoint.h HControlPoint
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  *
  * According to the UPnP Device Architecture specification, a control point is an
  * entity, which <em> "retrieves device and service descriptions, sends actions to
@@ -155,7 +155,7 @@ class HControlPointConfiguration;
  * point side is an entry point to a very accurate object model depicting the
  * real root UPnP device that has been discovered. For more information about
  * the \c %HDeviceProxy and the object model, see the page detailing the
- * HUPnP \ref devicemodel.
+ * HUPnP \ref hupnp_devicemodel.
  *
  * You can call quit() to stop an initialized control point instance from listening
  * the network and to clear its state.

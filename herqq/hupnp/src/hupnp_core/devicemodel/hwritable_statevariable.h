@@ -38,7 +38,7 @@ class HWritableStateVariablePrivate;
 /*!
  * Class that provides \e write access to a state variable.
  *
- * \c %HWritableStateVariable is a core component of the HUPnP \ref devicemodel
+ * \c %HWritableStateVariable is a core component of the HUPnP \ref hupnp_devicemodel
  * and it models a UPnP state variable, which allows \e read-write access. Typically,
  * instances of this class are available only on server-side.
  *
@@ -47,7 +47,7 @@ class HWritableStateVariablePrivate;
  *
  * \headerfile hwritable_statevariable.h HWritableStateVariable
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa devicehosting, \ref statevariables,
  * HStateVariable, HReadableStateVariable, HService, HStateVariableLocker
@@ -152,7 +152,7 @@ public:
  *
  * \headerfile hwritable_statevariable.h HStateVariableLocker
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HWritableStateVariable
  *

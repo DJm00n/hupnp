@@ -44,7 +44,7 @@ namespace Upnp
  *
  * \headerfile hservices_setupdata.h HServiceSetup
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HServicesSetupData, HService
  *
@@ -319,7 +319,7 @@ public:
  *
  * \headerfile hservices_setupdata.h HServicesSetupData
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks this class is not thread-safe.
  */

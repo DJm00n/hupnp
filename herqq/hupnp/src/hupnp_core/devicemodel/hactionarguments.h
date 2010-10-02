@@ -22,7 +22,7 @@
 #ifndef HACTIONARGUMENTS_H_
 #define HACTIONARGUMENTS_H_
 
-#include <HUpnpCore/HUpnpDatatypes>
+#include <HUpnpCore/HUpnpDataTypes>
 #include <HUpnpCore/HStateVariableInfo>
 
 #include <QtCore/QString>
@@ -98,7 +98,7 @@ namespace Upnp
  *
  * \headerfile hactionarguments.h HActionArgument
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HActionArguments, HAction
  */
@@ -299,7 +299,7 @@ class HActionArgumentsPrivate;
  *
  * \headerfile hactionarguments.h HActionArguments
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HActionArgument, HAction
  *

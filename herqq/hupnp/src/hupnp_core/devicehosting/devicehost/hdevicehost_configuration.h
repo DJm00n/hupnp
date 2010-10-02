@@ -53,7 +53,7 @@ class HDeviceConfigurationPrivate;
  *
  * \headerfile hdevicehost_configuration.h HDeviceConfiguration
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  *
  * \sa HDeviceHostConfiguration, HDeviceHost, HDeviceHost::init(), HDevice
  */
@@ -343,7 +343,7 @@ class HDeviceHostConfigurationPrivate;
  *
  * \headerfile hdevicehost_configuration.h HDeviceHostConfiguration
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  *
  * \sa HDeviceConfiguration, HDeviceHost
  */

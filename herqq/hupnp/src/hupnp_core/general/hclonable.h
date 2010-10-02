@@ -31,7 +31,13 @@ namespace Upnp
 {
 
 /*!
+ * This class defines an interface for cloning instances of polymorphic classes.
  *
+ * \headerfile hclonable.h HClonable
+ *
+ * \remarks this class is thread-safe.
+ *
+ * \ingroup hupnp_common
  */
 class H_UPNP_CORE_EXPORT HClonable
 {

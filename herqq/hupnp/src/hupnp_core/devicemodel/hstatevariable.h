@@ -22,7 +22,7 @@
 #ifndef HSTATEVARIABLE_H_
 #define HSTATEVARIABLE_H_
 
-#include <HUpnpCore/HUpnpDatatypes>
+#include <HUpnpCore/HUpnpDataTypes>
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
@@ -42,7 +42,7 @@ class HStateVariableController;
 /*!
  * Class that represents a UPnP state variable.
  *
- * \c %HStateVariable is a core component of the HUPnP \ref devicemodel
+ * \c %HStateVariable is a core component of the HUPnP \ref hupnp_devicemodel
  * and it models a UPnP state variable. The UPnP Device Architecture specifies a
  * UPnP state variable as an item or aspect that models state in a service.
  * In a way, a UPnP state variable is an abstraction to a member variable, since it is
@@ -56,7 +56,7 @@ class HStateVariableController;
  *
  * \headerfile hstatevariable.h HStateVariable
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HReadableStateVariable, HWritableStateVariable, HService
  *

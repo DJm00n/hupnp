@@ -109,7 +109,7 @@ class HActionArguments;
  *
  * \headerfile hactioninvoke.h HActionInvoke
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  */
 typedef Functor<int, H_TYPELIST_2(
     const Herqq::Upnp::HActionArguments&,

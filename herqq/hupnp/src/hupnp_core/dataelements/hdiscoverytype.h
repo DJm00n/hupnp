@@ -71,7 +71,7 @@ class HDiscoveryTypePrivate;
  *
  * \remarks this class is not thread-safe.
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  *
  * \sa Type, type()
  */

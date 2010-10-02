@@ -117,7 +117,7 @@ namespace Upnp
  *
  * \headerfile hdeviceproxy_creator.h HDeviceProxyCreator
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  */
 typedef Functor<Herqq::Upnp::HDeviceProxy*, H_TYPELIST_1(
     const Herqq::Upnp::HDeviceInfo&)> HDeviceProxyCreator;

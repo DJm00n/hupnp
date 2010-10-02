@@ -40,7 +40,7 @@ class HServiceProxyPrivate;
  * class is instantiated by HControlPoint for every service found in every
  * discovered UPnP device that is added into the control of an \c %HControlPoint.
  *
- * As an HService, the \c %HServiceProxy relies fully on the HUPnP \ref devicemodel
+ * As an HService, the \c %HServiceProxy relies fully on the HUPnP \ref hupnp_devicemodel
  * and thus it is used similarly compared to server-side \c %HService classes.
  * Unlike the \c %HService at server-side, however, the \c %HServiceProxy at
  * client-side is usually responsible of only performing remote procedure calls to
@@ -48,7 +48,7 @@ class HServiceProxyPrivate;
  *
  * \headerfile hserviceproxy.h HServiceProxy
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.

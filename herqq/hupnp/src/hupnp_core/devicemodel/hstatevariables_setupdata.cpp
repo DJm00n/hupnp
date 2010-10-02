@@ -35,29 +35,24 @@ namespace Upnp
  * HStateVariableSetup
  ******************************************************************************/
 HStateVariableSetup::HStateVariableSetup() :
-    m_name(), m_version(0), m_inclusionRequirement(), m_maxRate()
+    m_name(), m_dt(HUpnpDataTypes::Undefined), m_version(0),
+    m_inclusionRequirement(), m_maxRate()
 {
 }
 
 HStateVariableSetup::HStateVariableSetup(
-    const QString& name, HInclusionRequirement ireq) :
-        m_name(), m_version(1), m_inclusionRequirement(ireq), m_maxRate(-1)
-{
-    setName(name);
-}
-
-HStateVariableSetup::HStateVariableSetup(
-    const QString& name, qint32 version, HInclusionRequirement ireq) :
-        m_name(), m_version(version), m_inclusionRequirement(ireq), m_maxRate(-1)
+    const QString& name, HUpnpDataTypes::DataType dt, HInclusionRequirement ireq) :
+        m_name(), m_dt(dt), m_version(1), m_inclusionRequirement(ireq),
+        m_maxRate(-1)
 {
     setName(name);
 }
 
 HStateVariableSetup::HStateVariableSetup(
-    const QString& name, qint32 maxRate, qint32 version,
+    const QString& name, HUpnpDataTypes::DataType dt, qint32 version,
     HInclusionRequirement ireq) :
-        m_name(), m_version(version), m_inclusionRequirement(ireq),
-        m_maxRate(maxRate)
+        m_name(), m_dt(dt), m_version(version), m_inclusionRequirement(ireq),
+        m_maxRate(-1)
 {
     setName(name);
 }

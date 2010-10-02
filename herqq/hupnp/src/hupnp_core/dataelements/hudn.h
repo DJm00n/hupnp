@@ -46,7 +46,7 @@ namespace Upnp
  * \remark this class is not thread-safe, but it is lightweight to be
  * used by-value.
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  */
 class H_UPNP_CORE_EXPORT HUdn
 {

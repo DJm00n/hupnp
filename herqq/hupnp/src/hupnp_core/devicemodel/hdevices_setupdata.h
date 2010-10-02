@@ -42,7 +42,7 @@ namespace Upnp
  *
  * \headerfile hdevices_setupdata.h HDeviceSetup
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HDevicesSetupData, HDevice
  *
@@ -281,7 +281,7 @@ public:
  *
  * \headerfile hdevices_setupdata.h HDevicesSetupData
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks this class is not thread-safe.
  *

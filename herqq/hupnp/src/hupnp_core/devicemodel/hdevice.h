@@ -54,7 +54,7 @@ class HDeviceController;
  * \brief An abstract base class that represents a UPnP device hosted by the HUPnP
  * library.
  *
- * \c %HDevice is a core component of the HUPnP \ref devicemodel
+ * \c %HDevice is a core component of the HUPnP \ref hupnp_devicemodel
  * and it models a UPnP device, both root and embedded.
  * As detailed in the UPnP Device Architecture specification,
  * a UPnP device is essentially a container for services and possibly for other
@@ -124,7 +124,7 @@ class HDeviceController;
  *
  * \headerfile hdevice.h HDevice
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks the methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not.
@@ -144,7 +144,7 @@ public: // enums
      * This enumeration specifies how a device tree should be traversed given a
      * starting node.
      *
-     * HUPnP \ref devicemodel is organized into a tree in which there's a root HDevice
+     * HUPnP \ref hupnp_devicemodel is organized into a tree in which there's a root HDevice
      * and it may contain embedded HDevices as its children and they may contain
      * embedded HDevices as their children recursively.
      *
@@ -284,7 +284,7 @@ protected:
      * Provides the opportunity to do post-construction initialization routines
      * in derived classes.
      *
-     * As \c %HDevice is part of the HUPnP's \ref devicemodel
+     * As \c %HDevice is part of the HUPnP's \ref hupnp_devicemodel
      * the object creation process is driven by HUPnP. At the time
      * of instantiation of a descendant \c %HDevice the base \c %HDevice
      * sub-object is not yet fully set up. In other words, at that time

@@ -56,7 +56,7 @@ HInvocation::HInvocation(
     HActionPrivate* action, const HActionArguments& iArgs) :
         m_action(action), m_inArgs(iArgs), m_invokeId(), m_waitCond(),
         m_outArgs(m_action->m_info->outputArguments()), m_hasListener(0),
-        m_completed(false)
+        m_status(NotStarted)
 {
     Q_UNUSED(test)
 }
@@ -162,6 +162,7 @@ HSyncInvocation* HSyncActionInvoker::runAction(const HActionArguments& iArgs)
 {
     HSyncInvocation* invocation = new HSyncInvocation(m_action, iArgs);
     invocation->setAutoDelete(false);
+    invocation->HInvocation::m_status = HInvocation::Running;
     m_threadPool->start(invocation);
     return invocation;
 }
@@ -220,7 +221,7 @@ void HActionPrivate::onActionInvocationComplete(const HAsyncOp& id)
 
     Q_ASSERT(invocationInfo.invocation);
 
-    invocationInfo.invocation->m_completed = true;
+    invocationInfo.invocation->m_status = HInvocation::Finished;
     invocationInfo.invocation->m_waitCond.wakeAll();
 
     lock.unlock();

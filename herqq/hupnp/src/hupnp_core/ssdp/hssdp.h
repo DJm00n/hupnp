@@ -54,7 +54,7 @@ class HSsdpPrivate;
  *
  * \headerfile hssdp.h HSsdp
  *
- * \ingroup ssdp
+ * \ingroup hupnp_ssdp
  *
  * \remarks
  * \li this class requires an event loop for listening incoming messages

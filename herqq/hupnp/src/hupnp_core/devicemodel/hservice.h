@@ -44,7 +44,7 @@ class HServiceController;
  * \brief An abstract base class that represents a UPnP service hosted by an
  * HDevice.
  *
- * \c %HService is a core component of the HUPnP \ref devicemodel
+ * \c %HService is a core component of the HUPnP \ref hupnp_devicemodel
  * and it models a UPnP service. The UPnP Device Architecture specifies a
  * UPnP service as <em>"Logical functional unit. Smallest units of control. Exposes
  * actions and models the state of a physical device with state variables"</em>.
@@ -133,7 +133,7 @@ class HServiceController;
  *
  * \headerfile hservice.h HService
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa devicemodel
  *
@@ -237,7 +237,7 @@ protected:
      * Provides an opportunity to do post-construction initialization routines
      * in derived classes.
      *
-     * As \c %HService is part of the HUPnP's \ref devicemodel
+     * As \c %HService is part of the HUPnP's \ref hupnp_devicemodel
      * the object creation process is driven by HUPnP. At the time
      * of instantiation of a descendant \c %HService the base \c %HService
      * sub-object is not yet fully set up. In other words, at that time

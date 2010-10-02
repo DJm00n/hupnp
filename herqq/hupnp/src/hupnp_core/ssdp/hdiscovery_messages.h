@@ -51,7 +51,7 @@ class HResourceAvailablePrivate;
  *
  * \headerfile hdiscovery_messages.h HResourceAvailable
  *
- * \ingroup ssdp
+ * \ingroup hupnp_ssdp
  *
  * \remarks the class provides an assignment operator, which is not thread-safe.
  *
@@ -260,7 +260,7 @@ class HResourceUnavailablePrivate;
  *
  * \headerfile hdiscovery_messages.h HResourceUnavailable
  *
- * \ingroup ssdp
+ * \ingroup hupnp_ssdp
  *
  * \remarks the class provides an assignment operator, which is not thread-safe.
  *
@@ -399,7 +399,7 @@ class HResourceUpdatePrivate;
  *
  * \headerfile hdiscovery_messages.h HResourceUpdate
  *
- * \ingroup ssdp
+ * \ingroup hupnp_ssdp
  *
  * \remarks the class provides an assignment operator, which is not thread-safe.
  *
@@ -565,7 +565,7 @@ class HDiscoveryRequestPrivate;
  *
  * \headerfile hdiscovery_messages.h HDiscoveryRequest
  *
- * \ingroup ssdp
+ * \ingroup hupnp_ssdp
  *
  * \remarks the class provides an assignment operator, which is not thread-safe.
  *
@@ -703,7 +703,7 @@ class HDiscoveryResponsePrivate;
  *
  * \headerfile hdiscovery_messages.h HDiscoveryResponse
  *
- * \ingroup ssdp
+ * \ingroup hupnp_ssdp
  *
  * \remarks the class provides an assignment operator, which is not thread-safe.
  *

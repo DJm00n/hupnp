@@ -316,20 +316,39 @@ HActionInvokeProxyImpl::~HActionInvokeProxyImpl()
 
 void HActionInvokeProxyImpl::invokeCompleted()
 {
+    // Note, this method is *always* called from the thread in which the m_proxy
+    // lives.
+
     QMutexLocker locker(&m_invocationsMutex);
-    m_callback(m_invocations.dequeue()->m_invokeId);
+    HAsyncOp invocOp = m_invocations.dequeue()->m_invokeId;
+    locker.unlock();
+
+    m_callback(invocOp);
+
+    locker.relock();
     if (m_invocations.size())
     {
-        m_proxy->beginInvoke(m_invocations.head());
+        HAsyncInvocation* invoc = m_invocations.head();
+        if (invoc->m_status != HInvocation::Running)
+        {
+            invoc->m_status = HInvocation::Running;
+            locker.unlock();
+            m_proxy->beginInvoke(invoc);
+        }
     }
 }
 
 bool HActionInvokeProxyImpl::beginInvoke(HAsyncInvocation* arg)
 {
     QMutexLocker locker(&m_invocationsMutex);
+
     m_invocations.enqueue(arg);
-    if (m_invocations.size() <= 1)
+    if (m_invocations.size() == 1)
     {
+        // only one invocation at a time allowed.
+        arg->m_status = HInvocation::Running;
+        locker.unlock();
+
         m_proxy->beginInvoke(arg);
     }
 

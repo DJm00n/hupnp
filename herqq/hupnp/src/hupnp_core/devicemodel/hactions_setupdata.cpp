@@ -141,24 +141,9 @@ bool HActionsSetupData::setInclusionRequirement(
     return false;
 }
 
-bool HActionsSetupData::contains(const QString& actionName) const
-{
-    return m_actionSetupInfos.contains(actionName);
-}
-
 QSet<QString> HActionsSetupData::names() const
 {
     return m_actionSetupInfos.keys().toSet();
-}
-
-qint32 HActionsSetupData::size() const
-{
-    return m_actionSetupInfos.size();
-}
-
-bool HActionsSetupData::isEmpty() const
-{
-    return m_actionSetupInfos.isEmpty();
 }
 
 }

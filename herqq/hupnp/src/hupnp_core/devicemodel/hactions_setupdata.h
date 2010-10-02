@@ -23,6 +23,7 @@
 #define HACTIONS_SETUPDATA_H_
 
 #include <HUpnpCore/HActionInvoke>
+#include <HUpnpCore/HArgumentsSetupData>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
@@ -42,7 +43,7 @@ namespace Upnp
  *
  * \headerfile hactions_setupdata.h HActionSetup
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \sa HActionsSetupData, HAction
  *
@@ -56,6 +57,7 @@ private:
     qint32 m_version;
     HInclusionRequirement m_inclusionRequirement;
     HActionInvoke m_actionInvoke;
+    HArgumentsSetupData m_argsSetup;
 
 public:
 
@@ -139,6 +141,18 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
+     * Returns the setup information of the arguments contained by this action.
+     *
+     * \return the setup information of the arguments contained by this action.
+     *
+     * \sa setArgumentsSetupData()
+     */
+    inline const HArgumentsSetupData& argumentsSetupData() const
+    {
+        return m_argsSetup;
+    }
+
+    /*!
      * Returns the callable entity that is called when the
      * action is invoked.
      *
@@ -199,6 +213,19 @@ public:
     inline qint32 version() const
     {
         return m_version;
+    }
+
+    /*!
+     * Specifies the setup information of the arguments contained by this action.
+     *
+     * \arg specifies the setup information of the arguments contained by
+     * this action.
+     *
+     * \sa argumentsSetupData()
+     */
+    inline void setArgumentsSetupData(const HArgumentsSetupData& arg)
+    {
+        m_argsSetup = arg;
     }
 
     /*!
@@ -264,7 +291,7 @@ public:
  *
  * \headerfile hactions_setupdata.h HActionsSetupData
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks this class is not thread-safe.
  *
@@ -362,7 +389,10 @@ public:
      *
      * \sa get()
      */
-    bool contains(const QString& name) const;
+    inline bool contains(const QString& name) const
+    {
+        return m_actionSetupInfos.contains(name);
+    }
 
     /*!
      * Returns the names of the contained items.
@@ -376,14 +406,28 @@ public:
      *
      * \return the number of contained items.
      */
-    qint32 size() const;
+    inline qint32 size() const
+    {
+        return m_actionSetupInfos.size();
+    }
 
     /*!
      * Indicates if the object is empty.
      *
      * \return \e true in case the instance has no items.
      */
-    bool isEmpty() const;
+    inline bool isEmpty() const
+    {
+        return m_actionSetupInfos.isEmpty();
+    }
+
+    /*!
+     * Removes every contained object.
+     */
+    inline void clear()
+    {
+        m_actionSetupInfos.clear();
+    }
 };
 
 }

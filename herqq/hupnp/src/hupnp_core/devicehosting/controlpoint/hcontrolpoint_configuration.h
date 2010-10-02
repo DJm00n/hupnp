@@ -22,14 +22,6 @@
 #ifndef HCONTROLPOINT_CONFIGURATION_H_
 #define HCONTROLPOINT_CONFIGURATION_H_
 
-//
-// !! Warning !!
-//
-// This file is not part of public API and it should
-// never be included in client code. The contents of this file may
-// change or the file may be removed without of notice.
-//
-
 #include <HUpnpCore/HDeviceProxyCreator>
 
 class QHostAddress;
@@ -68,7 +60,7 @@ class HControlPointConfigurationPrivate;
  *
  * \headerfile hcontrolpoint_configuration.h HControlPointConfiguration
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  *
  * \sa HControlPoint
  *
@@ -138,10 +130,14 @@ public:
 
     /*!
      * Creates a new instance.
+     *
+     * Creates a new instance with default values.
      */
     HControlPointConfiguration();
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     virtual ~HControlPointConfiguration();
@@ -202,7 +198,7 @@ public:
      * unaware of UPnP devices that are already active in the network until they
      * re-advertise themselves.
      *
-     * \sa setPerformInitialDiscovery()
+     * \sa setAutoDiscovery()
      */
     bool autoDiscovery() const;
 
@@ -225,7 +221,7 @@ public:
      * is purely optional</b>. If the device creator is not set, \c %HControlPoint
      * will create and use default types. Most often custom types provide
      * value only when the custom types contain additional functionality, finer-grained
-     * API or something else that the base classes of \ref devicemodel do not.
+     * API or something else that the base classes of \ref hupnp_devicemodel do not.
      *
      * In any case, your callable entity must be:
      *   - copyable by value
@@ -355,7 +351,7 @@ public:
      * unaware of UPnP devices that are already active in the network until they
      * re-advertise themselves.
      *
-     * \sa performInitialDiscovery()
+     * \sa autoDiscovery()
      */
     void setAutoDiscovery(bool arg);
 

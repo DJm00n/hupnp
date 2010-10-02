@@ -36,7 +36,7 @@ namespace Upnp
  *
  * \headerfile hexecargs.h HExecArgs
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks this class is thread-safe.
  */

@@ -23,7 +23,7 @@
 #define HSTATEVARIABLEINFO_H_
 
 #include <HUpnpCore/HUpnp>
-#include <HUpnpCore/HUpnpDatatypes>
+#include <HUpnpCore/HUpnpDataTypes>
 
 class QString;
 class QVariant;
@@ -65,7 +65,7 @@ class HStateVariableInfoPrivate;
  *
  * \headerfile hstatevariableinfo.h HStateVariableInfo
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  *
  * \remarks this class is not thread-safe.
  *

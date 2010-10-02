@@ -47,7 +47,7 @@ include (dataelements/dataelements.pri)
 include (devicehosting/devicehosting.pri)
 
 win32 {
-    QMAKE_POST_LINK += copy ..\..\lib\qtsoap-2.7-opensource\lib\* ..\..\bin /Y
+    QMAKE_POST_LINK += copy ..\\..\\lib\\qtsoap-2.7-opensource\\lib\\* ..\\..\\bin /Y
 }
 else {
     QMAKE_POST_LINK += cp -fR ../../lib/qtsoap-2.7-opensource/lib/* ../../bin/

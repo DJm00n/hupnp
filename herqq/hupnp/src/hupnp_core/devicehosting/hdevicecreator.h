@@ -97,7 +97,7 @@ namespace Upnp
  *
  * \headerfile hdevicecreator.h HDeviceCreator
  *
- * \ingroup devicehosting
+ * \ingroup hupnp_devicehosting
  */
 typedef Functor<Herqq::Upnp::HDevice*, H_TYPELIST_1(
     const Herqq::Upnp::HDeviceInfo&)> HDeviceCreator;

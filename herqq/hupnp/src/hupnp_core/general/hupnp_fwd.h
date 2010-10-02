@@ -85,6 +85,8 @@ class HResourceUnavailable;
 /*!
  * This is a type definition for a collection of Herqq::Upnp::HEndpoint instances.
  *
+ * \ingroup hupnp_common
+ *
  * \sa HEndpoint
  */
 typedef QList<HEndpoint> HEndpoints;
@@ -92,6 +94,8 @@ typedef QList<HEndpoint> HEndpoints;
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HService instances.
+ *
+ * \ingroup hupnp_devicemodel
  *
  * \sa HService
  */
@@ -101,6 +105,8 @@ typedef QList<HService*> HServices;
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HServiceProxy instances.
  *
+ * \ingroup hupnp_devicemodel
+ *
  * \sa HServiceProxy
  */
 typedef QList<HServiceProxy*> HServiceProxies;
@@ -108,6 +114,8 @@ typedef QList<HServiceProxy*> HServiceProxies;
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HDevice instances.
+ *
+ * \ingroup hupnp_devicemodel
  *
  * \sa HDevice
  */
@@ -117,6 +125,8 @@ typedef QList<HDevice*> HDevices;
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HDeviceProxy instances.
  *
+ * \ingroup hupnp_devicemodel
+ *
  * \sa HDeviceProxy
  */
 typedef QList<HDeviceProxy*> HDeviceProxies;
@@ -125,6 +135,8 @@ typedef QList<HDeviceProxy*> HDeviceProxies;
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HStateVariable instances.
  *
+ * \ingroup hupnp_devicemodel
+ *
  * \sa HStateVariable
  */
 typedef QList<HStateVariable*> HStateVariables;
@@ -132,6 +144,8 @@ typedef QList<HStateVariable*> HStateVariables;
 /*!
  * This is a type definition for a collection of pointers to
  * Herqq::Upnp::HAction instances.
+ *
+ * \ingroup hupnp_devicemodel
  *
  * \sa HAction
  */

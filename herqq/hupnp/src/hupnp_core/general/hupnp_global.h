@@ -38,6 +38,8 @@ namespace Upnp
 
 /*!
  * This enumeration is used to specify the strictness of argument validation.
+ *
+ * \ingroup hupnp_common
  */
 enum HValidityCheckLevel
 {
@@ -57,7 +59,7 @@ enum HValidityCheckLevel
 };
 
 /*!
- * This enumeration specifies whether a component of the \ref devicemodel is
+ * This enumeration specifies whether a component of the \ref hupnp_devicemodel is
  * mandatory within a specific UPnP device.
  *
  * In more detail, any component of the device model
@@ -91,6 +93,8 @@ enum HValidityCheckLevel
  * presence of certain actions and state variables on the server side, HUPnP
  * can use these requirements to filter devices that are suitable in terms
  * of advertised capabilities.
+ *
+ * \ingroup hupnp_common
  */
 enum HInclusionRequirement
 {
@@ -117,6 +121,8 @@ enum HInclusionRequirement
 
  /*!
  * This enumeration specifies the logging levels that can be used with the device host.
+ *
+ * \ingroup hupnp_common
  */
 enum HLogLevel
 {
@@ -183,6 +189,8 @@ enum HLogLevel
  * \remark
  * \li The new logging level will take effect immediately.
  * \li The function is thread-safe.
+ *
+ * \ingroup hupnp_common
  */
 void H_UPNP_CORE_EXPORT SetLoggingLevel(HLogLevel level);
 
@@ -203,6 +211,8 @@ void H_UPNP_CORE_EXPORT SetLoggingLevel(HLogLevel level);
  * behavior in other UPnP software.
  *
  * \remark by default, the non standard behavior warnings are on.
+ *
+ * \ingroup hupnp_common
  */
 void H_UPNP_CORE_EXPORT EnableNonStdBehaviourWarnings(bool arg);
 

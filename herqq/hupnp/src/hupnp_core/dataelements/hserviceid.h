@@ -65,7 +65,7 @@ class HServiceIdPrivate;
  *
  * \remarks this class provides an assignment operator that is not thread-safe.
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  */
 class H_UPNP_CORE_EXPORT HServiceId
 {

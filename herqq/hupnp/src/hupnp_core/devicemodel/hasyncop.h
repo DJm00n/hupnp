@@ -167,8 +167,8 @@ public:
         WaitInvalidId,
 
         /*!
-         * The result of an asynchronous operation can be waited by a single listener
-         * and the operation in question already has a listener.
+         * The result of an asynchronous operation can be waited by a single
+         * listener and the operation in question already has a listener.
          */
         WaitListenerRegisteredAlready,
 
@@ -193,135 +193,166 @@ public:
 
 private:
 
-   const QUuid m_id;
-   volatile qint32 m_waitTimeout;
-   volatile AsyncWaitCode m_waitCode;
-   volatile qint32 m_returnValue;
-   QSharedPointer<volatile void*> m_userData;
+    const QUuid m_id;
+    volatile qint32 m_waitTimeout;
+    volatile AsyncWaitCode m_waitCode;
+    volatile qint32 m_returnValue;
+    QSharedPointer<volatile void*> m_userData;
+    QString* m_errorDescription;
 
-   HAsyncOp& operator=(const HAsyncOp&);
+    HAsyncOp& operator=(const HAsyncOp&);
+
+    HAsyncOp(qint32 returnCode, const QString& errorDescription);
 
 public:
 
-   /*!
-    * \brief Creates a new instance.
-    *
-    * Creates a new instance.
-    *
-    * \param waitCode specifies the initial wait code for the operation.
-    * The default is HAsyncOp::WaitSuccess.
-    *
-    * \remarks if the specified \a waitCode is not HAsyncOp::WaitSuccess no ID
-    * is created and as such isNull() will return \e true.
-    *
-    * \sa isNull()
-    */
-   explicit HAsyncOp(AsyncWaitCode waitCode = WaitSuccess);
+    /*!
+     * \brief Creates a new valid instance.
+     *
+     * Creates a new valid instance, i.e isNull() always returns \e false.
+     *
+     * \sa isNull(), createInvalid()
+     */
+    explicit HAsyncOp();
 
-   /*!
-    * \brief Destroys the instance.
-    *
-    * Destroys the instance.
-    */
-   ~HAsyncOp();
+    /*!
+     * \brief Destroys the instance.
+     *
+     * Destroys the instance.
+     */
+    ~HAsyncOp();
 
-   /*!
-    * \brief Copy constructor.
-    *
-    * Copy constructor.
-    */
-   HAsyncOp(const HAsyncOp&);
+    /*!
+     * \brief Copy constructor.
+     *
+     * Copy constructor.
+     */
+    HAsyncOp(const HAsyncOp&);
 
-   /*!
-    * Returns the wait timeout in milliseconds -if any- associated with the operation.
-    *
-    * \return the wait timeout in milliseconds -if any- associated with the operation.
-    *
-    * \sa setWaitTimeout()
-    */
-   inline qint32 waitTimeout() const { return m_waitTimeout; }
+    /*!
+     * Returns a human readable error description.
+     *
+     * \return a human readable error description, if any. This is never set when
+     * waitCode() is HAsyncOp::WaitSuccess or isNull() returns \e false, but it
+     * may not be set even when isNull() returns \e true.
+     *
+     * \sa setErrorDescription()
+     */
+    QString errorDescription() const;
 
-   /*!
-    * Sets the wait timeout in milliseconds for the operation.
-    *
-    * \param timeout specifies the wait timeout in milliseconds.
-    * A negative value means that the timeout isn't set.
-    *
-    * \sa waitTimeout()
-    */
-   inline void setWaitTimeout(qint32 timeout) { m_waitTimeout = timeout; }
+    /*!
+     * Sets a human readable error description.
+     *
+     * \param arg specifies the human readable error description.
+     *
+     * \sa errorDescription()
+     */
+    void setErrorDescription(const QString& arg);
 
-   /*!
-    * Returns the return value of the wait of operation completion.
-    *
-    * \return the return value of the wait of operation completion.
-    *
-    * \sa setWaitCode()
-    */
-   inline AsyncWaitCode waitCode() const { return m_waitCode; }
+    /*!
+     * Returns the wait timeout in milliseconds -if any- associated with the operation.
+     *
+     * \return the wait timeout in milliseconds -if any- associated with the operation.
+     *
+     * \sa setWaitTimeout()
+     */
+    inline qint32 waitTimeout() const { return m_waitTimeout; }
 
-   /*!
-    * Sets the return value of the wait of operation completion.
-    *
-    * \param waitCode specifies the return value of the wait of
-    * operation completion.
-    *
-    * \sa waitCode()
-    */
-   inline void setWaitCode(AsyncWaitCode waitCode) { m_waitCode = waitCode; }
+    /*!
+     * Sets the wait timeout in milliseconds for the operation.
+     *
+     * \param timeout specifies the wait timeout in milliseconds.
+     * A negative value means that the timeout isn't set.
+     *
+     * \sa waitTimeout()
+     */
+    inline void setWaitTimeout(qint32 timeout) { m_waitTimeout = timeout; }
 
-   /*!
-    * Returns the return value of the asynchronous operation.
-    *
-    * \sa setReturnValue()
-    */
-   inline qint32 returnValue() const { return m_returnValue; }
+    /*!
+     * Returns the return value of the wait of operation completion.
+     *
+     * \return the return value of the wait of operation completion.
+     *
+     * \sa setWaitCode()
+     */
+    inline AsyncWaitCode waitCode() const { return m_waitCode; }
 
-   /*!
-    * Sets the return value of the asynchronous operation.
-    *
-    * \param returnValue specifies the return value of the asynchronous operation.
-    *
-    * \sa returnValue()
-    */
-   inline void setReturnValue(qint32 returnValue)
-   {
+    /*!
+     * Sets the return value of the wait of operation completion.
+     *
+     * \param waitCode specifies the return value of the wait of
+     * operation completion.
+     *
+     * \sa waitCode()
+     */
+    inline void setWaitCode(AsyncWaitCode waitCode) { m_waitCode = waitCode; }
+
+    /*!
+     * Returns the return value of the asynchronous operation.
+     *
+     * \sa setReturnValue()
+     */
+    inline qint32 returnValue() const { return m_returnValue; }
+
+    /*!
+     * Sets the return value of the asynchronous operation.
+     *
+     * \param returnValue specifies the return value of the asynchronous operation.
+     *
+     * \sa returnValue()
+     */
+    inline void setReturnValue(qint32 returnValue)
+    {
        m_returnValue = returnValue;
-   }
+    }
 
-   /*!
-    * Associates arbitrary user provided data with the asynchronous operation.
-    *
-    * \param userData is the pointer to arbitrary user data.
-    *
-    * \remarks the instance never references the provided data.
-    *
-    * \sa userData()
-    */
-   void setUserData(void* userData);
+    /*!
+     * Associates arbitrary user provided data with the asynchronous operation.
+     *
+     * \param userData is the pointer to arbitrary user data.
+     *
+     * \remarks the instance never references the provided data.
+     *
+     * \sa userData()
+     */
+    void setUserData(void* userData);
 
-   /*!
-    * Returns the user provided data if set.
-    *
-    * \return a pointer to user provided data or null if the user data isn't set.
-    *
-    * \sa setUserData()
-    */
-   void* userData() const;
+    /*!
+     * Returns the user provided data if set.
+     *
+     * \return a pointer to user provided data or null if the user data isn't set.
+     *
+     * \sa setUserData()
+     */
+    void* userData() const;
 
-   /*!
-    * Returns universally unique identifier of the asynchronous operation.
-    *
-    * \return universally unique identifier of the asynchronous operation.
-    */
-   inline QUuid id() const { return m_id; }
+    /*!
+     * Returns universally unique identifier of the asynchronous operation.
+     *
+     * \return universally unique identifier of the asynchronous operation.
+     */
+    inline QUuid id() const { return m_id; }
 
-   /*!
-    * Indicates whether the object identifies an asynchronous operation.
-    *
-    * \return \e true in case the object identifies an asynchronous operation.
-    */
-   inline bool isNull() const { return m_id.isNull(); }
+    /*!
+     * Indicates whether the object identifies an asynchronous operation.
+     *
+     * \return \e true in case the object identifies an asynchronous operation.
+     */
+    inline bool isNull() const { return m_id.isNull(); }
+
+    /*!
+     * Creates a new invalid instance.
+     *
+     * An invalid HAsyncOp represents an asynchronous operation that failed
+     * to begin. Note, isNull() returns \e true always.
+     *
+     * \param returnCode specifies the return code.
+     *
+     * \param errorDescr specifies the human readable error description.
+     *
+     * \sa returnCode(), errorDescription(), isNull()
+     */
+    static HAsyncOp createInvalid(qint32 returnCode, const QString& errorDescr);
 };
 
 /*!

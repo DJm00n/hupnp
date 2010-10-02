@@ -43,7 +43,7 @@ namespace Upnp
  *
  * \remarks this class is not thread-safe, but it is lightweight to be used by-value.
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  */
 class H_UPNP_CORE_EXPORT HProductToken
 {
@@ -230,7 +230,7 @@ class HProductTokensPrivate;
  *
  * \remarks this class is not thread-safe.
  *
- * \ingroup dataelements
+ * \ingroup hupnp_common
  */
 class H_UPNP_CORE_EXPORT HProductTokens
 {
