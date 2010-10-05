@@ -1,6 +1,0 @@
-#ifndef H_ARGUMENTSETUP_
-#define H_ARGUMENTSETUP_
-
-#include "public/harguments_setupdata.h"
-
-#endif // H_ARGUMENTSETUP_
