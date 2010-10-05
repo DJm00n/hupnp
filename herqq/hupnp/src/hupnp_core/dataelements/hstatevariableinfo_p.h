@@ -63,6 +63,7 @@ public: // attributes
 
     HInclusionRequirement m_inclusionRequirement;
     qint32 m_maxRate;
+    qint32 m_version;
 
 public: // methods
 

@@ -260,6 +260,33 @@ public:
     ~HStateVariableInfo();
 
     /*!
+     * Returns the UPnP service version in which the state variable
+     * was first specified.
+     *
+     * \return the UPnP service version in which the state variable
+     * was first specified or \c -1, if the version is not defined.
+     *
+     * \remarks It is perfectly normal that the version information is not
+     * defined.
+     *
+     * \sa setVersion()
+     */
+    qint32 version() const;
+
+    /*!
+     * Specifies the UPnP service version in which the state variable
+     * was first specified.
+     *
+     * \param version specifies the UPnP service version in which the
+     * state variable was first specified. If a value smaller than \c -1 is
+     * given, the version value will be set to \c -1, which means that the
+     * version() is not defined.
+     *
+     * \sa version()
+     */
+    void setVersion(qint32 version);
+
+    /*!
      * Returns the name of the action.
      *
      * This is the name specified in the corresponding service description file.
@@ -289,7 +316,8 @@ public:
      * events.
      *
      * \return the maximum rate at which an evented state variable may send
-     * events. The returned value is -1 if the state variable is not evented.
+     * events. The returned value is -1 if the state variable is not evented or
+     * the maximum rate has not been defined.
      *
      * \sa setMaxEventRate(), eventingType()
      */

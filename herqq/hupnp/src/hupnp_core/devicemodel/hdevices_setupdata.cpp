@@ -22,7 +22,7 @@
 #include "hdevices_setupdata.h"
 #include "hdevice.h"
 
-#include <QSet>
+#include <QtCore/QSet>
 
 namespace Herqq
 {
@@ -31,55 +31,138 @@ namespace Upnp
 {
 
 /*******************************************************************************
+ * HDeviceSetupPrivate
+ ******************************************************************************/
+class HDeviceSetupPrivate
+{
+public:
+
+    HResourceType m_deviceType;
+    HDevice* m_device;
+    qint32 m_version;
+    HInclusionRequirement m_inclusionReq;
+
+    HDeviceSetupPrivate() :
+        m_deviceType(), m_device(0), m_version(0),
+        m_inclusionReq(InclusionRequirementUnknown)
+    {
+    }
+
+    ~HDeviceSetupPrivate()
+    {
+        delete m_device;
+    }
+};
+
+/*******************************************************************************
  * HDeviceSetup
  ******************************************************************************/
 HDeviceSetup::HDeviceSetup() :
-    m_deviceType(), m_device(0),
-    m_version(0),
-    m_inclusionReq(InclusionRequirementUnknown)
+    h_ptr(new HDeviceSetupPrivate())
 {
 }
 
 HDeviceSetup::HDeviceSetup(
     const HResourceType& type, HInclusionRequirement incReq) :
-        m_deviceType(type), m_device(0), m_version(1), m_inclusionReq(incReq)
+        h_ptr(new HDeviceSetupPrivate())
 {
+    h_ptr->m_deviceType = type;
+    h_ptr->m_version = 1;
+    h_ptr->m_inclusionReq = incReq;
 }
 
 HDeviceSetup::HDeviceSetup(
     const HResourceType& type, qint32 version, HInclusionRequirement incReq) :
-        m_deviceType(type), m_device(0), m_version(version),
-        m_inclusionReq(incReq)
+        h_ptr(new HDeviceSetupPrivate())
 {
+    h_ptr->m_deviceType = type;
+    h_ptr->m_version = version;
+    h_ptr->m_inclusionReq = incReq;
 }
 
 HDeviceSetup::HDeviceSetup(
     const HResourceType& type, HDevice* device, HInclusionRequirement ireq) :
-        m_deviceType(type), m_device(device), m_version(1), m_inclusionReq(ireq)
+        h_ptr(new HDeviceSetupPrivate())
 {
+    h_ptr->m_deviceType = type;
+    h_ptr->m_device = device;
+    h_ptr->m_version = 1;
+    h_ptr->m_inclusionReq = ireq;
 }
 
 HDeviceSetup::HDeviceSetup(
     const HResourceType& type, HDevice* device, qint32 version,
     HInclusionRequirement ireq) :
-        m_deviceType(type), m_device(device), m_version(version),
-        m_inclusionReq(ireq)
+        h_ptr(new HDeviceSetupPrivate())
 {
+    h_ptr->m_deviceType = type;
+    h_ptr->m_device = device;
+    h_ptr->m_version = version;
+    h_ptr->m_inclusionReq = ireq;
 }
 
 HDeviceSetup::~HDeviceSetup()
 {
-    delete m_device;
+    delete h_ptr;
+}
+
+const HResourceType& HDeviceSetup::deviceType() const
+{
+    return h_ptr->m_deviceType;
+}
+
+HDevice* HDeviceSetup::device() const
+{
+    return h_ptr->m_device;
+}
+
+HInclusionRequirement HDeviceSetup::inclusionRequirement() const
+{
+    return h_ptr->m_inclusionReq;
+}
+
+bool HDeviceSetup::isValid() const
+{
+    return h_ptr->m_deviceType.isValid() &&
+           h_ptr->m_version > 0 &&
+           h_ptr->m_inclusionReq != InclusionRequirementUnknown;
+}
+
+qint32 HDeviceSetup::version() const
+{
+    return h_ptr->m_version;
+}
+
+void HDeviceSetup::setInclusionRequirement(HInclusionRequirement arg)
+{
+    h_ptr->m_inclusionReq = arg;
+}
+
+void HDeviceSetup::setDeviceType(const HResourceType& arg)
+{
+    h_ptr->m_deviceType = arg;
+}
+
+void HDeviceSetup::setVersion(qint32 version)
+{
+    h_ptr->m_version = version;
+}
+
+HDevice* HDeviceSetup::takeDevice()
+{
+    HDevice* retVal = h_ptr->m_device;
+    h_ptr->m_device = 0;
+    return retVal;
 }
 
 void HDeviceSetup::setDevice(HDevice* arg)
 {
-    if (m_device)
+    if (h_ptr->m_device)
     {
-        delete m_device;
+        delete h_ptr->m_device;
     }
 
-    m_device = arg;
+    h_ptr->m_device = arg;
 }
 
 /*******************************************************************************

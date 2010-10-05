@@ -48,6 +48,7 @@ class HServiceId;
 class HActionInfo;
 class HDeviceHost;
 class HDeviceInfo;
+class HActionSetup;
 class HServiceInfo;
 class HDeviceProxy;
 class HDeviceSetup;

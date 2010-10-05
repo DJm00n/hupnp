@@ -24,9 +24,11 @@
 #include "hdevicehosting_exceptions_p.h"
 
 #include "../dataelements/hudn.h"
+#include "../dataelements/hserviceid.h"
 #include "../dataelements/hdeviceinfo.h"
 
 #include "../general/hupnp_global_p.h"
+#include "../datatypes/hupnp_datatypes.h"
 #include "../datatypes/hdatatype_mappings_p.h"
 
 #include "../devicemodel/hservice.h"
@@ -295,6 +297,92 @@ void HObjectCreator::initService(
     parseServiceDescription(service);
 }
 
+void HObjectCreator::parseStateVariables(
+    HService* service, QDomElement stateVariableElement)
+{
+    HStateVariablesSetupData stateVariablesSetup =
+        service->stateVariablesSetupData();
+
+    while(!stateVariableElement.isNull())
+    {
+        HStateVariableController* stateVariable =
+            parseStateVariable(service, stateVariableElement, stateVariablesSetup);
+
+        Q_ASSERT(stateVariable);
+
+        service->h_ptr->addStateVariable(stateVariable);
+
+        bool ok = QObject::connect(
+            stateVariable->m_stateVariable,
+            SIGNAL(valueChanged(const Herqq::Upnp::HStateVariableEvent&)),
+            service,
+            SLOT(notifyListeners()));
+
+        Q_ASSERT(ok); Q_UNUSED(ok)
+
+        stateVariableElement =
+            stateVariableElement.nextSiblingElement("stateVariable");
+
+        stateVariablesSetup.remove(
+            stateVariable->m_stateVariable->info().name());
+    }
+
+    if (!stateVariablesSetup.isEmpty())
+    {
+        foreach(const QString& name, stateVariablesSetup.names())
+        {
+            HStateVariableInfo svSetup = stateVariablesSetup.get(name);
+            if (svSetup.inclusionRequirement() == InclusionMandatory &&
+                svSetup.version() <= service->info().serviceType().version())
+            {
+                throw HParseException(QString(
+                    "Service description is missing a mandatory state variable "
+                    "[%1]").arg(name));
+            }
+        }
+    }
+}
+
+void HObjectCreator::parseActions(HService* service, QDomElement actionElement)
+{
+    HActionsSetupData actions = service->createActions();
+
+    while(!actionElement.isNull())
+    {
+        HActionController* action =
+            parseAction(service, actionElement, actions);
+
+        if (!action)
+        {
+            continue;
+        }
+
+        QString name = action->m_action->info().name();
+
+        service->h_ptr->m_actions.push_back(action);
+        service->h_ptr->m_actionsAsMap[name] = action;
+
+        actions.remove(name);
+
+        actionElement = actionElement.nextSiblingElement("action");
+    }
+
+    if (!actions.isEmpty())
+    {
+        foreach(const QString& name, actions.names())
+        {
+            HActionSetup setupInfo = actions.get(name);
+            if (setupInfo.inclusionRequirement() == InclusionMandatory &&
+                setupInfo.version() <= service->info().serviceType().version())
+            {
+                throw HParseException(QString(
+                    "Service description for [%1] is missing a mandatory action "
+                    "[%2]").arg(service->info().serviceId().toString(), name));
+            }
+        }
+    }
+}
+
 void HObjectCreator::parseServiceDescription(HService* service)
 {
     HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
@@ -357,47 +445,7 @@ void HObjectCreator::parseServiceDescription(HService* service)
         }
     }
 
-    HStateVariablesSetupData stateVariablesSetup =
-        service->stateVariablesSetupData();
-
-    while(!stateVariableElement.isNull())
-    {
-        HStateVariableController* stateVariable =
-            parseStateVariable(service, stateVariableElement, stateVariablesSetup);
-
-        Q_ASSERT(stateVariable);
-
-        service->h_ptr->addStateVariable(stateVariable);
-
-        bool ok = QObject::connect(
-            stateVariable->m_stateVariable,
-            SIGNAL(valueChanged(const Herqq::Upnp::HStateVariableEvent&)),
-            service,
-            SLOT(notifyListeners()));
-
-        Q_ASSERT(ok); Q_UNUSED(ok)
-
-        stateVariableElement =
-            stateVariableElement.nextSiblingElement("stateVariable");
-
-        stateVariablesSetup.remove(
-            stateVariable->m_stateVariable->info().name());
-    }
-
-    if (!stateVariablesSetup.isEmpty())
-    {
-        foreach(const QString& name, stateVariablesSetup.names())
-        {
-            HStateVariableSetup svSetup = stateVariablesSetup.get(name);
-            if (svSetup.inclusionRequirement() == InclusionMandatory &&
-                svSetup.version() <= service->info().serviceType().version())
-            {
-                throw HParseException(QString(
-                    "Service description is missing a mandatory state variable "
-                    "[%1]").arg(name));
-            }
-        }
-    }
+    parseStateVariables(service, stateVariableElement);
 
     QDomElement actionListElement = scpdElement.firstChildElement("actionList");
 
@@ -423,42 +471,117 @@ void HObjectCreator::parseServiceDescription(HService* service)
         }
     }
 
-    HActionsSetupData actions = service->createActions();
+    parseActions(service, actionElement);
+}
 
-    while(!actionElement.isNull())
+HStateVariableInfo HObjectCreator::parseStateVariableInfo_str(
+    const QString& name, const QVariant& defValue, const QDomElement& svElement,
+    HStateVariableInfo::EventingType evType, HInclusionRequirement incReq,
+    QString* err)
+{
+    QStringList allowedValues;
+
+    QDomElement allowedValueListElement =
+        svElement.firstChildElement("allowedValueList");
+
+    if (!allowedValueListElement.isNull())
     {
-        HActionController* action =
-            parseAction(service, actionElement, actions);
+        QDomElement allowedValueElement =
+            allowedValueListElement.firstChildElement("allowedValue");
 
-        if (!action)
+        while(!allowedValueElement.isNull())
         {
-            continue;
+            allowedValues.push_back(allowedValueElement.text());
+
+            allowedValueElement =
+                allowedValueElement.nextSiblingElement("allowedValue");
         }
-
-        QString name = action->m_action->info().name();
-
-        service->h_ptr->m_actions.push_back(action);
-        service->h_ptr->m_actionsAsMap[name] = action;
-
-        actions.remove(name);
-
-        actionElement = actionElement.nextSiblingElement("action");
     }
 
-    if (!actions.isEmpty())
+    return HStateVariableInfo(
+        name, defValue, allowedValues, evType, incReq, err);
+}
+
+HStateVariableInfo HObjectCreator::parseStateVariableInfo_numeric(
+    const QString& name, const QVariant& defValue, const QDomElement& svElement,
+    HStateVariableInfo::EventingType evType, HInclusionRequirement incReq,
+    HUpnpDataTypes::DataType dataTypeEnumValue, QString* err)
+{
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
+
+    QDomElement allowedValueRangeElement =
+        svElement.firstChildElement("allowedValueRange");
+
+    if (allowedValueRangeElement.isNull())
     {
-        foreach(const QString& name, actions.names())
+        return HStateVariableInfo(
+            name, dataTypeEnumValue, defValue, evType, incReq, err);
+    }
+
+    QString minimumStr = readElementValue("minimum", allowedValueRangeElement);
+
+    if (minimumStr.isEmpty())
+    {
+        QString localErr = QString("State variable [%1] is missing a "
+            "mandatory <minimum> element within <allowedValueRange>.").arg(
+                name);
+
+        if (m_creationParameters->m_strictness == StrictChecks)
         {
-            HActionSetup setupInfo = actions.get(name);
-            if (setupInfo.inclusionRequirement() == InclusionMandatory &&
-                setupInfo.version() <= service->info().serviceType().version())
+            throw InvalidServiceDescription(localErr);
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(localErr);
+            minimumStr = QString::number(INT_MIN);
+        }
+    }
+
+    QString maximumStr = readElementValue("maximum", allowedValueRangeElement);
+
+    if (maximumStr.isEmpty())
+    {
+        QString localErr = QString("State variable [%1] is missing a "
+            "mandatory <maximum> element within <allowedValueRange>.").arg(
+                name);
+
+        if (m_creationParameters->m_strictness == StrictChecks)
+        {
+            throw InvalidServiceDescription(localErr);
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(localErr);
+            maximumStr = QString::number(INT_MAX);
+        }
+    }
+
+    QString stepStr = readElementValue("step", allowedValueRangeElement);
+
+    if (stepStr.isEmpty())
+    {
+        if (HUpnpDataTypes::isRational(dataTypeEnumValue))
+        {
+            bool ok = false;
+            double maxTmp = maximumStr.toDouble(&ok);
+            if (ok && maxTmp < 1)
             {
-                throw HParseException(QString(
-                    "Service description for [%1] is missing a mandatory action "
-                    "[%2]").arg(service->info().serviceId().toString(), name));
+                stepStr = QString::number(maxTmp / 10);
+            }
+            else
+            {
+                stepStr = "1.0";
             }
         }
+        else
+        {
+            stepStr = "1";
+        }
     }
+
+    return HStateVariableInfo(
+        name, dataTypeEnumValue, defValue, minimumStr, maximumStr, stepStr,
+        evType, incReq, err);
 }
 
 HStateVariableController* HObjectCreator::parseStateVariable(
@@ -501,14 +624,9 @@ HStateVariableController* HObjectCreator::parseStateVariable(
             HStateVariableInfo::UnicastAndMulticast : HStateVariableInfo::UnicastOnly;
     }
 
-    QString name     = readElementValue("name", stateVariableElement);
-    QString dataType = readElementValue("dataType", stateVariableElement);
+    QString name = readElementValue("name", stateVariableElement);
 
-    bool wasDefined = false;
-    QString defaultValue =
-         readElementValue("defaultValue", stateVariableElement, &wasDefined);
-
-    HStateVariableSetup setupData = stateVariablesSetupData.get(name);
+    HStateVariableInfo setupData = stateVariablesSetupData.get(name);
     if (!setupData.isValid() &&
         stateVariablesSetupData.defaultInclusionPolicy() ==
         HStateVariablesSetupData::Deny)
@@ -518,306 +636,148 @@ HStateVariableController* HObjectCreator::parseStateVariable(
             "[%2]").arg(parentService->info().serviceId().toString(), name));
     }
 
+    QString dataType = readElementValue("dataType", stateVariableElement);
+
+    HUpnpDataTypes::DataType dataTypeEnumValue =
+        HUpnpDataTypes::dataType(dataType);
+
+    bool defValueWasDefined = false;
+    QString defaultValueStr = readElementValue(
+        "defaultValue", stateVariableElement, &defValueWasDefined);
+
+    QVariant defaultValue = defValueWasDefined ?
+        convertToRightVariantType(defaultValueStr, dataTypeEnumValue) : QVariant();
+
     QString err;
+    HStateVariableInfo parsedInfo;
     QScopedPointer<HStateVariable> stateVar;
-    try
+
+    if (dataTypeEnumValue == HUpnpDataTypes::string)
     {
-        if (dataType.compare(HUpnpDataTypes::string_str()) == 0)
-        {
-            QStringList allowedValues;
-
-            QDomElement allowedValueListElement =
-                stateVariableElement.firstChildElement("allowedValueList");
-
-            if (!allowedValueListElement.isNull())
-            {
-                QDomElement allowedValueElement =
-                    allowedValueListElement.firstChildElement("allowedValue");
-
-                while(!allowedValueElement.isNull())
-                {
-                    allowedValues.push_back(allowedValueElement.text());
-
-                    allowedValueElement =
-                        allowedValueElement.nextSiblingElement("allowedValue");
-                }
-            }
-
-            stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
-                (HStateVariable*) new HReadableStateVariable(parentService) :
-                (HStateVariable*) new HWritableStateVariable(parentService));
-
-            HStateVariableInfo info(
-                name, wasDefined ? defaultValue : QVariant(),
-                allowedValues, evType, setupData.inclusionRequirement(), &err);
-
-            if (!info.isValid())
-            {
-                throw HParseException(err);
-            }
-
-            bool ok = stateVar->init(info);
-            Q_ASSERT(ok); Q_UNUSED(ok)
-        }
-
-        HUpnpDataTypes::DataType dataTypeEnumValue =
-            HUpnpDataTypes::dataType(dataType);
-
-        if (HUpnpDataTypes::isNumeric(dataTypeEnumValue))
-        {
-            QDomElement allowedValueRangeElement =
-                stateVariableElement.firstChildElement("allowedValueRange");
-
-            if (!allowedValueRangeElement.isNull())
-            {
-                QString minimumStr =
-                    readElementValue("minimum", allowedValueRangeElement);
-
-                if (minimumStr.isEmpty())
-                {
-                    QString err = QString("State variable [%1] is missing a "
-                        "mandatory <minimum> element within <allowedValueRange>.").arg(name);
-
-                    if (m_creationParameters->m_strictness == StrictChecks)
-                    {
-                        throw InvalidServiceDescription(err);
-                    }
-                    else
-                    {
-                        HLOG_WARN_NONSTD(err);
-                        minimumStr = QString::number(INT_MIN);
-                    }
-                }
-
-                QString maximumStr =
-                    readElementValue("maximum", allowedValueRangeElement);
-
-                if (maximumStr.isEmpty())
-                {
-                    QString err = QString("State variable [%1] is missing a "
-                        "mandatory <maximum> element within <allowedValueRange>.").arg(name);
-
-                    if (m_creationParameters->m_strictness == StrictChecks)
-                    {
-                        throw InvalidServiceDescription(err);
-                    }
-                    else
-                    {
-                        HLOG_WARN_NONSTD(err);
-                        maximumStr = QString::number(INT_MAX);
-                    }
-                }
-
-                QString stepStr =
-                    readElementValue("step", allowedValueRangeElement);
-
-                if (stepStr.isEmpty())
-                {
-                    if (HUpnpDataTypes::isRational(dataTypeEnumValue))
-                    {
-                        bool ok = false;
-                        double maxTmp = maximumStr.toDouble(&ok);
-                        if (ok && maxTmp < 1)
-                        {
-                            stepStr = QString::number(maxTmp / 10);
-                        }
-                        else
-                        {
-                            stepStr = "1.0";
-                        }
-                    }
-                    else
-                    {
-                        stepStr = "1";
-                    }
-                }
-
-                stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
-                    (HStateVariable*) new HReadableStateVariable(parentService) :
-                    (HStateVariable*) new HWritableStateVariable(parentService));
-
-                HStateVariableInfo info(
-                    name,
-                    dataTypeEnumValue,
-                    wasDefined ?
-                        convertToRightVariantType(defaultValue, dataTypeEnumValue) :
-                        QVariant(),
-                    minimumStr, maximumStr, stepStr,
-                    evType,
-                    setupData.inclusionRequirement(), &err);
-
-                if (!info.isValid())
-                {
-                    throw HParseException(err);
-                }
-
-                bool ok = stateVar->init(info);
-                Q_ASSERT(ok); Q_UNUSED(ok)
-            }
-        }
-
-        stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
-           (HStateVariable*) new HReadableStateVariable(parentService) :
-           (HStateVariable*) new HWritableStateVariable(parentService));
-
-        HStateVariableInfo info(
-            name,
-            dataTypeEnumValue,
-            wasDefined ?
-                convertToRightVariantType(defaultValue, dataTypeEnumValue) :
-                QVariant(),
-            evType,
-            setupData.inclusionRequirement(),
+        parsedInfo = parseStateVariableInfo_str(
+            name, defValueWasDefined ? defaultValueStr : QVariant(),
+            stateVariableElement, evType, setupData.inclusionRequirement(),
             &err);
-
-        if (!info.isValid())
-        {
-            throw HParseException(err);
-        }
-
-        bool ok = stateVar->init(info);
-        Q_ASSERT(ok); Q_UNUSED(ok)
     }
-    catch(HException& ex)
+    else if (HUpnpDataTypes::isNumeric(dataTypeEnumValue))
+    {
+        parsedInfo = parseStateVariableInfo_numeric(
+            name, defaultValue, stateVariableElement, evType,
+            setupData.inclusionRequirement(), dataTypeEnumValue, &err);
+    }
+    else
+    {
+        parsedInfo = HStateVariableInfo(
+            name, dataTypeEnumValue, defaultValue, evType,
+            setupData.inclusionRequirement(), &err);
+    }
+
+    if (!parsedInfo.isValid())
     {
         throw HParseException(
             QString("Failed to parse <stateVariable> [%1]: %2").arg(
-                name, ex.reason()));
+                name, err));
     }
+
+    // TODO validate parsedInfo against the setupData
+
+    stateVar.reset(m_creationParameters->m_stateVariablesAreImmutable ?
+       (HStateVariable*) new HReadableStateVariable(parentService) :
+       (HStateVariable*) new HWritableStateVariable(parentService));
+
+    bool ok = stateVar->init(parsedInfo);
+    Q_ASSERT(ok); Q_UNUSED(ok)
 
     return new HStateVariableController(stateVar.take());
 }
 
-//
-// Returns 0 if the defined actions map does not contain an OPTIONAL
-// action encountered in the service description. Otherwise returns a valid
-// object or throws an exception.
-//
-HActionController* HObjectCreator::parseAction(
-    HService* parentService, const QDomElement& actionElement,
-    const HActionsSetupData& definedActions)
+namespace
 {
-    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
+bool verifyArgs(
+    const HActionArguments& /*argsSetup*/, const HActionArguments& /*actualArgs*/)
+{
+    return true; // TODO
+}
+}
 
-    QString name = readElementValue("name", actionElement);
+void HObjectCreator::parseActionArguments(
+    const QDomElement& argListElement, HService* parentService,
+    QVector<HActionArgument*>* inArgs, QVector<HActionArgument*>* outArgs,
+    bool* hasRetVal)
+{
+    bool firstOutArgFound  = false;
 
-    //
-    // First, check if the service type identifies the action name
-    HActionSetup actionSetup = definedActions.get(name);
-    if (!definedActions.isEmpty() && !actionSetup.isValid())
+    QDomElement argumentElement = argListElement.firstChildElement("argument");
+    while(!argumentElement.isNull())
     {
-        QString txt = QString(
-            "The implementation of service [%1] does not support "
-            "the action named [%2].").arg(
-                parentService->info().serviceId().toString(), name);
+        QString name = readElementValue("name", argumentElement);
 
-        throw HParseException(txt);
-    }
+        QString dirStr = readElementValue("direction", argumentElement);
 
-    QDomElement argumentListElement  =
-        actionElement.firstChildElement("argumentList");
+        bool retValWasDefined = false;
+        readElementValue("retval", argumentElement, &retValWasDefined);
 
-    bool hasRetvalArgument = false;
-    QVector<HActionArgument*> inputArguments;
-    QVector<HActionArgument*> outputArguments;
-    try
-    {
-        if (!argumentListElement.isNull())
+        QString relatedSvStr =
+            readElementValue("relatedStateVariable", argumentElement);
+
+        HStateVariableController* relatedSv =
+            parentService->h_ptr->m_stateVariables.value(relatedSvStr);
+
+        if (!relatedSv)
         {
-            QDomElement argumentElement =
-                argumentListElement.firstChildElement("argument");
-
-            bool firstOutArgFound = false;
-
-            while(!argumentElement.isNull())
-            {
-                QString name   =
-                    readElementValue("name", argumentElement);
-
-                QString dirStr =
-                    readElementValue("direction", argumentElement);
-
-                bool retValWasDefined = false;
-                readElementValue("retval", argumentElement, &retValWasDefined);
-
-                QString relatedSvStr =
-                    readElementValue("relatedStateVariable", argumentElement);
-
-                HStateVariableController* relatedSv =
-                    parentService->h_ptr->m_stateVariables.value(relatedSvStr);
-
-                if (!relatedSv)
-                {
-                    throw HParseException(QString(
-                        "No state variable named %1").arg(relatedSvStr));
-                }
-
-                if (dirStr.compare("out", Qt::CaseInsensitive) == 0)
-                {
-                    if (retValWasDefined)
-                    {
-                        if (firstOutArgFound)
-                        {
-                            throw HParseException(
-                                "[retval] must be the first [out] argument.");
-                        }
-
-                        hasRetvalArgument = true;
-                    }
-
-                    firstOutArgFound = true;
-
-                    HActionArgument* arg = new HActionArgument(
-                        name, relatedSv->m_stateVariable->info());
-
-                    outputArguments.push_back(arg);
-                }
-                else if (dirStr.compare("in", Qt::CaseInsensitive) == 0)
-                {
-                    if (firstOutArgFound)
-                    {
-                        throw HParseException(
-                            "Invalid argument order. Input arguments must all come "
-                            "before output arguments.");
-                    }
-
-                    HActionArgument* arg = new HActionArgument(
-                        name, relatedSv->m_stateVariable->info());
-
-                    inputArguments.push_back(arg);
-                }
-                else
-                {
-                    throw HParseException("Invalid [direction] value.");
-                }
-
-                argumentElement = argumentElement.nextSiblingElement("argument");
-            }
+            throw HParseException(QString(
+                "No state variable named %1").arg(relatedSvStr));
         }
-    }
-    catch(HException&)
-    {
-        qDeleteAll(inputArguments);
-        qDeleteAll(outputArguments);
-        throw;
-    }
 
-    QString err;
-    HActionInfo actionInfo(
-        name,
-        HActionArguments(inputArguments),
-        HActionArguments(outputArguments),
-        hasRetvalArgument,
-        actionSetup.inclusionRequirement(),
-        &err);
+        HActionArgument* createdArg = 0;
+        if (dirStr.compare("out", Qt::CaseInsensitive) == 0)
+        {
+            if (retValWasDefined)
+            {
+                if (firstOutArgFound)
+                {
+                    throw HParseException(
+                        "[retval] must be the first [out] argument.");
+                }
 
-    if (!actionInfo.isValid())
-    {
-        throw HParseException(QString(
-            "Service [%1]: failed to initialize action [%2]: %3").arg(
-                parentService->info().serviceId().toString(), name, err));
+                *hasRetVal = true;
+            }
+
+            firstOutArgFound = true;
+
+            createdArg = new HActionArgument(
+                name, relatedSv->m_stateVariable->info());
+
+            outArgs->push_back(createdArg);
+        }
+        else if (dirStr.compare("in", Qt::CaseInsensitive) == 0)
+        {
+            if (firstOutArgFound)
+            {
+                throw HParseException(
+                    "Invalid argument order. Input arguments must all come "
+                    "before output arguments.");
+            }
+
+            createdArg = new HActionArgument(
+                name, relatedSv->m_stateVariable->info());
+
+            inArgs->push_back(createdArg);
+        }
+        else
+        {
+            throw HParseException(QString(
+                "Invalid [direction] value: [%1].").arg(dirStr));
+        }
+
+        argumentElement = argumentElement.nextSiblingElement("argument");
     }
+}
 
+HActionController* HObjectCreator::createAction(
+    const HActionSetup& actionSetup, const HActionInfo& actionInfo,
+    HService* parentService)
+{
     QScopedPointer<HAction> action(new HAction(actionInfo, parentService));
     if (m_creationParameters->m_actionInvokeProxyCreator)
     {
@@ -838,7 +798,8 @@ HActionController* HObjectCreator::parseAction(
         {
             throw HParseException(QString(
                 "Service [%1]: action [%2] lacks an implementation").arg(
-                    parentService->info().serviceId().toString(), name));
+                    parentService->info().serviceId().toString(),
+                    actionInfo.name()));
         }
         action->h_ptr->m_actionInvoke = new HActionInvoke(actionInvoke);
         action->h_ptr->m_actionInvoker =
@@ -847,6 +808,82 @@ HActionController* HObjectCreator::parseAction(
     }
 
     return new HActionController(action.take());
+}
+
+//
+// Returns 0 if the defined actions map does not contain an OPTIONAL
+// action encountered in the service description. Otherwise returns a valid
+// object or throws an exception.
+//
+HActionController* HObjectCreator::parseAction(
+    HService* parentService, const QDomElement& actionElement,
+    const HActionsSetupData& definedActions)
+{
+    HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
+
+    QString name = readElementValue("name", actionElement);
+
+    HActionSetup actionSetup = definedActions.get(name);
+    if (!definedActions.isEmpty() && !actionSetup.isValid())
+    {
+        QString txt = QString(
+            "The implementation of service [%1] does not support "
+            "the action named [%2].").arg(
+                parentService->info().serviceId().toString(), name);
+
+        throw HParseException(txt);
+    }
+
+    bool hasRetVal = false;
+    QVector<HActionArgument*> inputArguments;
+    QVector<HActionArgument*> outputArguments;
+    try
+    {
+        QDomElement argumentListElement =
+            actionElement.firstChildElement("argumentList");
+        if (!argumentListElement.isNull())
+        {
+            parseActionArguments(
+                argumentListElement, parentService, &inputArguments,
+                &outputArguments, &hasRetVal);
+        }
+    }
+    catch(HException&)
+    {
+        qDeleteAll(inputArguments);
+        qDeleteAll(outputArguments);
+        throw;
+    }
+
+    HActionArguments inArgs  = inputArguments;
+    HActionArguments outArgs = outputArguments;
+    HActionArguments inArgsSetup  = actionSetup.inputArguments();
+    HActionArguments outArgsSetup = actionSetup.outputArguments();
+
+    bool b =
+        verifyArgs(inArgsSetup, inArgs) && verifyArgs(outArgsSetup, outArgs);
+
+    if (!b)
+    {
+        throw HParseException(QString(
+            "Incompatible action argument definitions between parent service [%1]"
+            " and service description.").arg(
+                parentService->info().serviceId().toString()));
+    }
+
+    QString err;
+    HActionInfo actionInfo(
+        name, inArgs, outArgs, hasRetVal, actionSetup.inclusionRequirement(),
+        &err);
+
+    if (!actionInfo.isValid())
+    {
+        throw HParseException(QString(
+            "Service [%1]: failed to initialize action [%2]: %3").arg(
+                parentService->info().serviceId().toString(), name, err));
+    }
+
+    return createAction(actionSetup, actionInfo, parentService);
 }
 
 namespace
@@ -866,7 +903,7 @@ void validateRootDevice(HDeviceController* device)
 
     public:
 
-        void validateDevice(HDeviceController* device)
+        void validateIcons(HDeviceController* device)
         {
             QList<QPair<QUrl, QImage> > icons =
                 device->m_device->info().icons();
@@ -887,56 +924,65 @@ void validateRootDevice(HDeviceController* device)
                     iconUrls.insert(iconUrl);
                 }
             }
+        }
+
+        void validateService(HServiceController* service)
+        {
+            QString eventUrl =
+                service->m_service->info().eventSubUrl().toString();
+
+            if (!eventUrl.isEmpty())
+            {
+                if (eventUrls.contains(eventUrl))
+                {
+                    throw InvalidDeviceDescription(QString(
+                        "EventSubUrl [%1] encountered more than once."
+                        "EventSubUrls MUST be unique within a device tree.").arg(eventUrl));
+                }
+                else
+                {
+                    eventUrls.insert(eventUrl);
+                }
+            }
+
+            QString scpdUrl =
+                service->m_service->info().scpdUrl().toString();
+
+            if (scpdUrls.contains(scpdUrl))
+            {
+                throw InvalidDeviceDescription(QString(
+                    "ScpdUrl [%1] encountered more than once."
+                    "ScpdUrls MUST be unique within a device tree.").arg(eventUrl));
+            }
+            else
+            {
+                scpdUrls.insert(eventUrl);
+            }
+
+            QString controlUrl =
+                service->m_service->info().controlUrl().toString();
+
+            if (controlUrls.contains(controlUrl))
+            {
+                throw InvalidDeviceDescription(QString(
+                    "ControlUrl [%1] encountered more than once. "
+                    "ControlUrls MUST be unique within a device tree.").arg(eventUrl));
+            }
+            else
+            {
+                controlUrls.insert(eventUrl);
+            }
+        }
+
+        void validateDevice(HDeviceController* device)
+        {
+            validateIcons(device);
 
             const QList<HServiceController*>* services = device->services();
             for(qint32 i = 0; i < services->size(); ++i)
             {
                 HServiceController* service = (*services)[i];
-
-                QString eventUrl =
-                    service->m_service->info().eventSubUrl().toString();
-
-                if (!eventUrl.isEmpty())
-                {
-                    if (eventUrls.contains(eventUrl))
-                    {
-                        throw InvalidDeviceDescription(QString(
-                            "EventSubUrl [%1] encountered more than once."
-                            "EventSubUrls MUST be unique within a device tree.").arg(eventUrl));
-                    }
-                    else
-                    {
-                        eventUrls.insert(eventUrl);
-                    }
-                }
-
-                QString scpdUrl =
-                    service->m_service->info().scpdUrl().toString();
-
-                if (scpdUrls.contains(scpdUrl))
-                {
-                    throw InvalidDeviceDescription(QString(
-                        "ScpdUrl [%1] encountered more than once."
-                        "ScpdUrls MUST be unique within a device tree.").arg(eventUrl));
-                }
-                else
-                {
-                    scpdUrls.insert(eventUrl);
-                }
-
-                QString controlUrl =
-                    service->m_service->info().controlUrl().toString();
-
-                if (controlUrls.contains(controlUrl))
-                {
-                    throw InvalidDeviceDescription(QString(
-                        "ControlUrl [%1] encountered more than once. "
-                        "ControlUrls MUST be unique within a device tree.").arg(eventUrl));
-                }
-                else
-                {
-                    controlUrls.insert(eventUrl);
-                }
+                validateService(service);
             }
 
             const QList<HDeviceController*>* devices = device->embeddedDevices();

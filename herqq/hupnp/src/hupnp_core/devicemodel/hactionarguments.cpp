@@ -86,8 +86,7 @@ HActionArgument::HActionArgument(const HActionArgument& other) :
     m_stateVariableInfo = other.m_stateVariableInfo;
 }
 
-HActionArgument& HActionArgument::operator=(
-    const HActionArgument& other)
+HActionArgument& HActionArgument::operator=(const HActionArgument& other)
 {
     Q_ASSERT(&other != this);
 
@@ -352,6 +351,48 @@ QList<QString> HActionArguments::names() const
 bool HActionArguments::isEmpty() const
 {
     return h_ptr->m_argumentsOrdered.isEmpty();
+}
+
+void HActionArguments::clear()
+{
+    h_ptr->m_arguments.clear();
+    h_ptr->m_argumentsOrdered.clear();
+}
+
+bool HActionArguments::remove(const QString& name)
+{
+    if (h_ptr->m_arguments.contains(name))
+    {
+        h_ptr->m_arguments.remove(name);
+        HActionArguments::iterator it = h_ptr->m_argumentsOrdered.begin();
+        for(; it != h_ptr->m_argumentsOrdered.end(); ++it)
+        {
+            if ((*it)->name() == name)
+            {
+                h_ptr->m_argumentsOrdered.erase(it);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool HActionArguments::append(HActionArgument *arg)
+{
+    if (!arg)
+    {
+        return false;
+    }
+    else if (h_ptr->m_arguments.contains(arg->name()))
+    {
+        return false;
+    }
+
+    h_ptr->m_arguments.insert(arg->name(), arg);
+    h_ptr->m_argumentsOrdered.append(arg);
+
+    return true;
 }
 
 QString HActionArguments::toString() const

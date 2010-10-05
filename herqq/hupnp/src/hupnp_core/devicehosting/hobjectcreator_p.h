@@ -38,6 +38,7 @@
 #include "../general/hupnp_fwd.h"
 #include "../general/hupnp_global.h"
 #include "../devicemodel/hactioninvoke.h"
+#include "../dataelements/hstatevariableinfo.h"
 
 #include "../../utils/hthreadpool_p.h"
 
@@ -197,12 +198,40 @@ private:
         const QDomElement& iconListElement);
 
     HDeviceInfo* parseDeviceInfo(const QDomElement& deviceElement);
+
+    void parseStateVariables(
+        HService* service, QDomElement stateVariableElement);
+
+    void parseActions(HService* service, QDomElement actionElement);
+
     void parseServiceDescription(HService*);
+
+    void parseActionArguments(
+        const QDomElement& argListElement,
+        HService* parentService,
+        QVector<HActionArgument*>* inArgs,
+        QVector<HActionArgument*>* outArgs,
+        bool* hasRetVal);
+
+    HActionController* createAction(
+        const HActionSetup& actionSetup, const HActionInfo& actionInfo,
+        HService* parentService);
 
     HActionController* parseAction(
         HService* parentService,
         const QDomElement& actionElement,
         const HActionsSetupData&);
+
+    HStateVariableInfo parseStateVariableInfo_str(
+        const QString& name, const QVariant& defValue,
+        const QDomElement& svElement, HStateVariableInfo::EventingType,
+        HInclusionRequirement, QString* err);
+
+    HStateVariableInfo parseStateVariableInfo_numeric(
+        const QString& name, const QVariant& defValue,
+        const QDomElement& svElement, HStateVariableInfo::EventingType,
+        HInclusionRequirement, HUpnpDataTypes::DataType dataTypeEnumValue,
+        QString* err);
 
     HStateVariableController* parseStateVariable(
         HService* parentService,

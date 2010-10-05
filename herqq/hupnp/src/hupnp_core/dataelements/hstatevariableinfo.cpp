@@ -45,7 +45,8 @@ HStateVariableInfoPrivate::HStateVariableInfoPrivate() :
     m_allowedValueList(),
     m_allowedValueRange(),
     m_inclusionRequirement(InclusionRequirementUnknown),
-    m_maxRate(-1)
+    m_maxRate(-1),
+    m_version(-1)
 {
 }
 
@@ -463,6 +464,16 @@ HStateVariableInfo::~HStateVariableInfo()
     delete h_ptr;
 }
 
+qint32 HStateVariableInfo::version() const
+{
+    return h_ptr->m_version;
+}
+
+void HStateVariableInfo::setVersion(qint32 version)
+{
+    h_ptr->m_version = version < 0 ? -1 : version;
+}
+
 QString HStateVariableInfo::name() const
 {
     return h_ptr->m_name;
@@ -581,6 +592,7 @@ bool operator==(const HStateVariableInfo& arg1, const HStateVariableInfo& arg2)
 {
     return arg1.h_ptr->m_name == arg2.h_ptr->m_name &&
            arg1.h_ptr->m_maxRate == arg2.h_ptr->m_maxRate &&
+           arg1.h_ptr->m_version == arg2.h_ptr->m_version &&
            arg1.h_ptr->m_dataType == arg2.h_ptr->m_dataType &&
            arg1.h_ptr->m_defaultValue == arg2.h_ptr->m_defaultValue &&
            arg1.h_ptr->m_eventingType == arg2.h_ptr->m_eventingType &&

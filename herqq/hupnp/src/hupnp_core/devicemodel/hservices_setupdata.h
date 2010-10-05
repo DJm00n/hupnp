@@ -22,21 +22,18 @@
 #ifndef HSERVICES_SETUPDATA_H_
 #define HSERVICES_SETUPDATA_H_
 
-#include <HUpnpCore/HServiceId>
-#include <HUpnpCore/HServiceInfo>
-#include <HUpnpCore/HResourceType>
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
-
-template<typename T>
-class QSet;
 
 namespace Herqq
 {
 
 namespace Upnp
 {
+
+class HServiceSetupPrivate;
 
 /*!
  * This class is used to specify information that is required to setup an
@@ -56,11 +53,7 @@ H_DISABLE_COPY(HServiceSetup)
 
 private:
 
-    HServiceId m_serviceId;
-    HResourceType m_serviceType;
-    HService* m_service;
-    qint32 m_version;
-    HInclusionRequirement m_inclusionReq;
+    HServiceSetupPrivate* h_ptr;
 
 public:
 
@@ -173,10 +166,7 @@ public:
      *
      * \sa setInclusionRequirement()
      */
-    inline HInclusionRequirement inclusionRequirement() const
-    {
-        return m_inclusionReq;
-    }
+    HInclusionRequirement inclusionRequirement() const;
 
     /*!
      * Indicates if the object is valid.
@@ -198,7 +188,7 @@ public:
      *
      * \sa setService(), takeService()
      */
-    inline HService* service() const { return m_service; }
+    HService* service() const;
 
     /*!
      * Returns the service ID.
@@ -207,7 +197,7 @@ public:
      *
      * \sa setServiceId()
      */
-    inline const HServiceId& serviceId() const { return m_serviceId; }
+    const HServiceId& serviceId() const;
 
     /*!
      * Returns the service type.
@@ -216,7 +206,7 @@ public:
      *
      * \sa setServiceType()
      */
-    inline const HResourceType& serviceType() const { return m_serviceType; }
+    const HResourceType& serviceType() const;
 
     /*!
      * Returns the version of the UPnP device, which first specified the service.
@@ -225,10 +215,7 @@ public:
      *
      * \sa setVersion()
      */
-    inline qint32 version() const
-    {
-        return m_version;
-    }
+    qint32 version() const;
 
     /*!
      * Sets the the <em>inclusion requirement</em>.
@@ -237,10 +224,7 @@ public:
      *
      * \sa inclusionRequirement()
      */
-    inline void setInclusionRequirement(HInclusionRequirement arg)
-    {
-        m_inclusionReq = arg;
-    }
+    void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
      * Sets the service ID.
@@ -249,10 +233,7 @@ public:
      *
      * \sa serviceId()
      */
-    inline void setServiceId(const HServiceId& arg)
-    {
-        m_serviceId = arg;
-    }
+    void setServiceId(const HServiceId& arg);
 
     /*!
      * Sets the service type.
@@ -261,10 +242,7 @@ public:
      *
      * \sa serviceType()
      */
-    inline void setServiceType(const HResourceType& arg)
-    {
-        m_serviceType = arg;
-    }
+    void setServiceType(const HResourceType& arg);
 
     /*!
      * Associates an HService pointer with this instance.
@@ -277,10 +255,7 @@ public:
      *
      * \sa service()
      */
-    inline void setService(HService* arg)
-    {
-        m_service = arg;
-    }
+    void setService(HService* arg);
 
     /*!
      * Sets the version of the UPnP device, which first specified the service.
@@ -290,10 +265,7 @@ public:
      *
      * \sa version()
      */
-    inline void setVersion(qint32 version)
-    {
-        m_version = version;
-    }
+    void setVersion(qint32 version);
 
      /*!
      * Returns the HService pointer associated with the instance and passes
@@ -304,13 +276,7 @@ public:
      *
      * \sa service()
      */
-    inline HService* takeService()
-    {
-        HService* retVal = m_service;
-        m_service = 0;
-        return retVal;
-    }
-
+    HService* takeService();
 };
 
 /*!

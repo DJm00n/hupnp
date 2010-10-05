@@ -13,6 +13,8 @@ INCLUDEPATH += \
 LIBS += -L"../../bin/"
 LIBS += -L"../../lib/qtsoap-2.7-opensource/lib"
 
+debug:DEFINES += DEBUG
+
 win32 {
     debug {
         LIBS += -lQtSolutions_SOAP-2.7d

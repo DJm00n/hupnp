@@ -104,7 +104,7 @@
  * The API documentation of HUPnP is clear about object ownership and
  * these classes are identified in documentation.
  *
- * \subsection herqqheader The <HUpnp> include file
+ * \subsection herqqheader The \c HUpnp include file
  *
  * %HUpnp introduce a number of types, functions, enums and
  * type definitions under the root namespace \c Herqq. For instance, all the
@@ -114,7 +114,7 @@
  * code to work. More specifically, if the compiler doesn't need to see the layout
  * of a %HUPnP type to compile your code, you should only forward-declare such %HUPnP
  * types. In that case, you can include the
- * <c><HUpnp></c> file, which provides forward-declarations to every public
+ * \c HUpnp file, which provides forward-declarations to every public
  * %HUPnP type and function.
  *
  * \subsection logging Logging
@@ -123,7 +123,7 @@
  * going on under the hood, especially when something appears
  * to be malfunctioning. You can enable logging in HUPnP by calling the
  * function Herqq::Upnp::SetLoggingLevel() with a desired \e level argument.
- * Include <c><HUpnp></c> to use the Herqq::Upnp::SetLoggingLevel().
+ * Include \c HUpnp to use the Herqq::Upnp::SetLoggingLevel().
  *
  * \subsection deployment Deployment
  *

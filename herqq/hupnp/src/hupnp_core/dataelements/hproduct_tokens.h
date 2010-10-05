@@ -90,7 +90,7 @@ public:
      * Indicates if the object is valid, i.e both the token and the product
      * version are defined.
      *
-     * \param level specifies whether the contents of the object are checked
+     * \param checkLevel specifies whether the contents of the object are checked
      * for strict validity. Only an object that is strictly valid
      * contains information as defined in the UDA. In other words,
      * a strictly valid product token takes the form

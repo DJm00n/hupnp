@@ -1,7 +1,6 @@
 
 HEADERS += \
     $$SRC_LOC/devicemodel/haction.h \
-    $$SRC_LOC/devicemodel/harguments_setupdata.h \
     $$SRC_LOC/devicemodel/hactions_setupdata.h \
     $$SRC_LOC/devicemodel/hasyncop.h \
     $$SRC_LOC/devicemodel/hexecargs.h \
@@ -34,7 +33,6 @@ EXPORTED_PRIVATE_HEADERS += \
 
 SOURCES += \
     $$SRC_LOC/devicemodel/haction.cpp \
-    $$SRC_LOC/devicemodel/harguments_setupdata.cpp \
     $$SRC_LOC/devicemodel/hactions_setupdata.cpp \
     $$SRC_LOC/devicemodel/hasyncop.cpp \
     $$SRC_LOC/devicemodel/hexecargs.cpp \

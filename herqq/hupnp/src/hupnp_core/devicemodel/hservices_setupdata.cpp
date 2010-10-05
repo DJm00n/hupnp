@@ -21,6 +21,8 @@
 
 #include "hservices_setupdata.h"
 #include "hservice.h"
+#include "../dataelements/hserviceid.h"
+#include "../dataelements/hresourcetype.h"
 
 #include <QtCore/QSet>
 
@@ -31,69 +33,153 @@ namespace Upnp
 {
 
 /*******************************************************************************
+ * HServiceSetupPrivate
+ ******************************************************************************/
+class HServiceSetupPrivate
+{
+
+public:
+
+    HServiceId m_serviceId;
+    HResourceType m_serviceType;
+    HService* m_service;
+    qint32 m_version;
+    HInclusionRequirement m_inclusionReq;
+
+    HServiceSetupPrivate() :
+        m_serviceId(), m_serviceType(), m_service(0), m_version(0),
+        m_inclusionReq(InclusionRequirementUnknown)
+    {
+    }
+
+    ~HServiceSetupPrivate()
+    {
+        delete m_service;
+    }
+};
+
+/*******************************************************************************
  * HServiceSetup
  ******************************************************************************/
 HServiceSetup::HServiceSetup() :
-    m_serviceId(), m_serviceType(), m_service(0), m_version(0),
-    m_inclusionReq(InclusionRequirementUnknown)
+    h_ptr(new HServiceSetupPrivate())
 {
 }
 
 HServiceSetup::HServiceSetup(
     const HServiceId& id, const HResourceType& serviceType,
     HInclusionRequirement ireq) :
-        m_serviceId(id),
-        m_serviceType(serviceType),
-        m_service(0),
-        m_version(1),
-        m_inclusionReq(ireq)
+        h_ptr(new HServiceSetupPrivate())
 {
+    h_ptr->m_serviceId = id;
+    h_ptr->m_serviceType = serviceType;
+    h_ptr->m_version = 1;
+    h_ptr->m_inclusionReq = ireq;
 }
 
 HServiceSetup::HServiceSetup(
     const HServiceId& id, const HResourceType& serviceType, qint32 version,
     HInclusionRequirement ireq) :
-        m_serviceId(id),
-        m_serviceType(serviceType),
-        m_service(0),
-        m_version(version),
-        m_inclusionReq(ireq)
+        h_ptr(new HServiceSetupPrivate())
 {
+    h_ptr->m_serviceId = id;
+    h_ptr->m_serviceType = serviceType;
+    h_ptr->m_version = version;
+    h_ptr->m_inclusionReq = ireq;
 }
 
 HServiceSetup::HServiceSetup(
     const HServiceId& id, const HResourceType& serviceType,
     HService* service, HInclusionRequirement ireq) :
-        m_serviceId(id),
-        m_serviceType(serviceType),
-        m_service(service),
-        m_version(1),
-        m_inclusionReq(ireq)
+        h_ptr(new HServiceSetupPrivate())
 {
+    h_ptr->m_serviceId = id;
+    h_ptr->m_serviceType = serviceType;
+    h_ptr->m_service = service;
+    h_ptr->m_version = 1;
+    h_ptr->m_inclusionReq = ireq;
 }
 
 HServiceSetup::HServiceSetup(
     const HServiceId& id, const HResourceType& serviceType,
     HService* service, qint32 version, HInclusionRequirement ireq) :
-        m_serviceId(id),
-        m_serviceType(serviceType),
-        m_service(service),
-        m_version(version),
-        m_inclusionReq(ireq)
+        h_ptr(new HServiceSetupPrivate())
 {
+    h_ptr->m_serviceId = id;
+    h_ptr->m_serviceType = serviceType;
+    h_ptr->m_service = service;
+    h_ptr->m_version = version;
+    h_ptr->m_inclusionReq = ireq;
 }
 
 HServiceSetup::~HServiceSetup()
 {
-    delete m_service;
+    delete h_ptr;
 }
 
 bool HServiceSetup::isValid(HValidityCheckLevel checkLevel) const
 {
-    return m_serviceId.isValid(checkLevel) &&
-           m_serviceType.isValid() &&
-           m_version > 0 &&
-           m_inclusionReq != InclusionRequirementUnknown;
+    return h_ptr->m_serviceId.isValid(checkLevel) &&
+           h_ptr->m_serviceType.isValid() &&
+           h_ptr->m_version > 0 &&
+           h_ptr->m_inclusionReq != InclusionRequirementUnknown;
+}
+
+HInclusionRequirement HServiceSetup::inclusionRequirement() const
+{
+    return h_ptr->m_inclusionReq;
+}
+
+HService* HServiceSetup::service() const
+{
+    return h_ptr->m_service;
+}
+
+const HServiceId& HServiceSetup::serviceId() const
+{
+    return h_ptr->m_serviceId;
+}
+
+const HResourceType& HServiceSetup::serviceType() const
+{
+    return h_ptr->m_serviceType;
+}
+
+qint32 HServiceSetup::version() const
+{
+    return h_ptr->m_version;
+}
+
+void HServiceSetup::setInclusionRequirement(HInclusionRequirement arg)
+{
+    h_ptr->m_inclusionReq = arg;
+}
+
+void HServiceSetup::setServiceId(const HServiceId& arg)
+{
+    h_ptr->m_serviceId = arg;
+}
+
+void HServiceSetup::setServiceType(const HResourceType& arg)
+{
+    h_ptr->m_serviceType = arg;
+}
+
+void HServiceSetup::setService(HService* arg)
+{
+    h_ptr->m_service = arg;
+}
+
+void HServiceSetup::setVersion(qint32 version)
+{
+    h_ptr->m_version = version;
+}
+
+HService* HServiceSetup::takeService()
+{
+    HService* retVal = h_ptr->m_service;
+    h_ptr->m_service = 0;
+    return retVal;
 }
 
 /*******************************************************************************

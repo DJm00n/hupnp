@@ -76,7 +76,7 @@ HActionInfo::HActionInfo(
     {
         if (err)
         {
-            *err = "Cannot contain a return value when no output arguments"
+            *err = "Cannot contain a return value when no output arguments "
                    "are specified";
         }
         return;

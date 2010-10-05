@@ -23,7 +23,7 @@
 #define HSTATEVARIABLES_SETUPDATA_H_
 
 #include <HUpnpCore/HUpnp>
-#include <HUpnpCore/HUpnpDataTypes>
+#include <HUpnpCore/HStateVariableInfo>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
@@ -37,207 +37,6 @@ namespace Herqq
 namespace Upnp
 {
 
-class HStateVariableSetupPrivate;
-
-/*!
- * This class is used to specify information that can be used to setup an
- * HStateVariable.
- *
- * \headerfile hstatevariables_setupdata.h HStateVariableSetup
- *
- * \ingroup hupnp_devicemodel
- *
- * \sa HStateVariablesSetupData, HStateVariable
- *
- * \remarks this class is not thread-safe.
- */
-class H_UPNP_CORE_EXPORT HStateVariableSetup
-{
-
-private:
-
-    HStateVariableSetupPrivate* h_ptr;
-
-public:
-
-    /*!
-     * Creates a new, invalid instance.
-     *
-     * \sa isValid().
-     */
-    HStateVariableSetup();
-
-    /*!
-     * Creates a new instance.
-     *
-     * \param name specifies the name of the state variable.
-     *
-     * \param dt specifies the data type of the state variable.
-     *
-     * \param incReq specifies the \e inclusion \e requirement of the
-     * state variable.
-     *
-     * \sa isValid()
-     *
-     * \remarks the version() is set to 1.
-     */
-    HStateVariableSetup(
-        const QString& name,
-        HUpnpDataTypes::DataType dt,
-        HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Creates a new instance.
-     *
-     * \param name specifies the name of the state variable.
-     *
-     * \param version specifies the UPnP service version in which the
-     * state variable was first specified.
-     *
-     * \param incReq specifies the \e inclusion \e requirement of the
-     * state variable.
-     *
-     * \sa isValid()
-     */
-    HStateVariableSetup(
-        const QString& name,
-        HUpnpDataTypes::DataType dt,
-        qint32 version,
-        HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Copy constructor.
-     *
-     * Creates a copy of \c other.
-     */
-    HStateVariableSetup(const HStateVariableSetup&);
-
-    /*!
-     * Assignment operator.
-     *
-     * Copies the contents of \c other to this.
-     */
-    HStateVariableSetup& operator=(const HStateVariableSetup&);
-
-    /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
-     */
-    ~HStateVariableSetup();
-
-    /*!
-     * Returns the <em>inclusion requirement</em> of the state variable.
-     *
-     * \return the <em>inclusion requirement</em> of the state variable.
-     *
-     * \sa setInclusionRequirement()
-     */
-    HInclusionRequirement inclusionRequirement() const;
-
-    /*!
-     * Indicates if the object is valid.
-     *
-     * \return \e true in case the object is valid, that is,
-     * both the name and the inclusion requirement are properly defined.
-     */
-    bool isValid() const;
-
-    /*!
-     * Returns the maximum rate at which an evented state variable may
-     * send events.
-     *
-     * \return the maximum rate at which an evented state variable may
-     * send events.
-     *
-     * \sa setMaxEventRate()
-     */
-    qint32 maxEventRate() const;
-
-    /*!
-     * Returns the name of the state variable.
-     *
-     * \return the name of the state variable.
-     *
-     * \sa setName()
-     */
-    QString name() const;
-
-    /*!
-     * Returns the data type of the state variable.
-     *
-     * \return the data type of the state variable.
-     *
-     * \sa setDataType()
-     */
-    HUpnpDataTypes::DataType dataType() const;
-
-    /*!
-     * Returns the UPnP service version in which the state variable
-     * was first specified.
-     *
-     * \return the UPnP service version in which the state variable
-     * was first specified.
-     *
-     * \sa setVersion()
-     */
-    qint32 version() const;
-
-    /*!
-     * Sets the name of the state variable.
-     *
-     * \param name specifies the name of the state variable.
-     *
-     * \param err is a pointer to a \c QString that contains an error description
-     * in case the name could not be set. This is an optional parameter.
-     *
-     * \return \e true in case the specified name was successfully set.
-     *
-     * \sa name()
-     */
-    bool setName(const QString& name, QString* err = 0);
-
-    /*!
-     * Sets the data type of the state variable.
-     *
-     * \param dt specifies the data type of the state variable.
-     *
-     * \sa dataType()
-     */
-    void setDataType(HUpnpDataTypes::DataType dt);
-
-    /*!
-     * Sets the maximum rate at which an evented state variable may send events.
-     *
-     * \param arg specifies the maximum rate at which an evented
-     * state variable may send events.
-     *
-     * \sa maxEventRate()
-     */
-    void setMaxEventRate(qint32 arg);
-
-    /*!
-     * Sets the <em>inclusion requirement</em> of the state variable.
-     *
-     * \param arg specifies the <em>inclusion requirement</em> of the
-     * state variable.
-     *
-     * \sa inclusionRequirement()
-     */
-    void setInclusionRequirement(HInclusionRequirement arg);
-
-    /*!
-     * Specifies the UPnP service version in which the state variable
-     * was first specified.
-     *
-     * \param version specifies the UPnP service version in which the
-     * state variable was first specified.
-     *
-     * \sa version()
-     */
-    void setVersion(qint32 version);
-};
-
 /*!
  * This class is used to specify information that is required to setup the
  * \c HStateVariables of an HService.
@@ -247,8 +46,6 @@ public:
  * \ingroup hupnp_devicemodel
  *
  * \remarks this class is not thread-safe.
- *
- * \sa HStateVariableSetup
  */
 class H_UPNP_CORE_EXPORT HStateVariablesSetupData
 {
@@ -277,7 +74,7 @@ public:
 
 private:
 
-    QHash<QString, HStateVariableSetup> m_setupData;
+    QHash<QString, HStateVariableInfo> m_setupData;
     DefaultInclusionPolicy m_defaultInclusionPolicy;
 
 public:
@@ -297,7 +94,7 @@ public:
      *
      * The default inclusion policy specifies the action to take when a
      * state variable definition in a service description file does not map
-     * to any HStateVariableSetup object contained within this instance.
+     * to any HStateVariableInfo object contained within this instance.
      *
      * \return the default inclusion policy.
      */
@@ -322,12 +119,12 @@ public:
      * \param name specifies the name of the item to be retrieved.
      *
      * \return the item with the specified name. Note that the returned item
-     * is invalid, i.e. HStateVariableSetup::isValid() returns false in case no item
+     * is invalid, i.e. HStateVariableInfo::isValid() returns false in case no item
      * with the specified name was found.
      *
      * \sa contains(), isEmpty()
      */
-    HStateVariableSetup get(const QString& name) const;
+    HStateVariableInfo get(const QString& name) const;
 
     /*!
      * Indicates if the object is empty.
@@ -361,7 +158,7 @@ public:
      *
      * \sa remove()
      */
-    bool insert(const HStateVariableSetup& newItem);
+    bool insert(const HStateVariableInfo& newItem);
 
     /*!
      * Removes an existing item.

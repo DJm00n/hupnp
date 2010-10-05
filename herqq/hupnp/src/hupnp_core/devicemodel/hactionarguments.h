@@ -125,7 +125,6 @@ public:
     HActionArgument();
 
     /*!
-     *
      * Initializes a new instance with the specified name and related state variable.
      *
      * \param name specifies the name of the argument
@@ -139,7 +138,8 @@ public:
      * \sa isValid()
      */
     HActionArgument(
-        const QString& name, const HStateVariableInfo& stateVariableInfo);
+        const QString& name,
+        const HStateVariableInfo& stateVariableInfo);
 
     /*!
      * Copy constructor.
@@ -338,6 +338,9 @@ public:
     /*!
      * Creates a new instance from the specified input arguments and takes the
      * ownership of the provided arguments.
+     *
+     * \param args specifies the action argument objects this instance will
+     * manage.
      *
      * \sa isEmpty()
      */
@@ -552,6 +555,41 @@ public:
      * \return \e true when the object has no arguments.
      */
     bool isEmpty() const;
+
+    /*!
+     * Removes every contained HActionArgument from this instance.
+     *
+     * \warning Calling this function will make any active iterators invalid.
+     */
+    void clear();
+
+    /*!
+     * Removes an HActionArgument with the specified name.
+     *
+     * \param name specifies the name of the HActionArgument to be removed.
+     *
+     * \return \e true if an HActionArgument was found and removed.
+     *
+     * \warning Calling this function will make any active iterators invalid.
+     */
+    bool remove(const QString& name);
+
+    /*!
+     * Inserts a new HActionArgument to this instance.
+     *
+     * \param arg specifies the HActionArgument to be added.
+     *
+     * \return \e true if the specified argument was added. The action argument
+     * will not be added if the instance already contains an action argument
+     * instance with the same name or the provided pointer is null.
+     *
+     * \remarks
+     * \li This instance takes the ownership of the provided HActionArgument
+     * object.
+     *
+     * \warning Calling this function will make any active iterators invalid.
+     */
+    bool append(HActionArgument* arg);
 
     /*!
      * Returns a string representation of the object.

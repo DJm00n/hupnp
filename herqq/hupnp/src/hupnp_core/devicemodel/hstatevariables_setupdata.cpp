@@ -32,147 +32,6 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HStateVariableSetupPrivate
- ******************************************************************************/
-class HStateVariableSetupPrivate
-{
-
-public:
-
-    QString m_name;
-    HUpnpDataTypes::DataType m_dt;
-    qint32 m_version;
-    HInclusionRequirement m_inclusionRequirement;
-    qint32 m_maxRate;
-
-    HStateVariableSetupPrivate() :
-        m_name(), m_dt(HUpnpDataTypes::Undefined), m_version(0),
-        m_inclusionRequirement(), m_maxRate(-1)
-    {
-    }
-};
-
-/*******************************************************************************
- * HStateVariableSetup
- ******************************************************************************/
-HStateVariableSetup::HStateVariableSetup() :
-    h_ptr(new HStateVariableSetupPrivate())
-{
-}
-
-HStateVariableSetup::HStateVariableSetup(
-    const QString& name, HUpnpDataTypes::DataType dt, HInclusionRequirement ireq) :
-        h_ptr(new HStateVariableSetupPrivate())
-{
-    h_ptr->m_dt = dt;
-    h_ptr->m_version = 1;
-    h_ptr->m_inclusionRequirement = ireq;
-
-    setName(name);
-}
-
-HStateVariableSetup::HStateVariableSetup(
-    const QString& name, HUpnpDataTypes::DataType dt, qint32 version,
-    HInclusionRequirement ireq) :
-        h_ptr(new HStateVariableSetupPrivate())
-{
-    h_ptr->m_dt = dt;
-    h_ptr->m_version = version;
-    h_ptr->m_inclusionRequirement = ireq;
-
-    setName(name);
-}
-
-HStateVariableSetup::HStateVariableSetup(const HStateVariableSetup& other) :
-    h_ptr(0)
-{
-    Q_ASSERT(&other != this);
-    h_ptr = new HStateVariableSetupPrivate(*other.h_ptr);
-}
-
-HStateVariableSetup& HStateVariableSetup::operator=(
-    const HStateVariableSetup& other)
-{
-    Q_ASSERT(&other != this);
-
-    HStateVariableSetupPrivate* newHptr =
-        new HStateVariableSetupPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
-    return *this;
-}
-
-HStateVariableSetup::~HStateVariableSetup()
-{
-    delete h_ptr;
-}
-
-bool HStateVariableSetup::setName(const QString& name, QString* err)
-{
-    if (verifyName(name, err))
-    {
-        h_ptr->m_name = name;
-        return true;
-    }
-
-    return false;
-}
-
-HInclusionRequirement HStateVariableSetup::inclusionRequirement() const
-{
-    return h_ptr->m_inclusionRequirement;
-}
-
-bool HStateVariableSetup::isValid() const
-{
-    return !h_ptr->m_name.isEmpty() &&
-            h_ptr->m_version > 0 &&
-            h_ptr->m_inclusionRequirement != InclusionRequirementUnknown;
-}
-
-qint32 HStateVariableSetup::maxEventRate() const
-{
-    return h_ptr->m_maxRate;
-}
-
-QString HStateVariableSetup::name() const
-{
-    return h_ptr->m_name;
-}
-
-HUpnpDataTypes::DataType HStateVariableSetup::dataType() const
-{
-    return h_ptr->m_dt;
-}
-
-qint32 HStateVariableSetup::version() const
-{
-    return h_ptr->m_version;
-}
-
-void HStateVariableSetup::setDataType(HUpnpDataTypes::DataType dt)
-{
-    h_ptr->m_dt = dt;
-}
-
-void HStateVariableSetup::setMaxEventRate(qint32 arg)
-{
-    h_ptr->m_maxRate = arg < 0 ? -1 : arg;
-}
-
-void HStateVariableSetup::setInclusionRequirement(HInclusionRequirement arg)
-{
-    h_ptr->m_inclusionRequirement = arg;
-}
-
-void HStateVariableSetup::setVersion(qint32 version)
-{
-    h_ptr->m_version = version;
-}
-
-/*******************************************************************************
  * HStateVariablesSetupData
  ******************************************************************************/
 HStateVariablesSetupData::HStateVariablesSetupData(
@@ -181,7 +40,7 @@ HStateVariablesSetupData::HStateVariablesSetupData(
 {
 }
 
-bool HStateVariablesSetupData::insert(const HStateVariableSetup& setupData)
+bool HStateVariablesSetupData::insert(const HStateVariableInfo& setupData)
 {
     if (m_setupData.contains(setupData.name()))
     {
@@ -214,7 +73,7 @@ bool HStateVariablesSetupData::setInclusionRequirement(
 {
     if (m_setupData.contains(name))
     {
-        HStateVariableSetup setupInfo = m_setupData.value(name);
+        HStateVariableInfo setupInfo = m_setupData.value(name);
         setupInfo.setInclusionRequirement(incReq);
         m_setupData.insert(name, setupInfo);
         return true;
@@ -223,7 +82,7 @@ bool HStateVariablesSetupData::setInclusionRequirement(
     return false;
 }
 
-HStateVariableSetup HStateVariablesSetupData::get(
+HStateVariableInfo HStateVariablesSetupData::get(
     const QString& stateVarName) const
 {
     return m_setupData.value(stateVarName);

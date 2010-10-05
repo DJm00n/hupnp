@@ -23,19 +23,17 @@
 #define HACTIONS_SETUPDATA_H_
 
 #include <HUpnpCore/HActionInvoke>
-#include <HUpnpCore/HArgumentsSetupData>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
-
-template<typename T>
-class QSet;
 
 namespace Herqq
 {
 
 namespace Upnp
 {
+
+class HActionSetupPrivate;
 
 /*!
  * This class is used to specify information that is required to setup an
@@ -53,11 +51,7 @@ class H_UPNP_CORE_EXPORT HActionSetup
 {
 private:
 
-    QString m_name;
-    qint32 m_version;
-    HInclusionRequirement m_inclusionRequirement;
-    HActionInvoke m_actionInvoke;
-    HArgumentsSetupData m_argsSetup;
+    HActionSetupPrivate* h_ptr;
 
 public:
 
@@ -141,16 +135,43 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Returns the setup information of the arguments contained by this action.
+     * Copy constructor.
      *
-     * \return the setup information of the arguments contained by this action.
-     *
-     * \sa setArgumentsSetupData()
+     * Creates a copy of \a other.
      */
-    inline const HArgumentsSetupData& argumentsSetupData() const
-    {
-        return m_argsSetup;
-    }
+    HActionSetup(const HActionSetup&);
+
+    /*!
+     * Assignment operator.
+     *
+     * Copies the contents of \a other to this.
+     */
+    HActionSetup& operator=(const HActionSetup&);
+
+    /*!
+     * Destroys the instance.
+     *
+     * Destroys the instance.
+     */
+    ~HActionSetup();
+
+    /*!
+     * Returns the setup information of the action's input arguments.
+     *
+     * \return the setup information of the action's input arguments.
+     *
+     * \sa setInputArguments()
+     */
+    const HActionArguments& inputArguments() const;
+
+    /*!
+     * Returns the setup information of the action's output arguments.
+     *
+     * \return the setup information of the action's output arguments.
+     *
+     * \sa setOutputArguments()
+     */
+    const HActionArguments& outputArguments() const;
 
     /*!
      * Returns the callable entity that is called when the
@@ -160,10 +181,7 @@ public:
      *
      * \sa setActionInvoke()
      */
-    inline HActionInvoke actionInvoke() const
-    {
-        return m_actionInvoke;
-    }
+    HActionInvoke actionInvoke() const;
 
     /*!
      * Returns the <em>inclusion requirement</em> of the action.
@@ -172,10 +190,7 @@ public:
      *
      * \sa setInclusionRequirement()
      */
-    inline HInclusionRequirement inclusionRequirement() const
-    {
-        return m_inclusionRequirement;
-    }
+    HInclusionRequirement inclusionRequirement() const;
 
     /*!
      * Indicates if the object is valid.
@@ -183,11 +198,7 @@ public:
      * \return \e true in case the object is valid, that is,
      * the name(), version() and the inclusionRequirement() are properly defined.
      */
-    inline bool isValid() const
-    {
-        return !m_name.isEmpty() && m_version > 0 &&
-                m_inclusionRequirement != InclusionRequirementUnknown;
-    }
+    bool isValid() const;
 
     /*!
      * Returns the name of the action.
@@ -196,10 +207,7 @@ public:
      *
      * \sa setName()
      */
-    inline QString name() const
-    {
-        return m_name;
-    }
+    QString name() const;
 
     /*!
      * Returns the UPnP service version in which the action
@@ -210,23 +218,25 @@ public:
      *
      * \sa setVersion()
      */
-    inline qint32 version() const
-    {
-        return m_version;
-    }
+    qint32 version() const;
 
     /*!
-     * Specifies the setup information of the arguments contained by this action.
+     * Specifies the action's input arguments.
      *
-     * \arg specifies the setup information of the arguments contained by
-     * this action.
+     * \param args specifies the setup information for the action's input arguments.
      *
-     * \sa argumentsSetupData()
+     * \sa inputArguments()
      */
-    inline void setArgumentsSetupData(const HArgumentsSetupData& arg)
-    {
-        m_argsSetup = arg;
-    }
+    void setInputArguments(const HActionArguments& args);
+
+    /*!
+     * Specifies the action's output arguments.
+     *
+     * \param args specifies the setup information for the action's output arguments.
+     *
+     * \sa outputArguments()
+     */
+    void setOutputArguments(const HActionArguments& args);
 
     /*!
      * Specifies the callable entity that is called when the
@@ -239,10 +249,7 @@ public:
      *
      * \sa actionInvoke()
      */
-    inline void setActionInvoke(const HActionInvoke& arg)
-    {
-        m_actionInvoke = arg;
-    }
+    void setActionInvoke(const HActionInvoke& arg);
 
     /*!
      * Sets the name of the action.
@@ -265,10 +272,7 @@ public:
      *
      * \sa inclusionRequirement()
      */
-    inline void setInclusionRequirement(HInclusionRequirement arg)
-    {
-        m_inclusionRequirement = arg;
-    }
+    void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
      * Specifies the UPnP service version in which the action
@@ -279,10 +283,7 @@ public:
      *
      * \sa version()
      */
-    inline void setVersion(qint32 version)
-    {
-        m_version = version;
-    }
+    void setVersion(qint32 version);
 };
 
 /*!

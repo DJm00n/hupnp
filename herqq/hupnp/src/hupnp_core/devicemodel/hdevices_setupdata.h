@@ -22,19 +22,18 @@
 #ifndef HDEVICES_SETUPDATA_H_
 #define HDEVICES_SETUPDATA_H_
 
-#include <HUpnpCore/HResourceType>
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
-
-template<typename T>
-class QSet;
 
 namespace Herqq
 {
 
 namespace Upnp
 {
+
+class HDeviceSetupPrivate;
 
 /*!
  * This class is used to specify information that is required to setup an
@@ -54,10 +53,7 @@ H_DISABLE_COPY(HDeviceSetup)
 
 private:
 
-    HResourceType m_deviceType;
-    HDevice* m_device;
-    qint32 m_version;
-    HInclusionRequirement m_inclusionReq;
+    HDeviceSetupPrivate* h_ptr;
 
 public:
 
@@ -154,7 +150,7 @@ public:
      *
      * \sa setDeviceType()
      */
-    inline const HResourceType& deviceType() const { return m_deviceType; }
+    const HResourceType& deviceType() const;
 
     /*!
      * Returns the HDevice pointer associated with the instance.
@@ -164,7 +160,7 @@ public:
      *
      * \sa takeDevice()
      */
-    inline HDevice* device() const { return m_device; }
+    HDevice* device() const;
 
     /*!
      * Returns the <em>inclusion requirement</em>.
@@ -173,10 +169,7 @@ public:
      *
      * \sa setInclusionRequirement()
      */
-    inline HInclusionRequirement inclusionRequirement() const
-    {
-        return m_inclusionReq;
-    }
+    HInclusionRequirement inclusionRequirement() const;
 
     /*!
      * Indicates if the object is valid.
@@ -186,12 +179,7 @@ public:
      *
      * \sa version(), deviceType(), inclusionRequirement()
      */
-    inline bool isValid() const
-    {
-        return m_deviceType.isValid() &&
-               m_version > 0 &&
-               m_inclusionReq != InclusionRequirementUnknown;
-    }
+    bool isValid() const;
 
     /*!
      * Returns the version of the UPnP device, which first specified the
@@ -202,10 +190,7 @@ public:
      *
      * \sa setVersion()
      */
-    inline qint32 version() const
-    {
-        return m_version;
-    }
+    qint32 version() const;
 
     /*!
      * Sets the the <em>inclusion requirement</em>.
@@ -214,10 +199,7 @@ public:
      *
      * \sa inclusionRequirement()
      */
-    inline void setInclusionRequirement(HInclusionRequirement arg)
-    {
-        m_inclusionReq = arg;
-    }
+    void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
      * Sets the device type.
@@ -226,10 +208,7 @@ public:
      *
      * \sa deviceType()
      */
-    inline void setDeviceType(const HResourceType& arg)
-    {
-        m_deviceType = arg;
-    }
+    void setDeviceType(const HResourceType& arg);
 
     /*!
      * Associates an HDevice pointer with this instance.
@@ -253,10 +232,7 @@ public:
      *
      * \sa version()
      */
-    inline void setVersion(qint32 version)
-    {
-        m_version = version;
-    }
+    void setVersion(qint32 version);
 
     /*!
      * Returns the HDevice pointer associated with the instance and passes
@@ -267,12 +243,7 @@ public:
      *
      * \sa device(), setDevice()
      */
-    inline HDevice* takeDevice()
-    {
-        HDevice* retVal = m_device;
-        m_device = 0;
-        return retVal;
-    }
+    HDevice* takeDevice();
 };
 
 /*!
