@@ -1,5 +1,72 @@
 # HUPnP Changelog
 
+HUPnP 0.7.0 [Oct 6, 2010]
+--------------------------------------------------------------------------------
+- Added classes for setting up each component of the device model. 
+See the reference documentation about the device model creation for more details.
+
+- Modified the structure and contents of the "include" directory and 
+added the possibility to "deploy" the built binaries and public headers to a 
+folder for easier deployment (using "make install").
+
+- Introduced "information" classes for each core component of the device model. 
+These classes contain static information read from description documents.
+
+- Added the possibility to define whether HDeviceHost runs user code in a 
+single or multiple threads.
+
+- Added support for HTTP authentication during client-side action invocation.
+
+- Added the possibility to execute action invocation in a "fire and forget" manner.
+
+- Improved the extensibility of HControlPoint's and HDeviceHost's configuration 
+classes.
+
+- Modified the HActionArgument and HActionArguments to use value-semantics in full.
+
+- Modified the access modifiers of several methods in the components of the 
+device model to improve extensibility.
+
+- Modified the HAction's generic error codes to use an enumeration rather 
+than static member functions.
+
+- Unified some of the names of similar methods amongst device model components.
+
+- Removed the use of Qt's event dispatcher from HControlPoint and HDeviceHost.
+
+- Prefixed the include directives to Qt headers in public HUPnP header files to 
+include the Qt module name.
+
+- Fixed a bug, which exposed a few private exception classes to public interface. 
+HUPnP should not expose exceptions into the public interface anymore.
+
+- Fixed several bugs in event handling, action invocation and component 
+initialization that could  have caused dead-lock situations.
+
+- Fixed a possible crash bug in generation of a SOAP error message.
+
+- Fixed a bug in service description parse code in relation to allowed value ranges.
+
+- Fixed a possible crash bug in client-side action invocation.
+
+- Fixed a possible crash bug in the shutdown of a control point and device host.
+
+- Fixed a bug in generic HTTP messaging related to handling packets that lack 
+the "content-length" header.
+
+- Modified build settings to enable the Qt Creator's "shadow build" feature.
+
+- Did internal refactoring in various places.
+
+- Many small optimizations, code cleansing and general improvements not worth 
+mentioning individually. 
+
+- Updated documentation.
+
+Special thanks to Nikhil Marathe <nsm.nikhil@gmail.com>, 
+Sebastian Marek <s.marek@avm.de>, Jukka Kinnunen <kinnujuk@gmail.com> 
+and Paulo Romulo <p.romuloo@gmail.com> for testing and using the library 
+and reporting their findings and ideas to me. Much appreciated. 
 
 HUPnP 0.6.0 [June 25, 2010]
 --------------------------------------------------------------------------------
