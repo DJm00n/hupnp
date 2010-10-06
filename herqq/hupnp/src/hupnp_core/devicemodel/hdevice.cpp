@@ -32,7 +32,7 @@
 #include <QtCore/QTimer>
 #include <QtCore/QString>
 
-/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation
+/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 0.7
  *
  * \section introduction Introduction
  *
