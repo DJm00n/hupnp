@@ -22,6 +22,7 @@
 #ifndef HDEVICEHOST_CONFIGURATION_H_
 #define HDEVICEHOST_CONFIGURATION_H_
 
+#include <HUpnpCore/HClonable>
 #include <HUpnpCore/HDeviceCreator>
 
 class QString;
@@ -57,7 +58,8 @@ class HDeviceConfigurationPrivate;
  *
  * \sa HDeviceHostConfiguration, HDeviceHost, HDeviceHost::init(), HDevice
  */
-class H_UPNP_CORE_EXPORT HDeviceConfiguration
+class H_UPNP_CORE_EXPORT HDeviceConfiguration :
+    public HClonable
 {
 H_DISABLE_COPY(HDeviceConfiguration)
 
@@ -65,75 +67,33 @@ protected:
 
     HDeviceConfigurationPrivate* h_ptr;
 
-    /*!
-     * Clones the contents of this to the \c target object.
-     *
-     * Every derived class should override this method, especially if new
-     * member variables have been introduced. Further, the implementation
-     * should be something along these lines:
-     *
-     * \code
-     * void MyDeviceConfiguration::doClone(HDeviceConfiguration* target) const
-     * {
-     *    MyDeviceConfiguration* myConf =
-     *        dynamic_cast<MyDeviceConfiguration*>(target);
-     *    if (!target)
-     *    {
-     *        return;
-     *    }
-     *
-     *    BaseClassOfMyDeviceConfiguration::doClone(myConf);
-     *
-     *    // copy the variables introduced in *this* MyDeviceConfiguration
-     *    // instance to "myConf".
-     * }
-     * \endcode
-     *
-     * \param target specifies the target object to which the contents of
-     * \c this instance are cloned.
-     */
-    virtual void doClone(HDeviceConfiguration* target) const;
+    //
+    // Documented in HClonable
+    virtual void doClone(HClonable* target) const;
 
-    /*!
-     * Creates a new instance.
-     *
-     * This method is used as part of object cloning. Because of that, it is
-     * important that every descendant class overrides this method:
-     *
-     * \code
-     * HDeviceConfiguration* MyDeviceConfiguration::newInstance() const
-     * {
-     *     return new MyDeviceConfiguration();
-     * }
-     * \endcode
-     *
-     * \remarks
-     * \li the object has to be heap-allocated and
-     * \li the ownership of the object is passed to the caller.
-     */
+    //
+    // Documented in HClonable
     virtual HDeviceConfiguration* newInstance() const;
 
 public:
 
     /*!
+     * Default constructor.
+     *
      * Creates a new, empty instance.
      */
     HDeviceConfiguration();
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     virtual ~HDeviceConfiguration();
 
-    /*!
-     * Returns a deep copy of the instance.
-     *
-     * \return a deep copy of the instance.
-     *
-     * \remarks
-     * \li the ownership of the returned object is transferred to the caller.
-     */
-    HDeviceConfiguration* clone() const;
+    //
+    // Documented in HClonable
+    virtual HDeviceConfiguration* clone() const;
 
     /*!
      * Sets the path to the UPnP device description.
@@ -347,7 +307,8 @@ class HDeviceHostConfigurationPrivate;
  *
  * \sa HDeviceConfiguration, HDeviceHost
  */
-class H_UPNP_CORE_EXPORT HDeviceHostConfiguration
+class H_UPNP_CORE_EXPORT HDeviceHostConfiguration :
+    public HClonable
 {
 H_DISABLE_COPY(HDeviceHostConfiguration)
 
@@ -355,52 +316,12 @@ protected:
 
     HDeviceHostConfigurationPrivate* h_ptr;
 
-    /*!
-     * Clones the contents of this to the \c target object.
-     *
-     * Every derived class should override this method, especially if new
-     * member variables have been introduced. Further, the implementation
-     * should be something along these lines:
-     *
-     * \code
-     * void MyDeviceHostConfiguration::doClone(HDeviceHostConfiguration* target) const
-     * {
-     *    MyDeviceHostConfiguration* myConf =
-     *        dynamic_cast<MyDeviceHostConfiguration*>(target);
-     *    if (!target)
-     *    {
-     *        return;
-     *    }
-     *
-     *    BaseClassOfMyDeviceHostConfiguration::doClone(myConf);
-     *
-     *    // copy the variables introduced in *this* MyDeviceHostConfiguration
-     *    // instance to "myConf".
-     * }
-     * \endcode
-     *
-     * \param target specifies the target object to which the contents of
-     * \c this instance are cloned.
-     */
-    virtual void doClone(HDeviceHostConfiguration* target) const;
+    //
+    // Documented in HClonable
+    virtual void doClone(HClonable* target) const;
 
-    /*!
-     * Creates a new instance.
-     *
-     * This method is used as part of object cloning. Because of that, it is
-     * important that every descendant class overrides this method:
-     *
-     * \code
-     * HDeviceHostConfiguration* HDeviceHostConfiguration::newInstance() const
-     * {
-     *     return new HDeviceHostConfiguration();
-     * }
-     * \endcode
-     *
-     * \remarks
-     * \li the object has to be heap-allocated and
-     * \li the ownership of the object is passed to the caller.
-     */
+    //
+    // Documented in HClonable
     virtual HDeviceHostConfiguration* newInstance() const;
 
 public:
@@ -431,11 +352,15 @@ public:
     };
 
     /*!
+     * Default constructor.
+     *
      * Creates a new, empty instance.
      */
     HDeviceHostConfiguration();
 
     /*!
+     * Creates a new instance.
+     *
      * Creates an instance with a single device configuration. This is a convenience
      * method.
      */
@@ -443,21 +368,14 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     virtual ~HDeviceHostConfiguration();
 
-    /*!
-     * Returns a deep copy of the instance.
-     *
-     * \return a deep copy of the instance.
-     *
-     * \remarks
-     * \li you should override this in derived classes. Failing
-     * to override this will result in invalid clones being made of derived classes
-     * that introduce new member variables.
-     * \li the ownership of the returned object is transferred to the caller.
-     */
-    HDeviceHostConfiguration* clone() const;
+    //
+    // Documented in HClonable
+    virtual HDeviceHostConfiguration* clone() const;
 
     /*!
      * Adds a device configuration.

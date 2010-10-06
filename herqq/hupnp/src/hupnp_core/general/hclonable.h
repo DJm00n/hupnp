@@ -118,7 +118,6 @@ public:
     virtual HClonable* clone() const;
 };
 
-
 }
 }
 

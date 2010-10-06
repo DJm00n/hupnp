@@ -104,7 +104,7 @@
  * The API documentation of HUPnP is clear about object ownership and
  * these classes are identified in documentation.
  *
- * \subsection herqqheader The \c HUpnp include file
+ * \subsection herqqheader The HUpnp include file
  *
  * %HUpnp introduce a number of types, functions, enums and
  * type definitions under the root namespace \c Herqq. For instance, all the
@@ -278,7 +278,7 @@
  * is \c HWritableStateVariable and on control point side the type is
  * \c HReadableStateVariable.
  *
- * \sa devicehosting
+ * \sa hupnp_devicehosting
  */
 
 
@@ -467,8 +467,6 @@
  * #include <HUpnpCore/HActionsSetupData>
  * #include <HUpnpCore/HServicesSetupData>
  *
- * using namespace Herqq::Upnp;
- *
  * MyBinaryLightDevice::MyBinaryLightDevice()
  * {
  * }
@@ -479,12 +477,13 @@
  *
  * HServicesSetupData* MyBinaryLightDevice::createServices()
  * {
- *     HServicesSetupData* retVal = new HServicesSetupData();
+ *     Herqq::Upnp::HServicesSetupData* retVal = new Herqq::Upnp::HServicesSetupData();
  *
  *     retVal->insert(
- *         HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
- *         HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
- *         new MySwitchPowerService());
+ *         new Herqq::Upnp::HServiceSetup(
+ *             Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
+ *             Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
+ *             new MySwitchPowerService()));
  *
  *  // This maps the UPnP service type "urn:schemas-upnp-org:service:SwitchPower:1"
  *  // with the standard service ID "urn:schemas-upnp-org:serviceId:SwitchPower"
@@ -505,7 +504,7 @@
  *
  * HActionsSetupData MySwitchPowerService::createActions()
  * {
- *     HActionsSetupData retVal;
+ *     Herqq::Upnp::HActionsSetupData retVal;
  *     return retVal;
  * }
  *
@@ -575,8 +574,6 @@
  * #include <HUpnpCore/HStateVariable>
  * #include <HUpnpCore/HActionArguments>
  *
- * using namespace Herqq::Upnp;
- *
  * MySwitchPowerService::MySwitchPowerService()
  * {
  * }
@@ -587,11 +584,12 @@
  *
  * HService::HActionsSetupData MySwitchPowerService::createActions()
  * {
- *     HActionsSetupData retVal;
+ *     Herqq::Upnp::HActionsSetupData retVal;
  *
  *     retVal.insert(
- *         "SetTarget",
- *         HActionInvoke(this, &MySwitchPowerService::setTarget));
+ *         Herqq::Upnp::HActionSetup(
+ *             "SetTarget",
+ *             Herqq::Upnp::HActionInvoke(this, &MySwitchPowerService::setTarget)));
  *
  *     // The above lines map the MySwitchPowerService::setTarget() method to
  *     // the action that has the name SetTarget. In essence, this mapping instructs
@@ -601,20 +599,22 @@
  *     // method the method does not have to be public.
  *
  *     retVal.insert(
- *         "GetTarget",
- *         HActionInvoke(this, &MySwitchPowerService::getTarget));
+ *         Herqq::Upnp::HActionSetup(
+ *             "GetTarget",
+ *             Herqq::Upnp::HActionInvoke(this, &MySwitchPowerService::getTarget)));
  *
  *     retVal.insert(
- *         "GetStatus",
- *         HActionInvoke(this, &MySwitchPowerService::getStatus));
+ *         Herqq::Upnp::HActionSetup(
+ *             "GetStatus",
+ *             Herqq::Upnp::HActionInvoke(this, &MySwitchPowerService::getStatus)));
  *
  *     return retVal;
  * }
  *
  * qint32 MySwitchPowerService::setTarget(
- *     const HActionArguments& inArgs, HActionArguments* outArgs)
+ *     const Herqq::Upnp::HActionArguments& inArgs, Herqq::Upnp::HActionArguments* outArgs)
  * {
- *     const HActionArgument* newTargetValueArg = inArgs.get("newTargetValue");
+ *     const Herqq::Upnp::HActionArgument* newTargetValueArg = inArgs.get("newTargetValue");
  *     if (!newTargetValueArg)
  *     {
  *         // If MySwitchPowerService class is not made for direct public use
@@ -622,7 +622,7 @@
  *         // HUPnP and HUPnP always ensures that the action arguments defined in the
  *         // service description are present when an action is invoked.
  *
- *         return HAction::InvalidArgs;
+ *         return Herqq::Upnp::HAction::InvalidArgs;
  *     }
  *
  *     bool newTargetValue = newTargetValueArg->value().toBool();
@@ -645,11 +645,11 @@
  *
  *     stateVariableByName("Status")->writable()->setValue(newTargetValue);
  *
- *     return HAction::Success;
+ *     return Herqq::Upnp::HAction::Success;
  * }
  *
  * qint32 MySwitchPowerService::getTarget(
- *     const HActionArguments& inArgs, HActionArguments* outArgs)
+ *     const Herqq::Upnp::HActionArguments& inArgs, Herqq::Upnp::HActionArguments* outArgs)
  * {
  *     if (!outArgs)
  *     {
@@ -658,10 +658,10 @@
  *         // is called only by HUPnP, as HUPnP ensures proper arguments
  *         // are always provided when an action is invoked.
  *
- *         return HAction::InvalidArgs;
+ *         return Herqq::Upnp::HAction::InvalidArgs;
  *     }
  *
- *     HActionArgument* retTargetValue = outArgs->get("RetTargetValue");
+ *     Herqq::Upnp::HActionArgument* retTargetValue = outArgs->get("RetTargetValue");
  *     if (!retTargetValue)
  *     {
  *         // See the comments above. The same thing applies here as well.
@@ -671,11 +671,11 @@
  *     bool b = stateVariableByName("Target")->value().toBool();
  *     retTargetValue->setValue(b);
  *
- *     return HAction::Success;
+ *     return Herqq::Upnp::HAction::Success;
  * }
  *
  * qint32 MySwitchPowerService::getStatus(
- *     const HActionArguments& inArgs, HActionArguments* outArgs)
+ *     const Herqq::Upnp::HActionArguments& inArgs, Herqq::Upnp::HActionArguments* outArgs)
  * {
  *     if (!outArgs)
  *     {
@@ -683,17 +683,17 @@
  *         return HAction::InvalidArgs;
  *     }
  *
- *     HActionArgument* resultStatus = outArgs->get("ResultStatus");
+ *     Herqq::Upnp::HActionArgument* resultStatus = outArgs->get("ResultStatus");
  *     if (!resultStatus)
  *     {
  *         // See the comments above. The same thing applies here as well.
- *         return HAction::InvalidArgs;
+ *         return Herqq::Upnp::HAction::InvalidArgs;
  *     }
  *
  *     bool b = stateVariableByName("Status")->value().toBool();
  *     resultStatus->setValue(b);
  *
- *     return HAction::Success;
+ *     return Herqq::Upnp::HAction::Success;
  * }
  *
  * \endcode

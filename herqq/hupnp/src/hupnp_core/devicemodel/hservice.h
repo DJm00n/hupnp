@@ -99,16 +99,19 @@ class HServiceController;
  *     Herqq::Upnp::HActionsSetupData retVal;
  *
  *     retVal.insert(
- *         "SetTarget",
- *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::setTarget));
+ *         HActionSetup(
+ *             "SetTarget",
+ *             Herqq::Upnp::HActionInvoke(this, &MySwitchPower::setTarget)));
  *
  *     retVal.insert(
- *         "GetTarget",
- *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getTarget));
+ *         HActionSetup(
+ *             "GetTarget",
+ *             Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getTarget)));
  *
  *     retVal.insert(
- *         "GetStatus",
- *         Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getStatus));
+ *         HActionSetup(
+ *             "GetStatus",
+ *             Herqq::Upnp::HActionInvoke(this, &MySwitchPower::getStatus)));
  *
  *     // The above binds member functions to the specified action names.
  *     // However, you could also use normal functions and functors.
@@ -135,7 +138,7 @@ class HServiceController;
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa devicemodel
+ * \sa hupnp_devicemodel
  *
  * \remarks The methods introduced in this class are thread-safe, but the \c QObject
  * base class is largely not. However, the signal stateChanged() has thread affinity

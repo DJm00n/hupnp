@@ -164,7 +164,7 @@ class HDeviceHostPrivate;
  * HDevice objects it manages; <b>%HDeviceHost always destroys every
  * %HDevice it manages when it is being destroyed</b>.
  *
- * \sa devicehosting, HDevice, HDeviceHostConfiguration, HDeviceConfiguration
+ * \sa hupnp_devicehosting, HDevice, HDeviceHostConfiguration, HDeviceConfiguration
  */
 class H_UPNP_CORE_EXPORT HDeviceHost :
     public QObject

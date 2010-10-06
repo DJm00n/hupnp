@@ -81,7 +81,7 @@ public:
     /*!
      * Specifies different types of eventing.
      *
-     * \sa devicehosting
+     * \sa hupnp_devicehosting
      */
     enum EventingType
     {

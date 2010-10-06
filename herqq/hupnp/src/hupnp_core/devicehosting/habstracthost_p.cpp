@@ -193,7 +193,7 @@ static bool test = registerMetaTypes();
  * \c HDeviceProxy types and \c HServiceProxy types are actually created when an
  * \c HControlPoint instance builds its object model for a discovered device.
  *
- * \sa Herqq::Upnp::HDeviceHost, Herqq::Upnp::HControlPoint, devicemodel
+ * \sa Herqq::Upnp::HDeviceHost, Herqq::Upnp::HControlPoint, hupnp_devicemodel
  */
 
 namespace Herqq

@@ -41,7 +41,7 @@ namespace Upnp
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa devicehosting, \ref statevariables,
+ * \sa hupnp_devicehosting, \ref statevariables,
  * HStateVariable, HWritableStateVariable, HService
  *
  * \remark

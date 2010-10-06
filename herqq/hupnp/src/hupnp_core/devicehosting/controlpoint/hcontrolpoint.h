@@ -172,7 +172,7 @@ class HControlPointConfiguration;
  *
  * \warning see notes about object deletion in ~HControlPoint().
  *
- * \sa HDeviceProxy, HDeviceProxies, devicemodel
+ * \sa HDeviceProxy, HDeviceProxies, hupnp_devicemodel
  */
 class H_UPNP_CORE_EXPORT HControlPoint :
     public QObject

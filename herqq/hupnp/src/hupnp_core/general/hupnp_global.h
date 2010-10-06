@@ -71,7 +71,7 @@ enum HValidityCheckLevel
  * When HUPnP builds an object model of a UPnP device, this information can be
  * used in validating a description document, or verifying that the provided
  * implementation (HDevice, HDeviceProxy, HService and HServiceProxy derivatives)
- * accurately depict a description document.
+ * accurately depicts a description document.
  *
  * For instance, if the author of a subclass of a server-side HService has
  * specified that a particular action is mandatory, the user of the class,

@@ -22,6 +22,7 @@
 #ifndef HCONTROLPOINT_CONFIGURATION_H_
 #define HCONTROLPOINT_CONFIGURATION_H_
 
+#include <HUpnpCore/HClonable>
 #include <HUpnpCore/HDeviceProxyCreator>
 
 class QHostAddress;
@@ -66,59 +67,20 @@ class HControlPointConfigurationPrivate;
  *
  * \remarks this class is not thread-safe.
  */
-class H_UPNP_CORE_EXPORT HControlPointConfiguration
+class H_UPNP_CORE_EXPORT HControlPointConfiguration :
+    public HClonable
 {
 H_DISABLE_COPY(HControlPointConfiguration)
 friend class HControlPoint;
 
 protected:
 
-    /*!
-     * Clones the contents of this to the \c target object.
-     *
-     * Every derived class should override this method, especially if new
-     * member variables have been introduced. Further, the implementation
-     * should be something along these lines:
-     *
-     * \code
-     * void MyControlPointConfiguration::doClone(HControlPointConfiguration* target) const
-     * {
-     *    MyControlPointConfiguration* myConf =
-     *        dynamic_cast<MyControlPointConfiguration*>(target);
-     *    if (!target)
-     *    {
-     *        return;
-     *    }
-     *
-     *    BaseClassMyControlPointConfiguration::doClone(myConf);
-     *
-     *    // copy the variables introduced in *this* MyControlPointConfiguration
-     *    // instance to "myConf".
-     * }
-     * \endcode
-     *
-     * \param target specifies the target object to which the contents of
-     * \c this instance are cloned.
-     */
-    virtual void doClone(HControlPointConfiguration* target) const;
+    //
+    // Documented in HClonable
+    virtual void doClone(HClonable* target) const;
 
-    /*!
-     * Creates a new instance.
-     *
-     * This method is used as part of object cloning. Because of that, it is
-     * important that every descendant class overrides this method:
-     *
-     * \code
-     * HControlPointConfiguration* MyControlPointConfiguration::newInstance() const
-     * {
-     *     return new MyControlPointConfiguration();
-     * }
-     * \endcode
-     *
-     * \remarks
-     * \li the object has to be heap-allocated and
-     * \li the ownership of the object is passed to the caller.
-     */
+    //
+    // Documented in HClonable
     virtual HControlPointConfiguration* newInstance() const;
 
 protected:
@@ -142,15 +104,9 @@ public:
      */
     virtual ~HControlPointConfiguration();
 
-    /*!
-     * Returns a deep copy of the instance.
-     *
-     * \return a deep copy of the instance.
-     *
-     * \remarks
-     * \li the ownership of the returned object is transferred to the caller.
-     */
-    HControlPointConfiguration* clone() const;
+    //
+    // Documented in HClonable
+    virtual HControlPointConfiguration* clone() const;
 
     /*!
      * Returns the user-defined callable entity that is used to create

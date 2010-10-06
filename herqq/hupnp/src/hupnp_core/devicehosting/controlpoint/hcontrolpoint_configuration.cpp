@@ -106,20 +106,23 @@ HControlPointConfiguration* HControlPointConfiguration::newInstance() const
     return new HControlPointConfiguration();
 }
 
-void HControlPointConfiguration::doClone(HControlPointConfiguration* target) const
+void HControlPointConfiguration::doClone(HClonable* target) const
 {
-    delete target->h_ptr;
-    target->h_ptr = h_ptr->clone();
+    HControlPointConfiguration* conf =
+        dynamic_cast<HControlPointConfiguration*>(target);
+
+    if (!conf)
+    {
+        return;
+    }
+
+    delete conf->h_ptr;
+    conf->h_ptr = h_ptr->clone();
 }
 
 HControlPointConfiguration* HControlPointConfiguration::clone() const
 {
-    HControlPointConfiguration* newClone = newInstance();
-    if (!newClone) { return 0; }
-
-    doClone(newClone);
-
-    return newClone;
+    return static_cast<HControlPointConfiguration*>(HClonable::clone());
 }
 
 HDeviceProxyCreator HControlPointConfiguration::deviceCreator() const

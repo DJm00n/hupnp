@@ -191,6 +191,8 @@ class HStateVariableEventPrivate;
  *
  * \headerfile hstatevariable.h HStateVariableEvent
  *
+ * \ingroup hupnp_devicemodel
+ *
  * \sa HStateVariable::valueChanged()
  *
  * \remarks this class is not thread-safe.
@@ -204,8 +206,6 @@ private:
 public:
 
     /*!
-     * Creates a new, invalid instance.
-     *
      * Creates a new, invalid instance.
      *
      * \sa isValid()

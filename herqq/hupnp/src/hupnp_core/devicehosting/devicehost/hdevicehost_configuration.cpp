@@ -59,21 +59,23 @@ HDeviceConfiguration* HDeviceConfiguration::newInstance() const
     return new HDeviceConfiguration();
 }
 
-void HDeviceConfiguration::doClone(HDeviceConfiguration* target) const
+void HDeviceConfiguration::doClone(HClonable* target) const
 {
-    target->h_ptr->m_cacheControlMaxAgeInSecs = h_ptr->m_cacheControlMaxAgeInSecs;
-    target->h_ptr->m_deviceCreator            = h_ptr->m_deviceCreator;
-    target->h_ptr->m_pathToDeviceDescriptor   = h_ptr->m_pathToDeviceDescriptor;
+    HDeviceConfiguration* conf = dynamic_cast<HDeviceConfiguration*>(target);
+
+    if (!conf)
+    {
+        return;
+    }
+
+    conf->h_ptr->m_cacheControlMaxAgeInSecs = h_ptr->m_cacheControlMaxAgeInSecs;
+    conf->h_ptr->m_deviceCreator            = h_ptr->m_deviceCreator;
+    conf->h_ptr->m_pathToDeviceDescriptor   = h_ptr->m_pathToDeviceDescriptor;
 }
 
 HDeviceConfiguration* HDeviceConfiguration::clone() const
 {
-    HDeviceConfiguration* newClone = newInstance();
-    if (!newClone) { return 0; }
-
-    doClone(newClone);
-
-    return newClone;
+    return static_cast<HDeviceConfiguration*>(HClonable::clone());
 }
 
 QString HDeviceConfiguration::pathToDeviceDescription() const
@@ -170,17 +172,25 @@ HDeviceHostConfiguration* HDeviceHostConfiguration::newInstance() const
     return new HDeviceHostConfiguration();
 }
 
-void HDeviceHostConfiguration::doClone(HDeviceHostConfiguration* target) const
+void HDeviceHostConfiguration::doClone(HClonable* target) const
 {
-    target->h_ptr->m_individualAdvertisementCount =
+    HDeviceHostConfiguration* conf =
+        dynamic_cast<HDeviceHostConfiguration*>(target);
+
+    if (!conf)
+    {
+        return;
+    }
+
+    conf->h_ptr->m_individualAdvertisementCount =
         h_ptr->m_individualAdvertisementCount;
 
-    target->h_ptr->m_networkAddresses = h_ptr->m_networkAddresses;
+    conf->h_ptr->m_networkAddresses = h_ptr->m_networkAddresses;
 
-    target->h_ptr->m_subscriptionExpirationTimeout =
+    conf->h_ptr->m_subscriptionExpirationTimeout =
         h_ptr->m_subscriptionExpirationTimeout;
 
-    target->h_ptr->m_threadingModel = h_ptr->m_threadingModel;
+    conf->h_ptr->m_threadingModel = h_ptr->m_threadingModel;
 
     QList<const HDeviceConfiguration*> confCollection;
     foreach(const HDeviceConfiguration* conf, h_ptr->m_collection)
@@ -188,18 +198,13 @@ void HDeviceHostConfiguration::doClone(HDeviceHostConfiguration* target) const
         confCollection.append(conf->clone());
     }
 
-    qDeleteAll(target->h_ptr->m_collection);
-    target->h_ptr->m_collection = confCollection;
+    qDeleteAll(conf->h_ptr->m_collection);
+    conf->h_ptr->m_collection = confCollection;
 }
 
 HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
 {
-    HDeviceHostConfiguration* newClone = newInstance();
-    if (!newClone) { return 0; }
-
-    doClone(newClone);
-
-    return newClone;
+    return static_cast<HDeviceHostConfiguration*>(HClonable::clone());
 }
 
 bool HDeviceHostConfiguration::add(const HDeviceConfiguration& arg)

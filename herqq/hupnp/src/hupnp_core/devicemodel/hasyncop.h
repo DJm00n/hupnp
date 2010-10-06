@@ -135,7 +135,7 @@ namespace Upnp
  *
  * \headerfile hasyncop.h HAsyncOp
  *
- * \ingroup devicemodel
+ * \ingroup hupnp_devicemodel
  *
  * \remarks this class is thread-safe.
  */

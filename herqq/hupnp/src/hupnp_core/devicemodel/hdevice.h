@@ -99,14 +99,16 @@ class HDeviceController;
  *   Herqq::Upnp::HServicesSetupData* retVal = new HServicesSetupData();
  *
  *   retVal->insert(
- *       Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
- *       Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
- *       new SwitchPowerImpl()); // your type
+ *       new Herqq::Upnp::HServiceSetup(
+ *           Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
+ *           Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
+ *           new SwitchPowerImpl())); // your type
  *
  *   retVal->insert(
- *       Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:Dimming"),
- *       Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:Dimming:1"),
- *       new DimmingImpl()); // your type
+ *       new Herqq::Upnp::HServiceSetup(
+ *           Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:Dimming"),
+ *           Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:Dimming:1"),
+ *           new DimmingImpl())); // your type
  *
  *   return retVal;
  * }
@@ -223,9 +225,9 @@ protected:
      *
      * \code
      *
-     * void HServicesSetupData* MyDeviceType::createServices()
+     * void Herqq::Upnp::HServicesSetupData* MyDeviceType::createServices()
      * {
-     *     HServicesSetupData* retVal = SuperClass::createServices();
+     *     Herqq::Upnp::HServicesSetupData* retVal = SuperClass::createServices();
      *
      *     // create and add the services of this device to the "retVal" variable
      *
@@ -256,9 +258,9 @@ protected:
      *
      * \code
      *
-     * void HDevicesSetupData* MyDeviceType::createEmbeddedDevices()
+     * void Herqq::Upnp::HDevicesSetupData* MyDeviceType::createEmbeddedDevices()
      * {
-     *     HDevicesSetupData* retVal = SuperClass::createEmbeddedDevices();
+     *     Herqq::Upnp::HDevicesSetupData* retVal = SuperClass::createEmbeddedDevices();
      *
      *     // create and add the embedded devices of this device to the
      *     // "retVal" variable
