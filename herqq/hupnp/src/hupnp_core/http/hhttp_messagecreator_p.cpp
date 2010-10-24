@@ -21,15 +21,13 @@
 
 #include "hhttp_messagecreator_p.h"
 #include "hhttp_messaginginfo_p.h"
+#include "hhttp_header_p.h"
 #include "hhttp_utils_p.h"
 
 #include "../devicemodel/haction.h"
 #include "../../utils/hlogger_p.h"
 
 #include "../general/hupnp_global_p.h"
-
-#include <QtNetwork/QHttpRequestHeader>
-#include <QtNetwork/QHttpResponseHeader>
 
 #include <QtSoapMessage>
 
@@ -48,13 +46,13 @@ HHttpMessageCreator::~HHttpMessageCreator()
 }
 
 QByteArray HHttpMessageCreator::setupData(
-    QHttpHeader& hdr, MessagingInfo& mi)
+    HHttpHeader& hdr, MessagingInfo& mi)
 {
     return setupData(hdr, QByteArray(), mi);
 }
 
 QByteArray HHttpMessageCreator::setupData(
-    QHttpHeader& reqHdr, const QByteArray& body, MessagingInfo& mi,
+    HHttpHeader& reqHdr, const QByteArray& body, MessagingInfo& mi,
     ContentType ct)
 {
     HLOG(H_AT, H_FUN);
@@ -164,7 +162,7 @@ QByteArray HHttpMessageCreator::createResponse(
         Q_ASSERT(false);
     }
 
-    QHttpResponseHeader responseHdr(statusCode, reasonPhrase);
+    HHttpResponseHeader responseHdr(statusCode, reasonPhrase);
     return setupData(responseHdr, body, mi, ct);
 }
 
@@ -241,7 +239,7 @@ QByteArray HHttpMessageCreator::setupData(
     MessagingInfo& mi, qint32 statusCode, const QString& reasonPhrase,
     const QString& body, ContentType ct)
 {
-    QHttpResponseHeader responseHdr(statusCode, reasonPhrase);
+    HHttpResponseHeader responseHdr(statusCode, reasonPhrase);
     return setupData(responseHdr, body.toUtf8(), mi, ct);
 }
 
@@ -272,7 +270,7 @@ QByteArray HHttpMessageCreator::create(
 {
     Q_ASSERT(req.isValid(true));
 
-    QHttpRequestHeader reqHdr;
+    HHttpRequestHeader reqHdr;
     reqHdr.setContentType("Content-type: text/xml; charset=\"utf-8\"");
 
     reqHdr.setRequest(
@@ -293,7 +291,7 @@ QByteArray HHttpMessageCreator::create(
 {
     Q_ASSERT(req.isValid(false));
 
-    QHttpRequestHeader requestHdr(
+    HHttpRequestHeader requestHdr(
         "SUBSCRIBE", extractRequestPart(req.eventUrl()));
 
     requestHdr.setValue("TIMEOUT", req.timeout().toString());
@@ -320,7 +318,7 @@ QByteArray HHttpMessageCreator::create(
 {
     Q_ASSERT(req.isValid(false));
 
-    QHttpRequestHeader requestHdr(
+    HHttpRequestHeader requestHdr(
         "UNSUBSCRIBE", extractRequestPart(req.eventUrl()));
 
     mi.setHostInfo(req.eventUrl());
@@ -335,7 +333,7 @@ QByteArray HHttpMessageCreator::create(
 {
     Q_ASSERT(response.isValid(true));
 
-    QHttpResponseHeader responseHdr(200, "OK");
+    HHttpResponseHeader responseHdr(200, "OK");
     responseHdr.setContentLength(0);
 
     responseHdr.setValue("SID"    , response.sid().toString());
@@ -346,7 +344,7 @@ QByteArray HHttpMessageCreator::create(
 }
 
 NotifyRequest::RetVal HHttpMessageCreator::create(
-    const QHttpRequestHeader& reqHdr, const QByteArray& body, NotifyRequest& req)
+    const HHttpRequestHeader& reqHdr, const QByteArray& body, NotifyRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -392,7 +390,7 @@ NotifyRequest::RetVal HHttpMessageCreator::create(
 
 SubscribeRequest::RetVal
     HHttpMessageCreator::create(
-        const QHttpRequestHeader& reqHdr, SubscribeRequest& req)
+        const HHttpRequestHeader& reqHdr, SubscribeRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -435,7 +433,7 @@ SubscribeRequest::RetVal
 }
 
 UnsubscribeRequest::RetVal HHttpMessageCreator::create(
-    const QHttpRequestHeader& reqHdr, UnsubscribeRequest& req)
+    const HHttpRequestHeader& reqHdr, UnsubscribeRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -472,7 +470,7 @@ UnsubscribeRequest::RetVal HHttpMessageCreator::create(
 }
 
 bool HHttpMessageCreator::create(
-    const QHttpResponseHeader& respHdr, SubscribeResponse& resp)
+    const HHttpResponseHeader& respHdr, SubscribeResponse& resp)
 {
     HLOG(H_AT, H_FUN);
 

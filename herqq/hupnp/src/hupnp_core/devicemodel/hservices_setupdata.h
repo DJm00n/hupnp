@@ -368,7 +368,7 @@ public:
      *
      * \return \e true in case the item was added. The \c newItem will not be added
      * if the instance already contains an item that has the
-     * same HDeviceSetup::deviceType() as the \c newItem or the \c newItem is null.
+     * same HServiceSetup::serviceId() as the \c newItem or the \c newItem is null.
      *
      * \remarks
      * \li The \c newItem has to be heap-allocated and

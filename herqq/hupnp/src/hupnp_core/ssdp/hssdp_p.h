@@ -31,19 +31,18 @@
 //
 
 #include "hssdp.h"
-#include "../general/hupnp_defs.h"
-#include "../socket/hendpoint.h"
-#include "../socket/hmulticast_socket.h"
-
 #include "hdiscovery_messages.h"
+
+#include "../socket/hendpoint.h"
+#include "../general/hupnp_defs.h"
+#include "../http/hhttp_header_p.h"
+#include "../socket/hmulticast_socket.h"
 
 #include <QtCore/QByteArray>
 
 class QUrl;
 class QString;
 class QHostAddress;
-class QHttpRequestHeader;
-class QHttpResponseHeader;
 
 namespace Herqq
 {
@@ -65,11 +64,11 @@ private:
     qint32 parseCacheControl(const QString& str);
     void checkHost(const QString& host);
 
-    HDiscoveryResponse   parseDiscoveryResponse(const QHttpResponseHeader& hdr);
-    HDiscoveryRequest    parseDiscoveryRequest (const QHttpRequestHeader& hdr);
-    HResourceAvailable   parseDeviceAvailable  (const QHttpRequestHeader& hdr);
-    HResourceUnavailable parseDeviceUnavailable(const QHttpRequestHeader& hdr);
-    HResourceUpdate      parseDeviceUpdate     (const QHttpRequestHeader& hdr);
+    HDiscoveryResponse   parseDiscoveryResponse(const HHttpResponseHeader& hdr);
+    HDiscoveryRequest    parseDiscoveryRequest (const HHttpRequestHeader& hdr);
+    HResourceAvailable   parseDeviceAvailable  (const HHttpRequestHeader& hdr);
+    HResourceUnavailable parseDeviceUnavailable(const HHttpRequestHeader& hdr);
+    HResourceUpdate      parseDeviceUpdate     (const HHttpRequestHeader& hdr);
 
     void clear();
 

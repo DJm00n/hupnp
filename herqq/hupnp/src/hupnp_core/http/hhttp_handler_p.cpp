@@ -20,9 +20,10 @@
  */
 
 #include "hhttp_handler_p.h"
+#include "hhttp_utils_p.h"
+#include "hhttp_header_p.h"
 #include "hhttp_messaginginfo_p.h"
 #include "hhttp_messagecreator_p.h"
-#include "hhttp_utils_p.h"
 
 #include "../general/hupnp_global_p.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
@@ -31,8 +32,6 @@
 
 #include <QtNetwork/QTcpSocket>
 #include <QtNetwork/QHostAddress>
-#include <QtNetwork/QHttpRequestHeader>
-#include <QtNetwork/QHttpResponseHeader>
 
 #include <QtSoapMessage>
 
@@ -660,10 +659,10 @@ HHttpHandler::ReturnValue HHttpHandler::send(
 
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, NotifyRequest& req, NotifyRequest::RetVal& retVal,
-    const QHttpRequestHeader* reqHdr, const QByteArray* body)
+    const HHttpRequestHeader* reqHdr, const QByteArray* body)
 {
     QByteArray bodyContent;
-    QHttpRequestHeader requestHeader;
+    HHttpRequestHeader requestHeader;
 
     if (!reqHdr && !body)
     {
@@ -711,9 +710,9 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
 
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, SubscribeRequest& req, SubscribeRequest::RetVal& retVal,
-    const QHttpRequestHeader* reqHdr)
+    const HHttpRequestHeader* reqHdr)
 {
-    QHttpRequestHeader requestHeader;
+    HHttpRequestHeader requestHeader;
     if (!reqHdr)
     {
         ReturnValue rv = receive(mi, requestHeader);
@@ -759,9 +758,9 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
 
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, UnsubscribeRequest& req,
-    UnsubscribeRequest::RetVal& retVal, const QHttpRequestHeader* reqHdr)
+    UnsubscribeRequest::RetVal& retVal, const HHttpRequestHeader* reqHdr)
 {
-    QHttpRequestHeader requestHeader;
+    HHttpRequestHeader requestHeader;
     if (!reqHdr)
     {
         ReturnValue rv = receive(mi, requestHeader);
@@ -804,7 +803,7 @@ HHttpHandler::ReturnValue HHttpHandler::receive(
 HHttpHandler::ReturnValue HHttpHandler::receive(
     MessagingInfo& mi, SubscribeResponse& resp)
 {
-    QHttpResponseHeader respHeader;
+    HHttpResponseHeader respHeader;
     ReturnValue rv = receive(mi, respHeader);
     if (rv != Success)
     {
@@ -834,8 +833,8 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 }
 
 HHttpHandler::ReturnValue HHttpHandler::msgIO(
-    MessagingInfo& mi, QHttpRequestHeader& requestHdr,
-    const QByteArray& reqBody, QHttpResponseHeader& responseHdr,
+    MessagingInfo& mi, HHttpRequestHeader& requestHdr,
+    const QByteArray& reqBody, HHttpResponseHeader& responseHdr,
     QByteArray* respBody)
 {
     QByteArray data = HHttpMessageCreator::setupData(requestHdr, reqBody, mi);
@@ -849,8 +848,8 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 }
 
 HHttpHandler::ReturnValue HHttpHandler::msgIO(
-    MessagingInfo& mi, QHttpRequestHeader& requestHdr,
-    QHttpResponseHeader& responseHdr, QByteArray* respBody)
+    MessagingInfo& mi, HHttpRequestHeader& requestHdr,
+    HHttpResponseHeader& responseHdr, QByteArray* respBody)
 {
     return msgIO(mi, requestHdr, QByteArray(), responseHdr, respBody);
 }
@@ -866,7 +865,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
         return rv;
     }
 
-    QHttpResponseHeader responseHdr;
+    HHttpResponseHeader responseHdr;
     rv = receive(mi, responseHdr);
     if (rv != Success)
     {
@@ -891,7 +890,7 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
         return rv;
     }
 
-    QHttpResponseHeader responseHdr;
+    HHttpResponseHeader responseHdr;
     rv = receive(mi, responseHdr);
     if (rv != Success)
     {
@@ -908,10 +907,10 @@ HHttpHandler::ReturnValue HHttpHandler::msgIO(
 }
 
 HHttpHandler::ReturnValue HHttpHandler::msgIO(
-    MessagingInfo& mi, QHttpRequestHeader& reqHdr,
+    MessagingInfo& mi, HHttpRequestHeader& reqHdr,
     const QtSoapMessage& soapMsg, QtSoapMessage& response)
 {
-    QHttpResponseHeader responseHdr;
+    HHttpResponseHeader responseHdr;
 
     QByteArray respBody;
 

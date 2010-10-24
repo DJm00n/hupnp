@@ -36,9 +36,8 @@
 #include <QtCore/QUrl>
 #include <QtCore/QString>
 #include <QtCore/QDateTime>
+#include <QtCore/QStringList>
 #include <QtNetwork/QHostAddress>
-#include <QtNetwork/QHttpRequestHeader>
-#include <QtNetwork/QHttpResponseHeader>
 
 /*!
  * \defgroup hupnp_ssdp Ssdp
@@ -72,7 +71,7 @@
  *       1800, // how long the advertisement is valid in seconds
  *       QUrl("127.0.0.1:1900/mydevice"), // where the device description can be downloaded
  *       Herqq::Upnp::HProductTokens("unix/5.1 UPnP/1.1 MyProduct/1.0"), // some information about the host and product
- *       Herqq::Upnp::HUsn("uuid:5d724fc2-5c5e-4760-a123-f04a9136b300::upnp:rootdevice")); // universally unique identifier
+ *       Herqq::Upnp::HDiscoveryType("uuid:5d724fc2-5c5e-4760-a123-f04a9136b300::upnp:rootdevice")); // universally unique identifier
  *
  * ssdp.announcePresence(deviceAvailable);
  *
@@ -82,9 +81,9 @@
  * UPnP root device is now available.
  *
  * \note All SSDP classes validate the provided information during
- * object construction. For instance, if the argument to the Herqq::Upnp::HUsn
+ * object construction. For instance, if the argument to the Herqq::Upnp::HDiscoveryType
  * is invalid, the constructed object will be invalid as well,
- * e.g Herqq::Upnp::HUsn::isValid() returns false. In such a case, the creation
+ * e.g Herqq::Upnp::HDiscoveryType::isValid() returns false. In such a case, the creation
  * of Herqq::Upnp::HResourceAvailable will fail and consequenlty, the \c %HSsdp will
  * not send anything.
  *
@@ -212,7 +211,7 @@ void HSsdpPrivate::checkHost(const QString& host)
 }
 
 HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(
-    const QHttpResponseHeader& hdr)
+    const HHttpResponseHeader& hdr)
 {
     QString   cacheControl  = hdr.value("CACHE-CONTROL");
     QDateTime date          = QDateTime::fromString(hdr.value("DATE"));
@@ -271,7 +270,7 @@ HDiscoveryResponse HSsdpPrivate::parseDiscoveryResponse(
 }
 
 HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(
-    const QHttpRequestHeader& hdr)
+    const HHttpRequestHeader& hdr)
 {
     QString host = hdr.value("HOST");
     QString man  = hdr.value("MAN").simplified();
@@ -300,7 +299,7 @@ HDiscoveryRequest HSsdpPrivate::parseDiscoveryRequest(
 }
 
 HResourceAvailable HSsdpPrivate::parseDeviceAvailable(
-    const QHttpRequestHeader& hdr)
+    const HHttpRequestHeader& hdr)
 {
     QString host          = hdr.value("HOST");
     QString server        = hdr.value("SERVER");
@@ -346,7 +345,7 @@ HResourceAvailable HSsdpPrivate::parseDeviceAvailable(
 }
 
 HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(
-    const QHttpRequestHeader& hdr)
+    const HHttpRequestHeader& hdr)
 {
     QString host        = hdr.value("HOST");
     //QString nt          = hdr.value("NT");
@@ -373,7 +372,7 @@ HResourceUnavailable HSsdpPrivate::parseDeviceUnavailable(
         HDiscoveryType(usn, LooseChecks), bootId, configId);
 }
 
-HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const QHttpRequestHeader& hdr)
+HResourceUpdate HSsdpPrivate::parseDeviceUpdate(const HHttpRequestHeader& hdr)
 {
     QString host          = hdr.value("HOST");
     QUrl    location      = hdr.value("LOCATION");
@@ -437,7 +436,7 @@ void HSsdpPrivate::processResponse(const QString& msg, const HEndpoint& source)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QHttpResponseHeader hdr(msg);
+    HHttpResponseHeader hdr(msg);
     if (!hdr.isValid())
     {
         HLOG_WARN("Ignoring a malformed HTTP response.");
@@ -463,7 +462,7 @@ void HSsdpPrivate::processNotify(const QString& msg, const HEndpoint& source)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QHttpRequestHeader hdr(msg);
+    HHttpRequestHeader hdr(msg);
     if (!hdr.isValid())
     {
         HLOG_WARN("Ignoring an invalid HTTP NOTIFY request.");
@@ -531,7 +530,7 @@ void HSsdpPrivate::processSearch(
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QHttpRequestHeader hdr(msg);
+    HHttpRequestHeader hdr(msg);
     if (!hdr.isValid())
     {
         HLOG_WARN("Ignoring an invalid HTTP M-SEARCH request.");

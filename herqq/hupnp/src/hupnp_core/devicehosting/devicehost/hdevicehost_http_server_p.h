@@ -37,6 +37,7 @@
 
 #include "../../general/hupnp_defs.h"
 #include "../../http/hhttp_server_p.h"
+#include "../../http/hhttp_header_p.h"
 
 #include "../../devicemodel/haction_p.h"
 
@@ -118,13 +119,13 @@ protected:
         MessagingInfo&, const InvokeActionRequest&, HRunnable*);
 
     virtual void incomingUnknownHeadRequest(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     virtual void incomingUnknownGetRequest(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     virtual void incomingUnknownPostRequest(
-        MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body, HRunnable*);
 
 public:
 

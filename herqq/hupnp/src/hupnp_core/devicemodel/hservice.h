@@ -180,11 +180,6 @@ protected:
      * is being initialized by the managing host (HDeviceHost or HControlPoint).
      *
      * \return the actions that this \c %HService exposes.
-     *
-     * \remarks The HService base class takes the ownership of the created
-     * objects and will delete them upon its destruction. Because of that,
-     * you can store the addresses of the created objects and use them safely
-     * throughout the lifetime of this service. However, you \b cannot delete them.
      */
     virtual HActionsSetupData createActions();
 
@@ -227,12 +222,7 @@ protected:
      * Most commonly this method is called only once when the instance
      * is being initialized by the managing host (HDeviceHost or HControlPoint).
      *
-     * \return the actions that this \c %HService exposes.
-     *
-     * \remarks The HService base class takes the ownership of the created
-     * objects and will delete them upon its destruction. Because of that,
-     * you can store the addresses of the created objects and use them safely
-     * throughout the lifetime of this service. However, you \b cannot delete them.
+     * \return information about the state variables this \c %HService exposes.
      */
     virtual HStateVariablesSetupData stateVariablesSetupData() const;
 

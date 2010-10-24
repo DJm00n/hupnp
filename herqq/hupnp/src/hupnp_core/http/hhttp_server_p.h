@@ -42,9 +42,9 @@
 class QUrl;
 class QString;
 class QTcpSocket;
-class QHttpHeader;
-class QHttpRequestHeader;
-class QHttpResponseHeader;
+class HHttpHeader;
+class HHttpRequestHeader;
+class HHttpResponseHeader;
 
 namespace Herqq
 {
@@ -114,24 +114,24 @@ private:
     void processRequest(qint32 socketDescriptor, HRunnable*);
 
     HHttpHandler::ReturnValue processNotifyMessage(
-        MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body,
+        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body,
         HRunnable*);
 
     HHttpHandler::ReturnValue processGet (
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     HHttpHandler::ReturnValue processHead(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     HHttpHandler::ReturnValue processPost(
-        MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body,
+        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body,
         HRunnable* runner);
 
     HHttpHandler::ReturnValue processSubscription(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     HHttpHandler::ReturnValue processUnsubscription(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     bool setupIface(const HEndpoint&);
 
@@ -150,13 +150,13 @@ protected:
         MessagingInfo&, const NotifyRequest&, HRunnable*);
 
     virtual void incomingUnknownHeadRequest(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     virtual void incomingUnknownGetRequest(
-        MessagingInfo&, const QHttpRequestHeader&, HRunnable*);
+        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
 
     virtual void incomingUnknownPostRequest(
-        MessagingInfo&, const QHttpRequestHeader&, const QByteArray& body,
+        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body,
         HRunnable* runner);
 
     ChunkedInfo& chunkedInfo();

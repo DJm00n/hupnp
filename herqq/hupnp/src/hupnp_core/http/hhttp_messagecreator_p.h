@@ -35,9 +35,9 @@
 
 class QString;
 class QByteArray;
-class QHttpHeader;
-class QHttpRequestHeader;
-class QHttpResponseHeader;
+class HHttpHeader;
+class HHttpRequestHeader;
+class HHttpResponseHeader;
 
 namespace Herqq
 {
@@ -64,9 +64,9 @@ private:
 
 public:
 
-    static QByteArray setupData(QHttpHeader& hdr, MessagingInfo&);
+    static QByteArray setupData(HHttpHeader& hdr, MessagingInfo&);
     static QByteArray setupData(
-        QHttpHeader& hdr, const QByteArray& body, MessagingInfo&,
+        HHttpHeader& hdr, const QByteArray& body, MessagingInfo&,
         ContentType = Undefined);
 
     inline static QByteArray createResponse(StatusCode sc, MessagingInfo& mi)
@@ -87,19 +87,19 @@ public:
     static QByteArray create(const SubscribeResponse& , MessagingInfo&);
 
     static NotifyRequest::RetVal create(
-        const QHttpRequestHeader& reqHdr, const QByteArray& body,
+        const HHttpRequestHeader& reqHdr, const QByteArray& body,
         NotifyRequest& req);
 
     static SubscribeRequest::RetVal create(
-        const QHttpRequestHeader& reqHdr,
+        const HHttpRequestHeader& reqHdr,
         SubscribeRequest& req);
 
     static UnsubscribeRequest::RetVal create(
-        const QHttpRequestHeader& reqHdr,
+        const HHttpRequestHeader& reqHdr,
         UnsubscribeRequest& req);
 
     static bool create(
-        const QHttpResponseHeader& respHdr,
+        const HHttpResponseHeader& respHdr,
         SubscribeResponse& resp);
 };
 

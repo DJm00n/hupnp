@@ -1,5 +1,6 @@
 HEADERS += \
     $$SRC_LOC/http/hhttp_p.h \
+    $$SRC_LOC/http/hhttp_header_p.h \
     $$SRC_LOC/http/hhttp_utils_p.h \
     $$SRC_LOC/http/hhttp_server_p.h \
     $$SRC_LOC/http/hhttp_handler_p.h \
@@ -9,6 +10,7 @@ HEADERS += \
 
 SOURCES += \
     $$SRC_LOC/http/hhttp_utils_p.cpp \
+    $$SRC_LOC/http/hhttp_header_p.cpp \
     $$SRC_LOC/http/hhttp_server_p.cpp \
     $$SRC_LOC/http/hhttp_handler_p.cpp \
     $$SRC_LOC/http/hhttp_asynchandler_p.cpp \

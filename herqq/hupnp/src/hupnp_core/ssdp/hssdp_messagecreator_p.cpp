@@ -29,9 +29,6 @@
 #include "../socket/hendpoint.h"
 #include "../../utils/hlogger_p.h"
 
-//#include <QHttpRequestHeader>
-//#include <QHttpResponseHeader>
-
 #include <QtCore/QUrl>
 #include <QtCore/QTextStream>
 

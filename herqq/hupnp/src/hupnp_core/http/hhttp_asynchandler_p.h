@@ -33,6 +33,7 @@
 #include "../general/hupnp_defs.h"
 
 #include "hhttp_p.h"
+#include "hhttp_header_p.h"
 #include "hhttp_messaginginfo_p.h"
 #include "../devicehosting/messages/hevent_messages_p.h"
 
@@ -41,8 +42,6 @@
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
 #include <QtNetwork/QAbstractSocket>
-#include <QtNetwork/QHttpRequestHeader>
-#include <QtNetwork/QHttpResponseHeader>
 
 class QtSoapMessage;
 
@@ -95,7 +94,7 @@ private:
     InternalState m_state;
     // the current state of this "state machine"
 
-    QHttpHeader* m_headerRead;
+    HHttpHeader* m_headerRead;
     // the http reader read from the target socket
     // (request / response, depends of the setup)
 
@@ -168,7 +167,7 @@ public:
     inline QByteArray dataRead() const { return m_dataRead; }
 
     // the header of the response
-    inline const QHttpHeader* headerRead() const { return m_headerRead; }
+    inline const HHttpHeader* headerRead() const { return m_headerRead; }
 
     inline MessagingInfo* messagingInfo() const { return m_mi; }
 
@@ -221,11 +220,11 @@ public:
     // Helper overload
     //
     HHttpAsyncOperation* msgIo(
-        MessagingInfo*, QHttpRequestHeader&, const QtSoapMessage&);
+        MessagingInfo*, HHttpRequestHeader&, const QtSoapMessage&);
 
     //
-    // waitingRequest == expecting to receive QHttpRequestHeader, otherwise
-    // expecting to receive QHttpResponseHeader
+    // waitingRequest == expecting to receive HHttpRequestHeader, otherwise
+    // expecting to receive HHttpResponseHeader
     //
     HHttpAsyncOperation* receive(MessagingInfo*, bool waitingRequest);
 };

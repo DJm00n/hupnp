@@ -23,6 +23,7 @@
 
 #include "../hdevicehosting_exceptions_p.h"
 
+#include "../../http/hhttp_header_p.h"
 #include "../../http/hhttp_handler_p.h"
 #include "../../http/hhttp_messaginginfo_p.h"
 
@@ -34,8 +35,6 @@
 #include <QtCore/QUrl>
 
 #include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHttpRequestHeader>
-#include <QtNetwork/QHttpResponseHeader>
 
 namespace Herqq
 {
@@ -88,8 +87,8 @@ QByteArray HDataRetriever::retrieveData(
         request.append('/');
     }
 
-    QHttpRequestHeader requestHdr("GET", request);
-    QHttpResponseHeader responseHdr;
+    HHttpRequestHeader requestHdr("GET", request);
+    HHttpResponseHeader responseHdr;
 
     QTcpSocket sock;
     qint32 port = baseUrl.port();

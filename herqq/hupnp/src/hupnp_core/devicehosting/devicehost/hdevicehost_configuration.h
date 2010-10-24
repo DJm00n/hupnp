@@ -40,8 +40,8 @@ namespace Upnp
 class HDeviceConfigurationPrivate;
 
 /*!
- * This is a class for specifying a configuration to an HDevice that is to be created
- * and hosted by an HDeviceHost.
+ * This is a class for specifying a configuration to an HDevice that is
+ * to be created and hosted by an HDeviceHost.
  *
  * A valid device configuration contains at least:
  *
@@ -152,33 +152,38 @@ public:
     /*!
      * Sets the callable entity that is used to create HDevice instances.
      *
-     * In any case, your callable entity must be:
+     * Your callable entity must have the function signature:
+     *
+     * \code
+     * Herqq::Upnp::HDevice* function(const Herqq::Upnp::HDeviceInfo&)
+     * \endcode
+     *
+     * However, your callable entity doesn't have to be a normal function,
+     * as long as it is:
+     *
      *   - copyable by value
-     *   - callable by the operator(), with single argument of
-     *   const Herqq::Upnp::HDeviceInfo& deviceInfo
+     *   - callable by the \c operator() with a single argument of
+     *   <c>const Herqq::Upnp::HDeviceInfo&</c>
      *   and that returns a pointer to a heap allocated instance of
-     *   Herqq::Upnp::HDevice*.
+     *   \c Herqq::Upnp::HDevice.
      *
-     * In other words, the signature is
-     * Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo&);
+     * In other words, your callable entity can be:
      *
-     * From this follows, that the device creator can be either a:
+     * - a functor,
+     * - a function pointer or
+     * - a member function pointer.
      *
-     * \li functor,
-     * \li function pointer or
-     * \li member function pointer
-     *
-     * For example, if your callable entity is a functor, it could
-     * look something like the following:
+     * For example, if your callable entity is a functor, it could be
+     * something like the following:
      *
      * \code
      *
-     * class Creator
+     * class MyDeviceCreator
      * {
      * public:
-     *     Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo& deviceInfo)
+     *     Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo&)
      *     {
-     *         return new MyFirstHDevice();
+     *         return new MyHDevice();
      *         // your class derived from HDevice that implements the functionality
      *         // advertised in the description files.
      *     }
@@ -186,63 +191,48 @@ public:
      *
      * \endcode
      *
-     * and you could call the method as follows:
+     * and you could set it as follows:
      *
      * \code
-     *
-     * deviceCreator(Creator());
-     *
+     * HDeviceConfiguration conf;
+     * conf.setDeviceCreator(MyDeviceCreator());
      * \endcode
      *
-     * If your callable entity is a member function other than the operator(),
+     * If your callable entity is a member function other than the \c operator(),
      * the member function declaration would look like the following:
      *
      * \code
      *
      * class MyClass
      * {
-     * private:
-     *    Herqq:Upnp::HDevice* createMyDevice(const Herqq::Upnp::HDeviceInfo&);
-     *
      * public:
-     *     MyClass();
+     *     Herqq:Upnp::HDevice* createMyDevice(const Herqq::Upnp::HDeviceInfo&);
      * };
      *
      * \endcode
      *
-     * and you could set the creator as follows (this is contrived due to the
-     * private access specifier):
+     * and you could set the creator as follows:
      *
      * \code
      *
-     * MyClass::MyClass()
-     * {
-     *    HDeviceConfiguration configuration;
-     *    configuration.deviceCreator(this, &MyClass::createMyDevice);
-     * }
+     * MyClass myClass;
+     * HDeviceConfiguration conf;
+     * conf.setDeviceCreator(&myClass, &MyClass::createMyDevice);
      *
      * \endcode
      *
-     * The example above demonstrates that:
-     *
-     * \li the device creator can be \em any member function with a proper signature,
+     * \note
+     * The device creator can be \em any member function with a proper signature,
      * regardless of the access specifier.
      *
-     * \li the way you could set the device creator.
-     *
-     * \param deviceCreator specifies the callable entity that is used to
-     * create HDevice instances.
-     *
-     * \return \e true in case the provided device creator is valid and it was
+     * \return \e true in case the \a deviceCreator is valid and it was
      * successfully set.
      *
-     * \remarks
+     * \warning
      *
-     * \li The objects your device creator creates will be deallocated by HUPnP
+     * The objects \a deviceCreator creates will be deallocated by HUPnP
      * when the objects are no longer needed. Do \b not delete
      * them manually.
-     *
-     * \li The device creator has to be set for every device to be hosted.
      *
      * \sa deviceCreator()
      */
@@ -256,8 +246,10 @@ public:
      * for hosting an HDevice class in a HDeviceHost.
      *
      * \retval false otherwise. In this case, the initialization of HDeviceHost
-     * cannot succeed. Make sure you have set the device creator and path to
-     * a device description file.
+     * cannot succeed. Make sure you have set the deviceCreator() and
+     * pathToDeviceDescription().
+     *
+     * \sa deviceCreator(), pathToDeviceDescription()
      */
     bool isValid() const;
 };
@@ -279,7 +271,7 @@ class HDeviceHostConfigurationPrivate;
  * - Add the device configurations to the HDeviceHostConfiguration instance
  * using add().
  * - Modify the behavior of the HDeviceHost by setting other variables
- * in this class.
+ * of this class.
  * - Create an HDeviceHost and initialize it by passing the
  * HDeviceHostConfiguration to its HDeviceHost::init() method.
  *

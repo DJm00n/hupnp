@@ -263,8 +263,8 @@ void HEventSubscription::renewSubscription_done(HHttpAsyncOperation* op)
         return;
     }
 
-    const QHttpResponseHeader* hdr =
-        static_cast<const QHttpResponseHeader*>(op->headerRead());
+    const HHttpResponseHeader* hdr =
+        static_cast<const HHttpResponseHeader*>(op->headerRead());
 
     Q_ASSERT(hdr);
 
@@ -425,8 +425,8 @@ void HEventSubscription::subscribe_done(HHttpAsyncOperation* op)
         return;
     }
 
-    const QHttpResponseHeader* hdr =
-        static_cast<const QHttpResponseHeader*>(op->headerRead());
+    const HHttpResponseHeader* hdr =
+        static_cast<const HHttpResponseHeader*>(op->headerRead());
 
     Q_ASSERT(hdr);
 

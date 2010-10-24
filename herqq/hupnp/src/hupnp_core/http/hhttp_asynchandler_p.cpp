@@ -329,11 +329,11 @@ bool HHttpAsyncOperation::readHeader()
 
     if (m_waitingHttpRequest)
     {
-        m_headerRead = new QHttpRequestHeader(QString::fromUtf8(m_dataRead));
+        m_headerRead = new HHttpRequestHeader(QString::fromUtf8(m_dataRead));
     }
     else
     {
-        m_headerRead = new QHttpResponseHeader(QString::fromUtf8(m_dataRead));
+        m_headerRead = new HHttpResponseHeader(QString::fromUtf8(m_dataRead));
     }
 
     m_dataRead.clear();
@@ -603,11 +603,11 @@ void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
 
         if (m_waitingHttpRequest)
         {
-            m_headerRead = new QHttpRequestHeader(QString::fromUtf8(m_dataRead));
+            m_headerRead = new HHttpRequestHeader(QString::fromUtf8(m_dataRead));
         }
         else
         {
-            m_headerRead = new QHttpResponseHeader(QString::fromUtf8(m_dataRead));
+            m_headerRead = new HHttpResponseHeader(QString::fromUtf8(m_dataRead));
         }
 
         if (!m_headerRead->isValid())
@@ -709,7 +709,7 @@ HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
 }
 
 HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
-    MessagingInfo* mi, QHttpRequestHeader& reqHdr, const QtSoapMessage& soapMsg)
+    MessagingInfo* mi, HHttpRequestHeader& reqHdr, const QtSoapMessage& soapMsg)
 {
     QByteArray dataToSend =
         HHttpMessageCreator::setupData(

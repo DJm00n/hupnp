@@ -39,8 +39,6 @@
 #include <QtCore/QUrl>
 #include <QtCore/QPair>
 
-#include <QtNetwork/QHttpRequestHeader>
-
 namespace Herqq
 {
 
@@ -465,7 +463,7 @@ void DeviceHostHttpServer::incomingControlRequest(
 }
 
 void DeviceHostHttpServer::incomingUnknownHeadRequest(
-    MessagingInfo& mi, const QHttpRequestHeader&, HRunnable*)
+    MessagingInfo& mi, const HHttpRequestHeader&, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     // TODO
@@ -475,7 +473,7 @@ void DeviceHostHttpServer::incomingUnknownHeadRequest(
 }
 
 void DeviceHostHttpServer::incomingUnknownGetRequest(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr, HRunnable*)
+    MessagingInfo& mi, const HHttpRequestHeader& requestHdr, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -587,7 +585,7 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
 }
 
 void DeviceHostHttpServer::incomingUnknownPostRequest(
-    MessagingInfo& mi, const QHttpRequestHeader& /*requestHdr*/,
+    MessagingInfo& mi, const HHttpRequestHeader& /*requestHdr*/,
     const QByteArray& /*body*/, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);

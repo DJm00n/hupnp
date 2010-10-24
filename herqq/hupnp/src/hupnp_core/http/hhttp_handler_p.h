@@ -37,9 +37,9 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QAtomicInt>
 
-class QHttpHeader;
-class QHttpRequestHeader;
-class QHttpResponseHeader;
+class HHttpHeader;
+class HHttpRequestHeader;
+class HHttpResponseHeader;
 
 class QtSoapMessage;
 
@@ -118,20 +118,20 @@ public:
         MessagingInfo&,
         NotifyRequest&,
         NotifyRequest::RetVal&,
-        const QHttpRequestHeader* rcvdHdr=0,
+        const HHttpRequestHeader* rcvdHdr=0,
         const QByteArray* body=0);
 
     ReturnValue receive(
         MessagingInfo&,
         SubscribeRequest&,
         SubscribeRequest::RetVal&,
-        const QHttpRequestHeader* rcvdHdr=0);
+        const HHttpRequestHeader* rcvdHdr=0);
 
     ReturnValue receive(
         MessagingInfo&,
         UnsubscribeRequest&,
         UnsubscribeRequest::RetVal&,
-        const QHttpRequestHeader* rcvdHdr=0);
+        const HHttpRequestHeader* rcvdHdr=0);
 
     ReturnValue receive(MessagingInfo&, SubscribeResponse&);
 
@@ -142,16 +142,16 @@ public:
 
     // last parameter is the response message
     ReturnValue msgIO(
-        MessagingInfo&, QHttpRequestHeader&, const QtSoapMessage&, QtSoapMessage&);
+        MessagingInfo&, HHttpRequestHeader&, const QtSoapMessage&, QtSoapMessage&);
 
     // last parameter is the body of the message, if any
     ReturnValue msgIO(
-        MessagingInfo&, QHttpRequestHeader&, QHttpResponseHeader&, QByteArray* = 0);
+        MessagingInfo&, HHttpRequestHeader&, HHttpResponseHeader&, QByteArray* = 0);
 
     // last parameter is the body of the message, if any
     ReturnValue msgIO(
-        MessagingInfo&, QHttpRequestHeader&, const QByteArray& requestBody,
-        QHttpResponseHeader&, QByteArray* = 0);
+        MessagingInfo&, HHttpRequestHeader&, const QByteArray& requestBody,
+        HHttpResponseHeader&, QByteArray* = 0);
 };
 
 }

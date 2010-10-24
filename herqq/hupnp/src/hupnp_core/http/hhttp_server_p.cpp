@@ -21,6 +21,7 @@
 
 #include "hhttp_server_p.h"
 #include "hhttp_utils_p.h"
+#include "hhttp_header_p.h"
 #include "hhttp_messaginginfo_p.h"
 #include "hhttp_messagecreator_p.h"
 
@@ -38,8 +39,6 @@
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
 #include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHttpRequestHeader>
-#include <QtNetwork/QHttpResponseHeader>
 
 namespace Herqq
 {
@@ -126,7 +125,7 @@ void HHttpServer::processRequest(qint32 socketDescriptor, HRunnable* runner)
           stopWatch.elapsed() < 30000)
     {
         QByteArray body;
-        QHttpRequestHeader requestHeader;
+        HHttpRequestHeader requestHeader;
 
         MessagingInfo mi(client);
         mi.chunkedInfo() = m_chunkedInfo;
@@ -229,7 +228,7 @@ void HHttpServer::processRequest(qint32 socketDescriptor, HRunnable* runner)
 }
 
 HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
-    MessagingInfo& mi, const QHttpRequestHeader& request, const QByteArray& body,
+    MessagingInfo& mi, const HHttpRequestHeader& request, const QByteArray& body,
     HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -255,7 +254,7 @@ HHttpHandler::ReturnValue HHttpServer::processNotifyMessage(
 }
 
 HHttpHandler::ReturnValue HHttpServer::processGet(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr, HRunnable* runner)
+    MessagingInfo& mi, const HHttpRequestHeader& requestHdr, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG("Dispatching unknown GET request.");
@@ -265,7 +264,7 @@ HHttpHandler::ReturnValue HHttpServer::processGet(
 }
 
 HHttpHandler::ReturnValue HHttpServer::processHead(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr, HRunnable* runner)
+    MessagingInfo& mi, const HHttpRequestHeader& requestHdr, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG("Dispatching unknown HEAD request.");
@@ -275,7 +274,7 @@ HHttpHandler::ReturnValue HHttpServer::processHead(
 }
 
 HHttpHandler::ReturnValue HHttpServer::processPost(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr,
+    MessagingInfo& mi, const HHttpRequestHeader& requestHdr,
     const QByteArray& body, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -318,7 +317,7 @@ HHttpHandler::ReturnValue HHttpServer::processPost(
 }
 
 HHttpHandler::ReturnValue HHttpServer::processSubscription(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr, HRunnable* runner)
+    MessagingInfo& mi, const HHttpRequestHeader& requestHdr, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -343,7 +342,7 @@ HHttpHandler::ReturnValue HHttpServer::processSubscription(
 }
 
 HHttpHandler::ReturnValue HHttpServer::processUnsubscription(
-    MessagingInfo& mi, const QHttpRequestHeader& requestHdr, HRunnable* runner)
+    MessagingInfo& mi, const HHttpRequestHeader& requestHdr, HRunnable* runner)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -434,7 +433,7 @@ void HHttpServer::incomingNotifyMessage(
 }
 
 void HHttpServer::incomingUnknownHeadRequest(
-    MessagingInfo& mi, const QHttpRequestHeader&, HRunnable*)
+    MessagingInfo& mi, const HHttpRequestHeader&, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_WARN("Calling default [incomingUnknownHeadRequest] implementation, which does nothing.");
@@ -443,7 +442,7 @@ void HHttpServer::incomingUnknownHeadRequest(
 }
 
 void HHttpServer::incomingUnknownGetRequest(
-    MessagingInfo& mi, const QHttpRequestHeader&, HRunnable*)
+    MessagingInfo& mi, const HHttpRequestHeader&, HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_WARN("Calling default [incomingUnknownGetRequest] implementation, which does nothing.");
@@ -452,7 +451,7 @@ void HHttpServer::incomingUnknownGetRequest(
 }
 
 void HHttpServer::incomingUnknownPostRequest(
-    MessagingInfo& mi, const QHttpRequestHeader&, const QByteArray&,
+    MessagingInfo& mi, const HHttpRequestHeader&, const QByteArray&,
     HRunnable*)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
