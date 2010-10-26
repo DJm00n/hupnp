@@ -87,9 +87,8 @@ public:
     /*!
      * Changes the value of the state variable.
      *
-     * If the instance is evented
-     * (eventingType() is not HStateVariable::NoEvents), after the value has been changed,
-     * valueChanged() signal is emitted.
+     * If the instance is evented the valueChanged() signal is emitted after
+     * the value has been changed.
      *
      * \param newValue specifies the new value of the state variable. The new value
      * must have the same underlying data type as the previous value

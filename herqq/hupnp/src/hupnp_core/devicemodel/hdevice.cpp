@@ -278,6 +278,257 @@
  * is \c HWritableStateVariable and on control point side the type is
  * \c HReadableStateVariable.
  *
+ * \section setting_up_the_devicemodel Setting Up the Device Model
+ *
+ * Note that in case you are writing a client-side software you rarely need to worry
+ * about how the device model gets built. However, if you are implementing a
+ * server-side UPnP device this is something you should know.
+ *
+ * \subsection how_devicehost_builds_a_device How HDeviceHost builds a device
+ *
+ * When you initialize an Herqq::Upnp::HDeviceHost you provide it:
+ * - one or more device descriptions that represent the UPnP device(s) you want
+ * to host and
+ * - \e device \e creators that create the C++ classes representing the
+ * device descriptions.
+ *
+ * You can find more information about setting up the Herqq::Upnp::HDeviceHost in
+ * \ref hupnp_devicehosting, but what is relevant here is that you provide two
+ * pieces of information that \b must match; the C++ classes created by the
+ * \e device \e creator(s) \b must reflect the description documents and vice
+ * versa.
+ *
+ * During its initialization an \c HDeviceHost scans the provided
+ * description document(s), and whenever it encounters a definition of a
+ * UPnP device it invokes the device creator(s) you have provided to create
+ * an instance of Herqq::Upnp::HDevice matching the device definition in the
+ * description document. The \c HDeviceHost provides an Herqq::Upnp::HDeviceInfo
+ * instance to the device creator, which contains the information read from the
+ * device description document. Based on this information the device creator is
+ * expected to create and return an Herqq::Upnp::HDevice if it can and \c null
+ * otherwise. If the device creator returns \c null the \c HDeviceHost
+ * aborts initialization and exists with an error.
+ *
+ * For example,
+ *
+ * \code
+ * Herqq::Upnp::HDevice* myDeviceCreator(const Herqq::Upnp::HDeviceInfo&)
+ * {
+ *     // if you have defined this creator to be used with multiple devices,
+ *     // you may want to check the provided device info object to identify the
+ *     // device type that HUPnP expects to be created.
+ *     return new DimmableLightImpl(); // The implementation of the UPnP device derived from HDevice
+ * }
+ * \endcode
+ *
+ * If the device creator returns a valid device pointer the \c HDeviceHost takes
+ * ownership of the object and uses it to complete the model setup. That is,
+ * each \c HDevice has to create the UPnP services it contains and similarly
+ * each \c HService has to create the UPnP actions it contains. These creator
+ * methods are called as the description documents are parsed and service and
+ * action definitions are encountered, just as it is with device definitions.
+ *
+ * \subsection using_custom_hdevice Using custom Herqq::Upnp::HDevice implementations
+ *
+ * Using device creators with existing \c HDevice implementations is straightforward,
+ * since the Herqq::Upnp::HDeviceCreator only needs to know how to map
+ * an Herqq::Upnp::HDeviceInfo into a proper Herqq::Upnp::HDevice. However,
+ * things get a bit more involved when you are implementing a custom \c HDevice,
+ * because now you may need to create UPnP services, which may need to create
+ * UPnP actions.
+ *
+ * One of the key ideas behind the HUPnP device model is that an \c HDevice
+ * represents a UPnP device closely and as such it is the only entity that knows
+ * what UPnP services, embedded devices, actions and state variables the
+ * corresponding UPnP device contains. From this follows that every \c HDevice
+ * implementation is expected to create the implementations for UPnP services
+ * and embedded UPnP devices it contains. The implementations of the UPnP services
+ * are created in Herqq::Upnp::HDevice::createServices() and the implementations
+ * of the embedded devices are created in Herqq::Upnp::HDevice::createEmbeddedDevices(),
+ * which both are called by HUPnP during the parse of the description document.
+ *
+ * An example of \c createServices():
+ *
+ * \code
+ *
+ * Herqq::Upnp::HServicesSetupData* DimmableLight::createServices()
+ * {
+ *   Herqq::Upnp::HServicesSetupData* retVal = new Herqq::Upnp::HServicesSetupData();
+ *
+ *   retVal->insert(
+ *       new Herqq::Upnp::HServiceSetup(
+ *           Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:SwitchPower"),
+ *           Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:SwitchPower:1"),
+ *           new SwitchPowerImpl())); // The UPnP service implementation derived from HService
+ *
+ *   retVal->insert(
+ *       new Herqq::Upnp::HServiceSetup(
+ *           Herqq::Upnp::HServiceId("urn:schemas-upnp-org:serviceId:Dimming"),
+ *           Herqq::Upnp::HResourceType("urn:schemas-upnp-org:service:Dimming:1"),
+ *           new DimmingImpl())); // The UPnP service implementation derived from HService
+ *
+ *   return retVal;
+ * }
+ *
+ * \endcode
+ *
+ * And an example of \c createEmbeddedDevices():
+ *
+ * \code
+ * Herqq::Upnp::HDevicesSetupData* MyRootDevice::createEmbeddedDevices()
+ * {
+ *   Herqq::Upnp::HDevicesSetupData* retVal = new Herqq::Upnp::HDevicesSetupData();
+ *
+ *   retVal->insert(
+ *       new Herqq::Upnp::HDeviceSetup(
+ *           Herqq::Upnp::HResourceType("urn:my-domain-org:device:MyDevice_X:1"),
+ *           new MyDevice_XImpl())); // The UPnP device implementation derived from HDevice
+ *
+ *   retVal->insert(
+ *       new Herqq::Upnp::HDeviceSetup(
+ *           Herqq::Upnp::HResourceType("urn:my-domain-org:device:MyDevice_Y:1"),
+ *           new MyDevice_YImpl())); // The UPnP device implementation derived from HDevice
+ *
+ *   return retVal;
+ * }
+ * \endcode
+ *
+ * If your device has no services you do not have to implement
+ * the Herqq::Upnp::HDevice::createServices() and if your device has no
+ * embedded devices you do not have to implement the
+ * Herqq::Upnp::HDevice::createEmbeddedDevices(). In addition,
+ * a device description document can specify embedded devices for a UPnP device
+ * even if you haven't overridden the \c createEmbeddedDevices(). In this case
+ * the \e device \e creator has to be able to create the device types found
+ * in the description document. On the other hand, any device returned by the
+ * \c createEmbeddedDevices() \b must be found in the description document.
+ *
+ * In other words, you \b have \b to override \c createServices() whenever the device
+ * has services. But you \b can override \c createEmbeddedDevices() if you want
+ * to state what embedded devices your device <b>has to have</b> to be functional.
+ * Thus, \c createEmbeddedDevices() is always optional, but it can be used to
+ * ensure that the desired embedded devices are defined in the specified
+ * device description.
+ *
+ * \note The <em>device creator</em> is used if an embedded device is encountered,
+ * but it isn't found in the list the \c createEmbeddedDevices() returns.
+ *
+ * \subsection using_custom_hservice Using custom Herqq::Upnp::HService implementations
+ *
+ * Implementing custom UPnP services is about plugging in custom functionality
+ * in the form of UPnP actions. Although a UPnP service may not have any actions,
+ * UPnP services usually define one or more actions. That is why the main task
+ * of implementing custom Herqq::Upnp::HService is almost always about mapping
+ * <em>callable entities</em> to UPnP action names.
+ *
+ * \note A callable entity is a C++ concept that
+ * is used to refer to anything that can be called with the \c operator(),
+ * such as a normal function, functor or a member function.
+ *
+ * In order to do the mapping, you need to override Herqq::Upnp::HService::createActions().
+ *
+ * Consider an example,
+ *
+ * \code
+ * Herqq::Upnp::HActionsSetupData MyConnectionManagerService::createActions()
+ * {
+ *   Herqq::Upnp::HActionsSetupData retVal;
+ *
+ *   retVal.setInvoke("GetProtocolInfo",
+ *       HActionInvoke(this, &MyConnectionManagerService::getProtocolInfo));
+ *
+ *   retVal.setInvoke("PrepareForConnection",
+ *       HActionInvoke(this, &MyConnectionManagerService::prepareForConnection));
+ *
+ *   retVal.setInvoke("ConnectionComplete",
+ *       HActionInvoke(this, &MyConnectionManagerService::connectionComplete));
+ *
+ *   retVal.setInvoke("GetCurrentConnectionIDs",
+ *       HActionInvoke(this, &MyConnectionManagerService::getCurrentConnectionIDs));
+ *
+ *   retVal.setInvoke("GetCurrentConnectionInfo",
+ *       HActionInvoke(this, &MyConnectionManagerService::getCurrentConnectionInfo));
+ *
+ *   return retVal;
+ * }
+ * \endcode
+ *
+ * The above code maps five member functions of the class
+ * \c MyConnectionManagerService to the five action names accordingly. Once the
+ * model is set up and the \c HDevice is hosted by \c HDeviceHost,
+ * action invocations are ultimately directed to these member functions in this
+ * case. In other words, in this case it is these member functions that have to
+ * do whatever it is that these actions are expected to do.
+ *
+ * \note The callable entity concept detaches invocation logic from what is being
+ * invoked and enables these "entities" to be handled by value. It is a very
+ * powerful concept that allows you to map <em>anything that can be called</em>
+ * following a certain signature under the same interface.
+ *
+ * To give you an idea of the versatility of an callable entity, you could do
+ * the above with normal functions too:
+ *
+ * \code
+ * namespace
+ * {
+ * int getProtocolInfo(const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ * }
+ *
+ * int prepareForConnection(const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ * }
+ *
+ * int connectionComplete(const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ * }
+ *
+ * int getCurrentConnectionIDs(const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ * }
+ *
+ * int getCurrentConnectionInfo(const HActionArguments& inArgs, HActionArguments* outArgs)
+ * {
+ * }
+ * }
+ *
+ * Herqq::Upnp::HActionsSetupData MyConnectionManagerService::createActions()
+ * {
+ *   Herqq::Upnp::HActionsSetupData retVal;
+ *
+ *   retVal.setInvoke("GetProtocolInfo", HActionInvoke(getProtocolInfo));
+ *   retVal.setInvoke("PrepareForConnection", HActionInvoke(prepareForConnection));
+ *   retVal.setInvoke("ConnectionComplete", HActionInvoke(connectionComplete));
+ *   retVal.setInvoke("GetCurrentConnectionIDs", HActionInvoke(getCurrentConnectionIDs));
+ *   retVal.setInvoke("GetCurrentConnectionInfo", HActionInvoke(getCurrentConnectionInfo));
+ *
+ *   return retVal;
+ * }
+ *
+ * \endcode
+ *
+ * Once you have setup the action mappings, your \c HService is ready to be used.
+ * However, there is much more you can do with Herqq::Upnp::HActionSetup to
+ * ensure that the service description containing the action definitions is
+ * correct. Similarly, you can override Herqq::Upnp::HService::stateVariablesSetupData()
+ * to provide additional information to HUPnP in order to make sure that the
+ * service description document is appropriately set up in terms of state
+ * variables as well. This may not be important to you if you are writing a
+ * "private" implementation of a service, but it could be very useful if you are
+ * writing a "public" library of UPnP devices and services that have to make
+ * sure they are appropriately used.
+ *
+ * \note
+ * When implementing a custom \c HService class you are required to implement
+ * only the \c createActions() if the service has actions. Furthermore,
+ * you are required to provide only the mappings between action names and
+ * callable entities. Everything else is optional.
+ * Although providing state variable setup data or detailed information about
+ * the expected action arguments may be very useful if you are writing
+ * library components to be used by other people.
+ *
+ *
+ *
  * \sa hupnp_devicehosting
  */
 
@@ -702,7 +953,9 @@
  *
  * First of all, you may want to skim the discussion in
  * \ref hupnp_devicemodel and \ref hupnp_devicehosting to fully understand
- * the comments in the example above. That being said, perhaps the
+ * the comments in the example above. Especially the section
+ * \ref setting_up_the_devicemodel is useful if you want to learn the details of
+ * building a custom UPnP device using HUPnP. That being said, perhaps the
  * most important issues of building a custom UPnP device using HUPnP
  * can be summarized to:
  *
