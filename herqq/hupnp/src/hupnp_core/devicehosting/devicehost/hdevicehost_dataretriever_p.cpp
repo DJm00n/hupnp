@@ -24,7 +24,6 @@
 #include "../hdevicehosting_exceptions_p.h"
 #include "../../../utils/hlogger_p.h"
 
-#include <QtGui/QImage>
 #include <QtCore/QFile>
 #include <QtCore/QString>
 
@@ -75,7 +74,7 @@ QString DeviceHostDataRetriever::retrieveServiceDescription(
     return QString::fromUtf8(file.readAll());
 }
 
-QImage DeviceHostDataRetriever::retrieveIcon(
+QByteArray DeviceHostDataRetriever::retrieveIcon(
     const QUrl& /*devLoc*/, const QUrl& iconUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -99,15 +98,14 @@ QImage DeviceHostDataRetriever::retrieveIcon(
         "Attempting to open a file [%1] that should contain an icon").arg(
             fullIconPath));
 
-    QImage icon(fullIconPath);
-
-    if (icon.isNull())
+    QFile iconFile(fullIconPath);
+    if (!iconFile.open(QIODevice::ReadOnly))
     {
         throw InvalidDeviceDescription(
             QString("Could not open the icon file [%1]").arg(fullIconPath));
     }
 
-    return icon;
+    return iconFile.readAll();
 }
 
 QString DeviceHostDataRetriever::retrieveDeviceDescription(

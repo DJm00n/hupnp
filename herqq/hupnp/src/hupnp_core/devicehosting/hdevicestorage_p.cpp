@@ -35,8 +35,6 @@
 #include "../devicemodel/hdevice_p.h"
 #include "../devicemodel/hservice_p.h"
 
-#include <QtGui/QImage>
-
 #include <QtCore/QUrl>
 #include <QtCore/QPair>
 
@@ -489,12 +487,12 @@ bool DeviceStorage::removeRootDevice(HDeviceController* root)
     return true;
 }
 
-QPair<QUrl, QImage> DeviceStorage::seekIcon(
+QPair<QUrl, QByteArray> DeviceStorage::seekIcon(
     HDeviceController* device, const QString& iconUrl)
 {
     Q_ASSERT(device);
 
-    QList<QPair<QUrl, QImage> > icons =
+    QList<QPair<QUrl, QByteArray> > icons =
         device->m_device->info().icons();
 
     for (qint32 i = 0; i < icons.size(); ++i)
@@ -508,14 +506,14 @@ QPair<QUrl, QImage> DeviceStorage::seekIcon(
     const QList<HDeviceController*>* devices = device->embeddedDevices();
     foreach(HDeviceController* device, *devices)
     {
-        QPair<QUrl, QImage> icon = seekIcon(device, iconUrl);
-        if (icon != QPair<QUrl, QImage>())
+        QPair<QUrl, QByteArray> icon = seekIcon(device, iconUrl);
+        if (icon != QPair<QUrl, QByteArray>())
         {
             return icon;
         }
     }
 
-    return QPair<QUrl, QImage>();
+    return QPair<QUrl, QByteArray>();
 }
 
 HServiceController* DeviceStorage::searchServiceByScpdUrl(

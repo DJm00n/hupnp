@@ -34,8 +34,6 @@
 
 #include "../../../utils/hlogger_p.h"
 
-#include <QtGui/QImage>
-
 #include <QtCore/QUrl>
 #include <QtCore/QPair>
 
@@ -553,28 +551,13 @@ void DeviceHostHttpServer::incomingUnknownGetRequest(
         return;
     }
 
-    QPair<QUrl, QImage> icon =
+    QPair<QUrl, QByteArray> icon =
         m_deviceStorage.seekIcon(device, extractedRequestPart);
 
     if (!icon.second.isNull())
     {
-        QByteArray ba;
-        QBuffer buffer(&ba);
-        if (!buffer.open(QIODevice::WriteOnly))
-        {
-            HLOG_WARN("Failed to serialize the icon.");
-            return;
-        }
-
-        if (!icon.second.save(&buffer, "png"))
-        {
-            HLOG_WARN("Failed to serialize the icon.");
-            return;
-        }
-
         HLOG_DBG(QString("Sending icon to [%1] as requested.").arg(peer));
-
-        m_httpHandler.send(mi, ba, Ok);
+        m_httpHandler.send(mi, icon.second, Ok);
         return;
     }
 

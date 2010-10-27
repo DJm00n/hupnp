@@ -1,6 +1,7 @@
 TEMPLATE = lib
 TARGET   = HUpnp
 QT      += network xml
+QT      -= gui
 CONFIG  += warn_on dll exceptions thread
 DEFINES += H_BUILD_UPNP_CORE_LIB
 

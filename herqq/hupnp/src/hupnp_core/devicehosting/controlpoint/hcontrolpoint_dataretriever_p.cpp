@@ -30,10 +30,7 @@
 #include "../../../utils/hlogger_p.h"
 #include "../../general/hupnp_global_p.h"
 
-#include <QtGui/QImage>
-
 #include <QtCore/QUrl>
-
 #include <QtNetwork/QTcpSocket>
 
 namespace Herqq
@@ -144,7 +141,7 @@ QString HDataRetriever::retrieveServiceDescription(
     return QString::fromUtf8(retrieveData(deviceLocation, scpdUrl, true));
 }
 
-QImage HDataRetriever::retrieveIcon(
+QByteArray HDataRetriever::retrieveIcon(
     const QUrl& deviceLocation, const QUrl& iconUrl)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -153,16 +150,7 @@ QImage HDataRetriever::retrieveIcon(
         "Attempting to retrieve icon [%1] from: [%2]").arg(
             iconUrl.toString(), deviceLocation.toString()));
 
-    QByteArray data = retrieveData(deviceLocation, iconUrl, true);
-
-    QImage image;
-    if (!image.loadFromData(data))
-    {
-        throw HParseException(
-            QString("The retrieved data is not a proper icon"));
-    }
-
-    return image;
+    return retrieveData(deviceLocation, iconUrl, true);
 }
 
 QString HDataRetriever::retrieveDeviceDescription(

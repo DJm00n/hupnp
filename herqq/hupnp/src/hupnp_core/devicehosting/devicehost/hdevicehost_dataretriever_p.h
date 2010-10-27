@@ -27,8 +27,6 @@
 #include <QtCore/QUrl>
 #include <QtCore/QByteArray>
 
-class QImage;
-
 namespace Herqq
 {
 
@@ -56,7 +54,7 @@ public:
     QString retrieveServiceDescription(
         const QUrl& deviceLocation, const QUrl& scpdUrl);
 
-    QImage retrieveIcon(const QUrl& deviceLocation, const QUrl& iconUrl);
+    QByteArray retrieveIcon(const QUrl& deviceLocation, const QUrl& iconUrl);
 
     QString retrieveDeviceDescription(const QString& filePath);
 };

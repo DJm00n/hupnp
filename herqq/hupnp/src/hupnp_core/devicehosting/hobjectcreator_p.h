@@ -47,7 +47,6 @@
 #include <QtCore/QString>
 #include <QtXml/QDomDocument>
 
-class QImage;
 class QDomElement;
 
 namespace Herqq
@@ -77,7 +76,7 @@ typedef Functor<QString, H_TYPELIST_2(const QUrl&, const QUrl&)>
 //
 //
 //
-typedef Functor<QImage, H_TYPELIST_2(const QUrl&, const QUrl&)>
+typedef Functor<QByteArray, H_TYPELIST_2(const QUrl&, const QUrl&)>
     IconFetcher;
 
 //
@@ -194,7 +193,7 @@ private:
     void initService(
         HService*, const QDomElement& serviceDefinition, HServiceSetup*);
 
-    QList<QPair<QUrl, QImage> > parseIconList(
+    QList<QPair<QUrl, QByteArray> > parseIconList(
         const QDomElement& iconListElement);
 
     HDeviceInfo* parseDeviceInfo(const QDomElement& deviceElement);

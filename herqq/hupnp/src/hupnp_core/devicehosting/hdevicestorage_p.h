@@ -112,7 +112,7 @@ public: // instance methods
 
     QList<HDeviceController*> rootDeviceControllers() const;
 
-    QPair<QUrl, QImage> seekIcon(
+    QPair<QUrl, QByteArray> seekIcon(
         HDeviceController* device, const QString& iconUrl);
 
     bool searchValidLocation(

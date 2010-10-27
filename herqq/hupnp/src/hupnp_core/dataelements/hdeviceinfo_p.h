@@ -66,7 +66,7 @@ public: // attributes
     HUdn    m_udn;
     QString m_upc;
     QUrl    m_presentationUrl;
-    QList<QPair<QUrl, QImage> > m_icons;
+    QList<QPair<QUrl, QByteArray> > m_icons;
 
 public: // methods
 
@@ -106,7 +106,7 @@ public: // methods
     }
 
     bool setUpc(const QString& upc);
-    bool setIcons(const QList<QPair<QUrl, QImage> >& icons);
+    bool setIcons(const QList<QPair<QUrl, QByteArray> >& icons);
     inline bool setPresentationUrl(const QUrl& presentationUrl)
     {
         Q_ASSERT(presentationUrl.isValid() || presentationUrl.isEmpty());

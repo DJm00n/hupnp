@@ -41,8 +41,6 @@
 #include "../../../utils/hsysutils_p.h"
 #include "../../../utils/hexceptions_p.h"
 
-#include <QtGui/QImage>
-
 #include <QtCore/QUrl>
 #include <QtCore/QString>
 #include <QtCore/QMutexLocker>

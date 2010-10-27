@@ -38,8 +38,6 @@
 #include "../../../utils/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
 
-#include <QtGui/QImage>
-
 #include <ctime>
 
 namespace Herqq

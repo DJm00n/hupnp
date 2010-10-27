@@ -22,7 +22,6 @@
 #include "hdeviceinfo.h"
 #include "hdeviceinfo_p.h"
 
-#include <QtGui/QImage>
 #include <QtCore/QMetaType>
 
 static bool registerMetaTypes()
@@ -213,7 +212,7 @@ bool HDeviceInfoPrivate::setUpc(const QString& upc)
     return true;
 }
 
-bool HDeviceInfoPrivate::setIcons(const QList<QPair<QUrl, QImage> >& icons)
+bool HDeviceInfoPrivate::setIcons(const QList<QPair<QUrl, QByteArray> >& icons)
 {
     m_icons = icons;
     return true;
@@ -305,7 +304,7 @@ HDeviceInfo::HDeviceInfo(
     const QString& serialNumber,
     const HUdn&    udn,
     const QString& upc,
-    const QList<QPair<QUrl, QImage> >& icons,
+    const QList<QPair<QUrl, QByteArray> >& icons,
     const QUrl&    presentationUrl,
     HValidityCheckLevel checkLevel,
     QString* err) :
@@ -400,7 +399,7 @@ void HDeviceInfo::setUpc(const QString& arg)
     h_ptr->setUpc(arg);
 }
 
-void HDeviceInfo::setIcons(const QList<QPair<QUrl, QImage> >& arg)
+void HDeviceInfo::setIcons(const QList<QPair<QUrl, QByteArray> >& arg)
 {
     h_ptr->setIcons(arg);
 }
@@ -465,7 +464,7 @@ QString HDeviceInfo::upc() const
     return h_ptr->m_upc;
 }
 
-QList<QPair<QUrl, QImage> > HDeviceInfo::icons() const
+QList<QPair<QUrl, QByteArray> > HDeviceInfo::icons() const
 {
     return h_ptr->m_icons;
 }
@@ -495,8 +494,8 @@ bool operator==(const HDeviceInfo& obj1, const HDeviceInfo& obj2)
         return false;
     }
 
-    QList<QPair<QUrl, QImage> > icons1 = obj1.icons();
-    QList<QPair<QUrl, QImage> > icons2 = obj2.icons();
+    QList<QPair<QUrl, QByteArray> > icons1 = obj1.icons();
+    QList<QPair<QUrl, QByteArray> > icons2 = obj2.icons();
 
     if (icons1.size() != icons2.size())
     {

@@ -47,7 +47,6 @@
 
 #include "../../utils/hlogger_p.h"
 
-#include <QtGui/QImage>
 #include <QtXml/QDomElement>
 
 namespace Herqq
@@ -905,7 +904,7 @@ void validateRootDevice(HDeviceController* device)
 
         void validateIcons(HDeviceController* device)
         {
-            QList<QPair<QUrl, QImage> > icons =
+            QList<QPair<QUrl, QByteArray> > icons =
                 device->m_device->info().icons();
 
             for (qint32 i = 0; i < icons.size(); ++i)
@@ -998,12 +997,12 @@ void validateRootDevice(HDeviceController* device)
 }
 }
 
-QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
+QList<QPair<QUrl, QByteArray> > HObjectCreator::parseIconList(
     const QDomElement& iconListElement)
 {
     HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
 
-    QList<QPair<QUrl, QImage> > retVal;
+    QList<QPair<QUrl, QByteArray> > retVal;
 
     QDomElement iconElement = iconListElement.firstChildElement("icon");
     while(!iconElement.isNull())
@@ -1012,7 +1011,7 @@ QList<QPair<QUrl, QImage> > HObjectCreator::parseIconList(
 
         try
         {
-            QImage icon = m_creationParameters->m_iconFetcher(
+            QByteArray icon = m_creationParameters->m_iconFetcher(
                 extractBaseUrl(m_creationParameters->m_deviceLocations[0]),
                 iconUrl);
 
@@ -1093,7 +1092,7 @@ HDeviceInfo* HObjectCreator::parseDeviceInfo(const QDomElement& deviceElement)
         readElementValue("UPC"             , deviceElement);
 
     QDomElement iconListElement = deviceElement.firstChildElement("iconList");
-    QList<QPair<QUrl, QImage> > icons;
+    QList<QPair<QUrl, QByteArray> > icons;
     if (!iconListElement.isNull())
     {
         icons = parseIconList(iconListElement);

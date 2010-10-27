@@ -27,7 +27,6 @@
 #include <QtCore/QPair>
 
 class QUrl;
-class QImage;
 class QString;
 
 namespace Herqq
@@ -182,7 +181,7 @@ public:
         const QString& serialNumber,
         const HUdn&    udn,
         const QString& upc,
-        const QList<QPair<QUrl, QImage> >& icons,
+        const QList<QPair<QUrl, QByteArray> >& icons,
         const QUrl&    presentationUrl,
         HValidityCheckLevel checkLevel = StrictChecks,
         QString* err = 0);
@@ -293,7 +292,7 @@ public:
      *
      * \sa icons()
      */
-    void setIcons(const QList<QPair<QUrl, QImage> >& arg);
+    void setIcons(const QList<QPair<QUrl, QByteArray> >& arg);
 
     /*!
      * Sets the presentation URL.
@@ -405,7 +404,7 @@ public:
      *
      * \sa setIcons()
      */
-    QList<QPair<QUrl, QImage> > icons() const;
+    QList<QPair<QUrl, QByteArray> > icons() const;
 
     /*!
      * Returns the location of the device's presentation page.
