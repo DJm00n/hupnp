@@ -56,7 +56,10 @@ else {
     QMAKE_POST_LINK += cp -fR ../../lib/qtsoap-2.7-opensource/lib/* ../../bin/
 }
 
-public_headers.files = $$find(HEADERS, ^((?!_p).)*$)
+includes.files += ../../include/HUpnpCore/H*
+includes.path = ../../deploy/include/HUpnpCore/
+
+public_headers.files = $$find(HEADERS, ^((?!_p).)*$)*
 public_headers.path = ../../deploy/include/HUpnpCore/public
 
 private_headers.files = $$EXPORTED_PRIVATE_HEADERS
@@ -68,4 +71,4 @@ unix:corelibs.files = ../../bin/libHUpnp.so ../../bin/libQtSolutions_SOAP-2.7.so
 
 corelibs.path = ../../deploy/bin/
 
-INSTALLS += corelibs
+INSTALLS += includes public_headers private_headers corelibs
