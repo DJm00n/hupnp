@@ -62,16 +62,10 @@ public_headers.path = ../../deploy/include/HUpnpCore/public
 private_headers.files = $$EXPORTED_PRIVATE_HEADERS
 private_headers.path = ../../deploy/include/HUpnpCore/private
 
-win32{
-    core_lib.files = ../../bin/hupnp.dll ../../bin/QtSolutions_SOAP-2.7*
-}
-macx{
-    core_lib.files = ../../bin/libHUpnp.dylib ../../bin/libQtSolutions_SOAP-2.7.dylib
-}
-else{
-    core_lib.files = ../../bin/libHUpnp.so ../../bin/libQtSolutions_SOAP-2.7.so
-}
+win32:corelibs.files = ../../bin/hupnp.dll ../../bin/QtSolutions_SOAP-2.7*
+macx:corelibs.files = ../../bin/libHUpnp.dylib ../../bin/libQtSolutions_SOAP-2.7.dylib
+unix:corelibs.files = ../../bin/libHUpnp.so ../../bin/libQtSolutions_SOAP-2.7.so
 
-core_lib.path = ../../deploy/bin/
+corelibs.path = ../../deploy/bin/
 
-INSTALLS += public_headers private_headers core_lib
+INSTALLS += corelibs
