@@ -4,6 +4,7 @@ QT      += network xml
 QT      -= gui
 CONFIG  += warn_on dll exceptions thread
 DEFINES += H_BUILD_UPNP_CORE_LIB
+VERSION = 0.7.1
 
 QMAKE_CXXFLAGS_WARN_ON +=
 
@@ -25,6 +26,7 @@ win32 {
     }
 
     LIBS += -lws2_32
+    TARGET_EXT = .dll
 }
 else {
     LIBS += -lQtSolutions_SOAP-2.7
@@ -56,19 +58,27 @@ else {
     QMAKE_POST_LINK += cp -fR ../../lib/qtsoap-2.7-opensource/lib/* ../../bin/
 }
 
+isEmpty(PREFIX) {
+    PREFIX = ../../deploy
+}
+
+INSTLOC_INC = $$PREFIX/include/HUpnpCore
+INSTLOC_LIB = $$PREFIX/lib
+
 includes.files += ../../include/HUpnpCore/H*
-includes.path = ../../deploy/include/HUpnpCore/
+includes.path = $$INSTLOC_INC
 
 public_headers.files = $$find(HEADERS, ^((?!_p).)*$)*
-public_headers.path = ../../deploy/include/HUpnpCore/public
+public_headers.path = $$INSTLOC_INC/public
 
 private_headers.files = $$EXPORTED_PRIVATE_HEADERS
-private_headers.path = ../../deploy/include/HUpnpCore/private
+private_headers.path = $$INSTLOC_INC/private
 
-win32:corelibs.files = ../../bin/hupnp.dll ../../bin/QtSolutions_SOAP-2.7*
-macx:corelibs.files = ../../bin/libHUpnp.dylib ../../bin/libQtSolutions_SOAP-2.7.dylib
-unix:corelibs.files = ../../bin/libHUpnp.so ../../bin/libQtSolutions_SOAP-2.7.so
+win32:qtsoap.files += ../../bin/QtSolutions_SOAP-2.7.*
+unix:qtsoap.files += ../../bin/libQtSolutions_SOAP-2.7.so
+macx:qtsoap.files += ../../bin/libQtSolutions_SOAP-2.7.dylib
 
-corelibs.path = ../../deploy/bin/
+qtsoap.path = $$INSTLOC_LIB
+target.path = $$INSTLOC_LIB
 
-INSTALLS += includes public_headers private_headers corelibs
+INSTALLS += includes public_headers private_headers target qtsoap
