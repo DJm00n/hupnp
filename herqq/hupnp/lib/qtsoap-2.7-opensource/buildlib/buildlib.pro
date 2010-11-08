@@ -12,3 +12,12 @@ DESTDIR = $$QTSOAP_LIBDIR
 #}
 #target.path = $$DESTDIR
 #INSTALLS += target
+
+isEmpty(PREFIX) {
+    PREFIX = ../../../deploy
+}
+
+INSTLOC_LIB = $$PREFIX/lib
+target.path = $$INSTLOC_LIB
+
+INSTALLS += target

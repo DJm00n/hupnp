@@ -74,11 +74,6 @@ public_headers.path = $$INSTLOC_INC/public
 private_headers.files = $$EXPORTED_PRIVATE_HEADERS
 private_headers.path = $$INSTLOC_INC/private
 
-win32:qtsoap.files += ../../bin/QtSolutions_SOAP-2.7.*
-unix:qtsoap.files += ../../bin/libQtSolutions_SOAP-2.7.so
-macx:qtsoap.files += ../../bin/libQtSolutions_SOAP-2.7.dylib
-
-qtsoap.path = $$INSTLOC_LIB
 target.path = $$INSTLOC_LIB
 
-INSTALLS += includes public_headers private_headers target qtsoap
+INSTALLS += includes public_headers private_headers target
