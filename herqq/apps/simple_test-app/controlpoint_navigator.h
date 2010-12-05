@@ -47,15 +47,15 @@ private:
     ControlPointNavigatorItem* m_rootItem;
 
     ControlPointNavigatorItem* buildModel(
-        Herqq::Upnp::HDevice*, ControlPointNavigatorItem*);
+        Herqq::Upnp::HClientDevice*, ControlPointNavigatorItem*);
 
 public:
 
     explicit ControlPointNavigator(QObject* parent = 0);
     virtual ~ControlPointNavigator();
 
-    void rootDeviceOnline(Herqq::Upnp::HDevice*);
-    void rootDeviceOffline(Herqq::Upnp::HDevice*);
+    void rootDeviceOnline(Herqq::Upnp::HClientDevice*);
+    void rootDeviceOffline(Herqq::Upnp::HClientDevice*);
 
     virtual QVariant data      (const QModelIndex& index, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex& index) const;

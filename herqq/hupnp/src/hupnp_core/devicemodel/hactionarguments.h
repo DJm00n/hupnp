@@ -27,12 +27,10 @@
 
 #include <QtCore/QString>
 #include <QtCore/QVariant>
+#include <QtCore/QSharedDataPointer>
 
 template<typename T, typename U>
 class QHash;
-
-template<typename T>
-class QList;
 
 template<typename T>
 class QVector;
@@ -44,15 +42,16 @@ namespace Upnp
 {
 
 /*!
- * A class that represents an argument for a UPnP action invocation.
+ * A class that represents an argument used in a UPnP action invocation.
  *
  * A UPnP argument is defined in the UPnP service description within
  * an action. If you picture a UPnP action as a function, then an
- * action argument is a parameter to the function. In that sense, a UPnP
+ * action argument is a parameter to the function. In that sense a UPnP
  * \e input \e argument is a single \b constant parameter that provides
  * input for the function. An input argument is never modified during action
  * invocation. On the other hand, a UPnP \e output \e argument relays information
- * back from the callee to the caller and thus it is modified during action invocation.
+ * back from the callee to the caller and thus it is often modified during
+ * action invocation.
  *
  * A UPnP argument has an unique name() within the definition
  * of the action that contains it. A UPnP argument contains a value, which you
@@ -61,46 +60,45 @@ namespace Upnp
  *
  * A somewhat unusual aspect of a UPnP argument is the concept of a
  * <em>related state variable</em>. According to the UDA specification, a
- * UPnP argument is \b always associated with a HStateVariable, even if the
+ * UPnP argument is \b always associated with a state variable, even if the
  * state variable does not serve any other purpose besides that.
- * This type of a state variable
- * is used to describe the data type of a UPnP argument and thus the value of a
- * UPnP argument is bound by the data type of its related state variable.
- * The dataType() method introduced in this class is equivalent for calling
- * \verbatim relatedStateVariable()->dataType() \endverbatim
+ * This type of a state variable is used to describe the data type of a
+ * UPnP argument and thus the value of a UPnP argument is bound by the
+ * data type of its related state variable. The dataType() method introduced
+ * in this class is equivalent for calling relatedStateVariable()->dataType().
  *
  * \note
- * relatedStateVariable() returns a const reference to an
- * HStateVariableInfo object, rather than a reference or
- * a pointer to an HStateVariable. HStateVariableInfo is an object with value semantics
- * that describes an HStateVariable.
- *
- * Since it is common for actions
- * to use both input and output arguments that are defined only for the duration of
- * the action invocation, there are bound to be numerous state variables that
- * exist only for UPnP action invocation. It is defined in the UDA specification
- * that these types of state variables have to have a name that includes the
- * prefix \b A_ARG_TYPE.
+ * relatedStateVariable() returns a const reference to an HStateVariableInfo
+ * object, rather than a reference or a pointer to an actual state variable.
+ * HStateVariableInfo is an object with value semantics that details information
+ * of a state variable.
  *
  * Due to the strict typing of UPnP arguments, HUPnP attempts to make sure that
  * invalid values are not entered into a UPnP argument. Because of this, you can
  * call isValidValue() to check if a value you wish to set using setValue()
- * will be accepted. In addition, the setValue() returns false in case the value
+ * will be accepted. In addition, setValue() returns \e false in case the value
  * was not accepted. It is advised that you make sure your values are properly
- * set before attempting action invocation, since the invocation is likely to
- * fail in case any of the provided arguments is invalid.
+ * set before attempting to invoke an action, because the invocation may fail
+ * in case any of the provided arguments is invalid.
  *
  * Finally, you can use isValid() to check if the object itself is valid, which
- * is true if the object was constructed with a proper name and a related state
- * variable.
+ * is true if the object was constructed with a proper name and valid related state
+ * variable information.
  *
- * \remarks the class is not thread-safe.
+ * \note Since it is common for actions to use both input and output arguments
+ * that are defined only for the duration of the action invocation,
+ * there are bound to be numerous state variables that exist only for
+ * UPnP action invocation. It is defined in the UDA specification
+ * that these types of state variables have to have a name that includes the
+ * prefix \b A_ARG_TYPE.
+ *
+ * \remarks This class is not thread-safe.
  *
  * \headerfile hactionarguments.h HActionArgument
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HActionArguments, HAction
+ * \sa HActionArguments
  */
 class H_UPNP_CORE_EXPORT HActionArgument
 {
@@ -290,9 +288,9 @@ class HActionArgumentsPrivate;
  * for an action invocation.
  *
  * \note
- * The class provides iterative and keyed access to the stored HActionArgument instances.
- * The order of action arguments during iteration is the order in which the
- * HActionArgument objects are provided to the instance.
+ * The class provides iterative and keyed access to the stored HActionArgument
+ * instances. The order of action arguments during iteration is the order
+ * in which the HActionArgument objects are provided to the instance.
  * If the class is instantiated by HUPnP, the order of the contained arguments
  * during iteration is the order in which they are defined in the service
  * description document.
@@ -301,9 +299,9 @@ class HActionArgumentsPrivate;
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HActionArgument, HAction
+ * \sa HActionArgument
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HActionArguments
 {
@@ -410,8 +408,6 @@ public:
     const HActionArgument* get(const QString& argumentName) const;
 
     /*!
-     * Retrieves an action argument.
-     *
      * Retrieves an action argument from the specified \e index.
      *
      * \param index specifies the index of the action argument to return. The
@@ -497,7 +493,7 @@ public:
     qint32 size() const;
 
     /*!
-     * Returns the action argument matching the specified index.
+     * Retrieves an action argument from the specified \e index.
      *
      * This is the same as calling get() with the specified index. This method is
      * provided for convenience.
@@ -506,7 +502,8 @@ public:
      * index has to be valid position in the container, i.e. it must be
      * 0 <= i < size().
      *
-     * \return the action argument matching the specified index.
+     * \return a pointer to the action argument that can be found at the specified
+     * index.
      */
     HActionArgument* operator[](qint32 index);
 
@@ -517,7 +514,8 @@ public:
      * index has to be valid position in the container, i.e. it must be
      * 0 <= i < size().
      *
-     * \return the action argument matching the specified index.
+     * \return a pointer to the action argument that can be found at the specified
+     * index.
      */
     const HActionArgument* operator[](qint32 index) const;
 
@@ -529,7 +527,8 @@ public:
      *
      * \param argName specifies the name of the argument to be retrieved.
      *
-     * \return the action argument matching the specified name, if any.
+     * \return a pointer to the action argument with the specified name
+     * or a null pointer in case no argument has the specified name.
      */
     HActionArgument* operator[](const QString& argName);
 
@@ -538,7 +537,8 @@ public:
      *
      * \param argName specifies the name of the argument to be retrieved.
      *
-     * \return the action argument matching the specified name, if any.
+     * \return a pointer to the action argument with the specified name
+     * or a null pointer in case no argument has the specified name.
      */
     const HActionArgument* operator[](const QString& argName) const;
 
@@ -557,20 +557,20 @@ public:
     bool isEmpty() const;
 
     /*!
-     * Removes every contained HActionArgument from this instance.
+     * Removes and deletes every contained HActionArgument from this instance.
      *
-     * \warning Calling this function will make any active iterators invalid.
+     * \warning Calling this function makes active iterators invalid.
      */
     void clear();
 
     /*!
-     * Removes an HActionArgument with the specified name.
+     * Removes and deletes an HActionArgument with the specified name.
      *
      * \param name specifies the name of the HActionArgument to be removed.
      *
      * \return \e true if an HActionArgument was found and removed.
      *
-     * \warning Calling this function will make any active iterators invalid.
+     * \warning Calling this function makes active iterators invalid.
      */
     bool remove(const QString& name);
 
@@ -587,7 +587,7 @@ public:
      * \li This instance takes the ownership of the provided HActionArgument
      * object.
      *
-     * \warning Calling this function will make any active iterators invalid.
+     * \warning Calling this function makes active iterators invalid.
      */
     bool append(HActionArgument* arg);
 

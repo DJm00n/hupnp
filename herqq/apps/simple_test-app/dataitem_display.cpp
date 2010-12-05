@@ -22,16 +22,16 @@
 
 #include "dataitem_display.h"
 
-#include <HUpnpCore/HDevice>
-#include <HUpnpCore/HAction>
-#include <HUpnpCore/HService>
 #include <HUpnpCore/HServiceId>
 #include <HUpnpCore/HActionInfo>
 #include <HUpnpCore/HDeviceInfo>
 #include <HUpnpCore/HServiceInfo>
 #include <HUpnpCore/HResourceType>
-#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HClientDevice>
+#include <HUpnpCore/HClientAction>
+#include <HUpnpCore/HClientService>
 #include <HUpnpCore/HActionArguments>
+#include <HUpnpCore/HClientStateVariable>
 
 #include <QUrl>
 #include <QStringList>
@@ -53,7 +53,7 @@ void DataItemDisplay::NavItemVisitor::visit(ActionItem* item)
     Q_ASSERT(item);
     m_owner->m_modelData.clear();
 
-    HAction* action = item->action();
+    HClientAction* action = item->action();
 
     m_owner->m_rootDeviceUdn = action->parentService()->parentDevice()->
         rootDevice()->info().udn();
@@ -84,7 +84,7 @@ void DataItemDisplay::NavItemVisitor::visit(ServiceItem* item)
     Q_ASSERT(item);
     m_owner->m_modelData.clear();
 
-    HService* service = item->service();
+    HClientService* service = item->service();
 
     m_owner->m_rootDeviceUdn = service->parentDevice()->
         rootDevice()->info().udn();
@@ -113,7 +113,7 @@ void DataItemDisplay::NavItemVisitor::visit(DeviceItem* item)
 
     m_owner->m_modelData.clear();
 
-    HDevice* device = item->device();
+    HClientDevice* device = item->device();
     HDeviceInfo deviceInfo = device->info();
 
     m_owner->m_rootDeviceUdn = device->rootDevice()->info().udn();
@@ -151,7 +151,7 @@ void DataItemDisplay::NavItemVisitor::visit(StateVariableItem* item)
 
     m_owner->m_modelData.clear();
 
-    HStateVariable* stateVar = item->stateVariable();
+    const HClientStateVariable* stateVar = item->stateVariable();
 
     m_owner->m_rootDeviceUdn = stateVar->parentService()->parentDevice()->
         rootDevice()->info().udn();

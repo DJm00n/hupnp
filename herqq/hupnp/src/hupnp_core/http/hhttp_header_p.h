@@ -36,6 +36,12 @@
 #include <QtCore/QPair>
 #include <QtCore/QString>
 
+namespace Herqq
+{
+
+namespace Upnp
+{
+
 //
 // The design and implementation of this class were heavily influenced by
 // the Qt's QHttpHeader. The main reason this class exists is that Qt
@@ -203,5 +209,8 @@ public:
 
     virtual QString toString() const;
 };
+
+}
+}
 
 #endif // HHTTP_HEADER_H

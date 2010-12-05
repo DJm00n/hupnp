@@ -30,21 +30,19 @@
 // change or the file may be removed without of notice.
 //
 
+#include "hserverdevicecontroller_p.h"
+
 #include "../../general/hupnp_global_p.h"
-
-#include "../../devicemodel/hdevice.h"
-#include "../../devicemodel/hdevice_p.h"
-
-#include "../../devicemodel/hservice.h"
-#include "../../devicemodel/hservice_p.h"
-
-#include "../../socket/hendpoint.h"
+#include "../../devicemodel/hdevicestatus.h"
+#include "../../devicemodel/server/hserverdevice.h"
+#include "../../devicemodel/server/hserverservice.h"
 
 #include "../../ssdp/hssdp.h"
 #include "../../ssdp/hdiscovery_messages.h"
 
 #include "../../dataelements/hudn.h"
 #include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hserviceinfo.h"
 #include "../../dataelements/hdiscoverytype.h"
 #include "../../dataelements/hproduct_tokens.h"
 
@@ -64,9 +62,10 @@ class Announcement
 
 protected:
 
-    HDeviceController* m_device;
+    HServerDevice* m_device;
     HDiscoveryType m_usn;
     QUrl m_location;
+    int m_deviceTimeoutInSecs;
 
 public:
 
@@ -75,9 +74,10 @@ public:
     }
 
     Announcement(
-        HDeviceController* device, const HDiscoveryType& usn,
-        const QUrl& location) :
-            m_device(device), m_usn(usn), m_location(location)
+        HServerDevice* device, const HDiscoveryType& usn,
+        const QUrl& location, int deviceTimeoutInSecs) :
+            m_device(device), m_usn(usn), m_location(location),
+            m_deviceTimeoutInSecs(deviceTimeoutInSecs)
     {
         Q_ASSERT(m_device);
         Q_ASSERT(m_usn.type() != HDiscoveryType::Undefined);
@@ -95,6 +95,7 @@ public:
 class ResourceAvailableAnnouncement :
     private Announcement
 {
+
 public:
 
     ResourceAvailableAnnouncement()
@@ -102,23 +103,24 @@ public:
     }
 
     ResourceAvailableAnnouncement(
-        HDeviceController* device, const HDiscoveryType& usn,
-        const QUrl& location) :
-            Announcement(device, usn, location)
+        HServerDevice* device, const HDiscoveryType& usn,
+        const QUrl& location, int deviceTimeoutInSecs) :
+            Announcement(device, usn, location, deviceTimeoutInSecs)
     {
     }
 
     HResourceAvailable operator()() const
     {
-        HProductTokens pt = HSysInfo::instance().herqqProductTokens();
+        const HProductTokens& pt = HSysInfo::instance().herqqProductTokens();
 
         return HResourceAvailable(
-            m_device->deviceTimeoutInSecs() * 2,
+            m_deviceTimeoutInSecs * 2,
             m_location,
             pt,
             m_usn,
-            m_device->deviceStatus()->bootId(),
-            m_device->deviceStatus()->configId());
+            m_device->deviceStatus().bootId(),
+            m_device->deviceStatus().configId()
+            );
     }
 };
 
@@ -135,9 +137,9 @@ public:
     }
 
     ResourceUnavailableAnnouncement(
-        HDeviceController* device, const HDiscoveryType& usn,
-        const QUrl& location) :
-            Announcement(device, usn, location)
+        HServerDevice* device, const HDiscoveryType& usn,
+        const QUrl& location, int deviceTimeoutInSecs) :
+            Announcement(device, usn, location, deviceTimeoutInSecs)
     {
     }
 
@@ -145,25 +147,70 @@ public:
     {
         return HResourceUnavailable(
             m_usn,
-            m_device->deviceStatus()->bootId(),
-            m_device->deviceStatus()->configId());
+            m_device->deviceStatus().bootId(),
+            m_device->deviceStatus().configId()
+            );
     }
 };
 
+class HDeviceHostSsdpHandler;
+
 //
-//
+// Class that sends the SSDP announcements.
 //
 class PresenceAnnouncer
 {
 private:
 
-    QList<DeviceHostSsdpHandler*> m_ssdps;
+    QList<HDeviceHostSsdpHandler*> m_ssdps;
     quint32 m_advertisementCount;
+
+private:
+
+    template<typename AnnouncementType>
+    void createAnnouncementMessagesForEmbeddedDevice(
+        HServerDevice* device, int deviceTimeoutInSecs,
+        QList<AnnouncementType>* announcements)
+    {
+        QList<QUrl> locations = device->locations();
+        foreach(const QUrl& location, locations)
+        {
+            HDeviceInfo deviceInfo = device->info();
+
+            HUdn udn = deviceInfo.udn();
+            HDiscoveryType usn(udn);
+
+            // device UDN advertisement
+            announcements->push_back(
+                AnnouncementType(device, usn, location, deviceTimeoutInSecs));
+
+            // device type advertisement
+            usn.setResourceType(deviceInfo.deviceType());
+            announcements->push_back(
+                AnnouncementType(device, usn, location, deviceTimeoutInSecs));
+
+            // service advertisements
+            const HServerServices& services = device->services();
+            foreach(HServerService* service, services)
+            {
+                usn.setResourceType(service->info().serviceType());
+                announcements->push_back(
+                    AnnouncementType(device, usn, location, deviceTimeoutInSecs));
+            }
+        }
+
+        const HServerDevices& devices = device->embeddedDevices();
+        foreach(HServerDevice* embeddedDevice, devices)
+        {
+            createAnnouncementMessagesForEmbeddedDevice(
+                embeddedDevice, deviceTimeoutInSecs, announcements);
+        }
+    }
 
 public:
 
     PresenceAnnouncer(
-        const QList<DeviceHostSsdpHandler*>& ssdps, quint32 advertisementCount) :
+        const QList<HDeviceHostSsdpHandler*>& ssdps, quint32 advertisementCount) :
             m_ssdps(ssdps), m_advertisementCount(advertisementCount)
     {
         Q_ASSERT(m_advertisementCount > 0);
@@ -174,13 +221,15 @@ public:
     }
 
     template<typename AnnouncementType>
-    void announce(const QList<HDeviceController*>& rootDevices)
+    void announce(const QList<HServerDeviceController*>& rootDevices)
     {
         QList<AnnouncementType> announcements;
 
-        foreach(HDeviceController* rootDevice, rootDevices)
+        foreach(HServerDeviceController* rootDevice, rootDevices)
         {
-            createAnnouncementMessagesForRootDevice(rootDevice, announcements);
+            createAnnouncementMessagesForRootDevice(
+                rootDevice->m_device, rootDevice->deviceTimeoutInSecs(),
+                &announcements);
         }
 
         sendAnnouncements(announcements);
@@ -188,54 +237,22 @@ public:
 
     template<typename AnnouncementType>
     void createAnnouncementMessagesForRootDevice(
-        HDeviceController* rootDevice, QList<AnnouncementType>& announcements)
+        HServerDevice* rootDevice, int deviceTimeoutInSecs,
+        QList<AnnouncementType>* announcements)
     {
-        QList<QUrl> locations = rootDevice->m_device->locations();
+        QList<QUrl> locations = rootDevice->locations();
         foreach(const QUrl& location, locations)
         {
-            HUdn udn(rootDevice->m_device->info().udn());
+            HUdn udn(rootDevice->info().udn());
             HDiscoveryType usn(udn, true);
 
-            announcements.push_back(AnnouncementType(rootDevice, usn, location));
+            announcements->push_back(
+                AnnouncementType(rootDevice, usn, location, deviceTimeoutInSecs));
         }
 
         // generic device advertisement (same for both root and embedded devices)
-        createAnnouncementMessagesForEmbeddedDevice(rootDevice, announcements);
-    }
-
-    template<typename AnnouncementType>
-    void createAnnouncementMessagesForEmbeddedDevice(
-        HDeviceController* device, QList<AnnouncementType>& announcements)
-    {
-        QList<QUrl> locations = device->m_device->locations();
-        foreach(const QUrl& location, locations)
-        {
-            HDeviceInfo deviceInfo = device->m_device->info();
-
-            HUdn udn = deviceInfo.udn();
-            HDiscoveryType usn(udn);
-
-            // device UDN advertisement
-            announcements.push_back(AnnouncementType(device, usn, location));
-
-            // device type advertisement
-            usn.setResourceType(deviceInfo.deviceType());
-            announcements.push_back(AnnouncementType(device, usn, location));
-
-            // service advertisements
-            const QList<HServiceController*>* services = device->services();
-            foreach(HServiceController* service, *services)
-            {
-                usn.setResourceType(service->m_service->info().serviceType());
-                announcements.push_back(AnnouncementType(device, usn, location));
-            }
-        }
-
-        const QList<HDeviceController*>* devices = device->embeddedDevices();
-        foreach(HDeviceController* embeddedDevice, *devices)
-        {
-            createAnnouncementMessagesForEmbeddedDevice(embeddedDevice, announcements);
-        }
+        createAnnouncementMessagesForEmbeddedDevice(
+            rootDevice, deviceTimeoutInSecs, announcements);
     }
 
     template<typename AnnouncementType>

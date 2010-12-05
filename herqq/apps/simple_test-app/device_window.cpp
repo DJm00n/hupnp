@@ -24,14 +24,14 @@
 #include "ui_device_window.h"
 
 #include <HUpnpCore/HUpnp>
-#include <HUpnpCore/HAction>
 #include <HUpnpCore/HServiceId>
 #include <HUpnpCore/HDeviceHost>
-#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HDeviceInfo>
+#include <HUpnpCore/HActionInfo>
+#include <HUpnpCore/HServiceInfo>
+#include <HUpnpCore/HServerAction>
 #include <HUpnpCore/HActionArguments>
-#include <HUpnpCore/HActionsSetupData>
-#include <HUpnpCore/HServicesSetupData>
-#include <HUpnpCore/HWritableStateVariable>
+#include <HUpnpCore/HServerStateVariable>
 #include <HUpnpCore/HDeviceHostConfiguration>
 
 #include <QtDebug>
@@ -50,29 +50,23 @@ HTestService::~HTestService()
 {
 }
 
-HActionsSetupData HTestService::createActions()
+HServerService::HActionInvokes HTestService::createActionInvokes()
 {
-    HActionsSetupData retVal;
+    HActionInvokes retVal;
 
     //
     // This is where it is defined what are to be called when the actions
     // identified by their names are invoked.
 
     // In this example, public member functions are used.
-    bool ok = retVal.insert(HActionSetup(
-        "Echo", HActionInvoke(this, &HTestService::echoAction)));
+    retVal.insert(
+        "Echo", HActionInvoke(this, &HTestService::echoAction));
 
-    Q_ASSERT(ok); Q_UNUSED(ok)
+    retVal.insert(
+        "Register", HActionInvoke(this, &HTestService::registerAction));
 
-    ok = retVal.insert(HActionSetup(
-        "Register", HActionInvoke(this, &HTestService::registerAction)));
-
-    Q_ASSERT(ok);
-
-    ok = retVal.insert(HActionSetup(
-        "Chargen", HActionInvoke(this, &HTestService::chargenAction)));
-
-    Q_ASSERT(ok);
+    retVal.insert(
+        "Chargen", HActionInvoke(this, &HTestService::chargenAction));
 
     return retVal;
 }
@@ -92,28 +86,21 @@ qint32 HTestService::echoAction(
     // This signal is sent so that the user interface can react to this
     // particular invocation somehow.
 
-    return HAction::Success;
+    return UpnpSuccess;
 }
 
 qint32 HTestService::registerAction(
-    const HActionArguments& /*inArgs*/,
-    HActionArguments* /*outArgs*/)
+    const HActionArguments& /*inArgs*/, HActionArguments* /*outArgs*/)
 {
     // Simple implementation of the Register service:
     // modifies an evented state variable, which causes events to be sent to
     // all registered listeners.
 
     bool ok = false;
-    HWritableStateVariable* sv =
-        stateVariableByName("RegisteredClientCount")->writable();
+    HServerStateVariable* sv = stateVariables().value("RegisteredClientCount");
 
     Q_ASSERT(sv);
     // fetch the state variable we want to modify
-
-    HStateVariableLocker svLocker(sv);
-    // lock the state variable to ensure
-    // that the value of the state variable is not modified by another thread
-    // while we are incrementing it
 
     quint32 count = sv->value().toUInt(&ok);
     Q_ASSERT(ok);
@@ -123,11 +110,6 @@ qint32 HTestService::registerAction(
     Q_ASSERT(ok);
     // and increment it
 
-    svLocker.unlock();
-    // explicitly unlock the state variable. this is not necessary, but it is a
-    // good practice to use, since it ensures that no matter what happens during
-    // the event processing, the lock we don't need anymore isn't held.
-
     emit actionInvoked(
         "Register",
         QString("Register invoked %1 times.").arg(QString::number(count)));
@@ -135,7 +117,7 @@ qint32 HTestService::registerAction(
     // This signal is sent so that the user interface can react to this
     // particular invocation somehow.
 
-    return HAction::Success;
+    return UpnpSuccess;
 }
 
 qint32 HTestService::chargenAction(
@@ -153,14 +135,14 @@ qint32 HTestService::chargenAction(
     // This signal is sent so that the user interface can react to this
     // particular invocation somehow.
 
-    return HAction::Success;
+    return UpnpSuccess;
 }
 
 /*******************************************************************************
  * HTestDevice
  ******************************************************************************/
 HTestDevice::HTestDevice() :
-    HDevice()
+    HServerDevice()
 {
 }
 
@@ -168,40 +150,38 @@ HTestDevice::~HTestDevice()
 {
 }
 
-HServicesSetupData* HTestDevice::createServices()
-{
-    HServicesSetupData* retVal = new HServicesSetupData();
-
-    retVal->insert(new HServiceSetup(
-        HServiceId("urn:herqq-org:serviceId:HTestService"),
-        HResourceType("urn:herqq-org:service:HTestService:1"),
-        new HTestService()));
-
-    // This UPnP device has a single service identified by serviceId
-    // "urn:herqq-org:service:HTestService:1", which is mapped to our
-    // type HTestService. The services are defined in the device description.
-
-    return retVal;
-}
 /*******************************************************************************
  * DeviceWindow
  *******************************************************************************/
 namespace
 {
-
-//
-// This simple functor is used to create our HTestDevice type.
-//
-class Creator
+class Creator : public HDeviceModelCreator
 {
 public:
 
-    HDevice* operator()(const HDeviceInfo& /*deviceInfo*/) const
+    virtual HServerDevice* createDevice(const HDeviceInfo& info) const
     {
-        // If we wanted to use this functor for creating other types as well,
-        // we would quite likely read the received "deviceInfo" and base the
-        // object creation on that.
-        return new HTestDevice();
+        if (info.deviceType().toString() == "urn:herqq-org:device:HTestDevice:1")
+        {
+            return new HTestDevice();
+        }
+
+        return 0;
+    }
+
+    virtual HServerService* createService(const HServiceInfo& info) const
+    {
+        if (info.serviceType().toString() == "urn:herqq-org:service:HTestService:1")
+        {
+            return new HTestService();
+        }
+
+        return 0;
+    }
+
+    virtual HDeviceModelCreator* clone() const
+    {
+        return new Creator();
     }
 };
 }
@@ -212,19 +192,23 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
 {
     m_ui->setupUi(this);
 
+    HDeviceHostConfiguration hostConfiguration;
+
+    Creator creator;
+    hostConfiguration.setDeviceModelCreator(creator);
+
     HDeviceConfiguration config;
     config.setPathToDeviceDescription(
         "./descriptions/hupnp_testdevice.xml");
     // the path to the device description file we want to be instantiated
 
-    config.setDeviceCreator(Creator());
-    // the functor that is used for creating the HDevice types.
-
     config.setCacheControlMaxAge(30);
+
+    hostConfiguration.add(config);
 
     m_deviceHost = new HDeviceHost(this);
 
-    if (!m_deviceHost->init(config))
+    if (!m_deviceHost->init(hostConfiguration))
     {
         qWarning() << m_deviceHost->errorDescription();
         Q_ASSERT(false);
@@ -234,7 +218,7 @@ DeviceWindow::DeviceWindow(QWidget *parent) :
     m_testDevice = m_deviceHost->rootDevices().at(0);
     // since we know there is at least one device if the initialization succeeded...
 
-    HService* service =
+    HServerService* service =
         m_testDevice->serviceById(HServiceId("urn:herqq-org:serviceId:HTestService"));
 
     // our user interface is supposed to react when our actions are invoked, so

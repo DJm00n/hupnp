@@ -24,11 +24,12 @@
 
 #include "../general/hupnp_defs.h"
 
+#include <QtCore/QPair>
 #include <QtCore/QString>
-#include <QtCore/QAtomicInt>
+#include <QtCore/QPointer>
+#include <QtNetwork/QTcpSocket>
 
 class QUrl;
-class QTcpSocket;
 
 //
 // !! Warning !!
@@ -47,43 +48,57 @@ namespace Upnp
 //
 //
 //
-class H_UPNP_CORE_EXPORT ChunkedInfo
+class H_UPNP_CORE_EXPORT HChunkedInfo
 {
-public:
+private:
 
-    ChunkedInfo();
-
-    QAtomicInt m_maxChunkSize;
+    volatile int m_maxChunkSize;
     // if this is non-zero, it means that chunked-encoding should be used
     // if the data to be sent is larger than that of the specified max chunk size
     // and that the max chunk size is this
 
-    QAtomicInt m_minChunkSize;
+    volatile int m_minChunkSize;
     // if this is non-zero, it means that when the size of the data to be sent
     // is not known in advance, how big _at least_ each chunk must be in size.
+
+public:
+
+    inline HChunkedInfo(int max = 0) :
+        m_maxChunkSize(max), m_minChunkSize(0)
+    {
+    }
+
+    inline HChunkedInfo(int min, int max) :
+        m_maxChunkSize(max), m_minChunkSize(min)
+    {
+    }
+
+    inline int max() const { return m_maxChunkSize; }
+    inline int min() const { return m_minChunkSize; }
+
+    inline void setMax(int arg) { m_maxChunkSize = arg; }
+    inline void setMin(int arg) { m_minChunkSize = arg; }
 };
 
 //
 //
 //
-class H_UPNP_CORE_EXPORT MessagingInfo
+class H_UPNP_CORE_EXPORT HMessagingInfo
 {
-H_DISABLE_COPY(MessagingInfo)
+H_DISABLE_COPY(HMessagingInfo)
 
 private:
 
-    QTcpSocket& m_sock;
+    QPair<QPointer<QTcpSocket>, bool> m_sock;
 
-    bool    m_keepAlive;
-    qint32  m_receiveTimeoutForNoData;
+    bool m_keepAlive;
+    qint32 m_receiveTimeoutForNoData;
 
-    ChunkedInfo m_chunkedInfo;
+    HChunkedInfo m_chunkedInfo;
 
     QString m_hostInfo;
 
     QString m_lastErrorDescription;
-
-    volatile bool m_autoDelete;
 
     qint32 m_msecsToWaitOnSend;
 
@@ -99,27 +114,29 @@ public:
         return retVal;
     }
 
-    explicit MessagingInfo(
+    explicit HMessagingInfo(
+        QPair<QTcpSocket*, bool> sock,
+        qint32 receiveTimeoutForNoData = defaultReceiveTimeoutForNoData());
+
+    explicit HMessagingInfo(
         QTcpSocket& sock,
         qint32 receiveTimeoutForNoData = defaultReceiveTimeoutForNoData());
 
-    MessagingInfo(
-        QTcpSocket& sock, bool keepAlive,
+    HMessagingInfo(
+        QPair<QTcpSocket*, bool>, bool keepAlive,
         qint32 receiveTimeoutForNoData = defaultReceiveTimeoutForNoData());
 
-    inline void setAutoDelete(bool b)
-    {
-        m_autoDelete = b;
-    }
+    HMessagingInfo(
+        QTcpSocket&,
+        bool keepAlive,
+        qint32 receiveTimeoutForNoData = defaultReceiveTimeoutForNoData());
 
-    inline bool autoDelete() const
-    {
-        return m_autoDelete;
-    }
+    ~HMessagingInfo();
 
     inline QTcpSocket& socket() const
     {
-        return m_sock;
+        Q_ASSERT(!m_sock.first.isNull());
+        return *m_sock.first;
     }
 
     inline void setKeepAlive(bool arg)
@@ -151,9 +168,14 @@ public:
         return m_receiveTimeoutForNoData;
     }
 
-    inline ChunkedInfo& chunkedInfo()
+    inline const HChunkedInfo& chunkedInfo() const
     {
         return m_chunkedInfo;
+    }
+
+    inline void setChunkedInfo(const HChunkedInfo& arg)
+    {
+        m_chunkedInfo = arg;
     }
 
     inline void setLastErrorDescription(const QString& errDescr)

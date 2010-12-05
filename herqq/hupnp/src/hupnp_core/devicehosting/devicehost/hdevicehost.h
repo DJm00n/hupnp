@@ -22,7 +22,7 @@
 #ifndef HDEVICEHOST_H_
 #define HDEVICEHOST_H_
 
-#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QObject>
 
@@ -35,7 +35,7 @@ namespace Upnp
 class HDeviceHostPrivate;
 
 /*!
- * A class for creating and hosting \c %HDevice instances on the network.
+ * A class for creating and hosting \c %HServerDevice instances on the network.
  *
  * \headerfile hdevicehost.h HDeviceHost
  *
@@ -43,11 +43,11 @@ class HDeviceHostPrivate;
  *
  * As the name implies, this is the class in the HUPnP library
  * used to expose UPnP devices to UPnP control points.
- * The class \e hosts instances of HDevice, which means that the class takes
- * care of all of the UPnP mechanics detaching the HDevice from it. This separation
- * leaves the HDevice to model the UPnP device structure and to focus on the functionality
- * of the specific device type. This is what the HUPnP \ref hupnp_devicemodel
- * is all about.
+ * The class \e hosts instances of HServerDevice, which means that the class takes
+ * care of all of the UPnP mechanics detaching the HServerDevice from it. This
+ * separation leaves the HServerDevice to model the UPnP device structure and to
+ * focus on the functionality of the specific device type. This is what the
+ * HUPnP \ref hupnp_devicemodel is all about.
  *
  * Hosting a device is simple, assuming you have the necessary device and service
  * descriptions ready and the HUPnP device and service classes implemented.
@@ -64,9 +64,13 @@ class HDeviceHostPrivate;
  * \code
  *
  * // myclass.h
-
+ *
+ * #include "my_hdevice.h" // your code containing the type MyHDevice
+ *
  * #include <HUpnpCore/HDeviceHost>
- * #include <QObject>
+ * #include <HUpnpCore/HDeviceModelCreator>
+ *
+ * #include <QtCore/QObject>
  *
  * class MyClass :
  *     public QObject
@@ -80,37 +84,56 @@ class HDeviceHostPrivate;
  *     MyClass(QObject* parent = 0);
  * };
  *
- * // myclass.cpp
- *
- * #include "myclass.h"
- * #include "my_hdevice.h" // your code containing the type MyHDevice
- *
- * namespace
- * {
- * class Creator
+ * class MyCreator : public Herqq::Upnp::HDeviceModelCreator
  * {
  * public:
- *     Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo&)
- *     {
- *         return new MyHDevice(); // your class derived from HDevice
- *     }
+ *
+ *   virtual MyHServerDevice* createDevice(const Herqq::Upnp::HDeviceInfo& info) const;
+ *   virtual MyHServerService* createService(const Herqq::Upnp::HServiceInfo& info) const;
+ *   virtual Herqq::Upnp::HDeviceModelCreator* clone() const;
  * };
+ *
+ *
+ * // myclass.cpp
+ *
+ * MyHServerDevice* MyCreator::createDevice(const Herqq::Upnp::HDeviceInfo& info) const
+ * {
+ *     if (info.deviceType().toString() == "urn:herqq-org:device:MyDevice:1")
+ *     {
+ *         return new MyHServerDevice();
+ *     }
+ *
+ *     return 0;
+ * }
+ *
+ * MyHServerService* MyCreator::createService(const Herqq::Upnp::HServiceInfo& info) const
+ * {
+ *     if (info.serviceType().toString() == "urn:herqq-org:service:MyService:1")
+ *     {
+ *         return new HMyServerService();
+ *     }
+ *
+ *      return 0;
+ * }
+ *
+ * Herqq::Upnp::HDeviceModelCreator* MyCreator::clone() const
+ * {
+ *     return new MyCreator();
  * }
  *
  * MyClass::MyClass(QObject* parent) :
  *     QObject(parent),
  *         m_deviceHost(new Herqq::Upnp::HDeviceHost(this))
  * {
+ *     Herqq::Upnp::HDeviceHostConfiguration hostConf;
+ *     hostConf.setDeviceModelCreator(MyCreator());
+ *
  *     Herqq::Upnp::HDeviceConfiguration deviceConf;
  *     deviceConf.setPathToDeviceDescription("my_hdevice_devicedescription.xml");
  *
- *     Creator deviceCreator;
- *     // You could also use a normal function or a member function to create
- *     // HDevice types.
+ *     hostConf.add(deviceConf);
  *
- *     deviceConf.setDeviceCreator(deviceCreator);
- *
- *     if (!m_deviceHost->init(deviceConf))
+ *     if (!m_deviceHost->init(hostConf))
  *     {
  *         // The initialization failed, perhaps you should do something?
  *         // for starters, you can call error() to check the error type and
@@ -128,24 +151,20 @@ class HDeviceHostPrivate;
  *
  * There are a few noteworthy issues in the example above.
  *
- * -# The device host will fail to initialize if your HDeviceConfiguration
- * instance is invalid; for instance, the \e device \e creator is not specified or
- * the path to your UPnP Device Description is invalid. Similarly, if your
- * UPnP Device or UPnP Service description (if your UPnP device has one) is invalid, the device
- * host will fail to initialize. The point is, you should always \b check \b the \b return \b value.
- * -# Your HDevice is accessible only as long as your \c %HDeviceHost
+ * -# The device host will fail to initialize if your HDeviceHostConfiguration
+ * instance is invalid; for instance, the \e device \e model \e creator is not
+ * specified or any of the paths to your UPnP device or service description
+ * documents are invalid. The point is, <b>you should always check the return
+ * value</b>.
+ * -# Your HServerDevice is accessible only as long as your \c %HDeviceHost
  * is alive. When the device host is destroyed every UPnP device it hosted
  * are destroyed as well.
  * -# \c %HDeviceHost requires an event loop to function.
- * -# \c %HDeviceHost takes in a HDeviceHostConfiguration object, which has a constructor
- * that takes in a HDeviceConfiguration object. This is exploited in the example above,
- * since we are not interested in hosting multiple HDevice instances in the same host and
- * we are not interested in modifying the default behavior of the \c %HDeviceHost.
  * -# The example above uses an \c %HDeviceHost instance to host a single UPnP root
  * device, but the same host could be used to host multiple UPnP root devices.
  * Certainly you can create multiple \c %HDeviceHost instances that each host a single
- * root HDevice within a thread, even sharing an event loop.
- * However, using a single \c %HDeviceHost for multiple root HDevice instances
+ * root HServerDevice within a thread, even sharing an event loop.
+ * However, using a single \c %HDeviceHost for multiple root HServerDevice instances
  * reduces resource usage in various ways and makes all the configured UPnP
  * root devices accessible to you from the same \c %HDeviceHost instance.
  *
@@ -159,12 +178,13 @@ class HDeviceHostPrivate;
  * However, you cannot move individual objects managed by \c %HDeviceHost.
  *
  * \li \c %HDeviceHost is the owner of the instances of
- * \c %HDevice it manages. It manages the memory of every object it has created.
+ * \c %HServerDevice it manages. It manages the memory of every object it has created.
  * In other words, a device host \b never transfers the ownership of the
- * HDevice objects it manages; <b>%HDeviceHost always destroys every
- * %HDevice it manages when it is being destroyed</b>.
+ * HServerDevice objects it manages; <b>%HDeviceHost always destroys every
+ * %HServerDevice it manages when it is being destroyed</b>.
  *
- * \sa hupnp_devicehosting, HDevice, HDeviceHostConfiguration, HDeviceConfiguration
+ * \sa hupnp_devicehosting, HServerDevice, HDeviceHostConfiguration,
+ * HDeviceConfiguration
  */
 class H_UPNP_CORE_EXPORT HDeviceHost :
     public QObject
@@ -189,6 +209,11 @@ public:
          * cause for the error could not be determined.
          */
         UndefinedError = -1,
+
+        /*!
+         * No error has occurred.
+         */
+        NoError = 0,
 
         /*!
          * Return value signifying that the device host is already successfully
@@ -284,7 +309,7 @@ private:
      * \remarks by default all subscriptions are accepted.
      */
     virtual bool acceptSubscription(
-        HService* targetService, const HEndpoint& source, bool isNew);
+        HServerService* targetService, const HEndpoint& source, bool isNew);
 
 protected:
 
@@ -310,7 +335,7 @@ protected:
      *
      * \remarks
      * \li A device host creates a single HDeviceHostRuntimeStatus object
-     * during construction and deletes it when the device host is being
+     * during its construction and deletes it when the device host is being
      * deleted.
      * \li The returned object is always owned by the device host.
      */
@@ -353,26 +378,28 @@ public:
      *
      * \warning the returned device will be deleted when the
      * device host is being destroyed. However, do \b not delete
-     * the device object directly. The ownership of an HDevice is \b never transferred.
+     * the device object directly. The ownership of an HServerDevice is \b
+     * never transferred.
      */
-    HDevice* device(
+    HServerDevice* device(
         const HUdn& udn,
-        HDevice::TargetDeviceType target = HDevice::RootDevices) const;
+        TargetDeviceType target = RootDevices) const;
 
     /*!
      * Returns a list of UPnP root devices the host is currently managing.
      *
-     * The returned list contains pointers to root HDevice objects that are currently
-     * hosted by this instance.
+     * The returned list contains pointers to root HServerDevice objects
+     * that are currently hosted by this instance.
      *
-     * \return a list of pointers to root HDevice objects that are currently managed
-     * by the device host.
+     * \return a list of pointers to root HServerDevice objects that are
+     * currently managed by the device host.
      *
-     * \warning the returned HDevice instances will be deleted when the
+     * \warning the returned HServerDevice instances will be deleted when the
      * device host is being destroyed. However, do \b not delete
-     * the device objects directly. The ownership of an HDevice is \b never transferred.
+     * the device objects directly. The ownership of an HServerDevice is \b never
+     * transferred.
      */
-    HDevices rootDevices() const;
+    HServerDevices rootDevices() const;
 
     /*!
      * Initializes the device host and the devices it is supposed to host.
@@ -382,7 +409,8 @@ public:
      *
      * \return \e true if the initialization of the device host succeeded.
      * If \e false is returned you can call error() to get the type of the error,
-     * and you can call errorDescription() to get a human-readable description of the error.
+     * and you can call errorDescription() to get a human-readable description
+     * of the error.
      *
      * \sa quit()
      */
@@ -390,12 +418,14 @@ public:
 
     /*!
      * Returns the type of the last error occurred.
+     *
      * \return the type of the last error occurred.
      */
     DeviceHostError error() const;
 
     /*!
      * Returns a human readable description of the last error occurred.
+     *
      * \return a human readable description of the last error occurred.
      */
     QString errorDescription() const;

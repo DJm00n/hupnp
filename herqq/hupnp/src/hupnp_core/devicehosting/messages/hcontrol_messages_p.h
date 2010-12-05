@@ -44,7 +44,7 @@ namespace Upnp
 //
 //
 //
-class InvokeActionRequest
+class HInvokeActionRequest
 {
 private:
 
@@ -54,12 +54,12 @@ private:
 
 public:
 
-    InvokeActionRequest();
-    InvokeActionRequest(
+    HInvokeActionRequest();
+    HInvokeActionRequest(
         const QString& soapAction, const QtSoapMessage& soapMsg,
         const QUrl& serviceUrl);
 
-    ~InvokeActionRequest();
+    ~HInvokeActionRequest();
 
     inline QString soapAction() const
     {

@@ -31,7 +31,6 @@
 //
 
 #include "hudn.h"
-#include "hdeviceinfo.h"
 #include "hresourcetype.h"
 
 #include "../../utils/hlogger_p.h"
@@ -39,6 +38,7 @@
 #include <QtCore/QUrl>
 #include <QtCore/QList>
 #include <QtCore/QString>
+#include <QtCore/QSharedData>
 
 namespace Herqq
 {
@@ -49,8 +49,10 @@ namespace Upnp
 //
 // Implementation details of HDeviceInfo
 //
-class HDeviceInfoPrivate
+class HDeviceInfoPrivate :
+    public QSharedData
 {
+HDeviceInfoPrivate& operator=(const HDeviceInfoPrivate&);
 
 public: // attributes
 
@@ -66,7 +68,7 @@ public: // attributes
     HUdn    m_udn;
     QString m_upc;
     QUrl    m_presentationUrl;
-    QList<QPair<QUrl, QByteArray> > m_icons;
+    QList<QUrl> m_icons;
 
 public: // methods
 
@@ -106,7 +108,7 @@ public: // methods
     }
 
     bool setUpc(const QString& upc);
-    bool setIcons(const QList<QPair<QUrl, QByteArray> >& icons);
+    bool setIcons(const QList<QUrl>& icons);
     inline bool setPresentationUrl(const QUrl& presentationUrl)
     {
         Q_ASSERT(presentationUrl.isValid() || presentationUrl.isEmpty());

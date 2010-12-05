@@ -24,7 +24,7 @@
 #include "hhttp_header_p.h"
 #include "hhttp_utils_p.h"
 
-#include "../devicemodel/haction.h"
+#include "../dataelements/hactioninfo.h"
 #include "../../utils/hlogger_p.h"
 
 #include "../general/hupnp_global_p.h"
@@ -46,13 +46,13 @@ HHttpMessageCreator::~HHttpMessageCreator()
 }
 
 QByteArray HHttpMessageCreator::setupData(
-    HHttpHeader& hdr, MessagingInfo& mi)
+    HHttpHeader& hdr, const HMessagingInfo& mi)
 {
     return setupData(hdr, QByteArray(), mi);
 }
 
 QByteArray HHttpMessageCreator::setupData(
-    HHttpHeader& reqHdr, const QByteArray& body, MessagingInfo& mi,
+    HHttpHeader& reqHdr, const QByteArray& body, const HMessagingInfo& mi,
     ContentType ct)
 {
     HLOG(H_AT, H_FUN);
@@ -83,8 +83,8 @@ QByteArray HHttpMessageCreator::setupData(
 
     bool chunked = false;
 
-    if (mi.chunkedInfo().m_maxChunkSize > 0 &&
-        body.size() > mi.chunkedInfo().m_maxChunkSize)
+    if (mi.chunkedInfo().max() > 0 &&
+        body.size() > mi.chunkedInfo().max())
     {
         chunked = true;
         reqHdr.setValue("Transfer-Encoding", "chunked");
@@ -101,7 +101,7 @@ QByteArray HHttpMessageCreator::setupData(
 }
 
 QByteArray HHttpMessageCreator::createResponse(
-    StatusCode sc, MessagingInfo& mi, const QByteArray& body, ContentType ct)
+    StatusCode sc, const HMessagingInfo& mi, const QByteArray& body, ContentType ct)
 {
     qint32 statusCode = 0;
     QString reasonPhrase = "";
@@ -178,49 +178,49 @@ void checkForActionError(
     Q_ASSERT(httpReasonPhrase);
     Q_ASSERT(soapFault);
 
-    if (actionRetVal == HAction::InvalidArgs)
+    if (actionRetVal == UpnpInvalidArgs)
     {
         *httpStatusCode   = 402;
         *httpReasonPhrase = "Invalid Args";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::ActionFailed)
+    else if (actionRetVal == UpnpActionFailed)
     {
         *httpStatusCode   = 501;
         *httpReasonPhrase = "Action Failed";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::ArgumentValueInvalid)
+    else if (actionRetVal == UpnpArgumentValueInvalid)
     {
         *httpStatusCode   = 600;
         *httpReasonPhrase = "Argument Value Invalid";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::ArgumentValueOutOfRange)
+    else if (actionRetVal == UpnpArgumentValueOutOfRange)
     {
         *httpStatusCode   = 601;
         *httpReasonPhrase = "Argument Value Out of Range";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::OptionalActionNotImplemented)
+    else if (actionRetVal == UpnpOptionalActionNotImplemented)
     {
         *httpStatusCode   = 602;
         *httpReasonPhrase = "Optional Action Not Implemented";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::OutOfMemory)
+    else if (actionRetVal == UpnpOutOfMemory)
     {
         *httpStatusCode   = 603;
         *httpReasonPhrase = "Out of Memory";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::HumanInterventionRequired)
+    else if (actionRetVal == UpnpHumanInterventionRequired)
     {
         *httpStatusCode   = 604;
         *httpReasonPhrase = "Human Intervention Required";
         *soapFault        = QtSoapMessage::Client;
     }
-    else if (actionRetVal == HAction::StringArgumentTooLong)
+    else if (actionRetVal == UpnpStringArgumentTooLong)
     {
         *httpStatusCode   = 605;
         *httpReasonPhrase = "String Argument Too Long";
@@ -236,7 +236,7 @@ void checkForActionError(
 }
 
 QByteArray HHttpMessageCreator::setupData(
-    MessagingInfo& mi, qint32 statusCode, const QString& reasonPhrase,
+    const HMessagingInfo& mi, qint32 statusCode, const QString& reasonPhrase,
     const QString& body, ContentType ct)
 {
     HHttpResponseHeader responseHdr(statusCode, reasonPhrase);
@@ -244,7 +244,7 @@ QByteArray HHttpMessageCreator::setupData(
 }
 
 QByteArray HHttpMessageCreator::createResponse(
-    MessagingInfo& mi, qint32 actionErrCode, const QString& description)
+    const HMessagingInfo& mi, qint32 actionErrCode, const QString& description)
 {
     QtSoapMessage::FaultCode soapFault;
     qint32 httpStatusCode; QString httpReasonPhrase;
@@ -266,7 +266,7 @@ QByteArray HHttpMessageCreator::createResponse(
 }
 
 QByteArray HHttpMessageCreator::create(
-    const NotifyRequest& req, MessagingInfo& mi)
+    const HNotifyRequest& req, HMessagingInfo* mi)
 {
     Q_ASSERT(req.isValid(true));
 
@@ -276,18 +276,18 @@ QByteArray HHttpMessageCreator::create(
     reqHdr.setRequest(
         "NOTIFY", extractRequestPart(req.callback().toString()));
 
-    mi.setHostInfo(req.callback());
+    mi->setHostInfo(req.callback());
 
     reqHdr.setValue("SID", req.sid().toString());
     reqHdr.setValue("SEQ", QString::number(req.seq()));
     reqHdr.setValue("NT" , "upnp:event");
     reqHdr.setValue("NTS", "upnp:propchange");
 
-    return setupData(reqHdr, req.data(), mi);
+    return setupData(reqHdr, req.data(), *mi);
 }
 
 QByteArray HHttpMessageCreator::create(
-    const SubscribeRequest& req, MessagingInfo& mi)
+    const HSubscribeRequest& req, const HMessagingInfo& mi)
 {
     Q_ASSERT(req.isValid(false));
 
@@ -314,22 +314,22 @@ QByteArray HHttpMessageCreator::create(
 }
 
 QByteArray HHttpMessageCreator::create(
-    const UnsubscribeRequest& req, MessagingInfo& mi)
+    const HUnsubscribeRequest& req, HMessagingInfo* mi)
 {
     Q_ASSERT(req.isValid(false));
 
     HHttpRequestHeader requestHdr(
         "UNSUBSCRIBE", extractRequestPart(req.eventUrl()));
 
-    mi.setHostInfo(req.eventUrl());
+    mi->setHostInfo(req.eventUrl());
 
     requestHdr.setValue("SID", req.sid().toString());
 
-    return setupData(requestHdr, mi);
+    return setupData(requestHdr, *mi);
 }
 
 QByteArray HHttpMessageCreator::create(
-    const SubscribeResponse& response, MessagingInfo& mi)
+    const HSubscribeResponse& response, const HMessagingInfo& mi)
 {
     Q_ASSERT(response.isValid(true));
 
@@ -343,8 +343,8 @@ QByteArray HHttpMessageCreator::create(
     return setupData(responseHdr, mi);
 }
 
-NotifyRequest::RetVal HHttpMessageCreator::create(
-    const HHttpRequestHeader& reqHdr, const QByteArray& body, NotifyRequest& req)
+HNotifyRequest::RetVal HHttpMessageCreator::create(
+    const HHttpRequestHeader& reqHdr, const QByteArray& body, HNotifyRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -362,35 +362,35 @@ NotifyRequest::RetVal HHttpMessageCreator::create(
 
     QUrl callbackUrl(QString("http://%1%2").arg(host, deliveryPath));
 
-    NotifyRequest nreq;
-    NotifyRequest::RetVal retVal =
+    HNotifyRequest nreq;
+    HNotifyRequest::RetVal retVal =
         nreq.setContents(callbackUrl, nt, nts, sid, seqStr, body);
 
     switch(retVal)
     {
-    case NotifyRequest::Success:
+    case HNotifyRequest::Success:
         break;
 
-    case NotifyRequest::PreConditionFailed:
+    case HNotifyRequest::PreConditionFailed:
         break;
 
-    case NotifyRequest::InvalidContents:
-    case NotifyRequest::InvalidSequenceNr:
+    case HNotifyRequest::InvalidContents:
+    case HNotifyRequest::InvalidSequenceNr:
         break;
 
     default:
         Q_ASSERT(false);
 
-        retVal = NotifyRequest::BadRequest;
+        retVal = HNotifyRequest::BadRequest;
     }
 
     req = nreq;
     return retVal;
 }
 
-SubscribeRequest::RetVal
+HSubscribeRequest::RetVal
     HHttpMessageCreator::create(
-        const HHttpRequestHeader& reqHdr, SubscribeRequest& req)
+        const HHttpRequestHeader& reqHdr, HSubscribeRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -402,38 +402,38 @@ SubscribeRequest::RetVal
     QString host       = reqHdr.value("HOST");
     QUrl servicePath   = reqHdr.path().trimmed();
 
-    SubscribeRequest sreq;
-    SubscribeRequest::RetVal retVal =
+    HSubscribeRequest sreq;
+    HSubscribeRequest::RetVal retVal =
         sreq.setContents(
             nt, appendUrls("http://"+host, servicePath),
             sid, callback, timeoutStr, userAgent);
 
     switch(retVal)
     {
-    case SubscribeRequest::Success:
+    case HSubscribeRequest::Success:
         break;
 
-    case SubscribeRequest::PreConditionFailed:
+    case HSubscribeRequest::PreConditionFailed:
         break;
 
-    case SubscribeRequest::IncompatibleHeaders:
+    case HSubscribeRequest::IncompatibleHeaders:
         break;
 
-    case SubscribeRequest::BadRequest:
+    case HSubscribeRequest::BadRequest:
         break;
 
     default:
         Q_ASSERT(false);
 
-        retVal = SubscribeRequest::BadRequest;
+        retVal = HSubscribeRequest::BadRequest;
     }
 
     req = sreq;
     return retVal;
 }
 
-UnsubscribeRequest::RetVal HHttpMessageCreator::create(
-    const HHttpRequestHeader& reqHdr, UnsubscribeRequest& req)
+HUnsubscribeRequest::RetVal HHttpMessageCreator::create(
+    const HHttpRequestHeader& reqHdr, HUnsubscribeRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -443,26 +443,26 @@ UnsubscribeRequest::RetVal HHttpMessageCreator::create(
 
     if (!callback.isEmpty())
     {
-        return UnsubscribeRequest::IncompatibleHeaders;
+        return HUnsubscribeRequest::IncompatibleHeaders;
     }
 
-    UnsubscribeRequest usreq;
-    UnsubscribeRequest::RetVal retVal =
+    HUnsubscribeRequest usreq;
+    HUnsubscribeRequest::RetVal retVal =
         usreq.setContents(
             appendUrls("http://"+hostStr, reqHdr.path().trimmed()), sid);
 
     switch(retVal)
     {
-    case UnsubscribeRequest::Success:
+    case HUnsubscribeRequest::Success:
         break;
 
-    case UnsubscribeRequest::PreConditionFailed:
+    case HUnsubscribeRequest::PreConditionFailed:
         break;
 
     default:
         Q_ASSERT(false);
 
-        retVal = UnsubscribeRequest::BadRequest;
+        retVal = HUnsubscribeRequest::BadRequest;
     }
 
     req = usreq;
@@ -470,7 +470,7 @@ UnsubscribeRequest::RetVal HHttpMessageCreator::create(
 }
 
 bool HHttpMessageCreator::create(
-    const HHttpResponseHeader& respHdr, SubscribeResponse& resp)
+    const HHttpResponseHeader& respHdr, HSubscribeResponse& resp)
 {
     HLOG(H_AT, H_FUN);
 
@@ -485,7 +485,7 @@ bool HHttpMessageCreator::create(
     QDateTime date    =
         QDateTime::fromString(respHdr.value("DATE"), HHttpUtils::rfc1123DateFormat());
 
-    resp = SubscribeResponse(sid, HProductTokens(server), timeout, date);
+    resp = HSubscribeResponse(sid, HProductTokens(server), timeout, date);
     return resp.isValid(false);
 }
 

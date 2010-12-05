@@ -25,6 +25,7 @@
 #include <HUpnpCore/HUpnp>
 
 #include <QtCore/QString>
+#include <QtCore/QSharedDataPointer>
 
 template<typename T>
 class QVector;
@@ -41,7 +42,7 @@ namespace Upnp
  *
  * \headerfile hproduct_tokens.h HProductToken
  *
- * \remarks this class is not thread-safe, but it is lightweight to be used by-value.
+ * \remarks This class is not thread-safe.
  *
  * \ingroup hupnp_common
  */
@@ -228,7 +229,7 @@ class HProductTokensPrivate;
  *
  * \headerfile hproduct_tokens.h HProductTokens
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
  * \ingroup hupnp_common
  */
@@ -236,7 +237,7 @@ class H_UPNP_CORE_EXPORT HProductTokens
 {
 private:
 
-    HProductTokensPrivate* h_ptr;
+    QSharedDataPointer<HProductTokensPrivate> h_ptr;
 
 public:
 

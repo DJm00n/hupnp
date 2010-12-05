@@ -37,6 +37,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/QVariant>
+#include <QtCore/QSharedData>
 #include <QtCore/QStringList>
 
 namespace Herqq
@@ -48,7 +49,8 @@ namespace Upnp
 //
 // Implementation details of HStateVariableInfo
 //
-class HStateVariableInfoPrivate
+class HStateVariableInfoPrivate :
+    public QSharedData
 {
 
 public: // attributes
@@ -72,7 +74,7 @@ public: // methods
     bool isWithinAllowedRange(const QVariant&, QString* errDescr=0);
 
     bool checkValue(
-        const QVariant&, QVariant* acceptableValue, QString* errDescr = 0);
+        const QVariant&, QVariant* acceptableValue, QString* errDescr = 0) const;
 
     bool setName(const QString& name, QString* err = 0);
     bool setDataType(HUpnpDataTypes::DataType arg, QString* err = 0);

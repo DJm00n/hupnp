@@ -21,17 +21,13 @@
 
 #include "hcontrolpoint_dataretriever_p.h"
 
-#include "../hdevicehosting_exceptions_p.h"
-
-#include "../../http/hhttp_header_p.h"
-#include "../../http/hhttp_handler_p.h"
-#include "../../http/hhttp_messaginginfo_p.h"
-
 #include "../../../utils/hlogger_p.h"
 #include "../../general/hupnp_global_p.h"
 
 #include <QtCore/QUrl>
-#include <QtNetwork/QTcpSocket>
+#include <QtCore/QTimerEvent>
+#include <QtNetwork/QNetworkReply>
+#include <QtNetwork/QNetworkRequest>
 
 namespace Herqq
 {
@@ -39,44 +35,47 @@ namespace Herqq
 namespace Upnp
 {
 
-HDataRetriever::HDataRetriever(
-    const QByteArray& loggingId, HHttpHandler& http) :
-        m_loggingIdentifier(loggingId), m_http(http)
+HDataRetriever::HDataRetriever(const QByteArray& loggingId) :
+    m_loggingIdentifier(loggingId), m_nam(), m_reply(0), m_lastError(),
+    m_success(false)
 {
+    bool ok = connect(
+        &m_nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(finished()));
+    Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
-QByteArray HDataRetriever::retrieveData(
-    const QUrl& baseUrl, const QUrl& query, bool processAbsoluteUrl)
+void HDataRetriever::finished()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QString request;
-    if (query.isEmpty())
+    quit();
+
+    if (m_reply->error() != QNetworkReply::NoError)
     {
-        request = extractRequestPart(baseUrl);
+        m_success = false;
+        HLOG_WARN(QString("Request failed: %1").arg(m_reply->errorString()));
     }
     else
     {
-        request = baseUrl.path();
+        m_success = true;
+    }
+}
 
-        QString queryPart = extractRequestPart(query);
-        if (processAbsoluteUrl && queryPart.startsWith('/'))
-        {
-            request = queryPart;
-        }
-        else if (!queryPart.isEmpty())
-        {
-            if (!request.endsWith('/'))
-            {
-                request.append('/');
-            }
+bool HDataRetriever::retrieveData(
+    const QUrl& baseUrl, const QUrl& query, QByteArray* data)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-            if (queryPart.startsWith('/'))
-            {
-                queryPart.remove(0, 1);
-            }
-            request.append(queryPart);
-        }
+    QString queryPart = extractRequestPart(query);
+
+    QString request = queryPart.startsWith('/') ?
+                      extractHostPart(baseUrl.toString()) : baseUrl.toString();
+
+    if (!query.isEmpty())
+    {
+        if (!request.endsWith('/')) { request.append('/'); }
+        if (queryPart.startsWith('/')) { queryPart.remove(0, 1); }
+        request.append(queryPart);
     }
 
     if (request.isEmpty())
@@ -84,44 +83,36 @@ QByteArray HDataRetriever::retrieveData(
         request.append('/');
     }
 
-    HHttpRequestHeader requestHdr("GET", request);
-    HHttpResponseHeader responseHdr;
+    QNetworkRequest req(request);
+    m_reply = m_nam.get(req);
 
-    QTcpSocket sock;
-    qint32 port = baseUrl.port();
-    sock.connectToHost(baseUrl.host(), port <= 0 ? 80 : port);
-    if (!sock.waitForConnected(5000))
+    int id = startTimer(3000);
+    exec();
+    killTimer(id);
+
+    if (m_success)
     {
-        throw HSocketException(
-            QString("Could not connect to [%1] in order to retrieve [%2]").arg(
-                baseUrl.toString(), request));
+        *data = m_reply->readAll();
     }
 
-    MessagingInfo mi(sock, false, 5000);
-    mi.setHostInfo(baseUrl);
-
-    QByteArray body;
-    HHttpHandler::ReturnValue rv =
-        m_http.msgIO(mi, requestHdr, responseHdr, &body);
-
-    if (rv)
-    {
-        throw HOperationFailedException(QString(
-            "Failed to retrieve data from: [%1] due to: [%2]").arg(
-                request, mi.lastErrorDescription()));
-    }
-
-    if (!body.size())
-    {
-        throw HOperationFailedException(
-            QString("Did not receive any data for request: [%1]").arg(request));
-    }
-
-    return body;
+    m_reply->deleteLater(); m_reply = 0;
+    return m_success;
 }
 
-QString HDataRetriever::retrieveServiceDescription(
-    const QUrl& deviceLocation, const QUrl& scpdUrl)
+void HDataRetriever::timerEvent(QTimerEvent* event)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    HLOG_WARN(QString("Request timed out."));
+
+    quit();
+    killTimer(event->timerId());
+
+    m_success = false;
+}
+
+bool HDataRetriever::retrieveServiceDescription(
+    const QUrl& deviceLocation, const QUrl& scpdUrl, QString* data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -129,20 +120,18 @@ QString HDataRetriever::retrieveServiceDescription(
         "Attempting to fetch a service description for [%1] from: [%2]").arg(
             scpdUrl.toString(), deviceLocation.toString()));
 
-    /*QDomDocument dd;
-    QString errMsg; qint32 errLine = 0;
-    if (!dd.setContent(data, false, &errMsg, &errLine))
+    QByteArray tmp;
+    if (!retrieveData(deviceLocation, scpdUrl, &tmp))
     {
-        throw HParseException(
-            QString("Could not parse the service description: [%1] @ line [%2]").
-            arg(errMsg, QString::number(errLine)));
-    }*/
+        return false;
+    }
 
-    return QString::fromUtf8(retrieveData(deviceLocation, scpdUrl, true));
+    *data = QString::fromUtf8(tmp);
+    return true;
 }
 
-QByteArray HDataRetriever::retrieveIcon(
-    const QUrl& deviceLocation, const QUrl& iconUrl)
+bool HDataRetriever::retrieveIcon(
+    const QUrl& deviceLocation, const QUrl& iconUrl, QByteArray* data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -150,11 +139,11 @@ QByteArray HDataRetriever::retrieveIcon(
         "Attempting to retrieve icon [%1] from: [%2]").arg(
             iconUrl.toString(), deviceLocation.toString()));
 
-    return retrieveData(deviceLocation, iconUrl, true);
+    return retrieveData(deviceLocation, iconUrl, data);
 }
 
-QString HDataRetriever::retrieveDeviceDescription(
-    const QUrl& deviceLocation)
+bool HDataRetriever::retrieveDeviceDescription(
+    const QUrl& deviceLocation, QString* data)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -162,7 +151,14 @@ QString HDataRetriever::retrieveDeviceDescription(
         "Attempting to fetch a device description from: [%1]").arg(
             deviceLocation.toString()));
 
-    return QString::fromUtf8(retrieveData(deviceLocation, QUrl(), false));
+    QByteArray tmp;
+    if (!retrieveData(deviceLocation, QUrl(), &tmp))
+    {
+        return false;
+    }
+
+    *data = QString::fromUtf8(tmp);
+    return true;
 }
 
 }

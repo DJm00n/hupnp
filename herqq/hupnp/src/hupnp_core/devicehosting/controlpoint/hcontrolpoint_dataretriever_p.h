@@ -33,8 +33,11 @@
 #include "../../general/hupnp_defs.h"
 
 #include <QtCore/QByteArray>
+#include <QtCore/QEventLoop>
+#include <QtNetwork/QNetworkAccessManager>
 
 class QUrl;
+class QNetworkReply;
 
 namespace Herqq
 {
@@ -42,35 +45,52 @@ namespace Herqq
 namespace Upnp
 {
 
-class HHttpHandler;
-class HDeviceController;
-
 //
 //
 //
-class HDataRetriever
+class HDataRetriever :
+    public QEventLoop
 {
+Q_OBJECT
 H_DISABLE_COPY(HDataRetriever)
+
+private slots:
+
+    void finished();
 
 private:
 
     const QByteArray m_loggingIdentifier;
-    HHttpHandler& m_http;
+    QNetworkAccessManager m_nam;
+    QNetworkReply* m_reply;
+    QString m_lastError;
 
-    QByteArray retrieveData(
-        const QUrl& baseUrl, const QUrl& query, bool processAbsoluteUrl);
+    bool m_success;
+
+private:
+
+    bool retrieveData(const QUrl& baseUrl, const QUrl& query, QByteArray*);
+
+protected:
+
+    virtual void timerEvent(QTimerEvent*);
 
 public:
 
-    HDataRetriever(const QByteArray& loggingId, HHttpHandler&);
+    HDataRetriever(const QByteArray& loggingId);
 
-    QString retrieveServiceDescription(
-        const QUrl& deviceLocation, const QUrl& scpdUrl);
+    inline QString lastError() const
+    {
+        return m_lastError;
+    }
 
-    QByteArray retrieveIcon(
-        const QUrl& deviceLocation, const QUrl& iconUrl);
+    bool retrieveServiceDescription(
+        const QUrl& deviceLocation, const QUrl& scpdUrl, QString*);
 
-    QString retrieveDeviceDescription(const QUrl& deviceLocation);
+    bool retrieveIcon(
+        const QUrl& deviceLocation, const QUrl& iconUrl, QByteArray*);
+
+    bool retrieveDeviceDescription(const QUrl& deviceLocation, QString*);
 };
 
 }

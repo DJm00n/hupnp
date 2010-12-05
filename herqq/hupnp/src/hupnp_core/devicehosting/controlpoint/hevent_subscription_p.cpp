@@ -21,10 +21,13 @@
 
 #include "hevent_subscription_p.h"
 
-#include "../../http/hhttp_handler_p.h"
-#include "../../devicemodel/hdevice.h"
-#include "../../devicemodel/hservice_p.h"
+#include "../../devicemodel/client/hclientdevice.h"
+#include "../../devicemodel/client/hdefault_clientservice_p.h"
+
+#include "../../dataelements/hserviceinfo.h"
+
 #include "../../general/hupnp_global_p.h"
+
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../../utils/hlogger_p.h"
@@ -39,7 +42,7 @@ namespace Upnp
  * HEventSubscription definition
  ******************************************************************************/
 HEventSubscription::HEventSubscription(
-    const QByteArray& loggingIdentifier, HServiceController* service,
+    const QByteArray& loggingIdentifier, HClientService* service,
     const QUrl& serverRootUrl, const HTimeout& desiredTimeout, QObject* parent) :
         QObject(parent),
             m_loggingIdentifier(loggingIdentifier),
@@ -69,7 +72,7 @@ HEventSubscription::HEventSubscription(
     Q_ASSERT_X(m_serverRootUrl.isValid(), H_AT,
              m_serverRootUrl.toString().toLocal8Bit());
 
-    m_deviceLocations = service->m_service->parentDevice()->locations();
+    m_deviceLocations = service->parentDevice()->locations();
 
     Q_ASSERT(m_deviceLocations.size() > 0);
     for(qint32 i = 0; i < m_deviceLocations.size(); ++i)
@@ -224,7 +227,7 @@ void HEventSubscription::msgIoComplete(HHttpAsyncOperation* op)
 
     if (m_currentOpType == Op_Subscribe || m_currentOpType == Op_Renew)
     {
-        foreach(const NotifyRequest& req, m_queuedNotifications)
+        foreach(const HNotifyRequest& req, m_queuedNotifications)
         {
             if (processNotify(req) != Ok)
             {
@@ -268,7 +271,7 @@ void HEventSubscription::renewSubscription_done(HHttpAsyncOperation* op)
 
     Q_ASSERT(hdr);
 
-    SubscribeResponse response;
+    HSubscribeResponse response;
     if (!HHttpMessageCreator::create(*hdr, response))
     {
         HLOG_WARN(QString("Received an invalid response to event "
@@ -323,12 +326,12 @@ void HEventSubscription::renewSubscription()
 
     QUrl eventUrl = resolveUri(
         extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
-        m_service->m_service->info().eventSubUrl());
+        m_service->info().eventSubUrl());
 
-    MessagingInfo* mi = new MessagingInfo(m_socket, false);
+    HMessagingInfo* mi = new HMessagingInfo(m_socket, false);
     mi->setHostInfo(eventUrl);
 
-    SubscribeRequest req(eventUrl, m_sid, m_desiredTimeout);
+    HSubscribeRequest req(eventUrl, m_sid, m_desiredTimeout);
     QByteArray data = HHttpMessageCreator::create(req, *mi);
 
     if (!m_http.msgIo(mi, data))
@@ -430,7 +433,7 @@ void HEventSubscription::subscribe_done(HHttpAsyncOperation* op)
 
     Q_ASSERT(hdr);
 
-    SubscribeResponse response;
+    HSubscribeResponse response;
     if (!HHttpMessageCreator::create(*hdr, response))
     {
         HLOG_WARN(QString("Failed to subscribe: %1.").arg(hdr->toString()));
@@ -494,12 +497,12 @@ void HEventSubscription::subscribe()
 
     m_eventUrl = resolveUri(
         extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
-        m_service->m_service->info().eventSubUrl());
+        m_service->info().eventSubUrl());
 
-    MessagingInfo* mi = new MessagingInfo(m_socket, false);
+    HMessagingInfo* mi = new HMessagingInfo(m_socket, false);
     mi->setHostInfo(m_eventUrl);
 
-    SubscribeRequest req(
+    HSubscribeRequest req(
         m_eventUrl,
         HSysInfo::instance().herqqProductTokens(),
         m_serverRootUrl.toString().append("/").append(
@@ -521,7 +524,7 @@ void HEventSubscription::subscribe()
     }
 }
 
-StatusCode HEventSubscription::processNotify(const NotifyRequest& req)
+StatusCode HEventSubscription::processNotify(const HNotifyRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     HLOG_DBG(QString("Processing notification [sid: %1, seq: %2].").arg(
@@ -548,7 +551,10 @@ StatusCode HEventSubscription::processNotify(const NotifyRequest& req)
         return PreconditionFailed;
     }
 
-    if (m_service->updateVariables(req.variables(), m_seq > 0))
+    HDefaultClientService* srv = static_cast<HDefaultClientService*>(m_service);
+    // TODO, this should not be necessary, or it should be done elsewhere.
+
+    if (srv->updateVariables(req.variables(), m_seq > 0))
     {
         HLOG_DBG(QString(
             "Notify [sid: %1, seq: %2] OK. State variable(s) were updated.").arg(
@@ -562,7 +568,7 @@ StatusCode HEventSubscription::processNotify(const NotifyRequest& req)
     return InternalServerError;
 }
 
-StatusCode HEventSubscription::onNotify(const NotifyRequest& req)
+StatusCode HEventSubscription::onNotify(const HNotifyRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     if (!m_subscribed)
@@ -632,21 +638,21 @@ void HEventSubscription::unsubscribe(qint32 msecsToWait)
 
     m_eventUrl = resolveUri(
         extractBaseUrl(m_deviceLocations[m_nextLocationToTry]),
-        m_service->m_service->info().eventSubUrl());
+        m_service->info().eventSubUrl());
 
     HLOG_DBG(QString(
         "Attempting to cancel event subscription from [%1]").arg(
             m_eventUrl.toString()));
 
-    MessagingInfo* mi = new MessagingInfo(m_socket, false);
+    HMessagingInfo* mi = new HMessagingInfo(m_socket, false);
     mi->setHostInfo(m_eventUrl);
     if (msecsToWait > 0)
     {
         mi->setSendWait(msecsToWait);
     }
 
-    UnsubscribeRequest req(m_eventUrl, m_sid);
-    QByteArray data = HHttpMessageCreator::create(req, *mi);
+    HUnsubscribeRequest req(m_eventUrl, m_sid);
+    QByteArray data = HHttpMessageCreator::create(req, mi);
 
     if (!m_http.msgIo(mi, data))
     {

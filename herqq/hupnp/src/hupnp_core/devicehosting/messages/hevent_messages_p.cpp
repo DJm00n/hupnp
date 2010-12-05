@@ -37,7 +37,7 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * SubscribeRequest
+ * HSubscribeRequest
  *******************************************************************************/
 namespace
 {
@@ -54,12 +54,12 @@ inline bool isValidEventUrl(const QUrl& eventUrl)
 }
 }
 
-SubscribeRequest::SubscribeRequest() :
+HSubscribeRequest::HSubscribeRequest() :
     m_callbacks(), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
 {
 }
 
-SubscribeRequest::SubscribeRequest(
+HSubscribeRequest::HSubscribeRequest(
     const QUrl& eventUrl, const HSid& sid, const HTimeout& timeout) :
         m_callbacks(), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
 {
@@ -81,7 +81,7 @@ SubscribeRequest::SubscribeRequest(
     m_sid      = sid;
 }
 
-SubscribeRequest::SubscribeRequest(
+HSubscribeRequest::HSubscribeRequest(
     const QUrl& eventUrl, const HProductTokens& userAgent, const QUrl& callback,
     const HTimeout& timeout) :
         m_callbacks (), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
@@ -106,7 +106,7 @@ SubscribeRequest::SubscribeRequest(
     m_userAgent = userAgent;
 }
 
-SubscribeRequest::SubscribeRequest(
+HSubscribeRequest::HSubscribeRequest(
     const QUrl& eventUrl, const HProductTokens& userAgent,
     const QList<QUrl>& callbacks, const HTimeout& timeout) :
         m_callbacks(), m_timeout(), m_sid(), m_eventUrl(), m_userAgent()
@@ -134,7 +134,7 @@ SubscribeRequest::SubscribeRequest(
     m_callbacks = callbacks;
 }
 
-SubscribeRequest::~SubscribeRequest()
+HSubscribeRequest::~HSubscribeRequest()
 {
 }
 
@@ -162,7 +162,7 @@ QList<QUrl> parseCallbacks(const QString& arg)
 }
 }
 
-SubscribeRequest::RetVal SubscribeRequest::setContents(
+HSubscribeRequest::RetVal HSubscribeRequest::setContents(
     const QString& nt, const QUrl& eventUrl, const QString& sid,
     const QString& callback, const QString& timeout, const QString& userAgent)
 {
@@ -175,7 +175,7 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
         return BadRequest;
     }
 
-    SubscribeRequest tmp;
+    HSubscribeRequest tmp;
 
     // these fields are the same regardless of message type
     tmp.m_eventUrl = eventUrl;
@@ -215,14 +215,14 @@ SubscribeRequest::RetVal SubscribeRequest::setContents(
 }
 
 /*******************************************************************************
- * SubscribeResponse
+ * HSubscribeResponse
  *******************************************************************************/
-SubscribeResponse::SubscribeResponse() :
+HSubscribeResponse::HSubscribeResponse() :
     m_sid(), m_timeout(), m_server(), m_responseGenerated()
 {
 }
 
-SubscribeResponse::SubscribeResponse(
+HSubscribeResponse::HSubscribeResponse(
     const HSid& sid, const HProductTokens& server, const HTimeout& timeout,
     const QDateTime& responseGenerated) :
         m_sid(sid), m_timeout(timeout), m_server(server),
@@ -230,23 +230,23 @@ SubscribeResponse::SubscribeResponse(
 {
     if (m_sid.isEmpty())
     {
-        *this = SubscribeResponse();
+        *this = HSubscribeResponse();
     }
 }
 
-SubscribeResponse::~SubscribeResponse()
+HSubscribeResponse::~HSubscribeResponse()
 {
 }
 
 /*******************************************************************************
- * UnsubscribeRequest
+ * HUnsubscribeRequest
  *******************************************************************************/
-UnsubscribeRequest::UnsubscribeRequest() :
+HUnsubscribeRequest::HUnsubscribeRequest() :
     m_eventUrl(), m_sid()
 {
 }
 
-UnsubscribeRequest::UnsubscribeRequest(const QUrl& eventUrl, const HSid& sid) :
+HUnsubscribeRequest::HUnsubscribeRequest(const QUrl& eventUrl, const HSid& sid) :
     m_eventUrl(), m_sid()
 {
     if (sid.isEmpty() || !isValidEventUrl(eventUrl))
@@ -258,14 +258,14 @@ UnsubscribeRequest::UnsubscribeRequest(const QUrl& eventUrl, const HSid& sid) :
     m_sid      = sid;
 }
 
-UnsubscribeRequest::~UnsubscribeRequest()
+HUnsubscribeRequest::~HUnsubscribeRequest()
 {
 }
 
-UnsubscribeRequest::RetVal UnsubscribeRequest::setContents(
+HUnsubscribeRequest::RetVal HUnsubscribeRequest::setContents(
     const QUrl& eventUrl, const QString& sid)
 {
-    UnsubscribeRequest tmp;
+    HUnsubscribeRequest tmp;
 
     tmp.m_sid = sid;
     tmp.m_eventUrl = eventUrl;
@@ -284,11 +284,11 @@ UnsubscribeRequest::RetVal UnsubscribeRequest::setContents(
 }
 
 /*******************************************************************************
- * NotifyRequest
+ * HNotifyRequest
  *******************************************************************************/
 namespace
 {
-NotifyRequest::RetVal parseData(
+HNotifyRequest::RetVal parseData(
     const QByteArray& data, QList<QPair<QString, QString> >& parsedData)
 {
     HLOG(H_AT, H_FUN);
@@ -296,7 +296,7 @@ NotifyRequest::RetVal parseData(
     QDomDocument dd;
     if (!dd.setContent(data, true))
     {
-        return NotifyRequest::InvalidContents;
+        return HNotifyRequest::InvalidContents;
     }
 
     //QDomNodeList propertySetNodes =
@@ -306,7 +306,7 @@ NotifyRequest::RetVal parseData(
 
     if (propertySetElement.isNull())
     {
-        return NotifyRequest::InvalidContents;
+        return HNotifyRequest::InvalidContents;
     }
 
     QDomElement propertyElement =
@@ -320,7 +320,7 @@ NotifyRequest::RetVal parseData(
         QDomElement variableElement = propertyElement.firstChildElement();
         if (variableElement.isNull())
         {
-            return NotifyRequest::InvalidContents;
+            return HNotifyRequest::InvalidContents;
         }
 
         QDomText variableValue = variableElement.firstChild().toText();
@@ -331,16 +331,16 @@ NotifyRequest::RetVal parseData(
     }
 
     parsedData = tmp;
-    return NotifyRequest::Success;
+    return HNotifyRequest::Success;
 }
 }
 
-NotifyRequest::NotifyRequest() :
+HNotifyRequest::HNotifyRequest() :
     m_callback(), m_sid(), m_seq(0), m_dataAsVariables(), m_data()
 {
 }
 
-NotifyRequest::NotifyRequest(
+HNotifyRequest::HNotifyRequest(
     const QUrl& callback, const HSid& sid,
     quint32 seq, const QByteArray& contents) :
         m_callback(), m_sid(), m_seq(0), m_dataAsVariables(),
@@ -364,11 +364,11 @@ NotifyRequest::NotifyRequest(
     m_data     = contents;
 }
 
-NotifyRequest::~NotifyRequest()
+HNotifyRequest::~HNotifyRequest()
 {
 }
 
-NotifyRequest::RetVal NotifyRequest::setContents(
+HNotifyRequest::RetVal HNotifyRequest::setContents(
     const QUrl& callback,
     const QString& nt, const QString& nts, const QString& sid,
     const QString& seq, const QString& contents)
@@ -382,7 +382,7 @@ NotifyRequest::RetVal NotifyRequest::setContents(
         return PreConditionFailed;
     }
 
-    NotifyRequest tmp;
+    HNotifyRequest tmp;
 
     tmp.m_callback = callback;
     if (!isValidCallback(tmp.m_callback))

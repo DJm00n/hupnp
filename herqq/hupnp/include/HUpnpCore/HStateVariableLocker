@@ -1,6 +1,0 @@
-#ifndef H_STATEVARIABLE_LOCKER_
-#define H_STATEVARIABLE_LOCKER_
-
-#include "public/hwritable_statevariable.h"
-
-#endif // H_STATEVARIABLE_LOCKER_

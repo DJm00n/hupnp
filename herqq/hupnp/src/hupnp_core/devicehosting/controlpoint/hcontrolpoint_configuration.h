@@ -23,7 +23,6 @@
 #define HCONTROLPOINT_CONFIGURATION_H_
 
 #include <HUpnpCore/HClonable>
-#include <HUpnpCore/HDeviceProxyCreator>
 
 class QHostAddress;
 
@@ -55,9 +54,6 @@ class HControlPointConfigurationPrivate;
  * The default is the first found interface that is up. Non-loopback interfaces
  * have preference, but if none are found the loopback is used. However, in this
  * case UDP multicast is not available.
- * - Specify an object creator that can be used to create custom HDeviceProxy
- * and HServiceProxy objects during run-time when new devices are discovered
- * with setDeviceCreator().
  *
  * \headerfile hcontrolpoint_configuration.h HControlPointConfiguration
  *
@@ -65,7 +61,7 @@ class HControlPointConfigurationPrivate;
  *
  * \sa HControlPoint
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HControlPointConfiguration :
     public HClonable
@@ -107,17 +103,6 @@ public:
     //
     // Documented in HClonable
     virtual HControlPointConfiguration* clone() const;
-
-    /*!
-     * Returns the user-defined callable entity that is used to create
-     * HDeviceProxy instances.
-     *
-     * \return the user-defined callable entity that is used to create
-     * HDeviceProxy instances.
-     *
-     * \sa setDeviceCreator()
-     */
-    HDeviceProxyCreator deviceCreator() const;
 
     /*!
      * Indicates whether to automatically subscribe to all events on all services
@@ -168,107 +153,6 @@ public:
      * \sa setNetworkAddressesToUse()
      */
     QList<QHostAddress> networkAddressesToUse() const;
-
-    /*!
-     * Sets the callable entity that is used to create HDeviceProxy instances.
-     *
-     * Setting the device creator is useful when you want to create the
-     * types that will be used later as HDeviceProxy instances. However, <b>this
-     * is purely optional</b>. If the device creator is not set, \c %HControlPoint
-     * will create and use default types. Most often custom types provide
-     * value only when the custom types contain additional functionality, finer-grained
-     * API or something else that the base classes of \ref hupnp_devicemodel do not.
-     *
-     * In any case, your callable entity must be:
-     *   - copyable by value
-     *   - callable with a signature <c>Herqq::Upnp::HDeviceProxy* function_name(const Herqq::Upnp::HDeviceInfo&);</c>
-     *
-     * Note, the return value must be a pointer to a heap allocated instance of
-     * Herqq::Upnp::HDeviceProxy* and the ownership of the created device will be
-     * transferred to the \c %HControlPoint after returning.
-     *
-     * From this follows that the device creator can be a:
-     *
-     * \li functor,
-     * \li function pointer or
-     * \li member function pointer
-     *
-     * For example, if your callable entity is a functor, it could
-     * look something like the following:
-     *
-     * \code
-     *
-     * class MyProxyCreator
-     * {
-     *     public:
-     *         MyProxyCreator();
-     *         ~MyProxyCreator();
-     *
-     *         HDeviceProxy* operator()(const Herqq::Upnp::HDeviceInfo&) const
-     *         {
-     *             return new MyProxyClass();
-     *         }
-     * };
-     *
-     * \endcode
-     *
-     * and you could call the method as follows:
-     *
-     * \code
-     *
-     * setDeviceCreator(MyProxyCreator());
-     *
-     * \endcode
-     *
-     * If your callable entity is a member function other than the operator(),
-     * the member function declaration would look like the following:
-     *
-     * \code
-     *
-     * class MyClass
-     * {
-     * private:
-     *    Herqq:Upnp::HDeviceProxy* createMyDevice(const Herqq::Upnp::HDeviceInfo&);
-     *
-     * public:
-     *     MyClass();
-     * };
-     *
-     * \endcode
-     *
-     * and you could set the creator as follows (this is contrived due to the
-     * private access specifier):
-     *
-     * \code
-     *
-     * MyClass::MyClass()
-     * {
-     *    HDeviceConfiguration configuration;
-     *    configuration.setDeviceCreator(this, &MyClass::createMyDevice);
-     * }
-     *
-     * \endcode
-     *
-     * The example above demonstrates that:
-     *
-     * \li the device creator can be \em any member function with a proper signature,
-     * regardless of the access specifier.
-     *
-     * \li the way you could set the device creator.
-     *
-     * \param deviceCreator specifies the callable entity that is used to
-     * create HDeviceProxy instances.
-     *
-     * \remarks
-     * \li The objects your device creator creates will be deallocated by
-     * the HUPnP library when the objects are no longer needed.
-     * Do \b not delete them manually.
-     *
-     * \li Setting a device creator is optional and unless you really want
-     * to define custom HDeviceProxy types to be used, you should not set this
-     * at all.
-     */
-    bool setDeviceCreator(const HDeviceProxyCreator& deviceCreator);
 
     /*!
      * Defines whether a control point should automatically subscribe to all

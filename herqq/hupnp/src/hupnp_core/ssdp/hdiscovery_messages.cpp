@@ -30,23 +30,9 @@
 #include "../../utils/hlogger_p.h"
 
 #include <QtNetwork/QHostAddress>
-#include <QtCore/QMetaType>
 #include <QtCore/QDateTime>
 #include <QtCore/QString>
 #include <QtCore/QUrl>
-
-static bool registerMetaTypes()
-{
-    qRegisterMetaType<Herqq::Upnp::HResourceAvailable>("Herqq::Upnp::HResourceAvailable");
-    qRegisterMetaType<Herqq::Upnp::HResourceUnavailable>("Herqq::Upnp::HResourceUnavailable");
-    qRegisterMetaType<Herqq::Upnp::HDiscoveryRequest>("Herqq::Upnp::HDiscoveryRequest");
-    qRegisterMetaType<Herqq::Upnp::HResourceUpdate>("Herqq::Upnp::HResourceUpdate");
-    qRegisterMetaType<Herqq::Upnp::HDiscoveryResponse>("Herqq::Upnp::HDiscoveryResponse");
-
-    return true;
-}
-
-static bool test = registerMetaTypes();
 
 namespace Herqq
 {
@@ -57,8 +43,11 @@ namespace Upnp
 /*******************************************************************************
  * HResourceAvailablePrivate
  ******************************************************************************/
-class HResourceAvailablePrivate
+class HResourceAvailablePrivate :
+    public QSharedData
 {
+HResourceAvailablePrivate& operator=(const HResourceAvailablePrivate&);
+
 public: // attributes
 
     HProductTokens m_serverTokens;
@@ -91,11 +80,10 @@ HResourceAvailablePrivate::~HResourceAvailablePrivate()
 HResourceAvailable::HResourceAvailable() :
     h_ptr(new HResourceAvailablePrivate())
 {
-    Q_UNUSED(test)
 }
 
 HResourceAvailable::HResourceAvailable(
-    quint32 cacheControlMaxAge, const QUrl& location,
+    qint32 cacheControlMaxAge, const QUrl& location,
     const HProductTokens& serverTokens, const HDiscoveryType& usn,
     qint32 bootId, qint32 configId, qint32 searchPort) :
         h_ptr(new HResourceAvailablePrivate())
@@ -157,29 +145,20 @@ HResourceAvailable::HResourceAvailable(
 }
 
 HResourceAvailable::HResourceAvailable(const HResourceAvailable& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
-    Q_ASSERT(&other != this);
-    h_ptr = new HResourceAvailablePrivate(*other.h_ptr);
 }
 
 HResourceAvailable& HResourceAvailable::operator=(
     const HResourceAvailable& other)
 {
     Q_ASSERT(&other != this);
-
-    HResourceAvailablePrivate* newDptr =
-        new HResourceAvailablePrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newDptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HResourceAvailable::~HResourceAvailable()
 {
-    delete h_ptr;
 }
 
 bool HResourceAvailable::isValid(HValidityCheckLevel level) const
@@ -188,12 +167,12 @@ bool HResourceAvailable::isValid(HValidityCheckLevel level) const
            (level == StrictChecks ? h_ptr->m_serverTokens.isValid() : true);
 }
 
-HProductTokens HResourceAvailable::serverTokens() const
+const HProductTokens& HResourceAvailable::serverTokens() const
 {
     return h_ptr->m_serverTokens;
 }
 
-HDiscoveryType HResourceAvailable::usn() const
+const HDiscoveryType& HResourceAvailable::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -242,8 +221,11 @@ bool operator!=(const HResourceAvailable& obj1, const HResourceAvailable& obj2)
 /*******************************************************************************
  * HResourceUnavailablePrivate
  ******************************************************************************/
-class HResourceUnavailablePrivate
+class HResourceUnavailablePrivate :
+    public QSharedData
 {
+HResourceUnavailablePrivate& operator=(const HResourceUnavailablePrivate&);
+
 public: // attributes
 
     HDiscoveryType m_usn;
@@ -304,25 +286,20 @@ HResourceUnavailable::HResourceUnavailable(
 }
 
 HResourceUnavailable::HResourceUnavailable(const HResourceUnavailable& other) :
-    h_ptr(new HResourceUnavailablePrivate(*other.h_ptr))
+    h_ptr(other.h_ptr)
 {
 }
 
 HResourceUnavailable& HResourceUnavailable::operator=(
     const HResourceUnavailable& other)
 {
-    HResourceUnavailablePrivate* newDptr =
-        new HResourceUnavailablePrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newDptr;
-
+    Q_ASSERT(this != &other);
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HResourceUnavailable::~HResourceUnavailable()
 {
-    delete h_ptr;
 }
 
 HEndpoint HResourceUnavailable::location() const
@@ -337,7 +314,7 @@ bool HResourceUnavailable::isValid(HValidityCheckLevel level) const
     // if the object is valid, the USN is valid
 }
 
-HDiscoveryType HResourceUnavailable::usn() const
+const HDiscoveryType& HResourceUnavailable::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -354,9 +331,9 @@ qint32 HResourceUnavailable::configId() const
 
 bool operator==(const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
 {
-    return obj1.h_ptr->m_usn            == obj2.h_ptr->m_usn &&
-           obj1.h_ptr->m_bootId         == obj2.h_ptr->m_bootId &&
-           obj1.h_ptr->m_configId       == obj2.h_ptr->m_configId;
+    return obj1.h_ptr->m_usn      == obj2.h_ptr->m_usn &&
+           obj1.h_ptr->m_bootId   == obj2.h_ptr->m_bootId &&
+           obj1.h_ptr->m_configId == obj2.h_ptr->m_configId;
 }
 
 bool operator!=(const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
@@ -367,8 +344,11 @@ bool operator!=(const HResourceUnavailable& obj1, const HResourceUnavailable& ob
 /*******************************************************************************
  * HResourceUpdatePrivate
  ******************************************************************************/
-class HResourceUpdatePrivate
+class HResourceUpdatePrivate :
+    public QSharedData
 {
+HResourceUpdatePrivate& operator=(const HResourceUpdatePrivate&);
+
 public: // attributes
 
     HDiscoveryType m_usn;
@@ -448,26 +428,20 @@ HResourceUpdate::HResourceUpdate(
 }
 
 HResourceUpdate::HResourceUpdate(const HResourceUpdate& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HResourceUpdatePrivate(*other.h_ptr);
 }
 
 HResourceUpdate& HResourceUpdate::operator=(const HResourceUpdate& other)
 {
     Q_ASSERT(&other != this);
-
-    HResourceUpdatePrivate* newDptr = new HResourceUpdatePrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newDptr;
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HResourceUpdate::~HResourceUpdate()
 {
-    delete h_ptr;
 }
 
 bool HResourceUpdate::isValid(HValidityCheckLevel level) const
@@ -477,7 +451,7 @@ bool HResourceUpdate::isValid(HValidityCheckLevel level) const
     // if the object is valid, the USN is valid
 }
 
-HDiscoveryType HResourceUpdate::usn() const
+const HDiscoveryType& HResourceUpdate::usn() const
 {
     return h_ptr->m_usn;
 }
@@ -524,8 +498,11 @@ bool operator!=(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
 /*******************************************************************************
  * HDiscoveryRequestPrivate
  ******************************************************************************/
-class HDiscoveryRequestPrivate
+class HDiscoveryRequestPrivate :
+    public QSharedData
 {
+HDiscoveryRequestPrivate& operator=(const HDiscoveryRequestPrivate&);
+
 public: // attributes
 
     HDiscoveryType m_st;
@@ -613,28 +590,20 @@ HDiscoveryRequest::HDiscoveryRequest(
 }
 
 HDiscoveryRequest::HDiscoveryRequest(const HDiscoveryRequest& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HDiscoveryRequestPrivate(*other.h_ptr);
 }
 
 HDiscoveryRequest& HDiscoveryRequest::operator=(const HDiscoveryRequest& other)
 {
     Q_ASSERT(&other != this);
-
-    HDiscoveryRequestPrivate* newDptr =
-        new HDiscoveryRequestPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newDptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HDiscoveryRequest::~HDiscoveryRequest()
 {
-    delete h_ptr;
 }
 
 bool HDiscoveryRequest::isValid(HValidityCheckLevel level) const
@@ -643,7 +612,7 @@ bool HDiscoveryRequest::isValid(HValidityCheckLevel level) const
            (level == StrictChecks ? h_ptr->m_userAgent.isValid() : true);
 }
 
-HDiscoveryType HDiscoveryRequest::searchTarget() const
+const HDiscoveryType& HDiscoveryRequest::searchTarget() const
 {
     return h_ptr->m_st;
 }
@@ -653,7 +622,7 @@ qint32 HDiscoveryRequest::mx() const
     return h_ptr->m_mx;
 }
 
-HProductTokens HDiscoveryRequest::userAgent() const
+const HProductTokens& HDiscoveryRequest::userAgent() const
 {
     return h_ptr->m_userAgent;
 }
@@ -673,8 +642,11 @@ bool operator!=(const HDiscoveryRequest& obj1, const HDiscoveryRequest& obj2)
 /*******************************************************************************
  * HDiscoveryResponsePrivate
  ******************************************************************************/
-class HDiscoveryResponsePrivate
+class HDiscoveryResponsePrivate :
+    public QSharedData
 {
+HDiscoveryResponsePrivate& operator=(const HDiscoveryResponsePrivate&);
+
 public: // attributes
 
     HProductTokens m_serverTokens;
@@ -705,7 +677,7 @@ HDiscoveryResponse::HDiscoveryResponse() :
 }
 
 HDiscoveryResponse::HDiscoveryResponse(
-    quint32 cacheControlMaxAge, const QDateTime& /*date*/, const QUrl& location,
+    qint32 cacheControlMaxAge, const QDateTime& /*date*/, const QUrl& location,
     const HProductTokens& serverTokens, const HDiscoveryType& usn,
     qint32 bootId, qint32 configId, qint32 searchPort) :
         h_ptr(new HDiscoveryResponsePrivate())
@@ -766,28 +738,20 @@ HDiscoveryResponse::HDiscoveryResponse(
 }
 
 HDiscoveryResponse::HDiscoveryResponse(const HDiscoveryResponse& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HDiscoveryResponsePrivate(*other.h_ptr);
 }
 
 HDiscoveryResponse& HDiscoveryResponse::operator=(const HDiscoveryResponse& other)
 {
     Q_ASSERT(&other != this);
-
-    HDiscoveryResponsePrivate* newDptr =
-        new HDiscoveryResponsePrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newDptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HDiscoveryResponse::~HDiscoveryResponse()
 {
-    delete h_ptr;
 }
 
 bool HDiscoveryResponse::isValid(HValidityCheckLevel level) const
@@ -796,7 +760,7 @@ bool HDiscoveryResponse::isValid(HValidityCheckLevel level) const
            (level == StrictChecks ? h_ptr->m_serverTokens.isValid() : true);
 }
 
-HProductTokens HDiscoveryResponse::serverTokens() const
+const HProductTokens& HDiscoveryResponse::serverTokens() const
 {
     return h_ptr->m_serverTokens;
 }
@@ -806,7 +770,7 @@ QDateTime HDiscoveryResponse::date() const
     return h_ptr->m_date;
 }
 
-HDiscoveryType HDiscoveryResponse::usn() const
+const HDiscoveryType& HDiscoveryResponse::usn() const
 {
     return h_ptr->m_usn;
 }

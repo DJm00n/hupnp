@@ -23,8 +23,8 @@
 #include "hcontrolpoint_configuration_p.h"
 
 #include "../../general/hupnp_global_p.h"
-#include "../../devicemodel/hdeviceproxy.h"
-#include "../../devicemodel/hserviceproxy.h"
+#include "../../devicemodel/client/hclientdevice.h"
+#include "../../devicemodel/client/hclientservice.h"
 #include "../../../utils/hmisc_utils_p.h"
 
 namespace Herqq
@@ -34,27 +34,9 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * HProxyCreator
- ******************************************************************************/
-HProxyCreator::HProxyCreator()
-{
-}
-
-HDeviceProxy* HProxyCreator::operator()(const HDeviceInfo&) const
-{
-    return new HDeviceProxy();
-}
-
-HServiceProxy* HProxyCreator::operator()(const HResourceType&) const
-{
-    return new HServiceProxy();
-}
-
-/*******************************************************************************
  * HControlPointConfigurationPrivate
  ******************************************************************************/
 HControlPointConfigurationPrivate::HControlPointConfigurationPrivate() :
-    m_deviceCreator(HProxyCreator()),
     m_subscribeToEvents(true),
     m_desiredSubscriptionTimeout(1800),
     m_autoDiscovery(true),
@@ -73,7 +55,6 @@ HControlPointConfigurationPrivate* HControlPointConfigurationPrivate::clone() co
     HControlPointConfigurationPrivate* newObj =
         new HControlPointConfigurationPrivate();
 
-    newObj->m_deviceCreator = m_deviceCreator;
     newObj->m_subscribeToEvents = m_subscribeToEvents;
     newObj->m_desiredSubscriptionTimeout = m_desiredSubscriptionTimeout;
     newObj->m_autoDiscovery = m_autoDiscovery;
@@ -125,11 +106,6 @@ HControlPointConfiguration* HControlPointConfiguration::clone() const
     return static_cast<HControlPointConfiguration*>(HClonable::clone());
 }
 
-HDeviceProxyCreator HControlPointConfiguration::deviceCreator() const
-{
-    return h_ptr->m_deviceCreator;
-}
-
 bool HControlPointConfiguration::subscribeToEvents() const
 {
     return h_ptr->m_subscribeToEvents;
@@ -148,18 +124,6 @@ bool HControlPointConfiguration::autoDiscovery() const
 QList<QHostAddress> HControlPointConfiguration::networkAddressesToUse() const
 {
     return h_ptr->m_networkAddresses;
-}
-
-bool HControlPointConfiguration::setDeviceCreator(
-    const HDeviceProxyCreator& deviceCreator)
-{
-    if (!deviceCreator)
-    {
-        return false;
-    }
-
-    h_ptr->m_deviceCreator = deviceCreator;
-    return true;
 }
 
 void HControlPointConfiguration::setSubscribeToEvents(bool arg)

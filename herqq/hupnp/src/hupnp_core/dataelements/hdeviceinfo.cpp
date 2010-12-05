@@ -22,16 +22,6 @@
 #include "hdeviceinfo.h"
 #include "hdeviceinfo_p.h"
 
-#include <QtCore/QMetaType>
-
-static bool registerMetaTypes()
-{
-    qRegisterMetaType<Herqq::Upnp::HDeviceInfo>("Herqq::Upnp::HDeviceInfo");
-    return true;
-}
-
-static bool regMetaT = registerMetaTypes();
-
 namespace Herqq
 {
 
@@ -47,7 +37,6 @@ HDeviceInfoPrivate::HDeviceInfoPrivate() :
     m_serialNumber    (), m_udn         (), m_upc         (), m_presentationUrl(),
     m_icons()
 {
-    Q_UNUSED(regMetaT)
 }
 
 HDeviceInfoPrivate::~HDeviceInfoPrivate()
@@ -212,7 +201,7 @@ bool HDeviceInfoPrivate::setUpc(const QString& upc)
     return true;
 }
 
-bool HDeviceInfoPrivate::setIcons(const QList<QPair<QUrl, QByteArray> >& icons)
+bool HDeviceInfoPrivate::setIcons(const QList<QUrl>& icons)
 {
     m_icons = icons;
     return true;
@@ -227,21 +216,15 @@ HDeviceInfo::HDeviceInfo() :
 }
 
 HDeviceInfo::HDeviceInfo(const HDeviceInfo& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HDeviceInfoPrivate(*other.h_ptr);
 }
 
 HDeviceInfo& HDeviceInfo::operator=(const HDeviceInfo& other)
 {
     Q_ASSERT(&other != this);
-
-    HDeviceInfoPrivate* newHptr = new HDeviceInfoPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
@@ -255,26 +238,26 @@ HDeviceInfo::HDeviceInfo(
     QString* err) :
         h_ptr(new HDeviceInfoPrivate())
 {
-    HDeviceInfoPrivate tmp;
+    QScopedPointer<HDeviceInfoPrivate> tmp(new HDeviceInfoPrivate());
 
     QString errTmp;
-    if (!tmp.setDeviceType(deviceType))
+    if (!tmp->setDeviceType(deviceType))
     {
         errTmp = QString("Invalid device type: [%1]").arg(deviceType.toString());
     }
-    else if (!tmp.setFriendlyName(friendlyName))
+    else if (!tmp->setFriendlyName(friendlyName))
     {
         errTmp = QString("Invalid friendly name: [%1]").arg(friendlyName);
     }
-    else if (!tmp.setManufacturer(manufacturer))
+    else if (!tmp->setManufacturer(manufacturer))
     {
         errTmp = QString("Invalid manufacturer: [%1]").arg(manufacturer);
     }
-    else if (!tmp.setModelName(modelName))
+    else if (!tmp->setModelName(modelName))
     {
         errTmp = QString("Invalid model name: [%1]").arg(modelName);
     }
-    else if (!tmp.setUdn(udn, checkLevel))
+    else if (!tmp->setUdn(udn, checkLevel))
     {
         errTmp = QString("Invalid UDN: [%1]").arg(udn.toString());
     }
@@ -285,11 +268,11 @@ HDeviceInfo::HDeviceInfo(
         {
             *err = errTmp;
         }
-
-        return;
     }
-
-    *h_ptr = tmp;
+    else
+    {
+        h_ptr = tmp.take();
+    }
 }
 
 HDeviceInfo::HDeviceInfo(
@@ -304,32 +287,32 @@ HDeviceInfo::HDeviceInfo(
     const QString& serialNumber,
     const HUdn&    udn,
     const QString& upc,
-    const QList<QPair<QUrl, QByteArray> >& icons,
+    const QList<QUrl>& icons,
     const QUrl&    presentationUrl,
     HValidityCheckLevel checkLevel,
     QString* err) :
         h_ptr(new HDeviceInfoPrivate())
 {
-    HDeviceInfoPrivate tmp;
+    QScopedPointer<HDeviceInfoPrivate> tmp(new HDeviceInfoPrivate());
 
     QString errTmp;
-    if (!tmp.setDeviceType(deviceType))
+    if (!tmp->setDeviceType(deviceType))
     {
         errTmp = QString("Invalid device type: [%1]").arg(deviceType.toString());
     }
-    else if (!tmp.setFriendlyName(friendlyName))
+    else if (!tmp->setFriendlyName(friendlyName))
     {
         errTmp = QString("Invalid friendly name: [%1]").arg(friendlyName);
     }
-    else if (!tmp.setManufacturer(manufacturer))
+    else if (!tmp->setManufacturer(manufacturer))
     {
         errTmp = QString("Invalid manufacturer: [%1]").arg(manufacturer);
     }
-    else if (!tmp.setModelName(modelName))
+    else if (!tmp->setModelName(modelName))
     {
         errTmp = QString("Invalid model name: [%1]").arg(modelName);
     }
-    else if (!tmp.setUdn(udn, checkLevel))
+    else if (!tmp->setUdn(udn, checkLevel))
     {
         errTmp = QString("Invalid UDN: [%1]").arg(udn.toString());
     }
@@ -340,11 +323,11 @@ HDeviceInfo::HDeviceInfo(
         {
             *err = errTmp;
         }
-
-        return;
     }
-
-    *h_ptr = tmp;
+    else
+    {
+        h_ptr = tmp.take();
+    }
 
     // these are optional ==> no need to be strict
     h_ptr->setManufacturerUrl (manufacturerUrl.toString());
@@ -360,7 +343,6 @@ HDeviceInfo::HDeviceInfo(
 
 HDeviceInfo::~HDeviceInfo()
 {
-    delete h_ptr;
 }
 
 bool HDeviceInfo::isValid(HValidityCheckLevel level) const
@@ -399,7 +381,7 @@ void HDeviceInfo::setUpc(const QString& arg)
     h_ptr->setUpc(arg);
 }
 
-void HDeviceInfo::setIcons(const QList<QPair<QUrl, QByteArray> >& arg)
+void HDeviceInfo::setIcons(const QList<QUrl>& arg)
 {
     h_ptr->setIcons(arg);
 }
@@ -464,7 +446,7 @@ QString HDeviceInfo::upc() const
     return h_ptr->m_upc;
 }
 
-QList<QPair<QUrl, QByteArray> > HDeviceInfo::icons() const
+QList<QUrl> HDeviceInfo::icons() const
 {
     return h_ptr->m_icons;
 }
@@ -476,7 +458,7 @@ QUrl HDeviceInfo::presentationUrl() const
 
 bool operator==(const HDeviceInfo& obj1, const HDeviceInfo& obj2)
 {
-    bool b = obj1.h_ptr->m_deviceType         == obj2.h_ptr->m_deviceType       &&
+    return   obj1.h_ptr->m_deviceType         == obj2.h_ptr->m_deviceType       &&
              obj1.h_ptr->m_friendlyName       == obj2.h_ptr->m_friendlyName     &&
              obj1.h_ptr->m_manufacturer       == obj2.h_ptr->m_manufacturer     &&
              obj1.h_ptr->m_manufacturerUrl    == obj2.h_ptr->m_manufacturerUrl  &&
@@ -487,30 +469,8 @@ bool operator==(const HDeviceInfo& obj1, const HDeviceInfo& obj2)
              obj1.h_ptr->m_serialNumber       == obj2.h_ptr->m_serialNumber     &&
              obj1.h_ptr->m_udn                == obj2.h_ptr->m_udn              &&
              obj1.h_ptr->m_upc                == obj2.h_ptr->m_upc              &&
-             obj1.h_ptr->m_presentationUrl    == obj2.h_ptr->m_presentationUrl;
-
-    if (!b)
-    {
-        return false;
-    }
-
-    QList<QPair<QUrl, QByteArray> > icons1 = obj1.icons();
-    QList<QPair<QUrl, QByteArray> > icons2 = obj2.icons();
-
-    if (icons1.size() != icons2.size())
-    {
-        return false;
-    }
-
-    for (qint32 i = 0; i < icons1.size(); ++i)
-    {
-        if (icons1[i] != icons2[i])
-        {
-            return false;
-        }
-    }
-
-    return true;
+             obj1.h_ptr->m_presentationUrl    == obj2.h_ptr->m_presentationUrl  &&
+             obj1.h_ptr->m_icons              == obj2.h_ptr->m_icons;
 }
 
 bool operator!=(const HDeviceInfo& obj1, const HDeviceInfo& obj2)

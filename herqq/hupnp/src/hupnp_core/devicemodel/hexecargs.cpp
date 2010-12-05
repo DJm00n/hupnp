@@ -27,8 +27,8 @@ namespace Herqq
 namespace Upnp
 {
 
-HExecArgs::HExecArgs(ExecType type) :
-    m_type(type)
+HExecArgs::HExecArgs(ExecType etype) :
+    m_execType(etype)
 {
 }
 
@@ -38,7 +38,7 @@ HExecArgs::~HExecArgs()
 
 bool operator==(const HExecArgs& arg1, const HExecArgs& arg2)
 {
-    return arg1.m_type == arg2.m_type;
+    return arg1.m_execType == arg2.m_execType;
 }
 
 bool operator!=(const HExecArgs& arg1, const HExecArgs& arg2)

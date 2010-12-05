@@ -35,9 +35,11 @@ namespace Upnp
  * HDeviceConfigurationPrivate
  ******************************************************************************/
 HDeviceConfigurationPrivate::HDeviceConfigurationPrivate() :
-    m_pathToDeviceDescriptor(),
-    m_cacheControlMaxAgeInSecs(1800),
-    m_deviceCreator()
+    m_pathToDeviceDescriptor(), m_cacheControlMaxAgeInSecs(1800)
+{
+}
+
+HDeviceConfigurationPrivate::~HDeviceConfigurationPrivate()
 {
 }
 
@@ -69,8 +71,7 @@ void HDeviceConfiguration::doClone(HClonable* target) const
     }
 
     conf->h_ptr->m_cacheControlMaxAgeInSecs = h_ptr->m_cacheControlMaxAgeInSecs;
-    conf->h_ptr->m_deviceCreator            = h_ptr->m_deviceCreator;
-    conf->h_ptr->m_pathToDeviceDescriptor   = h_ptr->m_pathToDeviceDescriptor;
+    conf->h_ptr->m_pathToDeviceDescriptor = h_ptr->m_pathToDeviceDescriptor;
 }
 
 HDeviceConfiguration* HDeviceConfiguration::clone() const
@@ -110,26 +111,9 @@ qint32 HDeviceConfiguration::cacheControlMaxAge() const
     return h_ptr->m_cacheControlMaxAgeInSecs;
 }
 
-HDeviceCreator HDeviceConfiguration::deviceCreator() const
-{
-    return h_ptr->m_deviceCreator;
-}
-
-bool HDeviceConfiguration::setDeviceCreator(
-    const HDeviceCreator& deviceCreator)
-{
-    if (deviceCreator)
-    {
-        h_ptr->m_deviceCreator = deviceCreator;
-        return true;
-    }
-
-    return false;
-}
-
 bool HDeviceConfiguration::isValid() const
 {
-    return !h_ptr->m_pathToDeviceDescriptor.isEmpty() && h_ptr->m_deviceCreator;
+    return !h_ptr->m_pathToDeviceDescriptor.isEmpty();
 }
 
 /*******************************************************************************
@@ -140,7 +124,7 @@ HDeviceHostConfigurationPrivate::HDeviceHostConfigurationPrivate() :
     m_individualAdvertisementCount(2),
     m_subscriptionExpirationTimeout(0),
     m_networkAddresses(),
-    m_threadingModel(HDeviceHostConfiguration::MultiThreaded)
+    m_deviceCreator(0)
 {
     QHostAddress ha = findBindableHostAddress();
     m_networkAddresses.append(ha);
@@ -190,8 +174,6 @@ void HDeviceHostConfiguration::doClone(HClonable* target) const
     conf->h_ptr->m_subscriptionExpirationTimeout =
         h_ptr->m_subscriptionExpirationTimeout;
 
-    conf->h_ptr->m_threadingModel = h_ptr->m_threadingModel;
-
     QList<const HDeviceConfiguration*> confCollection;
     foreach(const HDeviceConfiguration* conf, h_ptr->m_collection)
     {
@@ -200,6 +182,11 @@ void HDeviceHostConfiguration::doClone(HClonable* target) const
 
     qDeleteAll(conf->h_ptr->m_collection);
     conf->h_ptr->m_collection = confCollection;
+
+    HDeviceModelCreator* creator =
+        h_ptr->m_deviceCreator ? h_ptr->m_deviceCreator->clone() : 0;
+
+    conf->h_ptr->m_deviceCreator.reset(creator);
 }
 
 HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
@@ -218,6 +205,12 @@ bool HDeviceHostConfiguration::add(const HDeviceConfiguration& arg)
     return false;
 }
 
+void HDeviceHostConfiguration::clear()
+{
+    qDeleteAll(h_ptr->m_collection);
+    h_ptr->m_collection.clear();
+}
+
 QList<const HDeviceConfiguration*> HDeviceHostConfiguration::deviceConfigurations() const
 {
     return h_ptr->m_collection;
@@ -233,6 +226,17 @@ QList<QHostAddress> HDeviceHostConfiguration::networkAddressesToUse() const
     return h_ptr->m_networkAddresses;
 }
 
+HDeviceModelCreator* HDeviceHostConfiguration::deviceModelCreator() const
+{
+    return h_ptr->m_deviceCreator.data();
+}
+
+void HDeviceHostConfiguration::setDeviceModelCreator(
+    const HDeviceModelCreator& deviceCreator)
+{
+    h_ptr->m_deviceCreator.reset(deviceCreator.clone());
+}
+
 void HDeviceHostConfiguration::setIndividualAdvertisementCount(qint32 arg)
 {
     if (arg < 1)
@@ -246,11 +250,6 @@ void HDeviceHostConfiguration::setIndividualAdvertisementCount(qint32 arg)
 qint32 HDeviceHostConfiguration::subscriptionExpirationTimeout() const
 {
     return h_ptr->m_subscriptionExpirationTimeout;
-}
-
-HDeviceHostConfiguration::ThreadingModel HDeviceHostConfiguration::threadingModel() const
-{
-    return h_ptr->m_threadingModel;
 }
 
 void HDeviceHostConfiguration::setSubscriptionExpirationTimeout(qint32 arg)
@@ -277,14 +276,14 @@ bool HDeviceHostConfiguration::setNetworkAddressesToUse(
     return true;
 }
 
-void HDeviceHostConfiguration::setThreadingModel(ThreadingModel arg)
-{
-    h_ptr->m_threadingModel = arg;
-}
-
 bool HDeviceHostConfiguration::isEmpty() const
 {
     return h_ptr->m_collection.isEmpty();
+}
+
+bool HDeviceHostConfiguration::isValid() const
+{
+    return !isEmpty() && deviceModelCreator();
 }
 
 }

@@ -69,7 +69,7 @@ public:
 
 private:
 
-    volatile ExecType m_type;
+    volatile ExecType m_execType;
 
 public:
 
@@ -96,7 +96,7 @@ public:
     *
     * \sa setExecType()
     */
-   inline ExecType execType() const { return m_type; }
+   inline ExecType execType() const { return m_execType; }
 
    /*!
     * Sets the value indicating how the operation should be run and its
@@ -107,7 +107,7 @@ public:
     *
     * \sa execType()
     */
-   inline void setExecType(ExecType type) { m_type = type; }
+   inline void setExecType(ExecType type) { m_execType = type; }
 };
 
 /*!

@@ -26,13 +26,14 @@
 #include "genericinput.h"
 #include "allowedvaluelist_input.h"
 
-#include <HUpnpCore/HAction>
-#include <HUpnpCore/HDevice>
-#include <HUpnpCore/HService>
+
 #include <HUpnpCore/HActionInfo>
-#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HClientAction>
+#include <HUpnpCore/HClientDevice>
+#include <HUpnpCore/HClientService>
 #include <HUpnpCore/HActionArguments>
 #include <HUpnpCore/HActionArguments>
+#include <HUpnpCore/HClientStateVariable>
 
 #include <QUuid>
 #include <QMessageBox>
@@ -44,7 +45,7 @@
 using namespace Herqq::Upnp;
 
 InvokeActionDialog::InvokeActionDialog(
-    HAction* action, QWidget* parent) :
+    HClientAction* action, QWidget* parent) :
         QDialog(parent),
             m_ui(new Ui::InvokeActionDialog), m_action(action), m_inputWidgets()
 {
@@ -54,16 +55,16 @@ InvokeActionDialog::InvokeActionDialog(
     setupArgumentWidgets();
 
     bool ok = connect(
-        action, SIGNAL(invokeComplete(Herqq::Upnp::HAsyncOp)),
-        this, SLOT(invokeComplete(Herqq::Upnp::HAsyncOp)));
+        action, SIGNAL(invokeComplete(Herqq::Upnp::HAsyncOp, Herqq::Upnp::HActionArguments)),
+        this, SLOT(invokeComplete(Herqq::Upnp::HAsyncOp, Herqq::Upnp::HActionArguments)));
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
-void InvokeActionDialog::invokeComplete(HAsyncOp invokeOp)
+void InvokeActionDialog::invokeComplete(
+    HAsyncOp invokeOp, const Herqq::Upnp::HActionArguments& outArgs)
 {
-    HActionArguments outArgs;
-    if (m_action->waitForInvoke(&invokeOp, &outArgs))
+    if (invokeOp.returnValue() == UpnpSuccess)
     {
         for(qint32 i = 0; i < outArgs.size(); ++i)
         {
@@ -74,13 +75,13 @@ void InvokeActionDialog::invokeComplete(HAsyncOp invokeOp)
     }
     else
     {
-        QMessageBox msgBox;
+        QMessageBox* msgBox = new QMessageBox(this);
 
-        msgBox.setText(QString("Action invocation [id: %1] failed: %2").arg(
-            invokeOp.id().toString(),
-            HAction::errorCodeToString(invokeOp.returnValue())));
+        msgBox->setText(QString("Action invocation [id: %1] failed: %2").arg(
+            QString::number(invokeOp.id()),
+            upnpErrorCodeToString(invokeOp.returnValue())));
 
-        msgBox.exec();
+        msgBox->show();
     }
 
     m_ui->invokeButton->setEnabled(true);
@@ -145,7 +146,7 @@ void InvokeActionDialog::setupArgumentWidgets()
     }
 }
 
-void InvokeActionDialog::contentSourceRemoved(HDevice* device)
+void InvokeActionDialog::contentSourceRemoved(HClientDevice* device)
 {
     Q_ASSERT(device);
     if (device == m_action->parentService()->parentDevice()->rootDevice())

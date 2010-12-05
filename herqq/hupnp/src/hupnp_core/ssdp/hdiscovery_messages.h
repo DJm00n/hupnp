@@ -24,6 +24,8 @@
 
 #include <HUpnpCore/HUpnp>
 
+#include <QtCore/QSharedDataPointer>
+
 class QUrl;
 class QString;
 class QDateTime;
@@ -34,9 +36,6 @@ namespace Herqq
 namespace Upnp
 {
 
-class HEndpoint;
-class HDiscoveryType;
-class HProductTokens;
 class HResourceAvailablePrivate;
 
 /*!
@@ -64,7 +63,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HResourceAvailablePrivate* h_ptr;
+    QSharedDataPointer<HResourceAvailablePrivate> h_ptr;
 
 public:
 
@@ -122,7 +121,7 @@ public:
      * \sa isValid()
      */
     HResourceAvailable(
-        quint32        cacheControlMaxAge,
+        qint32         cacheControlMaxAge,
         const QUrl&    location,
         const HProductTokens& serverTokens,
         const HDiscoveryType& usn,
@@ -132,10 +131,14 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     ~HResourceAvailable();
 
     /*!
+     * Copy constructor.
+     *
      * Copies the contents of the other object instance to this.
      */
     HResourceAvailable(const HResourceAvailable&);
@@ -167,7 +170,7 @@ public:
      *
      * \sa isValid()
      */
-    HProductTokens serverTokens() const;
+    const HProductTokens& serverTokens() const;
 
     /*!
      * Returns the location of the announced device.
@@ -190,7 +193,7 @@ public:
      *
      * \sa isValid()
      */
-    HDiscoveryType usn() const;
+    const HDiscoveryType& usn() const;
 
     /*!
      * Returns the number of seconds the advertisement is valid.
@@ -273,7 +276,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HResourceUnavailablePrivate* h_ptr;
+    QSharedDataPointer<HResourceUnavailablePrivate> h_ptr;
 
 public:
 
@@ -306,10 +309,14 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     ~HResourceUnavailable();
 
     /*!
+     * Copy constructor.
+     *
      * Copies the contents of the other to this object.
      */
     HResourceUnavailable(const HResourceUnavailable&);
@@ -343,7 +350,7 @@ public:
      *
      * \sa isValid()
      */
-    HDiscoveryType usn() const;
+    const HDiscoveryType& usn() const;
 
     /*!
      * Returns the value of \c BOOTID.UPNP.ORG.
@@ -412,7 +419,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HResourceUpdatePrivate* h_ptr;
+    QSharedDataPointer<HResourceUpdatePrivate> h_ptr;
 
 public:
 
@@ -459,10 +466,14 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     ~HResourceUpdate();
 
     /*!
+     * Copy constructor.
+     *
      * Copies the contents of the other to this.
      */
     HResourceUpdate(const HResourceUpdate&);
@@ -502,7 +513,7 @@ public:
      *
      * \return the Unique Service Name.
      */
-    HDiscoveryType usn() const;
+    const HDiscoveryType& usn() const;
 
     /*!
      * Returns the value of \c BOOTID.UPNP.ORG.
@@ -578,7 +589,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HDiscoveryRequestPrivate* h_ptr;
+    QSharedDataPointer<HDiscoveryRequestPrivate> h_ptr;
 
 public:
 
@@ -619,11 +630,15 @@ public:
 
     /*!
      * Destroys the instance.
+     *
+     * Destroys the instance.
      */
     ~HDiscoveryRequest();
 
     /*!
      * Copy constructor.
+     *
+     * Copies the contents of \c other to this.
      */
     HDiscoveryRequest(const HDiscoveryRequest&);
 
@@ -651,7 +666,7 @@ public:
      *
      * \return the Search Target of the request.
      */
-    HDiscoveryType searchTarget() const;
+    const HDiscoveryType& searchTarget() const;
 
     /*!
      * Returns the maximum wait time in seconds.
@@ -670,7 +685,7 @@ public:
      *
      * \return information about the maker of the request.
      */
-    HProductTokens userAgent() const;
+    const HProductTokens& userAgent() const;
 };
 
 /*!
@@ -716,7 +731,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HDiscoveryResponsePrivate* h_ptr;
+    QSharedDataPointer<HDiscoveryResponsePrivate> h_ptr;
 
 public:
 
@@ -778,7 +793,7 @@ public:
      * \sa isValid()
      */
     HDiscoveryResponse(
-        quint32 cacheControlMaxAge,
+        qint32 cacheControlMaxAge,
         const QDateTime& date,
         const QUrl& location,
         const HProductTokens& serverTokens,
@@ -788,7 +803,9 @@ public:
         qint32 searchPort = -1);
 
     /*!
-     * Copy constructor. Makes a deep copy.
+     * Copy constructor.
+     *
+     * Copies the contents of \c other to this.
      */
     HDiscoveryResponse(const HDiscoveryResponse&);
 
@@ -800,6 +817,8 @@ public:
     HDiscoveryResponse& operator=(const HDiscoveryResponse&);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HDiscoveryResponse();
@@ -821,7 +840,7 @@ public:
      *
      * \return the server tokens.
      */
-    HProductTokens serverTokens() const;
+    const HProductTokens& serverTokens() const;
 
     /*!
      * Returns the date when the response was generated.
@@ -840,7 +859,7 @@ public:
      *
      * \sa isValid()
      */
-    HDiscoveryType usn() const;
+    const HDiscoveryType& usn() const;
 
     /*!
      * Returns the location of the announced device.

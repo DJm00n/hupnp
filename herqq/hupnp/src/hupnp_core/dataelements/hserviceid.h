@@ -50,20 +50,20 @@ class HServiceIdPrivate;
  * With a vendor defined service the format for a service identifier is:
  * \verbatim urn:domain-name:serviceId:serviceID \endverbatim
  *
- * Note, according to the UDA specification <em>Period characters in the Vendor Domain Name
- * MUST be replaced with hyphens in accordance with RFC 2141</em>.
+ * Note, according to the UDA specification <em>Period characters in the
+ * Vendor Domain Name MUST be replaced with hyphens in accordance with RFC 2141</em>.
  *
  * In both formats, the last \e serviceID component is the
  * <em>service identifier suffix</em>.
  *
  * \note
  * For interoperability reasons the class does not enforce the prefix prior
- * to the actual \c serviceID to be exactly as defined in the UDA. However, you can call
- * isValid(true) to check if the instance contains strictly valid information.
+ * to the actual \c serviceID to be exactly as defined in the UDA. However, you
+ * can call isValid() to check if the instance contains strictly valid information.
  *
  * \headerfile hserviceid.h HServiceId
  *
- * \remarks this class provides an assignment operator that is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
  * \ingroup hupnp_common
  */
@@ -130,6 +130,8 @@ public:
     HServiceId& operator=(const HServiceId& other);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HServiceId();

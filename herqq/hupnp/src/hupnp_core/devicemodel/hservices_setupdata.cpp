@@ -20,7 +20,6 @@
  */
 
 #include "hservices_setupdata.h"
-#include "hservice.h"
 #include "../dataelements/hserviceid.h"
 #include "../dataelements/hresourcetype.h"
 
@@ -42,19 +41,17 @@ public:
 
     HServiceId m_serviceId;
     HResourceType m_serviceType;
-    HService* m_service;
-    qint32 m_version;
+    int m_version;
     HInclusionRequirement m_inclusionReq;
 
     HServiceSetupPrivate() :
-        m_serviceId(), m_serviceType(), m_service(0), m_version(0),
+        m_serviceId(), m_serviceType(), m_version(0),
         m_inclusionReq(InclusionRequirementUnknown)
     {
     }
 
     ~HServiceSetupPrivate()
     {
-        delete m_service;
     }
 };
 
@@ -78,7 +75,7 @@ HServiceSetup::HServiceSetup(
 }
 
 HServiceSetup::HServiceSetup(
-    const HServiceId& id, const HResourceType& serviceType, qint32 version,
+    const HServiceId& id, const HResourceType& serviceType, int version,
     HInclusionRequirement ireq) :
         h_ptr(new HServiceSetupPrivate())
 {
@@ -88,33 +85,27 @@ HServiceSetup::HServiceSetup(
     h_ptr->m_inclusionReq = ireq;
 }
 
-HServiceSetup::HServiceSetup(
-    const HServiceId& id, const HResourceType& serviceType,
-    HService* service, HInclusionRequirement ireq) :
-        h_ptr(new HServiceSetupPrivate())
-{
-    h_ptr->m_serviceId = id;
-    h_ptr->m_serviceType = serviceType;
-    h_ptr->m_service = service;
-    h_ptr->m_version = 1;
-    h_ptr->m_inclusionReq = ireq;
-}
-
-HServiceSetup::HServiceSetup(
-    const HServiceId& id, const HResourceType& serviceType,
-    HService* service, qint32 version, HInclusionRequirement ireq) :
-        h_ptr(new HServiceSetupPrivate())
-{
-    h_ptr->m_serviceId = id;
-    h_ptr->m_serviceType = serviceType;
-    h_ptr->m_service = service;
-    h_ptr->m_version = version;
-    h_ptr->m_inclusionReq = ireq;
-}
-
 HServiceSetup::~HServiceSetup()
 {
     delete h_ptr;
+}
+
+HServiceSetup& HServiceSetup::operator=(const HServiceSetup& other)
+{
+    Q_ASSERT(&other != this);
+
+    HServiceSetupPrivate* newHptr = new HServiceSetupPrivate(*other.h_ptr);
+
+    delete h_ptr;
+    h_ptr = newHptr;
+
+    return *this;
+}
+
+HServiceSetup::HServiceSetup(const HServiceSetup& other) :
+    h_ptr(new HServiceSetupPrivate(*other.h_ptr))
+{
+    Q_ASSERT(this != &other);
 }
 
 bool HServiceSetup::isValid(HValidityCheckLevel checkLevel) const
@@ -130,11 +121,6 @@ HInclusionRequirement HServiceSetup::inclusionRequirement() const
     return h_ptr->m_inclusionReq;
 }
 
-HService* HServiceSetup::service() const
-{
-    return h_ptr->m_service;
-}
-
 const HServiceId& HServiceSetup::serviceId() const
 {
     return h_ptr->m_serviceId;
@@ -145,7 +131,7 @@ const HResourceType& HServiceSetup::serviceType() const
     return h_ptr->m_serviceType;
 }
 
-qint32 HServiceSetup::version() const
+int HServiceSetup::version() const
 {
     return h_ptr->m_version;
 }
@@ -165,21 +151,9 @@ void HServiceSetup::setServiceType(const HResourceType& arg)
     h_ptr->m_serviceType = arg;
 }
 
-void HServiceSetup::setService(HService* arg)
-{
-    h_ptr->m_service = arg;
-}
-
-void HServiceSetup::setVersion(qint32 version)
+void HServiceSetup::setVersion(int version)
 {
     h_ptr->m_version = version;
-}
-
-HService* HServiceSetup::takeService()
-{
-    HService* retVal = h_ptr->m_service;
-    h_ptr->m_service = 0;
-    return retVal;
 }
 
 /*******************************************************************************
@@ -192,21 +166,18 @@ HServicesSetupData::HServicesSetupData() :
 
 HServicesSetupData::~HServicesSetupData()
 {
-    qDeleteAll(m_serviceSetupInfos);
 }
 
-bool HServicesSetupData::insert(HServiceSetup* setupInfo)
+bool HServicesSetupData::insert(const HServiceSetup& setupInfo, bool overWrite)
 {
-    if (!setupInfo || !setupInfo->isValid(StrictChecks))
+    if (!setupInfo.isValid(StrictChecks))
     {
-        delete setupInfo;
         return false;
     }
 
-    const HServiceId& id = setupInfo->serviceId();
-    if (m_serviceSetupInfos.contains(id))
+    const HServiceId& id = setupInfo.serviceId();
+    if (!overWrite && m_serviceSetupInfos.contains(id))
     {
-        delete setupInfo;
         return false;
     }
 
@@ -218,7 +189,6 @@ bool HServicesSetupData::remove(const HServiceId& serviceId)
 {
     if (m_serviceSetupInfos.contains(serviceId))
     {
-        delete m_serviceSetupInfos.value(serviceId);
         m_serviceSetupInfos.remove(serviceId);
         return true;
     }
@@ -226,32 +196,9 @@ bool HServicesSetupData::remove(const HServiceId& serviceId)
     return false;
 }
 
-HServiceSetup* HServicesSetupData::get(const HServiceId& serviceId) const
+HServiceSetup HServicesSetupData::get(const HServiceId& serviceId) const
 {
     return m_serviceSetupInfos.value(serviceId);
-}
-
-HServiceSetup* HServicesSetupData::take(const HServiceId& serviceId)
-{
-    HServiceSetup* retVal = m_serviceSetupInfos.value(serviceId);
-    if (retVal)
-    {
-        m_serviceSetupInfos.remove(serviceId);
-    }
-    return retVal;
-}
-
-bool HServicesSetupData::setService(
-    const HServiceId& serviceId, HService* service)
-{
-    if (!m_serviceSetupInfos.contains(serviceId))
-    {
-        return false;
-    }
-
-    HServiceSetup* info = m_serviceSetupInfos.value(serviceId);
-    info->setService(service);
-    return true;
 }
 
 bool HServicesSetupData::contains(const HServiceId& id) const
@@ -264,7 +211,7 @@ QSet<HServiceId> HServicesSetupData::serviceIds() const
     return m_serviceSetupInfos.keys().toSet();
 }
 
-qint32 HServicesSetupData::size() const
+int HServicesSetupData::size() const
 {
     return m_serviceSetupInfos.size();
 }

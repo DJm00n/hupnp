@@ -102,15 +102,6 @@ public:
     static void logFatal_        (const QString& text);
 };
 
-#define STR(X) #X
-#define STRX(X) STR(X)
-
-#ifndef H_FUN
-#define H_FUN __FUNCTION__
-#endif
-
-#define H_AT __FILE__ ":" STRX(__LINE__)
-
 #define HLOG(at, fun) \
     Herqq::HLogger herqqLog__(at, fun);
 

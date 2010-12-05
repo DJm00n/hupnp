@@ -24,6 +24,8 @@
 
 #include <HUpnpCore/HUpnp>
 
+#include <QtCore/QSharedDataPointer>
+
 class QUrl;
 class QString;
 
@@ -47,19 +49,18 @@ class HServiceInfoPrivate;
  *
  * \ingroup hupnp_common
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
- * \sa HService, HDeviceInfo, HActionInfo and HStateVariableInfo.
+ * \sa HDeviceInfo, HActionInfo and HStateVariableInfo.
  */
 class H_UPNP_CORE_EXPORT HServiceInfo
 {
-H_DECLARE_PRIVATE(HServiceInfo)
 friend H_UPNP_CORE_EXPORT bool operator==(
     const HServiceInfo& obj1, const HServiceInfo& obj2);
 
 private:
 
-    HServiceInfoPrivate* h_ptr;
+    QSharedDataPointer<HServiceInfoPrivate> h_ptr;
 
 public:
 

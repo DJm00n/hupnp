@@ -32,19 +32,14 @@
 
 #include "../general/hupnp_defs.h"
 
-#include "hhttp_handler_p.h"
+#include "hhttp_asynchandler_p.h"
 #include "hhttp_messaginginfo_p.h"
-
-#include "../../utils/hthreadpool_p.h"
 
 #include <QtNetwork/QTcpServer>
 
 class QUrl;
 class QString;
 class QTcpSocket;
-class HHttpHeader;
-class HHttpRequestHeader;
-class HHttpResponseHeader;
 
 namespace Herqq
 {
@@ -53,10 +48,14 @@ namespace Upnp
 {
 
 class HEndpoint;
-class NotifyRequest;
-class SubscribeRequest;
-class UnsubscribeRequest;
-class InvokeActionRequest;
+class HNotifyRequest;
+class HSubscribeRequest;
+class HUnsubscribeRequest;
+class HInvokeActionRequest;
+
+class HHttpHeader;
+class HHttpRequestHeader;
+class HHttpResponseHeader;
 
 //
 // Private class for handling HTTP server duties needed in UPnP messaging
@@ -67,26 +66,14 @@ class H_UPNP_CORE_EXPORT HHttpServer :
 Q_OBJECT
 H_DISABLE_COPY(HHttpServer)
 friend class Server;
-friend class Task;
 
 private:
-
-    class Task :
-        public HRunnable
-    {
-    private:
-        HHttpServer* m_owner;
-        qint32 m_socketDescriptor;
-
-    public:
-
-        Task(HHttpServer* owner, qint32 socketDescriptor);
-        virtual void run();
-    };
 
     class Server :
         public QTcpServer
     {
+    H_DISABLE_COPY(Server)
+
     private:
         HHttpServer* m_owner;
 
@@ -97,69 +84,73 @@ private:
         Server(HHttpServer* owner);
     };
 
+private Q_SLOTS:
+
+    void msgIoComplete(HHttpAsyncOperation* op);
+
 private:
 
     QList<Server*> m_servers;
-    HThreadPool*   m_threadPool;
-    volatile bool  m_exiting;
 
 protected:
 
     const QByteArray m_loggingIdentifier;
-    HHttpHandler m_httpHandler;
-    ChunkedInfo m_chunkedInfo;
+    HHttpAsyncHandler* m_httpHandler;
+    HChunkedInfo m_chunkedInfo;
 
 private:
 
-    void processRequest(qint32 socketDescriptor, HRunnable*);
+    void processRequest(HHttpAsyncOperation*);
+    void processResponse(HHttpAsyncOperation*);
 
-    HHttpHandler::ReturnValue processNotifyMessage(
-        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body,
-        HRunnable*);
+    void processRequest(qint32 socketDescriptor);
 
-    HHttpHandler::ReturnValue processGet (
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+    void processNotifyMessage(
+        HMessagingInfo*, const HHttpRequestHeader&, const QByteArray& body);
 
-    HHttpHandler::ReturnValue processHead(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+    void processGet (
+        HMessagingInfo*, const HHttpRequestHeader&);
 
-    HHttpHandler::ReturnValue processPost(
-        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body,
-        HRunnable* runner);
+    void processHead(
+        HMessagingInfo*, const HHttpRequestHeader&);
 
-    HHttpHandler::ReturnValue processSubscription(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+    void processPost(
+        HMessagingInfo*, const HHttpRequestHeader&, const QByteArray& body);
 
-    HHttpHandler::ReturnValue processUnsubscription(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+    void processSubscription(
+        HMessagingInfo*, const HHttpRequestHeader&);
+
+    void processUnsubscription(
+        HMessagingInfo*, const HHttpRequestHeader&);
 
     bool setupIface(const HEndpoint&);
 
 protected:
 
     virtual void incomingSubscriptionRequest(
-        MessagingInfo&, const SubscribeRequest&, HRunnable*);
+        HMessagingInfo*, const HSubscribeRequest&);
 
     virtual void incomingUnsubscriptionRequest(
-        MessagingInfo&, const UnsubscribeRequest&, HRunnable*);
+        HMessagingInfo*, const HUnsubscribeRequest&);
 
     virtual void incomingControlRequest(
-        MessagingInfo&, const InvokeActionRequest&, HRunnable*);
+        HMessagingInfo*, const HInvokeActionRequest&);
 
     virtual void incomingNotifyMessage(
-        MessagingInfo&, const NotifyRequest&, HRunnable*);
+        HMessagingInfo*, const HNotifyRequest&);
 
     virtual void incomingUnknownHeadRequest(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+        HMessagingInfo*, const HHttpRequestHeader&);
 
     virtual void incomingUnknownGetRequest(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+        HMessagingInfo*, const HHttpRequestHeader&);
 
     virtual void incomingUnknownPostRequest(
-        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body,
-        HRunnable* runner);
+        HMessagingInfo*, const HHttpRequestHeader&, const QByteArray& body);
 
-    ChunkedInfo& chunkedInfo();
+    virtual void incomingResponse(HHttpAsyncOperation*);
+
+    virtual bool sendComplete(HHttpAsyncOperation*);
 
 public:
 
@@ -178,8 +169,6 @@ public:
     bool init(const QList<HEndpoint>&);
     bool isInitialized() const;
     void close();
-
-    qint32 activeClientCount() const;
 };
 
 }

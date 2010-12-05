@@ -23,15 +23,6 @@
 #include "../../utils/hmisc_utils_p.h"
 
 #include <QtCore/QUrl>
-#include <QtCore/QMetaType>
-
-static bool registerMetaTypes()
-{
-    qRegisterMetaType<Herqq::Upnp::HEndpoint>("Herqq::Upnp::HEndpoint");
-    return true;
-}
-
-static bool test = registerMetaTypes();
 
 namespace Herqq
 {
@@ -44,9 +35,8 @@ namespace Upnp
  ******************************************************************************/
 HEndpoint::HEndpoint(const QHostAddress& hostAddress, quint16 portNumber) :
     m_hostAddress(hostAddress),
-    m_portNumber(hostAddress == QHostAddress::Null ? 0 : portNumber)
+    m_portNumber(hostAddress == QHostAddress::Null ? (quint16)0 : portNumber)
 {
-    Q_UNUSED(test)
 }
 
 HEndpoint::HEndpoint(const QHostAddress& hostAddress) :
@@ -61,7 +51,7 @@ HEndpoint::HEndpoint() :
 
 HEndpoint::HEndpoint(const QUrl& url) :
     m_hostAddress(QHostAddress(url.host())),
-    m_portNumber(m_hostAddress == QHostAddress::Null ? 0 : url.port())
+    m_portNumber(m_hostAddress == QHostAddress::Null ? (quint16)0 : url.port())
 {
 }
 

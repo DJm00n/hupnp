@@ -29,6 +29,7 @@
     Class& operator=(const Class& clazz);
 
 #define H_FORCE_SINGLETON(Class) \
+private: \
     Class(const Class& clazz); \
     Class& operator=(const Class& clazz); \
     Class(); \
@@ -103,5 +104,14 @@
 #ifndef H_ASSERT_X
     #define H_ASSERT_X(cond, where, what) ((!(cond)) ? qt_assert_x(where, what,__FILE__,__LINE__) : qt_noop())
 #endif
+
+#define STR(X) #X
+#define STRX(X) STR(X)
+
+#ifndef H_FUN
+#define H_FUN __FUNCTION__
+#endif
+
+#define H_AT __FILE__ ":" STRX(__LINE__)
 
 #endif /* HGLOBAL_H_ */

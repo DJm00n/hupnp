@@ -25,6 +25,7 @@
 #include <HUpnpCore/HUpnp>
 
 #include <QtCore/QPair>
+#include <QtCore/QSharedDataPointer>
 
 class QUrl;
 class QString;
@@ -51,19 +52,18 @@ class HDeviceInfoPrivate;
  *
  * \ingroup hupnp_common
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
- * \sa HDevice, HServiceInfo, HActionInfo and HStateVariableInfo.
+ * \sa HServiceInfo, HActionInfo and HStateVariableInfo.
  */
 class H_UPNP_CORE_EXPORT HDeviceInfo
 {
-H_DECLARE_PRIVATE(HDeviceInfo)
 friend H_UPNP_CORE_EXPORT bool operator==(
     const HDeviceInfo& obj1, const HDeviceInfo& obj2);
 
 private:
 
-    HDeviceInfoPrivate* h_ptr;
+    QSharedDataPointer<HDeviceInfoPrivate> h_ptr;
 
 public:
 
@@ -181,7 +181,7 @@ public:
         const QString& serialNumber,
         const HUdn&    udn,
         const QString& upc,
-        const QList<QPair<QUrl, QByteArray> >& icons,
+        const QList<QUrl>& icons,
         const QUrl&    presentationUrl,
         HValidityCheckLevel checkLevel = StrictChecks,
         QString* err = 0);
@@ -292,7 +292,7 @@ public:
      *
      * \sa icons()
      */
-    void setIcons(const QList<QPair<QUrl, QByteArray> >& arg);
+    void setIcons(const QList<QUrl>& arg);
 
     /*!
      * Sets the presentation URL.
@@ -404,7 +404,7 @@ public:
      *
      * \sa setIcons()
      */
-    QList<QPair<QUrl, QByteArray> > icons() const;
+    QList<QUrl> icons() const;
 
     /*!
      * Returns the location of the device's presentation page.

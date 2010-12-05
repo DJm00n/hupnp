@@ -36,8 +36,8 @@ namespace Upnp
 class HResourceTypePrivate;
 
 /*!
- * A class used to depict a UPnP resource, which is either a
- * UPnP device or a UPnP service.
+ * A class used to depict a UPnP resource, which is either a UPnP device or a
+ * UPnP service.
  *
  * Both UPnP device and service descriptions use the \em type concept to a give the
  * corresponding device or service context that can be used in identification.
@@ -59,7 +59,7 @@ class HResourceTypePrivate;
  *
  * \headerfile hresourcetype.h HResourceType
  *
- * \remark this class is not thread-safe, but it is lightweight to be used by-value.
+ * \remarks This class is not thread-safe.
  *
  * \ingroup hupnp_common
  */
@@ -118,13 +118,19 @@ public:
          * The version part of HResourceType object has to be identical
          * to the specified value.
          */
-        ExactVersionMatch,
+        Exact,
 
         /*!
-         * The version part of HResourceType object has to be 
+         * The version part of HResourceType object has to be
          * less than or equal to the specified value.
          */
-        InclusiveVersionMatch
+        Inclusive,
+
+        /*!
+         * The version part of HResourceType object has to be greater than or
+         * equal to the specified value.
+         */
+        EqualOrGreater
     };
 
 private:
@@ -166,6 +172,8 @@ public:
     HResourceType(const QString& resourceTypeAsStr);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HResourceType();
@@ -323,7 +331,7 @@ public:
      * \param versionMatch specifies how the version information in the objects
      * are compared against one another. The target of the comparison is always
      * \e this object. Therefore if the \c versionMatch is set to
-     * HResourceType::InclusiveVersionMatch, the specified \e other object defines
+     * HResourceType::Inclusive, the specified \e other object defines
      * the upper bound for the comparison.
      *
      * \return \e true in case the two objects are considered a match

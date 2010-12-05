@@ -22,7 +22,8 @@
 #include "hdevicebuild_p.h"
 #include "hcontrolpoint_p.h"
 
-#include "../../devicemodel/hdevice.h"
+#include "../../devicemodel/client/hdefault_clientdevice_p.h"
+
 #include "../../../utils/hlogger_p.h"
 
 namespace Herqq
@@ -46,7 +47,7 @@ DeviceBuildTask::~DeviceBuildTask()
     m_createdDevice.take();
 }
 
-HDeviceController* DeviceBuildTask::createdDevice()
+HDefaultClientDevice* DeviceBuildTask::createdDevice()
 {
     return m_createdDevice.take();
 }
@@ -56,28 +57,26 @@ void DeviceBuildTask::run()
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
 
     QString err;
-    QScopedPointer<HDeviceController> device;
+    QScopedPointer<HDefaultClientDevice> device;
     device.reset(
         m_owner->buildDevice(m_locations[0], m_cacheControlMaxAge, &err));
     // the returned device is a fully built root device containing every
     // embedded device and service advertised in the device and service descriptions
-    // otherwise, the creation failed and an exception was thrown
+    // otherwise, the creation failed
     if (!device.data())
     {
         HLOG_WARN(QString("Couldn't create a device: %1").arg(err));
 
         m_completionValue = -1;
         m_errorString = err;
-
-        emit done(m_udn);
-        return;
     }
+    else
+    {
+        device->moveToThread(m_owner->thread());
 
-    device->moveToThread(m_owner->thread());
-    device->m_device->moveToThread(m_owner->thread());
-
-    m_completionValue = 0;
-    m_createdDevice.swap(device);
+        m_completionValue = 0;
+        m_createdDevice.swap(device);
+    }
 
     emit done(m_udn);
 }

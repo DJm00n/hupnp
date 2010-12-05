@@ -30,7 +30,6 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hdeviceproxy_creator.h"
 #include "../../../utils/hglobal.h"
 
 #include <QtCore/QList>
@@ -43,19 +42,6 @@ namespace Upnp
 {
 
 //
-//
-//
-class HProxyCreator
-{
-public:
-
-    HProxyCreator();
-
-    HDeviceProxy* operator()(const HDeviceInfo&) const;
-    HServiceProxy* operator()(const HResourceType&) const;
-};
-
-//
 // Implementation details of HControlPointConfiguration class
 //
 class H_UPNP_CORE_EXPORT HControlPointConfigurationPrivate
@@ -64,7 +50,6 @@ H_DISABLE_COPY(HControlPointConfigurationPrivate)
 
 public: // attributes
 
-    HDeviceProxyCreator m_deviceCreator;
     bool m_subscribeToEvents;
     qint32 m_desiredSubscriptionTimeout;
     bool m_autoDiscovery;

@@ -33,6 +33,7 @@
 #include "../hdevicestorage_p.h"
 
 #include "../../ssdp/hssdp.h"
+#include "../../ssdp/hssdp_p.h"
 #include "../../ssdp/hdiscovery_messages.h"
 
 #include "../../socket/hendpoint.h"
@@ -45,7 +46,9 @@ namespace Herqq
 namespace Upnp
 {
 
-class DeviceHostSsdpHandler;
+class HServerDevice;
+class HDeviceHostSsdpHandler;
+class HServerDeviceController;
 
 //
 //
@@ -54,10 +57,11 @@ class HDelayedWriter :
     public QObject
 {
 Q_OBJECT
+H_DISABLE_COPY(HDelayedWriter)
 
 private:
 
-    DeviceHostSsdpHandler& m_ssdp;
+    HDeviceHostSsdpHandler& m_ssdp;
     QList<HDiscoveryResponse> m_responses;
     HEndpoint m_source;
     qint32 m_msecs;
@@ -69,7 +73,7 @@ protected:
 public:
 
     HDelayedWriter(
-        DeviceHostSsdpHandler&,
+        HDeviceHostSsdpHandler&,
         const QList<HDiscoveryResponse>&,
         const HEndpoint& source,
         qint32 msecs);
@@ -84,19 +88,19 @@ Q_SIGNALS:
 //
 //
 //
-class DeviceHostSsdpHandler :
+class HDeviceHostSsdpHandler :
     public HSsdp
 {
-H_DISABLE_COPY(DeviceHostSsdpHandler)
+H_DISABLE_COPY(HDeviceHostSsdpHandler)
 
 private:
 
-    DeviceStorage& m_deviceStorage;
+    HDeviceStorage<HServerDevice, HServerService, HServerDeviceController>& m_deviceStorage;
 
 private:
 
     void processSearchRequest(
-        const HDeviceController*, const QUrl& deviceLocation,
+        const HServerDevice*, const QUrl& deviceLocation,
         QList<HDiscoveryResponse>*);
 
     bool processSearchRequest_AllDevices(
@@ -126,11 +130,17 @@ protected:
 
 public:
 
-    DeviceHostSsdpHandler(
-        const QByteArray& loggingIdentifier, DeviceStorage&,
+    HDeviceHostSsdpHandler(
+        const QByteArray& loggingIdentifier,
+        HDeviceStorage<HServerDevice, HServerService, HServerDeviceController>&,
         QObject* parent = 0);
 
-    virtual ~DeviceHostSsdpHandler();
+    virtual ~HDeviceHostSsdpHandler();
+
+    inline const QByteArray& loggingIdentifier() const
+    {
+        return h_ptr->m_loggingIdentifier;
+    }
 };
 
 }

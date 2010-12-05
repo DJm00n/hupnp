@@ -38,14 +38,14 @@ namespace Upnp
 {
 
 /*!
- * This class is used to specify information that is required to setup the
- * \c HStateVariables of an HService.
+ * This class is used to specify information that can be used to validate
+ * UPnP state variables.
  *
  * \headerfile hstatevariables_setupdata.h HStateVariablesSetupData
  *
  * \ingroup hupnp_devicemodel
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HStateVariablesSetupData
 {
@@ -60,14 +60,13 @@ public:
     enum DefaultInclusionPolicy
     {
         /*!
-         * The unknown state variable will be accepted.
+         * The unknown state variable should be accepted.
          */
         Accept,
 
         /*!
-         * The unknown state variable will be rejected, which will abort
-         * the build of a device tree in case such a state variable
-         * is encountered.
+         * The unknown state variable should be rejected. In this case the build
+         * of a device tree is aborted.
          */
         Deny
     };

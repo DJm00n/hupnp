@@ -158,8 +158,11 @@ bool operator!=(const HProductToken& obj1, const HProductToken& obj2)
 /*******************************************************************************
  * HProductTokensPrivate
  ******************************************************************************/
-class HProductTokensPrivate
+class HProductTokensPrivate :
+    public QSharedData
 {
+H_DISABLE_COPY(HProductTokensPrivate)
+
 private:
 
     // tries to parse the string into "token/version" pairs
@@ -337,27 +340,20 @@ HProductTokens::HProductTokens(const QString& tokens) :
 }
 
 HProductTokens::HProductTokens(const HProductTokens& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HProductTokensPrivate(*other.h_ptr);
 }
 
 HProductTokens& HProductTokens::operator=(const HProductTokens& other)
 {
     Q_ASSERT(&other != this);
-
-    HProductTokensPrivate* newHptr = new HProductTokensPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HProductTokens::~HProductTokens()
 {
-    delete h_ptr;
 }
 
 bool HProductTokens::isValid() const

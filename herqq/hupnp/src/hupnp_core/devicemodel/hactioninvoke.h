@@ -37,12 +37,9 @@ namespace Herqq
 namespace Upnp
 {
 
-class HActionArguments;
-class HActionArguments;
-
 /*!
  * This is a type definition for a <em>callable entity</em> that is used
- * for HAction invocation.
+ * for HServerAction invocation.
  *
  * You can create \c %HActionInvoke objects using normal functions, functors and
  * member functions that follow the signature of
@@ -60,7 +57,6 @@ class HActionArguments;
  * \code
  *
  * #include <HActionInvoke>
- * #include <HUpnpCore/HActionArguments>
  * #include <HUpnpCore/HActionArguments>
  *
  * #include "myclass.h" // your code that contains declaration for MyClass

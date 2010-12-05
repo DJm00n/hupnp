@@ -90,26 +90,19 @@ HActionInfo::HActionInfo(
 }
 
 HActionInfo::HActionInfo(const HActionInfo& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HActionInfoPrivate(*other.h_ptr);
 }
 
 HActionInfo::~HActionInfo()
 {
-    delete h_ptr;
 }
 
 HActionInfo& HActionInfo::operator=(const HActionInfo& other)
 {
     Q_ASSERT(&other != this);
-
-    HActionInfoPrivate* newHptr = new HActionInfoPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 

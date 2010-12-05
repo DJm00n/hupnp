@@ -27,19 +27,19 @@ namespace Herqq
 namespace Upnp
 {
 
-InvokeActionRequest::InvokeActionRequest() :
+HInvokeActionRequest::HInvokeActionRequest() :
     m_soapAction(), m_soapMsg(), m_serviceUrl()
 {
 }
 
-InvokeActionRequest::InvokeActionRequest(
+HInvokeActionRequest::HInvokeActionRequest(
     const QString& soapAction, const QtSoapMessage& soapMsg,
     const QUrl& serviceUrl) :
         m_soapAction(soapAction), m_soapMsg(soapMsg), m_serviceUrl(serviceUrl)
 {
 }
 
-InvokeActionRequest::~InvokeActionRequest()
+HInvokeActionRequest::~HInvokeActionRequest()
 {
 }
 

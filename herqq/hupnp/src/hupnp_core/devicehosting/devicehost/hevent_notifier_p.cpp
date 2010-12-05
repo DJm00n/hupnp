@@ -25,9 +25,9 @@
 
 #include "../messages/hevent_messages_p.h"
 
-#include "../../devicemodel/hdevice.h"
-#include "../../devicemodel/hservice.h"
-#include "../../devicemodel/hstatevariable.h"
+#include "../../devicemodel/server/hserverdevice.h"
+#include "../../devicemodel/server/hserverservice.h"
+#include "../../devicemodel/server/hserverstatevariable.h"
 
 #include "../../dataelements/hudn.h"
 #include "../../dataelements/hdeviceinfo.h"
@@ -49,7 +49,7 @@ namespace Upnp
 
 namespace
 {
-void getCurrentValues(QByteArray& msgBody, const HService* service)
+void getCurrentValues(QByteArray& msgBody, const HServerService* service)
 {
     HLOG(H_AT, H_FUN);
 
@@ -65,11 +65,11 @@ void getCurrentValues(QByteArray& msgBody, const HService* service)
 
     dd.appendChild(propertySetElem);
 
-    QList<HStateVariable*> stateVars = service->stateVariables();
-    QList<HStateVariable*>::const_iterator ci = stateVars.constBegin();
+    HServerStateVariables stateVars = service->stateVariables();
+    QHash<QString, HServerStateVariable*>::const_iterator ci = stateVars.constBegin();
     for(; ci != stateVars.constEnd(); ++ci)
     {
-        HStateVariable* stateVar = *ci;
+        HServerStateVariable* stateVar = ci.value();
         Q_ASSERT(stateVar);
 
         const HStateVariableInfo& info = stateVar->info();
@@ -93,30 +93,26 @@ void getCurrentValues(QByteArray& msgBody, const HService* service)
 }
 
 /*******************************************************************************
- * EventNotifier
+ * HEventNotifier
  ******************************************************************************/
-EventNotifier::EventNotifier(
+HEventNotifier::HEventNotifier(
     const QByteArray& loggingIdentifier,
-    HHttpHandler& http,
     HDeviceHostConfiguration& configuration,
     QObject* parent) :
         QObject(parent),
             m_loggingIdentifier(loggingIdentifier),
-            m_httpHandler(http),
-            m_remoteClients(),
-            m_remoteClientsMutex(QMutex::Recursive),
-            m_shutdown(false),
+            m_subscribers(),
             m_configuration(configuration)
 {
 }
 
-EventNotifier::~EventNotifier()
+HEventNotifier::~HEventNotifier()
 {
-    HLOG(H_AT, H_FUN);
-    shutdown();
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    qDeleteAll(m_subscribers);
 }
 
-HTimeout EventNotifier::getSubscriptionTimeout(const SubscribeRequest& sreq)
+HTimeout HEventNotifier::getSubscriptionTimeout(const HSubscribeRequest& sreq)
 {
     const static qint32 max = 60*60*24;
 
@@ -139,20 +135,9 @@ HTimeout EventNotifier::getSubscriptionTimeout(const SubscribeRequest& sreq)
     return HTimeout(max);
 }
 
-void EventNotifier::shutdown()
-{
-    m_shutdown = true;
-    QMutexLocker lock(&m_remoteClientsMutex);
-
-    QList<ServiceEventSubscriberPtrT>::iterator it =
-        m_remoteClients.begin();
-
-    m_remoteClients.clear();
-}
-
 namespace
 {
-bool isSameService(HService* srv1, HService* srv2)
+bool isSameService(HServerService* srv1, HServerService* srv2)
 {
     return srv1->parentDevice()->info().udn() ==
            srv2->parentDevice()->info().udn() &&
@@ -160,16 +145,14 @@ bool isSameService(HService* srv1, HService* srv2)
 }
 }
 
-EventNotifier::ServiceEventSubscriberPtrT EventNotifier::remoteClient(
-    const HSid& sid) const
+HServiceEventSubscriber* HEventNotifier::remoteClient(const HSid& sid) const
 {
-    HLOG(H_AT, H_FUN);
-    QMutexLocker lock(&m_remoteClientsMutex);
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QList<ServiceEventSubscriberPtrT>::const_iterator it =
-        m_remoteClients.constBegin();
+    QList<HServiceEventSubscriber*>::const_iterator it =
+        m_subscribers.constBegin();
 
-    for(; it != m_remoteClients.end(); ++it)
+    for(; it != m_subscribers.end(); ++it)
     {
         if ((*it)->sid() == sid)
         {
@@ -177,11 +160,11 @@ EventNotifier::ServiceEventSubscriberPtrT EventNotifier::remoteClient(
         }
     }
 
-    return ServiceEventSubscriberPtrT(0);
+    return 0;
 }
 
-StatusCode EventNotifier::addSubscriber(
-    HService* service, const SubscribeRequest& sreq, HSid* sid)
+StatusCode HEventNotifier::addSubscriber(
+    HServerService* service, const HSubscribeRequest& sreq, HSid* sid)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -191,20 +174,12 @@ StatusCode EventNotifier::addSubscriber(
     // to a service that is not evented. A "safe" route was taken here and
     // all subscriptions are accepted rather than returning some error. However,
     // in such a case the timeout is adjusted to a day and no events are ever sent.
-    // This is enforced at the HService class, which should not send any
+    // This is enforced at the HServerService class, which should not send any
     // events unless one or more of its state variables are evented.
 
-    QMutexLocker lock(&m_remoteClientsMutex);
-
-    if (m_shutdown)
+    for(qint32 i = 0; i < m_subscribers.size(); ++i)
     {
-        HLOG_DBG("Shutting down, rejecting subscription");
-        return InternalServerError;
-    }
-
-    for(qint32 i = 0; i < m_remoteClients.size(); ++i)
-    {
-        ServiceEventSubscriberPtrT rc = m_remoteClients[i];
+        HServiceEventSubscriber* rc = m_subscribers[i];
 
         if (isSameService(rc->service(), service) &&
             sreq.callbacks().contains(rc->location()))
@@ -225,45 +200,37 @@ StatusCode EventNotifier::addSubscriber(
     HTimeout timeout = service->isEvented() ?
         getSubscriptionTimeout(sreq) : HTimeout(60*60*24);
 
-    ServiceEventSubscriberPtrT rc(
-        new ServiceEventSubscriber(
-            m_httpHandler,
+    HServiceEventSubscriber* rc =
+        new HServiceEventSubscriber(
             m_loggingIdentifier,
             service,
             sreq.callbacks().at(0),
             timeout,
-            this),
-        &QObject::deleteLater);
+            this);
 
-    m_remoteClients.push_back(rc);
+    m_subscribers.push_back(rc);
 
     *sid = rc->sid();
 
     return Ok;
 }
 
-bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
+bool HEventNotifier::removeSubscriber(const HUnsubscribeRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
-    QMutexLocker lock(&m_remoteClientsMutex);
-
-    if (m_shutdown)
-    {
-        return false;
-    }
-
     bool found = false;
 
-    QList<ServiceEventSubscriberPtrT>::iterator it = m_remoteClients.begin();
-    for(; it != m_remoteClients.end(); )
+    QList<HServiceEventSubscriber*>::iterator it = m_subscribers.begin();
+    for(; it != m_subscribers.end(); )
     {
         if ((*it)->sid() == req.sid())
         {
             HLOG_INFO(QString("removing subscriber [SID [%1]] from [%2]").arg(
                 req.sid().toString(), (*it)->location().toString()));
 
-            it = m_remoteClients.erase(it);
+            delete *it;
+            it = m_subscribers.erase(it);
 
             found = true;
         }
@@ -273,7 +240,8 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
                 "removing an expired subscription [SID [%1]] from [%2]").arg(
                     (*it)->sid().toString(), (*it)->location().toString()));
 
-            it = m_remoteClients.erase(it);
+            delete *it;
+            it = m_subscribers.erase(it);
         }
         else
         {
@@ -285,45 +253,38 @@ bool EventNotifier::removeSubscriber(const UnsubscribeRequest& req)
     {
         HLOG_WARN(QString("Could not cancel subscription. Invalid SID [%1]").arg(
             req.sid().toString()));
-        return false;
     }
 
-    return true;
+    return found;
 }
 
-StatusCode EventNotifier::renewSubscription(
-    const SubscribeRequest& req, HSid* sid)
+StatusCode HEventNotifier::renewSubscription(
+    const HSubscribeRequest& req, HSid* sid)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(sid);
 
-    QMutexLocker lock(&m_remoteClientsMutex);
-
-    if (m_shutdown)
+    QList<HServiceEventSubscriber*>::iterator it = m_subscribers.begin();
+    for(; it != m_subscribers.end();)
     {
-        return InternalServerError;
-    }
-
-    QList<ServiceEventSubscriberPtrT>::iterator it = m_remoteClients.begin();
-    for(; it != m_remoteClients.end();)
-    {
-        ServiceEventSubscriberPtrT sub = (*it);
-        if ((*it)->sid() == req.sid())
+        HServiceEventSubscriber* sub = (*it);
+        if (sub->sid() == req.sid())
         {
             HLOG_INFO(QString("renewing subscription from [%1]").arg(
                 (*it)->location().toString()));
 
-            (*it)->renew(getSubscriptionTimeout(req));
-            *sid = (*it)->sid();
+            sub->renew(getSubscriptionTimeout(req));
+            *sid = sub->sid();
             return Ok;
         }
         else if (sub->expired())
         {
             HLOG_INFO(QString("removing subscriber [SID [%1]] from [%2]").arg(
-                sub->sid().toString(), (*it)->location().toString()));
+                sub->sid().toString(), sub->location().toString()));
 
-            it = m_remoteClients.erase(it);
+            delete *it;
+            it = m_subscribers.erase(it);
         }
         else
         {
@@ -337,7 +298,7 @@ StatusCode EventNotifier::renewSubscription(
     return PreconditionFailed;
 }
 
-void EventNotifier::stateChanged(const HService* source)
+void HEventNotifier::stateChanged(const HServerService* source)
 {
     HLOG(H_AT, H_FUN);
 
@@ -346,24 +307,22 @@ void EventNotifier::stateChanged(const HService* source)
     QByteArray msgBody;
     getCurrentValues(msgBody, source);
 
-    QMutexLocker lock(&m_remoteClientsMutex);
-
-    if (m_shutdown)
+    QList<HServiceEventSubscriber*>::iterator it = m_subscribers.begin();
+    for(; it != m_subscribers.end(); )
     {
-        return;
-    }
-
-    QList<ServiceEventSubscriberPtrT>::iterator it = m_remoteClients.begin();
-    for(; it != m_remoteClients.end(); )
-    {
-        if ((*it)->isInterested(source))
+        HServiceEventSubscriber* sub = (*it);
+        if (sub->isInterested(source))
         {
-            (*it)->notify(msgBody);
+            sub->notify(msgBody);
             ++it;
         }
         else if ((*it)->expired())
         {
-            it = m_remoteClients.erase(it);
+            HLOG_INFO(QString("removing subscriber [SID [%1]] from [%2]").arg(
+                sub->sid().toString(), sub->location().toString()));
+
+            delete *it;
+            it = m_subscribers.erase(it);
         }
         else
         {
@@ -374,14 +333,15 @@ void EventNotifier::stateChanged(const HService* source)
     // TODO add multicast event support
 }
 
-void EventNotifier::initialNotify(ServiceEventSubscriberPtrT rc, MessagingInfo& mi)
+void HEventNotifier::initialNotify(
+    HServiceEventSubscriber* rc, HMessagingInfo* mi)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QByteArray msgBody;
     getCurrentValues(msgBody, rc->service());
 
-    if (mi.keepAlive() && mi.socket().state() == QTcpSocket::ConnectedState)
+    if (mi->keepAlive() && mi->socket().state() == QTcpSocket::ConnectedState)
     {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // !!slight deviation from the UDA v1.1 specification!!
@@ -399,31 +359,32 @@ void EventNotifier::initialNotify(ServiceEventSubscriberPtrT rc, MessagingInfo& 
         // subscription came. However, if that fails, the initial notify is
         // re-send using a new connection.
 
-        mi.setReceiveTimeoutForNoData(2000);
+        mi->setReceiveTimeoutForNoData(2000);
 
-        if (rc->initialNotify(msgBody, &mi))
+        if (!rc->initialNotify(msgBody, mi))
         {
-            return;
+            HLOG_WARN_NONSTD(QString(
+                "Initial notify to SID [%1] failed. The device does not seem to " \
+                "respect HTTP keep-alive. Re-sending the initial notify using a new connection.").arg(
+                    rc->sid().toString()));
         }
 
-        HLOG_WARN_NONSTD(QString(
-            "Initial notify to SID [%1] failed. The device does not seem to " \
-            "respect HTTP keep-alive. Re-sending the initial notify using a new connection.").arg(
-                rc->sid().toString()));
+        return;
     }
 
     // before sending the initial event message (specified in UDA),
     // the UDA mandates that FIN has been sent to the subscriber unless
     // the connection is to be kept alive.
-    if (mi.socket().state() == QTcpSocket::ConnectedState)
+    if (mi->socket().state() == QTcpSocket::ConnectedState)
     {
-        mi.socket().disconnectFromHost();
-        if (mi.socket().state() != QAbstractSocket::UnconnectedState)
+        mi->socket().disconnectFromHost();
+        if (mi->socket().state() != QAbstractSocket::UnconnectedState)
         {
-            mi.socket().waitForDisconnected(100);
+            mi->socket().waitForDisconnected(50);
         }
     }
 
+    delete mi;
     rc->initialNotify(msgBody);
 }
 

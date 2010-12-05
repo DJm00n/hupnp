@@ -43,8 +43,7 @@ namespace Upnp
  *
  * \headerfile hudn.h HUdn
  *
- * \remark this class is not thread-safe, but it is lightweight to be
- * used by-value.
+ * \remarks This class is not thread-safe.
  *
  * \ingroup hupnp_common
  */
@@ -62,7 +61,8 @@ public:
     /*!
      * Constructs a new, empty instance.
      *
-     * Instance created by this constructor is not valid, i.e. isValid() will return false.
+     * Instance created by this constructor is not valid, i.e. isValid() will
+     * return false.
      *
      * \sa isValid
      */
@@ -95,6 +95,8 @@ public:
     HUdn(const QString& value);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     ~HUdn();

@@ -23,12 +23,9 @@
 #define HACTIONARGUMENTS_P_H_
 
 #include "hactionarguments.h"
-#include "../datatypes/hupnp_datatypes.h"
 
-#include <QtCore/QUrl>
 #include <QtCore/QVector>
 #include <QtCore/QString>
-#include <QtCore/QVariant>
 
 //
 // !! Warning !!

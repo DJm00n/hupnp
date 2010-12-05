@@ -23,13 +23,10 @@
 #define HDEVICEHOST_CONFIGURATION_H_
 
 #include <HUpnpCore/HClonable>
-#include <HUpnpCore/HDeviceCreator>
+#include <HUpnpCore/HDeviceModelCreator>
 
 class QString;
 class QHostAddress;
-
-template<typename T>
-class QList;
 
 namespace Herqq
 {
@@ -40,23 +37,21 @@ namespace Upnp
 class HDeviceConfigurationPrivate;
 
 /*!
- * This is a class for specifying a configuration to an HDevice that is
+ * This is a class for specifying a configuration to an HServerDevice that is
  * to be created and hosted by an HDeviceHost.
  *
- * A valid device configuration contains at least:
+ * A valid device configuration contains at least a path to a
+ * device description file. See setPathToDeviceDescription().
  *
- * \li a path to a device description file (setPathToDeviceDescription()) and
- * \li a <em>device creator</em> (setDeviceCreator()).
- *
- * The other options affect the runtime behavior of a HDeviceHost in regard to
- * the HDevice that is created based on the information provided through
- * an instance of this class.
+ * The other options available in this class affect the runtime behavior of a
+ * HDeviceHost in regard to the HServerDevice instance that is created based
+ * on the pathToDeviceDescription().
  *
  * \headerfile hdevicehost_configuration.h HDeviceConfiguration
  *
  * \ingroup hupnp_devicehosting
  *
- * \sa HDeviceHostConfiguration, HDeviceHost, HDeviceHost::init(), HDevice
+ * \sa HDeviceHostConfiguration, HDeviceHost, HDeviceHost::init(), HServerDevice
  */
 class H_UPNP_CORE_EXPORT HDeviceConfiguration :
     public HClonable
@@ -141,115 +136,16 @@ public:
     qint32 cacheControlMaxAge() const;
 
     /*!
-     * Returns the callable entity that is used to create HDevice instances.
-     *
-     * \return the callable entity that is used to create HDevice instances.
-     *
-     * \sa setDeviceCreator()
-     */
-    HDeviceCreator deviceCreator() const;
-
-    /*!
-     * Sets the callable entity that is used to create HDevice instances.
-     *
-     * Your callable entity must have the function signature:
-     *
-     * \code
-     * Herqq::Upnp::HDevice* function(const Herqq::Upnp::HDeviceInfo&)
-     * \endcode
-     *
-     * However, your callable entity doesn't have to be a normal function,
-     * as long as it is:
-     *
-     *   - copyable by value
-     *   - callable by the \c operator() with a single argument of
-     *   <c>const Herqq::Upnp::HDeviceInfo&</c>
-     *   and that returns a pointer to a heap allocated instance of
-     *   \c Herqq::Upnp::HDevice.
-     *
-     * In other words, your callable entity can be:
-     *
-     * - a functor,
-     * - a function pointer or
-     * - a member function pointer.
-     *
-     * For example, if your callable entity is a functor, it could be
-     * something like the following:
-     *
-     * \code
-     *
-     * class MyDeviceCreator
-     * {
-     * public:
-     *     Herqq::Upnp::HDevice* operator()(const Herqq::Upnp::HDeviceInfo&)
-     *     {
-     *         return new MyHDevice();
-     *         // your class derived from HDevice that implements the functionality
-     *         // advertised in the description files.
-     *     }
-     * };
-     *
-     * \endcode
-     *
-     * and you could set it as follows:
-     *
-     * \code
-     * HDeviceConfiguration conf;
-     * conf.setDeviceCreator(MyDeviceCreator());
-     * \endcode
-     *
-     * If your callable entity is a member function other than the \c operator(),
-     * the member function declaration would look like the following:
-     *
-     * \code
-     *
-     * class MyClass
-     * {
-     * public:
-     *     Herqq:Upnp::HDevice* createMyDevice(const Herqq::Upnp::HDeviceInfo&);
-     * };
-     *
-     * \endcode
-     *
-     * and you could set the creator as follows:
-     *
-     * \code
-     *
-     * MyClass myClass;
-     * HDeviceConfiguration conf;
-     * conf.setDeviceCreator(&myClass, &MyClass::createMyDevice);
-     *
-     * \endcode
-     *
-     * \note
-     * The device creator can be \em any member function with a proper signature,
-     * regardless of the access specifier.
-     *
-     * \return \e true in case the \a deviceCreator is valid and it was
-     * successfully set.
-     *
-     * \warning
-     *
-     * The objects \a deviceCreator creates will be deallocated by HUPnP
-     * when the objects are no longer needed. Do \b not delete
-     * them manually.
-     *
-     * \sa deviceCreator()
-     */
-    bool setDeviceCreator(const HDeviceCreator& deviceCreator);
-
-    /*!
      * Indicates whether or not the object contains the necessary details
-     * for hosting an HDevice class in a HDeviceHost.
+     * for hosting an HServerDevice class in a HDeviceHost.
      *
      * \retval true in case the object contains the necessary details
-     * for hosting an HDevice class in a HDeviceHost.
+     * for hosting an HServerDevice class in a HDeviceHost.
      *
      * \retval false otherwise. In this case, the initialization of HDeviceHost
-     * cannot succeed. Make sure you have set the deviceCreator() and
-     * pathToDeviceDescription().
+     * cannot succeed. Make sure you have set the pathToDeviceDescription().
      *
-     * \sa deviceCreator(), pathToDeviceDescription()
+     * \sa pathToDeviceDescription()
      */
     bool isValid() const;
 };
@@ -259,14 +155,17 @@ class HDeviceHostConfigurationPrivate;
 /*!
  * This class is used to specify one or more device configurations to an
  * HDeviceHost instance and to configure the functionality of the HDeviceHost
- * that affect every hosted HDevice.
+ * that affect every hosted HServerDevice.
  *
- * The initialization of an HDeviceHost requires a valid configuration.
+ * The initialization of an HDeviceHost requires a valid host configuration.
  * A valid \e host \e configuration contains at least one \e device
- * \e configuration, as otherwise the host would have nothing to do. Because
- * of this the initialization of an HDeviceHost follows roughly these steps:
+ * \e configuration and a <em>device model creator</em>, as otherwise the host
+ * would have nothing to do and no means to create UPnP device and service objects.
+ *
+ * The initialization of an HDeviceHost follows roughly these steps:
  *
  * - Create an HDeviceHostConfiguration instance.
+ * - Set the device model creator using setDeviceModelCreator().
  * - Create and setup one or more HDeviceConfiguration instances.
  * - Add the device configurations to the HDeviceHostConfiguration instance
  * using add().
@@ -277,10 +176,6 @@ class HDeviceHostConfigurationPrivate;
  *
  * Besides specifying the device configurations, you can configure an HDeviceHost
  * in following ways:
- * - Specify the threading model an HDeviceHost should use in regard to invoking
- * user code with setThreadingModel().
- * The default is HDeviceHostConfiguration::MultiThreaded, which means that the
- * user provided action implementations have to be thread-safe.
  * - Specify how many times each resource advertisement is sent with
  * setIndividualAdvertisementCount(). The default is 2.
  * - Specify the timeout for event subscriptions with
@@ -319,34 +214,11 @@ protected:
 public:
 
     /*!
-     * This enumeration specifies the threading models the HDeviceHost may
-     * use in its operations in regard to user code invocation.
-     */
-    enum ThreadingModel
-    {
-        /*!
-         * User code is invoked only from the thread in which the HDeviceHost
-         * lives.
-         *
-         * This value is often used in situations where an HDevice being run
-         * by the device host has thread affinity. For instance, this is the case
-         * with \c HDevices that need to interact with GUIs.
-         */
-        SingleThreaded,
-
-        /*!
-         * User code may be invoked from an arbitrary thread.
-         *
-         * This value should be used in situations where the HDevices run by
-         * the device host are thread-safe.
-         */
-        MultiThreaded
-    };
-
-    /*!
      * Default constructor.
      *
      * Creates a new, empty instance.
+     *
+     * \is isEmpty(), isValid()
      */
     HDeviceHostConfiguration();
 
@@ -355,6 +227,8 @@ public:
      *
      * Creates an instance with a single device configuration. This is a convenience
      * method.
+     *
+     * \sa isEmpty(), isValid()
      */
     HDeviceHostConfiguration(const HDeviceConfiguration&);
 
@@ -373,22 +247,29 @@ public:
      * Adds a device configuration.
      *
      * \param deviceConfiguration specifies the device configuration to be added.
-     * The configuration is added only if it is valid (\sa HDeviceConfiguration::isValid()).
+     * The configuration is added only if it is valid,
+     * see HDeviceConfiguration::isValid().
      *
-     * \return \e true in case the configuration was added. A configuration
-     * that is invalid, i.e. HDeviceConfiguration::isValid() returns false will
-     * not be added and \e false is returned.
+     * \return \e true in case the configuration was added. Only valid
+     * HDeviceConfiguration instances are added,
+     * see HDeviceConfiguration::isValid().
      */
     bool add(const HDeviceConfiguration& deviceConfiguration);
+
+    /*!
+     * Removes device configurations.
+     *
+     * \remarks This method removes the device configurations, but it does not
+     * reset other set attributes to their default values.
+     */
+    void clear();
 
     /*!
      * Returns the currently stored device configurations.
      *
      * \return the currently stored device configurations. The returned list
      * contains pointers to const device configuration objects this instance
-     * owns. The ownership of the objects is not transferred. You
-     * should \b never delete these, as that would eventually result in double
-     * deletion.
+     * owns. The ownership of the objects is \b not transferred.
      */
     QList<const HDeviceConfiguration*> deviceConfigurations() const;
 
@@ -425,21 +306,31 @@ public:
      *
      * \return the timeout in seconds the device host uses for subscriptions.
      *
-     * \remarks this is a low-level detail, which you shouldn't modify unless you
-     * know what you are doing.
-     *
      * \sa setSubscriptionExpirationTimeout()
      */
     qint32 subscriptionExpirationTimeout() const;
 
     /*!
-     * Returns the user code threading model the HDeviceHost uses in its
-     * operations.
+     * Returns the device model creator the HDeviceHost should use
+     * to create HServerDevice instances.
      *
-     * \return the user code threading model the HDeviceHost uses in its
-     * operations.
+     * \return the device model creator the HDeviceHost should use
+     * to create HServerDevice instances.
+     *
+     * \sa setDeviceModelCreator()
      */
-    ThreadingModel threadingModel() const;
+    HDeviceModelCreator* deviceModelCreator() const;
+
+    /*!
+     * Sets the device model creator the HDeviceHost should use
+     * to create HServerDevice instances.
+     *
+     * \param creator specifies the device model creator the HDeviceHost should use
+     * to create HServerDevice instances.
+     *
+     * \sa deviceModelCreator()
+     */
+    void setDeviceModelCreator(const HDeviceModelCreator& creator);
 
     /*!
      * Specifies how many times the device host sends each individual
@@ -450,9 +341,6 @@ public:
      * \param count specifies how many times the device host sends each individual
      * advertisement / announcement. If the provided value is smaller than 1 the
      * advertisement count is set to 1.
-     *
-     * \remarks this is a low-level detail, which you shouldn't modify unless you
-     * know what you are doing.
      *
      * \sa individualAdvertisementCount()
      */
@@ -491,28 +379,23 @@ public:
     bool setNetworkAddressesToUse(const QList<QHostAddress>& addresses);
 
     /*!
-     * Sets the user code threading model the HDeviceHost should use in its
-     * operations.
-     *
-     * This value specifies how an HDeviceHost invokes user code in regard
-     * to thread safety. If the value is HDeviceHostConfiguration::SingleThreaded
-     * user code is invoked only from the thread in which the HDeviceHost instance
-     * is run. If the value is HDeviceHostConfiguration::MultiThreaded user code
-     * may be invoked from any thread at any time. The default is
-     * HDeviceHostConfiguration::MultiThreaded.
-     *
-     * \param arg specifies the user code threading model the HDeviceHost
-     * should use in its operations.
-     */
-    void setThreadingModel(ThreadingModel arg);
-
-    /*!
      * Indicates if the instance contains any device configurations.
      *
      * \return \e true in case the instance contains no device configurations.
      * In this case the object cannot be used to initialize an HDeviceHost.
+     *
+     * \sa isValid()
      */
     bool isEmpty() const;
+
+    /*!
+     * Indicates if the object is valid, i.e it can be used to initialize
+     * an HDeviceHost instance.
+     *
+     * \return \e true if the object is valid. A valid object is not empty and
+     * its deviceModelCreator() is set.
+     */
+    bool isValid() const;
 };
 
 }

@@ -56,6 +56,12 @@ bool parseVersion(const QString& version, int* major, int* minor)
 }
 }
 
+namespace Herqq
+{
+
+namespace Upnp
+{
+
 /*******************************************************************************
  * HHttpHeader
  ******************************************************************************/
@@ -94,7 +100,6 @@ HHttpHeader& HHttpHeader::operator=(const HHttpHeader& other)
 bool HHttpHeader::parse(const QString& str)
 {
     QStringList lines = str.trimmed().split("\r\n");
-    lines.removeAll("");
 
     if (lines.isEmpty())
     {
@@ -106,7 +111,11 @@ bool HHttpHeader::parse(const QString& str)
 
     foreach(const QString& line, lines)
     {
-        if (!parseLine(line))
+        if (line.isEmpty())
+        {
+            break;
+        }
+        else if (!parseLine(line))
         {
             m_valid = false;
             return false;
@@ -345,7 +354,7 @@ HHttpRequestHeader& HHttpRequestHeader::operator=(
 bool HHttpRequestHeader::setRequest(
     const QString& method, const QString& path, int majorVer, int minorVer)
 {
-    if (method.simplified().isEmpty() || path.simplified().isEmpty())
+    if (method.simplified().isEmpty())
     {
         return false;
     }
@@ -388,4 +397,7 @@ QString HHttpRequestHeader::toString() const
     return QString("%1 %2 HTTP/%3.%4\r\n%5\r\n").arg(
         m_method, m_path, QString::number(m_majorVersion),
         QString::number(m_minorVersion), HHttpHeader::toString());
+}
+
+}
 }

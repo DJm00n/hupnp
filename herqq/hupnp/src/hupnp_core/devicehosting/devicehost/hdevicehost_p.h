@@ -31,9 +31,14 @@
 //
 
 #include "hdevicehost.h"
-#include "../habstracthost_p.h"
 
+#include "../hdevicestorage_p.h"
+
+#include <QtCore/QObject>
 #include <QtCore/QScopedPointer>
+
+class QTimer;
+class QNetworkAccessManager;
 
 namespace Herqq
 {
@@ -42,17 +47,21 @@ namespace Upnp
 {
 
 class HDeviceHost;
-class EventNotifier;
+class HServerDevice;
+class HDeviceStatus;
+class HEventNotifier;
 class PresenceAnnouncer;
-class DeviceHostHttpServer;
-class DeviceHostSsdpHandler;
+class HDeviceHostHttpServer;
+class HDeviceHostSsdpHandler;
+class HServerDeviceController;
 class HDeviceHostConfiguration;
+
 
 //
 // Implementation details of HDeviceHost class
 //
 class HDeviceHostPrivate :
-    public HAbstractHostPrivate
+    public QObject
 {
 Q_OBJECT
 H_DECLARE_PUBLIC(HDeviceHost)
@@ -60,27 +69,27 @@ H_DISABLE_COPY(HDeviceHostPrivate)
 
 private:
 
-    virtual void doClear();
-    // ^^ this is called by the base class upon destruction
-
-    void connectSelfToServiceSignals(HDevice* device);
+    void connectSelfToServiceSignals(HServerDevice* device);
 
 public: // attributes
 
+    const QByteArray m_loggingIdentifier;
+    // The prefix shown before the actual log output
+
     QScopedPointer<HDeviceHostConfiguration> m_config;
-    //
+    // The configuration of this instance
 
-    QList<DeviceHostSsdpHandler*> m_ssdps;
-    //
+    QList<HDeviceHostSsdpHandler*> m_ssdps;
+    // An SSDP listener /sender for each configured network interface
 
-    QScopedPointer<DeviceHostHttpServer> m_httpServer;
-    //
+    QScopedPointer<HDeviceHostHttpServer> m_httpServer;
+    // A HTTP server for each configured network interface
 
-    QScopedPointer<EventNotifier> m_eventNotifier;
-    //
+    QScopedPointer<HEventNotifier> m_eventNotifier;
+    // Handles the UPnP eventing
 
     QScopedPointer<PresenceAnnouncer> m_presenceAnnouncer;
-    //
+    // Creates and sends the SSDP "presence announcement" messages
 
     QScopedPointer<HDeviceHostRuntimeStatus> m_runtimeStatus;
     //
@@ -89,9 +98,20 @@ public: // attributes
 
     HDeviceHost::DeviceHostError m_lastError;
 
+    QString m_lastErrorDescription;
+    // description of the error that occurred last
+
+    bool m_initialized;
+
+    HDeviceStorage<HServerDevice, HServerService, HServerDeviceController> m_deviceStorage;
+    // This contains the root devices and it provides lookup methods to the
+    // contents of the device tree
+
+    QNetworkAccessManager* m_nam;
+
 public Q_SLOTS:
 
-    void announcementTimedout(HDeviceController*);
+    void announcementTimedout(HServerDeviceController*);
     // called when it is about for the device to be re-advertised
 
 public: // methods
@@ -101,7 +121,13 @@ public: // methods
 
     void stopNotifiers();
     void startNotifiers();
-    void createRootDevices();
+    bool createRootDevices();
+
+    inline static const QString& deviceDescriptionPostFix()
+    {
+        static QString retVal = "device_description.xml";
+        return retVal;
+    }
 };
 
 }

@@ -36,7 +36,7 @@ namespace Upnp
 {
 
 HHttpAsyncOperation::HHttpAsyncOperation(
-    const QByteArray& loggingIdentifier, MessagingInfo* mi,
+    const QByteArray& loggingIdentifier, unsigned int id, HMessagingInfo* mi,
     bool waitingRequest, QObject* parent) :
         QObject(parent),
             m_mi(mi),
@@ -47,9 +47,9 @@ HHttpAsyncOperation::HHttpAsyncOperation(
             m_headerRead(0),
             m_dataRead(),
             m_dataToRead(0),
-            m_uuid(QUuid::createUuid()),
+            m_id(id),
             m_loggingIdentifier(loggingIdentifier),
-            m_waitingHttpRequest(waitingRequest)
+            m_opType(waitingRequest ? ReceiveRequest : ReceiveResponse)
 {
     bool ok = connect(
         &m_mi->socket(), SIGNAL(readyRead()), this, SLOT(readyRead()));
@@ -64,8 +64,8 @@ HHttpAsyncOperation::HHttpAsyncOperation(
 }
 
 HHttpAsyncOperation::HHttpAsyncOperation(
-    const QByteArray& loggingIdentifier, MessagingInfo* mi,
-    const QByteArray& data, QObject* parent) :
+    const QByteArray& loggingIdentifier, unsigned int id, HMessagingInfo* mi,
+    const QByteArray& data, bool sendOnly, QObject* parent) :
         QObject(parent),
             m_mi(mi),
             m_dataToSend(data),
@@ -75,9 +75,9 @@ HHttpAsyncOperation::HHttpAsyncOperation(
             m_headerRead(0),
             m_dataRead(),
             m_dataToRead(0),
-            m_uuid(QUuid::createUuid()),
+            m_id(id),
             m_loggingIdentifier(loggingIdentifier),
-            m_waitingHttpRequest(false)
+            m_opType(sendOnly ? SendOnly : MsgIO)
 {
     bool ok = connect(
         &m_mi->socket(), SIGNAL(bytesWritten(qint64)),
@@ -99,11 +99,7 @@ HHttpAsyncOperation::HHttpAsyncOperation(
 
 HHttpAsyncOperation::~HHttpAsyncOperation()
 {
-    if (m_mi->autoDelete())
-    {
-        delete m_mi;
-    }
-
+    delete m_mi;
     delete m_headerRead;
 }
 
@@ -119,7 +115,7 @@ void HHttpAsyncOperation::sendChunked()
         qint32 dataToSendSize =
             m_dataSend > 0 ? m_dataSend :
                 qMin(m_dataToSend.size() - m_dataSent,
-                    static_cast<qint64>(m_mi->chunkedInfo().m_maxChunkSize));
+                    static_cast<qint64>(m_mi->chunkedInfo().max()));
 
         if (m_state == Internal_WritingChunkedSizeLine)
         {
@@ -183,9 +179,15 @@ void HHttpAsyncOperation::sendChunked()
         // write the "eof" == zero + crlf
         const char eof[] = "0\r\n";
         m_mi->socket().write(&eof[0], 3);
+        m_mi->socket().flush();
+
+        if (m_opType == SendOnly)
+        {
+            done_(Internal_FinishedSuccessfully);
+            return;
+        }
 
         m_state = Internal_ReadingHeader;
-        m_mi->socket().flush();
     }
 }
 
@@ -327,7 +329,7 @@ bool HHttpAsyncOperation::readHeader()
         return false;
     }
 
-    if (m_waitingHttpRequest)
+    if (m_opType == ReceiveRequest)
     {
         m_headerRead = new HHttpRequestHeader(QString::fromUtf8(m_dataRead));
     }
@@ -355,6 +357,11 @@ bool HHttpAsyncOperation::readHeader()
             done_(Internal_FinishedSuccessfully);
             return false;
         }
+    }
+    else if (m_headerRead->value("TRANSFER-ENCODING") != "chunked")
+    {
+        done_(Internal_FinishedSuccessfully);
+        return false;
     }
 
     m_state = Internal_ReadingData;
@@ -407,22 +414,22 @@ bool HHttpAsyncOperation::run()
 {
     if (m_dataToSend.isEmpty())
     {
-        m_mi->setLastErrorDescription(tr("no data to send"));
+        m_mi->setLastErrorDescription("no data to send");
         m_state = Internal_ReadingHeader;
         return true;
     }
 
     if (m_mi->socket().state() != QTcpSocket::ConnectedState)
     {
-        m_mi->setLastErrorDescription(tr("socket is not connected"));
+        m_mi->setLastErrorDescription("socket is not connected");
         return false;
     }
 
     qint32 indexOfData = m_dataToSend.indexOf("\r\n\r\n");
     Q_ASSERT(indexOfData > 0);
 
-    if (m_mi->chunkedInfo().m_maxChunkSize > 0 &&
-        m_dataToSend.size() - indexOfData > m_mi->chunkedInfo().m_maxChunkSize)
+    if (m_mi->chunkedInfo().max() > 0 &&
+        m_dataToSend.size() - indexOfData > m_mi->chunkedInfo().max())
     {
         // send the http header first (it is expected that the header has been
         // properly setup for chunked transfer, as it should be, since this is
@@ -483,13 +490,13 @@ void HHttpAsyncOperation::done_(InternalState state, bool emitSignal)
 {
     m_mi->socket().disconnect(this);
 
-    Q_ASSERT((state == Internal_FinishedSuccessfully && headerRead()) ||
+    Q_ASSERT((state == Internal_FinishedSuccessfully && (headerRead() || m_opType == SendOnly)) ||
               state != Internal_FinishedSuccessfully);
 
     m_state = state;
     if (emitSignal)
     {
-        emit done(m_uuid);
+        emit done(m_id);
     }
 }
 
@@ -514,13 +521,19 @@ void HHttpAsyncOperation::bytesWritten(qint64)
             }
 
             m_dataSent += dataSent;
-            if (m_dataSent < m_dataToSend.size())
-            {
-                return;
-            }
         }
 
-        m_state = Internal_ReadingHeader;
+        if (m_dataSent >= m_dataToSend.size())
+        {
+            if (m_opType == SendOnly)
+            {
+                done_(Internal_FinishedSuccessfully);
+            }
+            else
+            {
+                m_state = Internal_ReadingHeader;
+            }
+        }
     }
     else if (m_state == Internal_WritingChunk ||
              m_state == Internal_WritingChunkedSizeLine)
@@ -601,7 +614,7 @@ void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
             return;
         }
 
-        if (m_waitingHttpRequest)
+        if (m_opType == ReceiveRequest)
         {
             m_headerRead = new HHttpRequestHeader(QString::fromUtf8(m_dataRead));
         }
@@ -660,7 +673,8 @@ HHttpAsyncOperation::State HHttpAsyncOperation::state() const
 HHttpAsyncHandler::HHttpAsyncHandler(
     const QByteArray& loggingIdentifier, QObject* parent) :
         QObject(parent),
-            m_loggingIdentifier(loggingIdentifier), m_operations()
+            m_loggingIdentifier(loggingIdentifier), m_operations(),
+            m_lastIdUsed(0)
 {
 }
 
@@ -668,9 +682,9 @@ HHttpAsyncHandler::~HHttpAsyncHandler()
 {
 }
 
-void HHttpAsyncHandler::done(const QUuid& uuid)
+void HHttpAsyncHandler::done(unsigned int id)
 {
-    HHttpAsyncOperation* ao = m_operations.value(uuid);
+    HHttpAsyncOperation* ao = m_operations.value(id);
 
     Q_ASSERT(ao);
     Q_ASSERT(ao->state() != HHttpAsyncOperation::NotStarted);
@@ -678,29 +692,30 @@ void HHttpAsyncHandler::done(const QUuid& uuid)
     bool ok = ao->disconnect(this);
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    m_operations.remove(uuid);
+    m_operations.remove(id);
 
     emit msgIoComplete(ao);
 }
 
 HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
-    MessagingInfo* mi, const QByteArray& req)
+    HMessagingInfo* mi, const QByteArray& req)
 {
     Q_ASSERT(mi);
     Q_ASSERT(!req.isEmpty());
 
     HHttpAsyncOperation* ao =
-        new HHttpAsyncOperation(m_loggingIdentifier, mi, req, this);
+        new HHttpAsyncOperation(
+            m_loggingIdentifier, ++m_lastIdUsed, mi, req, false, this);
 
-    bool ok = connect(ao, SIGNAL(done(QUuid)), this, SLOT(done(QUuid)));
+    bool ok = connect(ao, SIGNAL(done(unsigned int)), this, SLOT(done(unsigned int)));
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    m_operations.insert(ao->uuid(), ao);
+    m_operations.insert(ao->id(), ao);
 
     if (!ao->run())
     {
-        m_operations.remove(ao->uuid());
+        m_operations.remove(ao->id());
         delete ao;
         return 0;
     }
@@ -709,7 +724,7 @@ HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
 }
 
 HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
-    MessagingInfo* mi, HHttpRequestHeader& reqHdr, const QtSoapMessage& soapMsg)
+    HMessagingInfo* mi, HHttpRequestHeader& reqHdr, const QtSoapMessage& soapMsg)
 {
     QByteArray dataToSend =
         HHttpMessageCreator::setupData(
@@ -718,28 +733,53 @@ HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
     return msgIo(mi, dataToSend);
 }
 
-HHttpAsyncOperation* HHttpAsyncHandler::receive(
-    MessagingInfo* mi, bool waitingRequest)
+HHttpAsyncOperation* HHttpAsyncHandler::send(
+    HMessagingInfo* mi, const QByteArray& data)
 {
     Q_ASSERT(mi);
+    Q_ASSERT(!data.isEmpty());
 
     HHttpAsyncOperation* ao =
-        new HHttpAsyncOperation(m_loggingIdentifier, mi, waitingRequest, this);
+        new HHttpAsyncOperation(
+            m_loggingIdentifier, ++m_lastIdUsed, mi, data, true, this);
 
-    bool ok = connect(ao, SIGNAL(done(QUuid)), this, SLOT(done(QUuid)));
+    bool ok = connect(ao, SIGNAL(done(unsigned int)), this, SLOT(done(unsigned int)));
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    m_operations.insert(ao->uuid(), ao);
+    m_operations.insert(ao->id(), ao);
 
     if (!ao->run())
     {
-        m_operations.remove(ao->uuid());
+        m_operations.remove(ao->id());
         delete ao;
         return 0;
     }
 
     return ao;
+}
 
+HHttpAsyncOperation* HHttpAsyncHandler::receive(
+    HMessagingInfo* mi, bool waitingRequest)
+{
+    Q_ASSERT(mi);
+
+    HHttpAsyncOperation* ao =
+        new HHttpAsyncOperation(
+            m_loggingIdentifier, ++m_lastIdUsed, mi, waitingRequest, this);
+
+    bool ok = connect(ao, SIGNAL(done(unsigned int)), this, SLOT(done(unsigned int)));
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    m_operations.insert(ao->id(), ao);
+
+    if (!ao->run())
+    {
+        m_operations.remove(ao->id());
+        delete ao;
+        return 0;
+    }
+
+    return ao;
 }
 
 }

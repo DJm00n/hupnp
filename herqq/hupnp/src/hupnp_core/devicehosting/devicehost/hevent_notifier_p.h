@@ -31,13 +31,12 @@
 //
 
 #include "../../http/hhttp_p.h"
+#include "../../general/hupnp_fwd.h"
 #include "../../general/hupnp_defs.h"
 
 #include <QtCore/QList>
-#include <QtCore/QMutex>
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
-#include <QtCore/QSharedPointer>
 
 namespace Herqq
 {
@@ -46,71 +45,54 @@ namespace Upnp
 {
 
 class HSid;
-class HService;
 class HTimeout;
-class HHttpHandler;
-class MessagingInfo;
-class SubscribeRequest;
-class UnsubscribeRequest;
-class ServiceEventSubscriber;
-class HDeviceHostConfiguration;
+class HMessagingInfo;
+class HSubscribeRequest;
+class HUnsubscribeRequest;
+class HServiceEventSubscriber;
 
 //
 // Internal class used to notify event subscribers of events.
 //
-class EventNotifier :
+class HEventNotifier :
     public QObject
 {
 Q_OBJECT
-H_DISABLE_COPY(EventNotifier)
-
-public:
-
-    typedef QSharedPointer<ServiceEventSubscriber> ServiceEventSubscriberPtrT;
+H_DISABLE_COPY(HEventNotifier)
 
 private: // attributes
 
     const QByteArray m_loggingIdentifier;
     // prefix for logging
 
-    HHttpHandler& m_httpHandler;
-    // shared http messaging helper used by objects under the control of a
-    // HDeviceHost
-
-    QList<ServiceEventSubscriberPtrT> m_remoteClients;
-    mutable QMutex m_remoteClientsMutex;
-
-    volatile bool m_shutdown;
+    QList<HServiceEventSubscriber*> m_subscribers;
 
     HDeviceHostConfiguration& m_configuration;
 
 private: // methods
 
-    HTimeout getSubscriptionTimeout(const SubscribeRequest&);
+    HTimeout getSubscriptionTimeout(const HSubscribeRequest&);
 
 private Q_SLOTS:
 
-    void stateChanged(const Herqq::Upnp::HService* source);
+    void stateChanged(const Herqq::Upnp::HServerService* source);
 
 public:
 
-    EventNotifier(
+    HEventNotifier(
         const QByteArray& loggingIdentifier,
-        HHttpHandler&,
         HDeviceHostConfiguration&,
         QObject* parent);
 
-    virtual ~EventNotifier();
+    virtual ~HEventNotifier();
 
-    void shutdown();
+    StatusCode addSubscriber(HServerService*, const HSubscribeRequest&, HSid*);
 
-    StatusCode addSubscriber(HService*, const SubscribeRequest&, HSid*);
+    bool removeSubscriber(const HUnsubscribeRequest&);
+    StatusCode renewSubscription(const HSubscribeRequest&, HSid*);
+    HServiceEventSubscriber* remoteClient(const HSid&) const;
 
-    bool removeSubscriber(const UnsubscribeRequest&);
-    StatusCode renewSubscription(const SubscribeRequest&, HSid*);
-    ServiceEventSubscriberPtrT remoteClient(const HSid&) const;
-
-    void initialNotify(ServiceEventSubscriberPtrT, MessagingInfo&);
+    void initialNotify(HServiceEventSubscriber*, HMessagingInfo*);
 };
 
 }

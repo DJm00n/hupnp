@@ -91,7 +91,7 @@ bool HStateVariableInfoPrivate::isWithinAllowedRange(
 }
 
 bool HStateVariableInfoPrivate::checkValue(
-    const QVariant& value, QVariant* acceptableValue, QString* errDescr)
+    const QVariant& value, QVariant* acceptableValue, QString* errDescr) const
 {
     QVariant tmp(value);
 
@@ -323,7 +323,7 @@ HStateVariableInfo::HStateVariableInfo(
     hptr->m_eventingType = eventingType;
     hptr->m_inclusionRequirement = inclusionReq;
 
-    *h_ptr = *hptr.data();
+    h_ptr = hptr.take();
 }
 
 HStateVariableInfo::HStateVariableInfo(
@@ -356,7 +356,7 @@ HStateVariableInfo::HStateVariableInfo(
     hptr->m_eventingType = eventingType;
     hptr->m_inclusionRequirement = inclusionReq;
 
-    *h_ptr = *hptr.data();
+    h_ptr = hptr.take();
 }
 
 HStateVariableInfo::HStateVariableInfo(
@@ -394,7 +394,7 @@ HStateVariableInfo::HStateVariableInfo(
     hptr->m_eventingType = eventingType;
     hptr->m_inclusionRequirement = inclusionReq;
 
-    *h_ptr = *hptr.data();
+    h_ptr = hptr.take();
 }
 
 HStateVariableInfo::HStateVariableInfo(
@@ -435,33 +435,25 @@ HStateVariableInfo::HStateVariableInfo(
     hptr->m_eventingType = eventingType;
     hptr->m_inclusionRequirement = inclusionReq;
 
-    *h_ptr = *hptr.data();
+    h_ptr = hptr.take();
 }
 
 HStateVariableInfo::HStateVariableInfo(const HStateVariableInfo& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HStateVariableInfoPrivate(*other.h_ptr);
 }
 
 HStateVariableInfo& HStateVariableInfo::operator=(
     const HStateVariableInfo& other)
 {
     Q_ASSERT(&other != this);
-
-    HStateVariableInfoPrivate* newHptr =
-        new HStateVariableInfoPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HStateVariableInfo::~HStateVariableInfo()
 {
-    delete h_ptr;
 }
 
 qint32 HStateVariableInfo::version() const

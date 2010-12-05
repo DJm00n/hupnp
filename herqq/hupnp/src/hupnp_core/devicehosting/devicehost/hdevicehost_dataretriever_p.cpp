@@ -21,7 +21,6 @@
 
 #include "hdevicehost_dataretriever_p.h"
 
-#include "../hdevicehosting_exceptions_p.h"
 #include "../../../utils/hlogger_p.h"
 
 #include <QtCore/QFile>
@@ -39,8 +38,8 @@ DeviceHostDataRetriever::DeviceHostDataRetriever(
 {
 }
 
-QString DeviceHostDataRetriever::retrieveServiceDescription(
-    const QUrl& /*deviceLocation*/, const QUrl& scpdUrl)
+bool DeviceHostDataRetriever::retrieveServiceDescription(
+    const QUrl& /*deviceLocation*/, const QUrl& scpdUrl, QString* retVal)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -66,16 +65,19 @@ QString DeviceHostDataRetriever::retrieveServiceDescription(
 
     if (!file.open(QIODevice::ReadOnly))
     {
-        throw HOperationFailedException(
+        m_lastError =
             QString("Could not open the service description file [%1].").arg(
-                fullScpdPath));
+                fullScpdPath);
+
+        return false;
     }
 
-    return QString::fromUtf8(file.readAll());
+    *retVal = QString::fromUtf8(file.readAll());
+    return true;
 }
 
-QByteArray DeviceHostDataRetriever::retrieveIcon(
-    const QUrl& /*devLoc*/, const QUrl& iconUrl)
+bool DeviceHostDataRetriever::retrieveIcon(
+    const QUrl& /*devLoc*/, const QUrl& iconUrl, QByteArray* retVal)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -101,36 +103,33 @@ QByteArray DeviceHostDataRetriever::retrieveIcon(
     QFile iconFile(fullIconPath);
     if (!iconFile.open(QIODevice::ReadOnly))
     {
-        throw InvalidDeviceDescription(
-            QString("Could not open the icon file [%1]").arg(fullIconPath));
+        m_lastError =
+            QString("Could not open the icon file [%1]").arg(fullIconPath);
+
+        return false;
     }
 
-    return iconFile.readAll();
+    *retVal = iconFile.readAll();
+    return true;
 }
 
-QString DeviceHostDataRetriever::retrieveDeviceDescription(
-    const QString& filePath)
+bool DeviceHostDataRetriever::retrieveDeviceDescription(
+    const QString& filePath, QString* retVal)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly))
     {
-        throw HOperationFailedException(
+        m_lastError =
             QString("Could not open the device description file: [%1].").arg(
-                filePath));
+                filePath);
+
+        return false;
     }
 
-    /*QDomDocument dd;
-    QString errMsg; qint32 errLine = 0;
-    if (!dd.setContent(&file, false, &errMsg, &errLine))
-    {
-        throw InvalidDeviceDescription(
-            QString("Could not parse the device description file: [%1] @ line %2").
-            arg(errMsg, QString::number(errLine)));
-    }*/
-
-    return QString::fromUtf8(file.readAll());
+    *retVal = QString::fromUtf8(file.readAll());
+    return true;
 
 }
 

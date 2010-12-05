@@ -39,7 +39,6 @@
 
 #include <QtCore/QUrl>
 #include <QtCore/QList>
-#include <QtCore/QMutex>
 #include <QtCore/QTimer>
 #include <QtCore/QByteArray>
 
@@ -51,8 +50,7 @@ namespace Herqq
 namespace Upnp
 {
 
-class MessagingInfo;
-class HServiceController;
+class HMessagingInfo;
 class HEventSubscription;
 class HHttpAsyncOperation;
 class HControlPointPrivate;
@@ -107,10 +105,10 @@ private:
     QTimer m_subscriptionTimer;
     // used to signal the time when the subscription should be renewed
 
-    QTimer        m_announcementTimer;
-    volatile bool m_announcementTimedOut;
+    QTimer m_announcementTimer;
+    bool m_announcementTimedOut;
 
-    HServiceController* m_service;
+    HClientService* m_service;
     // the target service of the subscription
 
     QUrl m_serverRootUrl;
@@ -137,7 +135,7 @@ private:
 
     bool m_subscribed;
 
-    QList<NotifyRequest> m_queuedNotifications;
+    QList<HNotifyRequest> m_queuedNotifications;
 
 private Q_SLOTS:
 
@@ -159,7 +157,7 @@ private:
     void runNextOp();
     void resubscribe();
     void renewSubscription();
-    StatusCode processNotify(const NotifyRequest&);
+    StatusCode processNotify(const HNotifyRequest&);
 
 Q_SIGNALS:
 
@@ -178,7 +176,7 @@ public:
 
     HEventSubscription(
         const QByteArray& loggingIdentifier,
-        HServiceController* service,
+        HClientService* service,
         const QUrl& serverRootUrl,
         const HTimeout& desiredTimeout,
         QObject* parent = 0);
@@ -186,12 +184,12 @@ public:
     virtual ~HEventSubscription();
 
     inline QUuid id() const { return m_randomIdentifier ; }
-    inline HServiceController* service() const { return m_service; }
+    inline HClientService* service() const { return m_service; }
 
     void subscribe();
     void unsubscribe(qint32 msecsToWait=0);
     void resetSubscription();
-    StatusCode onNotify(const NotifyRequest&);
+    StatusCode onNotify(const HNotifyRequest&);
 
     SubscriptionStatus subscriptionStatus() const;
 };

@@ -11,7 +11,7 @@
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  HUpnpSimpleTestApp is distributed in the hope that it will be useful, 
+ *  HUpnpSimpleTestApp is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
@@ -29,12 +29,13 @@
 #include "controlpoint_navigatoritem.h"
 
 #include <HUpnpCore/HUdn>
-#include <HUpnpCore/HService>
 #include <HUpnpCore/HDeviceInfo>
-#include <HUpnpCore/HDeviceProxy>
 #include <HUpnpCore/HControlPoint>
-#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HClientDevice>
+#include <HUpnpCore/HClientService>
 #include <HUpnpCore/HStateVariableInfo>
+#include <HUpnpCore/HStateVariableEvent>
+#include <HUpnpCore/HClientStateVariable>
 #include <HUpnpCore/HControlPointConfiguration>
 
 using namespace Herqq::Upnp;
@@ -54,17 +55,17 @@ ControlPointWindow::ControlPointWindow(QWidget* parent) :
 
     bool ok = connect(
         m_controlPoint,
-        SIGNAL(rootDeviceOnline(Herqq::Upnp::HDeviceProxy*)),
+        SIGNAL(rootDeviceOnline(Herqq::Upnp::HClientDevice*)),
         this,
-        SLOT(rootDeviceOnline(Herqq::Upnp::HDeviceProxy*)));
+        SLOT(rootDeviceOnline(Herqq::Upnp::HClientDevice*)));
 
     Q_ASSERT(ok);
 
     ok = connect(
         m_controlPoint,
-        SIGNAL(rootDeviceOffline(Herqq::Upnp::HDeviceProxy*)),
+        SIGNAL(rootDeviceOffline(Herqq::Upnp::HClientDevice*)),
         this,
-        SLOT(rootDeviceOffline(Herqq::Upnp::HDeviceProxy*)));
+        SLOT(rootDeviceOffline(Herqq::Upnp::HClientDevice*)));
 
     Q_ASSERT(ok);
 
@@ -85,25 +86,27 @@ ControlPointWindow::~ControlPointWindow()
     delete m_controlPoint;
 }
 
-void ControlPointWindow::connectToEvents(HDevice* device)
+void ControlPointWindow::connectToEvents(HClientDevice* device)
 {
-    HServices services = device->services();
+    HClientServices services = device->services();
     for (qint32 i = 0; i < services.size(); ++i)
     {
-        QList<HStateVariable*> stateVars = services[i]->stateVariables();
-        for (qint32 j = 0; j < stateVars.size(); ++j)
+        HClientStateVariables stateVars = services[i]->stateVariables();
+        foreach(const QString& name, stateVars.keys())
         {
             bool ok = connect(
-                stateVars[j],
-                SIGNAL(valueChanged(Herqq::Upnp::HStateVariableEvent)),
+                stateVars.value(name),
+                SIGNAL(valueChanged(const Herqq::Upnp::HClientStateVariable*,
+                                    Herqq::Upnp::HStateVariableEvent)),
                 this,
-                SLOT(stateVariableChanged(Herqq::Upnp::HStateVariableEvent)));
+                SLOT(stateVariableChanged(const Herqq::Upnp::HClientStateVariable*,
+                                          Herqq::Upnp::HStateVariableEvent)));
 
             Q_ASSERT(ok); Q_UNUSED(ok)
         }
     }
 
-    QList<HDevice*> embeddedDevices = device->embeddedDevices();
+    QList<HClientDevice*> embeddedDevices = device->embeddedDevices();
     for(qint32 i = 0; i < embeddedDevices.size(); ++i)
     {
         connectToEvents(embeddedDevices[i]);
@@ -111,21 +114,21 @@ void ControlPointWindow::connectToEvents(HDevice* device)
 }
 
 void ControlPointWindow::stateVariableChanged(
-    const Herqq::Upnp::HStateVariableEvent& event)
+    const HClientStateVariable* source, const HStateVariableEvent& event)
 {
     m_ui->status->append(QString(
         "State variable [%1] changed value from [%2] to [%3]").arg(
-            event.eventSource()->info().name(), event.previousValue().toString(),
+            source->info().name(), event.previousValue().toString(),
             event.newValue().toString()));
 }
 
-void ControlPointWindow::rootDeviceOnline(HDeviceProxy* newDevice)
+void ControlPointWindow::rootDeviceOnline(HClientDevice* newDevice)
 {
     m_controlpointNavigator->rootDeviceOnline(newDevice);
     connectToEvents(newDevice);
 }
 
-void ControlPointWindow::rootDeviceOffline(HDeviceProxy* device)
+void ControlPointWindow::rootDeviceOffline(HClientDevice* device)
 {
     m_controlpointNavigator->rootDeviceOffline(device);
     m_dataItemDisplay->deviceRemoved(device->info().udn());
@@ -181,8 +184,8 @@ void ControlPointWindow::on_navigatorTreeView_doubleClicked(QModelIndex index)
         Q_ASSERT(ok); Q_UNUSED(ok)
 
         ok = connect(
-            this, SIGNAL(contentSourceRemoved(Herqq::Upnp::HDevice*)),
-            dlg , SLOT(contentSourceRemoved(Herqq::Upnp::HDevice*)));
+            this, SIGNAL(contentSourceRemoved(Herqq::Upnp::HClientDevice*)),
+            dlg , SLOT(contentSourceRemoved(Herqq::Upnp::HClientDevice*)));
         Q_ASSERT(ok);
 
         dlg->show();

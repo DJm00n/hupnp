@@ -25,7 +25,6 @@
 #include <HUpnpCore/HUpnp>
 
 #include <QtCore/QUuid>
-#include <QtCore/QSharedPointer>
 
 namespace Herqq
 {
@@ -33,23 +32,27 @@ namespace Herqq
 namespace Upnp
 {
 
+class HAsyncOpPrivate;
+
 /*!
  * This class is used to identify an asynchronous operation and detail information
  * of it.
  *
  * Some HUPnP components provide an asynchronous interface for running possible
- * long-standing operations. A most notable example of this is the action
- * invocation (HAction::beginInvoke()). In these cases this class is used
- * to identify, describe and control some aspects of the execution and
- * the wait for the completion of the operation.
+ * long-standing operations. A most notable example of this is the client-side
+ * action invocation initiated with HClientAction::beginInvoke(). In cases
+ * like this, instances of this class are used to identify and describe the
+ * operations.
  *
  * \section Usage
  *
- * The component that runs an asynchronous operation always provides an instance
- * of this class when the operation is started and when it signals the operation
- * is complete. The provided instance identifies the operation and it, or any
- * copy of it is provided to the runner of the asynchronous operation when the
- * result of the operation is retrieved or waited upon.
+ * The component that runs an asynchronous operation provides an instance
+ * of this class when the operation is started. A copy of this instance is
+ * provided also when the component signals the operation is complete.
+ * The provided instance uniquely identifies the operation, carries information
+ * whether the operation eventually succeeded or not, may contain an error
+ * description in case of an error and can be used to pass user-defined data from
+ * instance to another.
  *
  * For example:
  *
@@ -57,48 +60,15 @@ namespace Upnp
  *
  * HAsyncOp op = someObject->beginSomeAsyncOp();
  *
- * // if you do not know the operation is complete, the following wait could be
- * // indefinite, unless you specify it not to be:
- * op.setWaitTimeout(5000); // 5 seconds
- * someObject->waitForSomeAsyncOp(&op);
+ * //
+ * // The operation completes, after which you can:
+ * //
  *
- * // after the wait you can check what happened with the wait by calling
- * HAsyncOp::WaitCode wcode = op.waitCode();
+ * int retVal = op.returnValue();
+ * // retrieve a return value indicating whether the operation succeeded.
  *
- * // and if the operation uses an integer as a return value, you can query it
- * // by calling:
- * qint32 retVal = op.returnValue();
- *
- * \endcode
- *
- * The above example highlights two different return codes that have two different
- * purposes, the <em>wait code</em> and the <em>return value of the
- * asynchronous operation</em>. The wait code specifies the result of the
- * \e wait operation; it tells whether the wait operation succeeded. A wait can
- * be successful even if the asynchronous operation failed and vice versa;
- * a wait can fail even if the asynchronous operation eventually succeeds.
- *
- * All the HUPnP's waitFor() methods used to retrieve the results of
- * asynchronous operations use \c bool as a return value to indicate if both
- * the wait and the asynchronous operation succeeded. For instance,
- *
- * \code
- *
- * HAsyncOp op = someObject->beginSomeAsyncOp();
- * if (!someObject->waitForSomeAsyncOp(&op))
- * {
- *     // Either the wait or the asynchronous operation failed. You can check
- *     // the wait code to see if it was the wait that failed:
- *     if (op.waitCode() != HAsyncOp::WaitSuccess)
- *     {
- *         // It was the wait that failed. This means that the operation is
- *         // still running and it may still succeed normally.
- *     }
- *     else if (op.returnValue() != SomeErrorCodeThatIndicatesSuccess)
- *     {
- *        // It was the asynchronous operation that failed.
- *     }
- * }
+ * QString errDescr = op.errorDescription();
+ * // retrieve an error description if the operation failed.
  *
  * \endcode
  *
@@ -122,16 +92,19 @@ namespace Upnp
  * }
  * \endcode
  *
- * Note, the user data is retrievable from \b any copy of the object that was
- * used to set the data. If an instance is created by the runner of an
- * asynchronous operation, setting the userData of that instance will associate
- * the userData with all the copies the runner uses too. From this follows that
- * when the runner informs the user an operation is finished, the provided
- * HAsyncOp object contains the previously set userData.
+ * Note, the contents of the instance are retrievable from \b any copy of the
+ * object. That is, the copy constructor and assignment operator make shallow
+ * copies of the contents. So for example if an \c %HAsyncOp instance is created
+ * by the runner of an asynchronous operation, setting the userData of that
+ * instance will associate the userData with all the copies the runner uses too.
+ * From this follows that when the runner informs the user an operation is
+ * finished, the provided HAsyncOp object contains the previously set userData
+ * and you can read the returnValue() from the originally received instance.
  *
  * Note also that the user data is never referenced by the runner of an
  * asynchronous operation. This also means that the ownership of the data is
- * never transferred.
+ * never transferred and you have to ensure the memory is handled correctly in
+ * that regard.
  *
  * \headerfile hasyncop.h HAsyncOp
  *
@@ -143,65 +116,9 @@ class H_UPNP_CORE_EXPORT HAsyncOp
 {
 friend H_UPNP_CORE_EXPORT bool operator==(const HAsyncOp&, const HAsyncOp&);
 
-public:
-
-    /*!
-     * This enumeration specifies the values the waiting for the completion of an
-     * asynchronous operation can return.
-     */
-    enum AsyncWaitCode
-    {
-        /*!
-         * The asynchronous operation was successfully completed.
-         */
-        WaitSuccess = 0,
-
-        /*!
-         * A timeout elapsed before the asynchronous operation was completed.
-         */
-        WaitTimeout,
-
-        /*!
-         * The specified asynchronous operation ID is invalid.
-         */
-        WaitInvalidId,
-
-        /*!
-         * The result of an asynchronous operation can be waited by a single
-         * listener and the operation in question already has a listener.
-         */
-        WaitListenerRegisteredAlready,
-
-        /*!
-         * The wait for the completion of an asynchronous operation was aborted.
-         */
-        WaitAborted,
-
-        /*!
-         * The object in question cannot execute the specified asynchronous
-         * operation at the moment.
-         */
-        WaitInvalidObjectState,
-
-        /*!
-         * The asynchronous operation cannot be waited upon. For instance,
-         * this is the case when the operation is launched with
-         * <em>fire and forget</em> semantics (HExecArgs::FireAndForget).
-         */
-        WaitInvalidOperation
-    };
-
 private:
 
-    const QUuid m_id;
-    volatile qint32 m_waitTimeout;
-    volatile AsyncWaitCode m_waitCode;
-    volatile qint32 m_returnValue;
-    QSharedPointer<volatile void*> m_userData;
-    QString* m_errorDescription;
-
-    HAsyncOp& operator=(const HAsyncOp&);
-
+    HAsyncOpPrivate* h_ptr;
     HAsyncOp(qint32 returnCode, const QString& errorDescription);
 
 public:
@@ -213,28 +130,36 @@ public:
      *
      * \sa isNull(), createInvalid()
      */
-    explicit HAsyncOp();
+    HAsyncOp();
 
     /*!
      * \brief Destroys the instance.
      *
-     * Destroys the instance.
+     * Decreases the reference count or destroys the instance once the reference
+     * count drops to zero.
      */
     ~HAsyncOp();
 
     /*!
-     * \brief Copy constructor.
-     *
      * Copy constructor.
+     *
+     * Creates a shallow copy of \a other increasing the reference count of
+     * \a other.
      */
     HAsyncOp(const HAsyncOp&);
 
     /*!
+     * Assignment operator.
+     *
+     * Switches this instance to refer to the contents of \a other increasing the
+     * reference count of \a other.
+     */
+    HAsyncOp& operator=(const HAsyncOp&);
+
+    /*!
      * Returns a human readable error description.
      *
-     * \return a human readable error description, if any. This is never set when
-     * waitCode() is HAsyncOp::WaitSuccess or isNull() returns \e false, but it
-     * may not be set even when isNull() returns \e true.
+     * \return a human readable error description, if any.
      *
      * \sa setErrorDescription()
      */
@@ -250,49 +175,11 @@ public:
     void setErrorDescription(const QString& arg);
 
     /*!
-     * Returns the wait timeout in milliseconds -if any- associated with the operation.
-     *
-     * \return the wait timeout in milliseconds -if any- associated with the operation.
-     *
-     * \sa setWaitTimeout()
-     */
-    inline qint32 waitTimeout() const { return m_waitTimeout; }
-
-    /*!
-     * Sets the wait timeout in milliseconds for the operation.
-     *
-     * \param timeout specifies the wait timeout in milliseconds.
-     * A negative value means that the timeout isn't set.
-     *
-     * \sa waitTimeout()
-     */
-    inline void setWaitTimeout(qint32 timeout) { m_waitTimeout = timeout; }
-
-    /*!
-     * Returns the return value of the wait of operation completion.
-     *
-     * \return the return value of the wait of operation completion.
-     *
-     * \sa setWaitCode()
-     */
-    inline AsyncWaitCode waitCode() const { return m_waitCode; }
-
-    /*!
-     * Sets the return value of the wait of operation completion.
-     *
-     * \param waitCode specifies the return value of the wait of
-     * operation completion.
-     *
-     * \sa waitCode()
-     */
-    inline void setWaitCode(AsyncWaitCode waitCode) { m_waitCode = waitCode; }
-
-    /*!
      * Returns the return value of the asynchronous operation.
      *
      * \sa setReturnValue()
      */
-    inline qint32 returnValue() const { return m_returnValue; }
+    int returnValue() const;
 
     /*!
      * Sets the return value of the asynchronous operation.
@@ -301,17 +188,14 @@ public:
      *
      * \sa returnValue()
      */
-    inline void setReturnValue(qint32 returnValue)
-    {
-       m_returnValue = returnValue;
-    }
+    void setReturnValue(int returnValue);
 
     /*!
      * Associates arbitrary user provided data with the asynchronous operation.
      *
      * \param userData is the pointer to arbitrary user data.
      *
-     * \remarks the instance never references the provided data.
+     * \remarks The instance never references the provided data.
      *
      * \sa userData()
      */
@@ -327,18 +211,20 @@ public:
     void* userData() const;
 
     /*!
-     * Returns universally unique identifier of the asynchronous operation.
+     * Returns an identifier of the asynchronous operation.
      *
-     * \return universally unique identifier of the asynchronous operation.
+     * \return an identifier of the asynchronous operation. The identifier
+     * is "unique" within the process where the library is loaded. More specifically,
+     * the ID is monotonically incremented and it is allowed to overflow.
      */
-    inline QUuid id() const { return m_id; }
+    unsigned int id() const;
 
     /*!
      * Indicates whether the object identifies an asynchronous operation.
      *
      * \return \e true in case the object identifies an asynchronous operation.
      */
-    inline bool isNull() const { return m_id.isNull(); }
+    bool isNull() const;
 
     /*!
      * Creates a new invalid instance.
@@ -352,7 +238,7 @@ public:
      *
      * \sa returnCode(), errorDescription(), isNull()
      */
-    static HAsyncOp createInvalid(qint32 returnCode, const QString& errorDescr);
+    static HAsyncOp createInvalid(int returnCode, const QString& errorDescr);
 };
 
 /*!
@@ -384,7 +270,7 @@ H_UPNP_CORE_EXPORT bool operator!=(const HAsyncOp&, const HAsyncOp&);
  *
  * \relates HAsyncOp
  */
-H_UPNP_CORE_EXPORT quint32 qHash(const HAsyncOp& key);
+inline quint32 qHash(const HAsyncOp& key) { return key.id(); }
 
 }
 }

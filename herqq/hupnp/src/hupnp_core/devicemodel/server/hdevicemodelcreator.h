@@ -1,0 +1,175 @@
+/*
+ *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *
+ *  Author: Tuomo Penttinen <tp@herqq.org>
+ *
+ *  This file is part of Herqq UPnP (HUPnP) library.
+ *
+ *  Herqq UPnP is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Herqq UPnP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef HDEVICEMODEL_CREATOR_H_
+#define HDEVICEMODEL_CREATOR_H_
+
+#include <HUpnpCore/HUpnp>
+
+namespace Herqq
+{
+
+namespace Upnp
+{
+
+class HDeviceModelCreatorPrivate;
+
+/*!
+ * A protocol class for creating HServerDevice and HServerService instances.
+ *
+ * The primary purpose of this protocol class is to build instances of the HUPnP's
+ * \ref hupnp_devicemodel at server-side. If you wish to host a device in an
+ * HDeviceHost you have to derive from this class and override its abstract methods.
+ *
+ * The secondary purpose of this class is to provide users the possibility to
+ * specify additional information about the components of the device model, which
+ * HUPnP can use for verification and validation purposes. This information is
+ * optional, but if provided, HUPnP uses it to verify that device and
+ * service descriptions are setup according to the specified information.
+ *
+ * The benefit of this is that your custom device model components can rest
+ * assured that all the required state variables, actions, services and
+ * embedded devices are properly defined and initialized before the instantiation
+ * of the device model (device tree) is published for control points to use.
+ *
+ * The benefits of this may be somewhat difficult to realize at first, since most
+ * of the time it is you, the user, who provides the implementation and
+ * the description documents. Apart from inadvertent mistakes, you usually
+ * get those right. However, when someone else provides the implementation of
+ * the HUPnP's device model or the description documents, mismatches can easily
+ * occur and this is where the benefits of this additional information are truly
+ * useful. Remember, in UPnP architecture the description documents are used to
+ * marshal device model information from servers to clients. If the description
+ * documents do not accurately reflect the server-side implementation, the
+ * client-side may not be able to correctly invoke the server-side.
+ *
+ * \headerfile hdevicemodelcreator.h HDeviceModelCreator
+ *
+ * \ingroup hupnp_devicemodel
+ *
+ * \sa hupnp_devicehosting, HServerDevice, HServerService
+ */
+class H_UPNP_CORE_EXPORT HDeviceModelCreator
+{
+H_DISABLE_COPY(HDeviceModelCreator)
+
+public:
+
+    /*!
+     * Constructor.
+     *
+     * Creates a new instance.
+     */
+    HDeviceModelCreator();
+
+    /*!
+     * Destroys the instance.
+     *
+     * Destroys the instance.
+     */
+    virtual ~HDeviceModelCreator();
+
+    /*!
+     * Creates a device matching the provided device information.
+     *
+     * \param info specifies information of the device type the creator is asked
+     * to create.
+     *
+     * \return a heap allocated device matching the provided device information
+     * or \c null in case the creator does not recognize the specified device type.
+     *
+     * \remarks The ownership of the created device is transferred to the caller.
+     */
+    virtual HServerDevice* createDevice(const HDeviceInfo& info) const;
+
+    /*!
+     * Creates a service matching the provided service information.
+     *
+     * \param info specifies information of the service type the creator is asked
+     * to create.
+     *
+     * \return a heap allocated service matching the provided service information
+     * or \c null in case the creator does not recognize the specified service type.
+     *
+     * \remarks The ownership of the created service is transferred to the caller.
+     */
+    virtual HServerService* createService(const HServiceInfo& info) const = 0;
+
+    /*!
+     * Returns information of the services contained or possibly contained by
+     * the specified device type.
+     *
+     * \param info specifies the device type.
+     *
+     * \return information of the services contained or possibly contained by
+     * the specified device type.
+     */
+    virtual HServicesSetupData servicesSetupData(const HDeviceInfo& info) const;
+
+    /*!
+     * Returns information of the embedded devices contained or possibly
+     * contained by the specified device type.
+     *
+     * \param info specifies the device type.
+     *
+     * \return information of the embedded devices contained or possibly
+     * contained by the specified device type.
+     */
+    virtual HDevicesSetupData embedddedDevicesSetupData(
+        const HDeviceInfo& info) const;
+
+    /*!
+     * Returns information of the actions contained or possibly contained by
+     * the specified service type.
+     *
+     * \param info specifies the service type.
+     *
+     * \return information of the actions contained or possibly contained by
+     * the specified service type.
+     */
+    virtual HActionsSetupData actionsSetupData(const HServiceInfo& info) const;
+
+    /*!
+     * Returns information of the state variables contained or possibly
+     * contained by the specified service type.
+     *
+     * \param info specifies the service type.
+     *
+     * \return information of the state variables contained or possibly
+     * contained by the specified service type.
+     */
+    virtual HStateVariablesSetupData stateVariablesSetupData(
+        const HServiceInfo& info) const;
+
+    /*!
+     * Clones this instance.
+     *
+     * \return a clone of this instance. This must never be null.
+     *
+     * \remarks The ownership of the returned instance is transferred to the caller.
+     */
+    virtual HDeviceModelCreator* clone() const = 0;
+};
+
+}
+}
+
+#endif /* HDEVICEMODEL_CREATOR_H_ */

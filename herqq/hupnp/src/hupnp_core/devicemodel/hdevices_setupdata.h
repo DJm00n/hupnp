@@ -23,6 +23,7 @@
 #define HDEVICES_SETUPDATA_H_
 
 #include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HResourceType>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
@@ -36,20 +37,19 @@ namespace Upnp
 class HDeviceSetupPrivate;
 
 /*!
- * This class is used to specify information that is required to setup an
- * HDevice.
+ * This class is used to specify information that can be used to validate
+ * a UPnP device.
  *
  * \headerfile hdevices_setupdata.h HDeviceSetup
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HDevicesSetupData, HDevice
+ * \sa HDevicesSetupData, HClientDevice, HServerDevice
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HDeviceSetup
 {
-H_DISABLE_COPY(HDeviceSetup)
 
 private:
 
@@ -93,47 +93,7 @@ public:
      */
     HDeviceSetup(
         const HResourceType& type,
-        qint32 version,
-        HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Creates a new instance.
-     *
-     * \param type specifies the device type.
-     *
-     * \param device specifies a pointer to a heap-allocated HDevice.
-     * This instance takes the ownership of the device.
-     *
-     * \param incReq specifies <em>inclusion requirement</em> of the device.
-     *
-     * \sa isValid()
-     *
-     * \remarks the version() is set to 1.
-     */
-    HDeviceSetup(
-        const HResourceType& type,
-        HDevice* device,
-        HInclusionRequirement incReq = InclusionMandatory);
-
-    /*!
-     * Creates a new instance.
-     *
-     * \param type specifies the device type.
-     *
-     * \param device specifies a pointer to a heap-allocated HDevice.
-     * This instance takes the ownership of the device.
-     *
-     * \param version specifies the version of the UPnP device,
-     * which first specified the embedded device.
-     *
-     * \param incReq specifies <em>inclusion requirement</em> of the device.
-     *
-     * \sa isValid()
-     */
-    HDeviceSetup(
-        const HResourceType& type,
-        HDevice* device,
-        qint32 version,
+        int version,
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
@@ -144,6 +104,20 @@ public:
     ~HDeviceSetup();
 
     /*!
+     * Copy constructor.
+     *
+     * Creates a copy of \a other.
+     */
+    HDeviceSetup& operator=(const HDeviceSetup&);
+
+    /*!
+     * Assignment operator.
+     *
+     * Copies the contents of \a other to this.
+     */
+    HDeviceSetup(const HDeviceSetup&);
+
+    /*!
      * Returns the device type.
      *
      * \return the device type.
@@ -151,16 +125,6 @@ public:
      * \sa setDeviceType()
      */
     const HResourceType& deviceType() const;
-
-    /*!
-     * Returns the HDevice pointer associated with the instance.
-     *
-     * \return the HDevice pointer associated with the instance. The ownership
-     * of the HDevice is not transferred to the caller.
-     *
-     * \sa takeDevice()
-     */
-    HDevice* device() const;
 
     /*!
      * Returns the <em>inclusion requirement</em>.
@@ -190,7 +154,7 @@ public:
      *
      * \sa setVersion()
      */
-    qint32 version() const;
+    int version() const;
 
     /*!
      * Sets the the <em>inclusion requirement</em>.
@@ -211,19 +175,6 @@ public:
     void setDeviceType(const HResourceType& arg);
 
     /*!
-     * Associates an HDevice pointer with this instance.
-     *
-     * \param arg specifies the HDevice pointer to be associated with this
-     * instance. The instance takes the ownership of the provided HDevice.
-     *
-     * \remarks if the instance already has an HDevice pointer associated with it,
-     * the old HDevice is first deleted, even if the provided HDevice is null.
-     *
-     * \sa device(), takeDevice()
-     */
-    void setDevice(HDevice* arg);
-
-    /*!
      * Specifies the version of the UPnP device, which first specified the
      * embedded device.
      *
@@ -232,39 +183,27 @@ public:
      *
      * \sa version()
      */
-    void setVersion(qint32 version);
-
-    /*!
-     * Returns the HDevice pointer associated with the instance and passes
-     * the ownership of the object to the caller.
-     *
-     * \return the HDevice pointer associated with the instance and passes
-     * the ownership of the object to the caller.
-     *
-     * \sa device(), setDevice()
-     */
-    HDevice* takeDevice();
+    void setVersion(int version);
 };
 
 /*!
- * This class is used to specify information that can be used to setup multiple
- * HDevice instances.
+ * This class is used to specify information that can be used to validate
+ * UPnP devices.
  *
  * \headerfile hdevices_setupdata.h HDevicesSetupData
  *
  * \ingroup hupnp_devicemodel
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
- * \sa HDeviceSetup, HDevice
+ * \sa HDeviceSetup
  */
 class H_UPNP_CORE_EXPORT HDevicesSetupData
 {
-H_DISABLE_COPY(HDevicesSetupData)
 
 private:
 
-    QHash<HResourceType, HDeviceSetup*> m_deviceSetupInfos;
+    QHash<HResourceType, HDeviceSetup> m_deviceSetupInfos;
 
 public:
 
@@ -307,14 +246,12 @@ public:
      *
      * \param type specifies the device type of the item.
      *
-     * \return the item with the specified device type. A null pointer is returned
-     * in case no item with the specified device type was found.
+     * \return the item with the specified device type. The returned item is
+     * invalid in case no item with the specified device type was found.
      *
-     * \remarks the ownership of the object is \b not transferred.
-     *
-     * \sa take(), contains()
+     * \sa contains()
      */
-    HDeviceSetup* get(const HResourceType& type) const;
+    HDeviceSetup get(const HResourceType& type) const;
 
     /*!
      * Indicates if the object is empty.
@@ -328,23 +265,19 @@ public:
      *
      * \return the number of contained items.
      */
-    qint32 size() const;
+    int size() const;
 
     /*!
      * Inserts a new item.
      *
      * \param newItem specifies the item to be added.
      *
-     * \return \e true in case the item was added. The \c newItem will not be added
+     * \return \e true in case the item was added. The \a newItem will not be added
      * if the instance already contains an item that has the
-     * same HDeviceSetup::deviceType() as the \c newItem or the \c newItem is null.
-     *
-     * \remarks
-     * \li The \c newItem has to be heap-allocated and
-     * \li the instance takes the ownership of the \c newItem, even if it is not
-     * added. If the item is not added the item is deleted.
+     * same HDeviceSetup::deviceType() as the \a newItem or the \a newItem is
+     * invalid.
      */
-    bool insert(HDeviceSetup* newItem);
+    bool insert(const HDeviceSetup& newItem);
 
     /*!
      * Removes an existing item.
@@ -354,37 +287,6 @@ public:
      * \return \e true in case the item was found and removed.
      */
     bool remove(const HResourceType& type);
-
-    /*!
-     * Associates an HDevice pointer with an item.
-     *
-     * \param type specifies the device type of the item.
-     *
-     * \param device specifies the device to be associated. This instance
-     * takes the ownership of the HDevice.
-     *
-     * \return \e true when an item with the specified service ID was found
-     * and the provided HDevice pointer was associated with it. Note also that
-     * the pointer can be null.
-     *
-     * \remarks if an item with the specified device type exists and it already has
-     * an HDevice pointer associated with it, the existing HDevice is deleted.
-     */
-    bool setDevice(const HResourceType& type, HDevice* device);
-
-    /*!
-     * Retrieves an item and removes it from the instance.
-     *
-     * \param type specifies the device type of the item.
-     *
-     * \return the item with the specified device type. A null pointer is returned
-     * in case no item with the specified device type was found.
-     *
-     * \remarks the ownership of the object \b is transferred to the caller.
-     *
-     * \sa get()
-     */
-    HDeviceSetup* take(const HResourceType& type);
 };
 
 }

@@ -32,7 +32,6 @@
 
 #include "../../general/hupnp_defs.h"
 #include "../../dataelements/hudn.h"
-#include "../../devicemodel/hdevice_p.h"
 
 #include "../../../utils/hthreadpool_p.h"
 
@@ -46,13 +45,13 @@ namespace Upnp
 
 class HServiceSubscribtion;
 class HControlPointPrivate;
+class HDefaultClientDevice;
 
 //
 // This class is used as a thread pool task to fetch a device description, its
 // accompanying service descriptions (if any) and to build the device model.
 //
 class DeviceBuildTask :
-    public QObject,
     public HRunnable
 {
 Q_OBJECT
@@ -68,7 +67,7 @@ private:
     QString m_errorString;
     // empty when succeeded
 
-    QScopedPointer<HDeviceController> m_createdDevice;
+    QScopedPointer<HDefaultClientDevice> m_createdDevice;
 
     const HUdn m_udn;
     const qint32 m_cacheControlMaxAge;
@@ -103,7 +102,7 @@ public:
     // returns an error description only if something went wrong
     // and the build failed
 
-    HDeviceController* createdDevice();
+    HDefaultClientDevice* createdDevice();
     // releases ownership
 
 Q_SIGNALS:

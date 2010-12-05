@@ -38,7 +38,8 @@ namespace Upnp
 /*******************************************************************************
  * HDiscoveryTypePrivate
  ******************************************************************************/
-class HDiscoveryTypePrivate
+class HDiscoveryTypePrivate :
+    public QSharedData
 {
 public:
 
@@ -301,27 +302,19 @@ HDiscoveryType::HDiscoveryType(
 
 HDiscoveryType::~HDiscoveryType()
 {
-    delete h_ptr;
 }
 
 HDiscoveryType::HDiscoveryType(const HDiscoveryType& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HDiscoveryTypePrivate(*other.h_ptr);
 }
 
 HDiscoveryType& HDiscoveryType::operator=(
     const HDiscoveryType& other)
 {
     Q_ASSERT(&other != this);
-
-    HDiscoveryTypePrivate* newHptr =
-        new HDiscoveryTypePrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 

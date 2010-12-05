@@ -23,15 +23,6 @@
 #include "hserviceinfo_p.h"
 
 #include <QtCore/QString>
-#include <QtCore/QMetaType>
-
-static bool registerMetaTypes()
-{
-    qRegisterMetaType<Herqq::Upnp::HServiceInfo>("Herqq::Upnp::HServiceInfo");
-    return true;
-}
-
-static bool regMetaT = registerMetaTypes();
 
 namespace Herqq
 {
@@ -50,7 +41,6 @@ HServiceInfoPrivate::HServiceInfoPrivate() :
     m_eventSubUrl (),
     m_inclusionRequirement(InclusionRequirementUnknown)
 {
-    Q_UNUSED(regMetaT)
 }
 
 HServiceInfoPrivate::~HServiceInfoPrivate()
@@ -114,27 +104,20 @@ HServiceInfo::HServiceInfo(
 }
 
 HServiceInfo::HServiceInfo(const HServiceInfo& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HServiceInfoPrivate(*other.h_ptr);
 }
 
 HServiceInfo& HServiceInfo::operator=(const HServiceInfo& other)
 {
     Q_ASSERT(&other != this);
-
-    HServiceInfoPrivate* newHptr = new HServiceInfoPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
 HServiceInfo::~HServiceInfo()
 {
-    delete h_ptr;
 }
 
 bool HServiceInfo::isValid(HValidityCheckLevel checkLevel) const

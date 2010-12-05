@@ -30,7 +30,6 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../../general/hupnp_defs.h"
 #include "../messages/hevent_messages_p.h"
 #include "../../http/hhttp_asynchandler_p.h"
 
@@ -47,34 +46,31 @@ namespace Herqq
 namespace Upnp
 {
 
-class HService;
-class HHttpHandler;
-class MessagingInfo;
+class HMessagingInfo;
 
 //
 // Internal class used to maintain information about a single event subscriber.
 //
-class ServiceEventSubscriber :
+class HServiceEventSubscriber :
     public QObject
 {
 Q_OBJECT
-H_DISABLE_COPY(ServiceEventSubscriber)
+H_DISABLE_COPY(HServiceEventSubscriber)
 
 private: // attributes
 
-    HHttpHandler& m_http;
-    HService*     m_service;
-    QUrl          m_location;
-    HSid          m_sid;
-    QAtomicInt    m_seq;
-    HTimeout      m_timeout;
-    QTimer        m_timer;
+    HServerService* m_service;
+    QUrl m_location;
+    HSid m_sid;
+    quint32 m_seq;
+    HTimeout m_timeout;
+    QTimer m_timer;
     HHttpAsyncHandler m_asyncHttp;
 
     QScopedPointer<QTcpSocket> m_socket;
     QQueue<QByteArray> m_messagesToSend;
 
-    volatile bool m_expired;
+    bool m_expired;
 
     const QByteArray m_loggingIdentifier;
 
@@ -86,29 +82,29 @@ private Q_SLOTS:
     void msgIoComplete(HHttpAsyncOperation*);
     void subscriptionTimeout();
 
-Q_SIGNALS:
+private:
 
-    void send_sig();
+    bool send(HMessagingInfo* mi);
 
 public:
 
-    ServiceEventSubscriber(
-        HHttpHandler& http, const QByteArray& loggingIdentifier,
-        HService* service, const QUrl location, const HTimeout& timeout,
+    HServiceEventSubscriber(
+        const QByteArray& loggingIdentifier,
+        HServerService* service, const QUrl location, const HTimeout& timeout,
         QObject* parent = 0);
 
-    virtual ~ServiceEventSubscriber();
+    virtual ~HServiceEventSubscriber();
 
     void notify(const QByteArray& msgBody);
-    bool initialNotify(const QByteArray& msgBody, MessagingInfo* = 0);
+    bool initialNotify(const QByteArray& msgBody, HMessagingInfo* = 0);
 
-    bool isInterested(const HService* service) const;
+    bool isInterested(const HServerService* service) const;
 
     inline QUrl      location() const { return m_location; }
     inline HSid      sid     () const { return m_sid;      }
     inline quint32   seq     () const { return m_seq;      }
     inline HTimeout  timeout () const { return m_timeout;  }
-    inline HService* service () const { return m_service;  }
+    inline HServerService* service () const { return m_service;  }
     inline bool      expired () const { return m_expired;  }
 
     void renew(const HTimeout&);

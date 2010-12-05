@@ -1,6 +1,0 @@
-#ifndef H_DEVICE_
-#define H_DEVICE_
-
-#include "public/hdevice.h"
-
-#endif // H_DEVICE_

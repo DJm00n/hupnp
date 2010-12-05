@@ -50,7 +50,7 @@ Q_DISABLE_COPY(InvokeActionDialog)
 private:
 
     Ui::InvokeActionDialog* m_ui;
-    Herqq::Upnp::HAction* m_action;
+    Herqq::Upnp::HClientAction* m_action;
     QHash<QString, IDataHolder*> m_inputWidgets;
 
     void setupArgumentWidgets();
@@ -59,13 +59,13 @@ private:
 public:
 
     explicit InvokeActionDialog(
-        Herqq::Upnp::HAction*, QWidget* parent = 0);
+        Herqq::Upnp::HClientAction*, QWidget* parent = 0);
 
     virtual ~InvokeActionDialog();
 
 public Q_SLOTS:
 
-    void contentSourceRemoved(Herqq::Upnp::HDevice*);
+    void contentSourceRemoved(Herqq::Upnp::HClientDevice*);
 
 protected:
 
@@ -74,7 +74,7 @@ protected:
 private slots:
 
     void on_invokeButton_clicked();
-    void invokeComplete(Herqq::Upnp::HAsyncOp);
+    void invokeComplete(Herqq::Upnp::HAsyncOp, const Herqq::Upnp::HActionArguments&);
 };
 
 #endif // INVOKEACTIONDIALOG_H

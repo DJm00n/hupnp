@@ -24,6 +24,8 @@
 
 #include <HUpnpCore/HUpnp>
 
+#include <QtCore/QSharedDataPointer>
+
 class QString;
 
 namespace Herqq
@@ -39,26 +41,24 @@ class HDiscoveryTypePrivate;
  * UPnP networking.
  *
  * The <em>UPnP discovery</em> is based on SSDP messages that provide information
- * about UPnP devices and services the UPnP devices provide. When UPnP devices use SSDP
- * messages they \e advertise themselves and the embedded devices and services they contain.
- * When UPnP control points use SSDP messages they \e search UPnP devices or
- * services matching some criteria. In HUPnP these different search and 
- * and advertisement types are called \e discovery \e types represented by instances 
- * of this class. 
+ * about UPnP devices and services the UPnP devices provide. When UPnP devices
+ * use SSDP messages they \e advertise themselves and the embedded devices and
+ * services they contain. When UPnP control points use SSDP messages they
+ * \e search UPnP devices or services matching some criteria. In HUPnP these
+ * different search and and advertisement types are called \e discovery \e types
+ * represented by instances of this class.
  *
  * For instance, if a UPnP device advertises itself to the network the
- * \e discovery \e type is HDiscoveryType::SpecificDevice,
- * since the Unique Device Name that identifies the device is known.
- * On the other hand, a control point may be interested
- * in searching all UPnP root devices on a network in which case the
- * \e discovery \e type would be HDiscoveryType::RootDevices. 
- * Then again, if a control point is interested
- * in searching some specific UPnP root device it can issue a search with the
- * discovery type set to HDiscoveryType::SpecificRootDevice and the UDN set
- * to the desired value.
+ * \e discovery \e type is HDiscoveryType::SpecificDevice, since the
+ * Unique Device Name that identifies the device is known. On the other hand,
+ * a control point may be interested in searching all UPnP root devices on a
+ * network in which case the \e discovery \e type would be HDiscoveryType::RootDevices.
+ * Then again, if a control point is interested in searching some specific
+ * UPnP root device it can issue a search with the discovery type set to
+ * HDiscoveryType::SpecificRootDevice and the UDN set to the desired value.
  *
- * The above example implies that a \e discovery \e type may identify a UPnP device. 
- * If a discovery type identifies a UPnP device you can call udn() to retrieve the 
+ * The above example implies that a \e discovery \e type may identify a UPnP device.
+ * If a discovery type identifies a UPnP device you can call udn() to retrieve the
  * Unique Device Name. Similarly, you can call setUdn() to specify the desired UDN.
  *
  * A discovery type may also have a \e resource \e type associated with it.
@@ -69,7 +69,7 @@ class HDiscoveryTypePrivate;
  *
  * \headerfile hdiscoverytype.h HDiscoveryType
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
  * \ingroup hupnp_common
  *
@@ -82,7 +82,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HDiscoveryTypePrivate* h_ptr;
+    QSharedDataPointer<HDiscoveryTypePrivate> h_ptr;
 
 public:
 
@@ -190,6 +190,7 @@ public:
 
     /*!
      * Creates a new empty instance.
+     *
      * The type is set to HDiscoveryType::Undefined.
      *
      * \sa type()
@@ -225,13 +226,13 @@ public:
      * Creates a new instance.
      *
      * A discovery type created using a valid resource type specifies the device
-     * or service type. No UDN is provided, which means the discovery type does not 
+     * or service type. No UDN is provided, which means the discovery type does not
      * specify a UPnP device.
      *
      * \param resourceType specifies the contents of the object. In case
      * the provided argument is valid the type() of the created object is either
      * - HDiscoveryType::DeviceType or
-     * - HDiscoveryType::ServiceType depending of the argument. In case the 
+     * - HDiscoveryType::ServiceType depending of the argument. In case the
      * provided argument is invalid the type is set to HDiscoveryType::Undefined.
      *
      * \sa type(), setUdn()
@@ -242,8 +243,8 @@ public:
      * Creates a new instance.
      *
      * A discovery type created with a valid UDN and a valid resource type
-     * identifies a specific UPnP device or UPnP service that is of certain type. 
-     * Both of the provided arguments have to be valid in order to create a valid type. 
+     * identifies a specific UPnP device or UPnP service that is of certain type.
+     * Both of the provided arguments have to be valid in order to create a valid type.
      * Otherwise the type() is set to HDiscoveryType::Undefined.
      *
      * \param udn specifies the Unique Device Name.
@@ -328,7 +329,7 @@ public:
     /*!
      * Sets the UDN of the object.
      *
-     * \note Changing the UDN may change the resourceType() and the type(). 
+     * \note Changing the UDN may change the resourceType() and the type().
      * For instance, if the object did not have UDN set before,
      * changing the UDN will change the type() of the object.
      *

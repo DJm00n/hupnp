@@ -32,21 +32,21 @@
 
 #include "hcontrolpoint.h"
 #include "hdevicebuild_p.h"
-#include "hactioninvoke_proxy_p.h"
 #include "hevent_subscriptionmanager_p.h"
 
-#include "../habstracthost_p.h"
-#include "../../devicemodel/hdevice.h"
-#include "../../devicemodel/hservice.h"
-#include "../../devicemodel/hactioninvoke.h"
+#include "../hdevicestorage_p.h"
+
+#include "../../devicemodel/client/hclientdevice.h"
+#include "../../devicemodel/client/hclientservice.h"
 
 #include "../../ssdp/hssdp.h"
 #include "../../ssdp/hssdp_p.h"
 #include "../../http/hhttp_server_p.h"
 #include "../../ssdp/hdiscovery_messages.h"
 
+#include "../../../utils/hthreadpool_p.h"
+
 #include <QtCore/QUuid>
-#include <QtCore/QMutex>
 #include <QtCore/QScopedPointer>
 #include <QtNetwork/QNetworkAccessManager>
 
@@ -71,23 +71,14 @@ private:
 
     HControlPointPrivate* m_owner;
 
-private Q_SLOTS:
-
-    void notify_slot(const QString*, const NotifyRequest*, StatusCode*, HRunnable*);
-
 protected:
 
-    virtual void incomingNotifyMessage(
-        MessagingInfo&, const NotifyRequest&, HRunnable*);
+    virtual void incomingNotifyMessage(HMessagingInfo*, const HNotifyRequest&);
 
 public:
 
     explicit ControlPointHttpServer(HControlPointPrivate*);
     virtual ~ControlPointHttpServer();
-
-Q_SIGNALS:
-
-    void notify_sig(const QString*, const NotifyRequest*, StatusCode*, HRunnable*);
 };
 
 //
@@ -105,13 +96,13 @@ private:
 protected:
 
     virtual bool incomingDiscoveryResponse(
-        const HDiscoveryResponse& msg, const HEndpoint& source);
+        const HDiscoveryResponse&, const HEndpoint& source);
 
     virtual bool incomingDeviceAvailableAnnouncement(
-        const HResourceAvailable& msg, const HEndpoint& source);
+        const HResourceAvailable&, const HEndpoint& source);
 
     virtual bool incomingDeviceUnavailableAnnouncement(
-        const HResourceUnavailable& msg, const HEndpoint& source);
+        const HResourceUnavailable&, const HEndpoint& source);
 
 public:
 
@@ -120,41 +111,15 @@ public:
 };
 
 //
-// Thread class used by the HControlPoint to run action invocations
-//
-class HControlPointThread :
-    public QThread
-{
-H_DISABLE_COPY(HControlPointThread)
-friend class HControlPointPrivate;
-
-private:
-
-    QNetworkAccessManager* m_nam;
-    // the nam used by the objects residing in this thread.
-
-    HControlPointPrivate* m_cp;
-
-protected:
-
-    virtual void run();
-
-public:
-
-    HControlPointThread(HControlPointPrivate*);
-};
-
-//
 // Implementation details of HControlPoint
 //
 class H_UPNP_CORE_EXPORT HControlPointPrivate :
-    public HAbstractHostPrivate
+    public QObject
 {
 Q_OBJECT
 H_DECLARE_PUBLIC(HControlPoint)
 H_DISABLE_COPY(HControlPointPrivate)
 friend class DeviceBuildTask;
-friend class HControlPointThread;
 friend class HControlPointSsdpHandler;
 
 private:
@@ -166,38 +131,33 @@ private Q_SLOTS:
 
     void deviceModelBuildDone(const Herqq::Upnp::HUdn&);
 
-    void authenticationRequired(
-        QNetworkReply* reply, QAuthenticator* authenticator);
-
 private:
 
-    bool addRootDevice(HDeviceController* device);
-    void subscribeToEvents(HDeviceController*);
+    bool addRootDevice(HDefaultClientDevice*);
+    void subscribeToEvents(HDefaultClientDevice*);
 
-    HActionInvokeProxy* createActionInvoker(HAction*);
-
-    void processDeviceOnline(HDeviceController*, bool newDevice);
+    void processDeviceOnline(HDefaultClientDevice*, bool newDevice);
 
     bool processDeviceOffline(
-        const HResourceUnavailable& msg, const HEndpoint& source,
+        const HResourceUnavailable&, const HEndpoint& source,
         HControlPointSsdpHandler* origin);
 
     template<class Msg>
     bool processDeviceDiscovery(
-        const Msg& msg, const HEndpoint& source,
-        HControlPointSsdpHandler* origin);
+        const Msg&, const HEndpoint& source, HControlPointSsdpHandler* origin);
 
     template<class Msg>
-    bool shouldFetch(const Msg& msg);
-
-    virtual void doClear();
+    bool shouldFetch(const Msg&);
 
 private Q_SLOTS:
 
-    void deviceExpired(HDeviceController* source);
-    void unsubscribed(Herqq::Upnp::HServiceProxy*);
+    void deviceExpired(HDefaultClientDevice* source);
+    void unsubscribed(Herqq::Upnp::HClientService*);
 
 public:
+
+    const QByteArray m_loggingIdentifier;
+    // the prefix shown before the actual log output
 
     QScopedPointer<HControlPointConfiguration> m_configuration;
     QList<QPair<quint32, HControlPointSsdpHandler*> > m_ssdps;
@@ -206,19 +166,33 @@ public:
     ControlPointHttpServer* m_server;
     HEventSubscriptionManager* m_eventSubscriber;
 
-    QMutex m_deviceCreationMutex;
-    //
-
     HControlPoint::ControlPointError m_lastError;
+
+    QString m_lastErrorDescription;
+    // description of the error that occurred last
 
     HControlPoint* q_ptr;
 
-    QScopedPointer<HControlPointThread> m_controlPointThread;
+    QNetworkAccessManager* m_nam;
+
+    enum InitState
+    {
+        Exiting = -1,
+        Uninitialized = 0,
+        Initializing = 1,
+        Initialized = 2
+    };
+
+    volatile InitState m_state;
+
+    HThreadPool* m_threadPool;
+
+    HDeviceStorage<HClientDevice, HClientService> m_deviceStorage;
 
     HControlPointPrivate();
     virtual ~HControlPointPrivate();
 
-    HDeviceController* buildDevice(
+    HDefaultClientDevice* buildDevice(
         const QUrl& deviceLocation, qint32 maxAge, QString* err);
 };
 

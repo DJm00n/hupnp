@@ -37,41 +37,39 @@ namespace Upnp
 
 /*!
  * This is a type definition for a <em>callable entity</em> that is used
- * as a callback for signaling the completion of an HAction invocation.
+ * as a callback for signaling the completion of an HClientAction invocation.
  *
  * You can create \c %HActionInvokeCallback objects using normal functions,
  * functors and member functions that follow the signature of
  *
  * <tt>
  *
- * bool function(HAsyncOp);
+ * bool function(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&);
  *
  * </tt>
  *
  * <h3>Parameters</h3>
  * \li The first parameter is a type of an "ID" of the asynchronous action invocation.
- * \li The second parameter is the return value of the action invocation.
- * \li The third parameter specifies the output arguments of the action invocation,
- *  which may be empty.
+ * \li The second parameter specifies the output arguments of the action invocation,
+ * which may be empty.
  *
  * <h3>Return value</h3>
- * The return value indicates if the invoked HAction should emit an
- * HAction::invokeComplete() or HAction::invokeFailed() signal depending on the
- * outcome of the invocation after the callback has returned.
- * \li \b true indicates that the HAction should sent the corresponding event.
+ * The return value indicates if the invoked HClientAction should emit an
+ * HClientAction::invokeComplete() after the callback has returned.
+ * \li \b true indicates that the HClientAction should sent the corresponding event.
  *
  * The following example demonstrates how you can instantiate the \c %HActionInvokeCallback
  * for a normal function, functor and a member function.
  *
  * \code
  *
- * #include <HUpnpCore/HAction>
+ * #include <HUpnpCore/HClientAction>
  *
  * #include "myclass.h" // your code that contains declaration for MyClass
  *
  * namespace
  * {
- * bool freefun(HAsyncOp)
+ * bool freefun(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&)
  * {
  *     return true;
  * }
@@ -79,14 +77,14 @@ namespace Upnp
  * class MyFunctor
  * {
  * public:
- *     bool operator()(HAsyncOp)
+ *     bool operator()(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&)
  *     {
  *         return true;
  *     }
  * };
  * }
  *
- * bool MyClass::memfun(HAsyncOp)
+ * bool MyClass::memfun(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&)
  * {
  *     return true;
  * }
@@ -110,7 +108,8 @@ namespace Upnp
  *
  * \ingroup hupnp_devicemodel
  */
-typedef Functor<bool, H_TYPELIST_1(HAsyncOp)> HActionInvokeCallback;
+typedef Functor<bool, H_TYPELIST_2(
+    const HAsyncOp&, const HActionArguments&)> HActionInvokeCallback;
 
 }
 }

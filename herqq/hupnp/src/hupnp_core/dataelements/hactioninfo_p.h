@@ -43,8 +43,10 @@ namespace Upnp
 //
 // Implementation details of HActionInfo
 //
-class HActionInfoPrivate
+class HActionInfoPrivate :
+    public QSharedData
 {
+HActionInfo& operator=(const HActionInfoPrivate&);
 
 public: // attributes
 

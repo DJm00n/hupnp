@@ -21,11 +21,10 @@
 
 #include "hevent_subscriber_p.h"
 
-#include "../../devicemodel/hservice.h"
+#include "../../devicemodel/server/hserverservice.h"
 #include "../../dataelements/hserviceid.h"
 #include "../../dataelements/hserviceinfo.h"
 
-#include "../../http/hhttp_handler_p.h"
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../../utils/hlogger_p.h"
@@ -39,53 +38,58 @@ namespace Herqq
 namespace Upnp
 {
 
-namespace
-{
-bool notifyClient(
-    HHttpHandler& http, MessagingInfo& mi,
-    const QByteArray& msgBody, const QUrl& location,
-    const HSid& sid, quint32 seq)
+bool HServiceEventSubscriber::send(HMessagingInfo* mi)
 {
     HLOG2(H_AT, H_FUN, "__DEVICE HOST__: ");
-    Q_ASSERT(sid.isValid());
-    Q_ASSERT(!msgBody.isEmpty() && !msgBody.isNull());
 
-    if (mi.socket().state() != QTcpSocket::ConnectedState)
+    if (mi->socket().state() != QTcpSocket::ConnectedState)
     {
         HLOG_WARN(QString(
-            "Client @ [sid: [%1]] is not connected. Failed to notify.").arg(
-                sid.toString()));
+            "Client [sid: [%1]] is not connected. Failed to notify.").arg(
+                m_sid.toString()));
 
+        delete mi;
         return false;
     }
 
-    NotifyRequest req(location, sid, seq, msgBody);
+    QByteArray message = m_messagesToSend.head();
+    qint32 seq = m_seq++;
+
+    HNotifyRequest req(m_location, m_sid, seq, message);
+
+    QByteArray data = HHttpMessageCreator::create(req, mi);
 
     HLOG_DBG(QString(
         "Sending notification [seq: %1] to subscriber [%2] @ [%3]").arg(
-            QString::number(seq), sid.toString(), location.toString()));
+            QString::number(seq), m_sid.toString(), m_location.toString()));
 
-    if (http.msgIO(mi, req) != HHttpHandler::Success)
+    HHttpAsyncOperation* oper = m_asyncHttp.msgIo(mi, data);
+    if (!oper)
     {
-        HLOG_WARN(QString(
-            "An error occurred while notifying [seq: %1, sid: %2] host @ [%3]").arg(
-                QString::number(seq), sid.toString(), location.toString()));
+        // notify failed
+        //
+        // according to UDA v1.1:
+        // "the publisher SHOULD abandon sending this message to the
+        // subscriber but MUST keep the subscription active and send future event
+        // messages to the subscriber until the subscription expires or is canceled."
 
-        return false;
+        HLOG_WARN(QString(
+            "Could not send notify [seq: %1, sid: %2] to host @ [%3].").arg(
+                QString::number(seq), m_sid.toString(),
+                m_location.toString()));
     }
 
-    HLOG_DBG("Notification sent successfully");
-    return true;
-}
+    return oper;
 }
 
-ServiceEventSubscriber::ServiceEventSubscriber(
-    HHttpHandler& http, const QByteArray& loggingIdentifier, HService* service,
+HServiceEventSubscriber::HServiceEventSubscriber(
+    const QByteArray& loggingIdentifier, HServerService* service,
     const QUrl location, const HTimeout& timeout, QObject* parent) :
         QObject(parent),
-            m_http   (http),
-            m_service(service), m_location(location),
-            m_sid    (QUuid::createUuid()), m_seq(0),
+            m_service(service), 
+            m_location(location),
+            m_sid    (QUuid::createUuid()), 
+            m_seq(0),
             m_timeout(timeout),
             m_timer(this),
             m_asyncHttp(loggingIdentifier, this),
@@ -110,11 +114,6 @@ ServiceEventSubscriber::ServiceEventSubscriber(
     Q_ASSERT(ok);
 
     ok = connect(
-        this, SIGNAL(send_sig()), this, SLOT(send()));
-
-    Q_ASSERT(ok);
-
-    ok = connect(
         &m_asyncHttp, SIGNAL(msgIoComplete(HHttpAsyncOperation*)),
         this, SLOT(msgIoComplete(HHttpAsyncOperation*)));
 
@@ -126,7 +125,7 @@ ServiceEventSubscriber::ServiceEventSubscriber(
     }
 }
 
-ServiceEventSubscriber::~ServiceEventSubscriber()
+HServiceEventSubscriber::~HServiceEventSubscriber()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(thread() == QThread::currentThread());
@@ -136,7 +135,7 @@ ServiceEventSubscriber::~ServiceEventSubscriber()
             m_location.toString(), m_sid.toString()));
 }
 
-bool ServiceEventSubscriber::connectToHost()
+bool HServiceEventSubscriber::connectToHost()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -160,7 +159,7 @@ bool ServiceEventSubscriber::connectToHost()
     return false;
 }
 
-void ServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
+void HServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -172,6 +171,13 @@ void ServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
                 m_sid.toString(),
                 m_location.toString(),
                 operation->messagingInfo()->lastErrorDescription()));
+
+        if (m_seq == 1)
+        {
+            m_seq--;
+            send();
+            return;
+        }
     }
     else
     {
@@ -182,14 +188,18 @@ void ServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
 
     operation->deleteLater();
 
-    m_messagesToSend.dequeue();
+    if (!m_messagesToSend.isEmpty())
+    {
+        m_messagesToSend.dequeue();
+    }
+
     if (!m_messagesToSend.isEmpty())
     {
         send();
     }
 }
 
-void ServiceEventSubscriber::send()
+void HServiceEventSubscriber::send()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -199,15 +209,15 @@ void ServiceEventSubscriber::send()
     }
 
     QByteArray message = m_messagesToSend.head();
-    qint32 seq = m_seq.fetchAndAddOrdered(1);
+    qint32 seq = m_seq++;
 
-    MessagingInfo* mi = new MessagingInfo(*m_socket, true, 10000);
+    HMessagingInfo* mi = new HMessagingInfo(*m_socket, true, 10000);
     // timeout specified by UDA v 1.1 is 30 seconds, but that seems absurd
     // in this context. however, if this causes problems change it back.
 
-    NotifyRequest req(m_location, m_sid, seq, message);
+    HNotifyRequest req(m_location, m_sid, seq, message);
 
-    QByteArray data = HHttpMessageCreator::create(req, *mi);
+    QByteArray data = HHttpMessageCreator::create(req, mi);
 
     HLOG_DBG(QString(
         "Sending notification [seq: %1] to subscriber [%2] @ [%3]").arg(
@@ -230,11 +240,9 @@ void ServiceEventSubscriber::send()
     }
 }
 
-void ServiceEventSubscriber::subscriptionTimeout()
+void HServiceEventSubscriber::subscriptionTimeout()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    Q_ASSERT(thread() == QThread::currentThread());
 
     m_expired = true;
 
@@ -248,7 +256,7 @@ void ServiceEventSubscriber::subscriptionTimeout()
             m_location.toString(), m_sid.toString()));
 }
 
-bool ServiceEventSubscriber::isInterested(const HService* service) const
+bool HServiceEventSubscriber::isInterested(const HServerService* service) const
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -256,7 +264,7 @@ bool ServiceEventSubscriber::isInterested(const HService* service) const
             m_service->info().serviceId() == service->info().serviceId();
 }
 
-void ServiceEventSubscriber::renew(const HTimeout& newTimeout)
+void HServiceEventSubscriber::renew(const HTimeout& newTimeout)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -275,7 +283,7 @@ void ServiceEventSubscriber::renew(const HTimeout& newTimeout)
     }
 }
 
-void ServiceEventSubscriber::notify(const QByteArray& msgBody)
+void HServiceEventSubscriber::notify(const QByteArray& msgBody)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     Q_ASSERT(QThread::currentThread() == thread());
@@ -289,26 +297,18 @@ void ServiceEventSubscriber::notify(const QByteArray& msgBody)
     }
 }
 
-bool ServiceEventSubscriber::initialNotify(
-    const QByteArray& msg, MessagingInfo* mi)
+bool HServiceEventSubscriber::initialNotify(
+    const QByteArray& msg, HMessagingInfo* mi)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(!m_seq);
 
-    if (!mi)
-    {
-        m_messagesToSend.enqueue(msg);
-        emit send_sig();
-        return true;
-    }
+    m_messagesToSend.enqueue(msg);
 
-    if (!notifyClient(m_http, *mi, msg, m_location, m_sid, m_seq))
-    {
-        return false;
-    }
+    if (!mi) { send()  ; }
+    else     { send(mi); }
 
-    m_seq.fetchAndAddOrdered(1);
     return true;
 }
 

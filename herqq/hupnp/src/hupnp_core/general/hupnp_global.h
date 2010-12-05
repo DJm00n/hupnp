@@ -37,6 +37,180 @@ namespace Upnp
 {
 
 /*!
+ * This enumeration specifies the generic error codes that UPnP action invocation
+ * may return.
+ *
+ * These values correspond to the values defined in the UDA, excluding
+ * \c NotImplemented and \c UndefinedFailure, which are defined for the purposes
+ * of HUPnP.
+ *
+ * \note These are only the generic error codes. Many UPnP devices define
+ * and use domain specific error codes that cannot be specified here.
+ */
+enum UpnpErrorCode
+{
+    /*!
+     * \brief Action invocation succeeded.
+     *
+     * Action invocation succeeded.
+     */
+    UpnpSuccess = 200,
+
+    /*!
+     * Invalid action.
+     *
+     * The specified action was not found.
+     */
+    UpnpInvalidAction = 401,
+
+    /*!
+     * Action invocation failed due to:
+     * \li not enough arguments,
+     * \li arguments in wrong order,
+     * \li one or more arguments have wrong data type
+     */
+    UpnpInvalidArgs = 402,
+
+    /*!
+     * \brief The current state of the service prevents the action invocation.
+     *
+     * The current state of the service prevents the action invocation.
+     */
+    UpnpActionFailed = 501,
+
+    /*!
+     * \brief Action invocation failed due to an invalid argument value.
+     *
+     * Action invocation failed due to an invalid argument value.
+     */
+    UpnpArgumentValueInvalid = 600,
+
+    /*!
+     * Action invocation failed due to:
+     * \li an argument value is less than the minimum of the allowed value range,
+     * \li an argument value is more than the maximum of the allowed value range,
+     * \li an argument value is not in the allowed value list
+     */
+    UpnpArgumentValueOutOfRange = 601,
+
+    /*!
+     * Action invocation failed due to the requested action being optional
+     * and not implemented by the device.
+     */
+    UpnpOptionalActionNotImplemented = 602,
+
+    /*!
+     * Action invocation failed due to insufficient memory.
+     *
+     * The device does not have sufficient memory available to complete the action.
+     * This MAY be a temporary condition; the control point MAY choose to retry the
+     * unmodified request again later and it MAY succeed if memory is available.
+     */
+    UpnpOutOfMemory = 603,
+
+    /*!
+     * The device has encountered an error condition which it cannot resolve itself
+     * and required human intervention such as a reset or power cycle. See the device
+     * display or documentation for further guidance.
+     */
+    UpnpHumanInterventionRequired = 604,
+
+    /*!
+     * Action invocation failed due to a string argument being
+     * too long for the device to handle properly.
+     */
+    UpnpStringArgumentTooLong = 605,
+
+    /*!
+     * \brief Action invocation failed, but the exact cause could not be determined.
+     *
+     * Action invocation failed, but the exact cause could not be determined.
+     */
+    UpnpUndefinedFailure = 0x0ff00000
+};
+
+/*!
+ * Returns a string representation of the specified error code.
+ *
+ * \param errCode specififes the error code.
+ *
+ * \return a string representation of the specified error code.
+ */
+QString H_UPNP_CORE_EXPORT upnpErrorCodeToString(qint32 errCode);
+
+/*!
+ * This enumeration specifies how a device tree should be traversed given a
+ * starting node.
+ *
+ * HUPnP \ref hupnp_devicemodel is organized into a tree that has a root
+ * device, which may contain embedded devices as its children and they may contain
+ * embedded devices as their children recursively.
+ *
+ * This enumeration is used to specify how a device and its children are traversed.
+ */
+enum DeviceVisitType
+{
+    /*!
+     * This value is used to indicate that only the device in question is visited.
+     */
+    VisitThisOnly = 0,
+
+    /*!
+     * This value is used to indicate that this device and its embedded devices
+     * are visited.
+     */
+    VisitThisAndDirectChildren,
+
+    /*!
+     * This value is used to indicate that this device and all of its child
+     * devices are visited recursively.
+     */
+    VisitThisRecursively
+};
+
+/*!
+ * This enumeration specifies the device types that are considered as
+ * \e targets of an operation.
+ */
+enum TargetDeviceType
+{
+    /*!
+     * This value is used to indicate that \b all devices, both root and
+     * embedded are the targets of an operation.
+     */
+    AllDevices,
+
+    /*!
+     * This value is used to indicate that \b only embedded devices are the
+     * targets of an operation.
+     */
+    EmbeddedDevices,
+
+    /*!
+     * This value is used to indicate that \b only root devices are the
+     * targets of an operation.
+     */
+    RootDevices
+};
+
+/*!
+ * This enumeration specifies the type of a device location URL.
+ */
+enum LocationUrlType
+{
+    /*!
+     * The absolute URL for the device description.
+     */
+    AbsoluteUrl,
+
+    /*!
+     * The base URL of the device. This is the URL with which the various
+     * other URLs found in a device description are resolved.
+     */
+    BaseUrl
+};
+
+/*!
  * This enumeration is used to specify the strictness of argument validation.
  *
  * \ingroup hupnp_common
@@ -70,10 +244,9 @@ enum HValidityCheckLevel
  *
  * When HUPnP builds an object model of a UPnP device, this information can be
  * used in validating a description document, or verifying that the provided
- * implementation (HDevice, HDeviceProxy, HService and HServiceProxy derivatives)
- * accurately depicts a description document.
+ * device tree accurately depicts a description document.
  *
- * For instance, if the author of a subclass of a server-side HService has
+ * For instance, if the author of a subclass of a HServerService has
  * specified that a particular action is mandatory, the user of the class,
  * who is the one that provides the description document, has to make sure that
  * the description document also contains the definition of the action.
@@ -87,12 +260,10 @@ enum HValidityCheckLevel
  * is capable of doing.
  *
  * From the client's perspective they are also useful in defining requirements
- * for a particular device type. For instance, if you are an author of a
- * HDeviceProxy or HServiceProxy derivative class and you have written
- * the component to work using a specific configuration that requires the
- * presence of certain actions and state variables on the server side, HUPnP
- * can use these requirements to filter devices that are suitable in terms
- * of advertised capabilities.
+ * for device and service types. For instance, if you have a component that
+ * expects a discovered UPnP device to contain certain services, state variables
+ * and actions, HUPnP can use these requirements to filter devices that are
+ * suitable in terms of advertised capabilities.
  *
  * \ingroup hupnp_common
  */

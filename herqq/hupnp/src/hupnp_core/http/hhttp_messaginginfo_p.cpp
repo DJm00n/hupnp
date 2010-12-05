@@ -33,34 +33,54 @@ namespace Upnp
 {
 
 /*******************************************************************************
- * ChunkedInfo
+ * HMessagingInfo
  ******************************************************************************/
-ChunkedInfo::ChunkedInfo() :
-    m_maxChunkSize(0), m_minChunkSize(0)
-{
-}
-
-/*******************************************************************************
- * MessagingInfo
- ******************************************************************************/
-MessagingInfo::MessagingInfo(
-    QTcpSocket& sock, qint32 receiveTimeoutForNoData) :
-        m_sock(sock), m_keepAlive(false),
+HMessagingInfo::HMessagingInfo(
+    QPair<QTcpSocket*, bool> sock, qint32 receiveTimeoutForNoData) :
+        m_sock(), m_keepAlive(false),
         m_receiveTimeoutForNoData(receiveTimeoutForNoData),
-        m_chunkedInfo(), m_autoDelete(true),
-        m_msecsToWaitOnSend(-1)
+        m_chunkedInfo(), m_msecsToWaitOnSend(-1)
 {
+    m_sock = qMakePair(QPointer<QTcpSocket>(sock.first), sock.second);
 }
 
-MessagingInfo::MessagingInfo(
+HMessagingInfo::HMessagingInfo(
+    QTcpSocket& sock, qint32 receiveTimeoutForNoData) :
+        m_sock(), m_keepAlive(false),
+        m_receiveTimeoutForNoData(receiveTimeoutForNoData),
+        m_chunkedInfo(), m_msecsToWaitOnSend(-1)
+{
+    m_sock = qMakePair(QPointer<QTcpSocket>(&sock), false);
+}
+
+HMessagingInfo::HMessagingInfo(
+    QPair<QTcpSocket*, bool> sock, bool keepAlive, qint32 receiveTimeoutForNoData) :
+        m_sock(), m_keepAlive(keepAlive),
+        m_receiveTimeoutForNoData(receiveTimeoutForNoData),
+        m_msecsToWaitOnSend(-1)
+{
+    m_sock = qMakePair(QPointer<QTcpSocket>(sock.first), sock.second);
+}
+
+HMessagingInfo::HMessagingInfo(
     QTcpSocket& sock, bool keepAlive, qint32 receiveTimeoutForNoData) :
-        m_sock(sock), m_keepAlive(keepAlive),
-        m_receiveTimeoutForNoData(receiveTimeoutForNoData), m_autoDelete(true),
+        m_sock(), m_keepAlive(keepAlive),
+        m_receiveTimeoutForNoData(receiveTimeoutForNoData),
         m_msecsToWaitOnSend(-1)
 {
+    m_sock = qMakePair(QPointer<QTcpSocket>(&sock), false);
 }
 
-void MessagingInfo::setHostInfo(const QUrl& hostInfo)
+HMessagingInfo::~HMessagingInfo()
+{
+    if (m_sock.second)
+    {
+        Q_ASSERT(!m_sock.first.isNull());
+        m_sock.first->deleteLater();
+    }
+}
+
+void HMessagingInfo::setHostInfo(const QUrl& hostInfo)
 {
     QString tmp(hostInfo.host());
 
@@ -72,21 +92,21 @@ void MessagingInfo::setHostInfo(const QUrl& hostInfo)
     m_hostInfo = tmp;
 }
 
-QString MessagingInfo::hostInfo() const
+QString HMessagingInfo::hostInfo() const
 {
     if (m_hostInfo.isEmpty())
     {
         // fall back to the ip address if no host information was provided.
         return QString("%1:%2").arg(
-            m_sock.peerName(), QString::number(m_sock.peerPort()));
+            socket().peerName(), QString::number(socket().peerPort()));
     }
 
     return m_hostInfo;
 }
 
-QString MessagingInfo::lastErrorDescription() const
+QString HMessagingInfo::lastErrorDescription() const
 {
-    return m_lastErrorDescription.isEmpty() ? m_sock.errorString() :
+    return m_lastErrorDescription.isEmpty() ? socket().errorString() :
            m_lastErrorDescription;
 }
 

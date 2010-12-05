@@ -24,8 +24,8 @@
 #define DEVICE_WINDOW_H
 
 #include <HUpnpCore/HUpnp>
-#include <HUpnpCore/HDevice>
-#include <HUpnpCore/HService>
+#include <HUpnpCore/HServerDevice>
+#include <HUpnpCore/HServerService>
 
 #include <QtGui/QMainWindow>
 
@@ -40,14 +40,14 @@ class DeviceWindow;
 // exposed by the HTestDevice
 //
 class HTestService :
-    public Herqq::Upnp::HService
+    public Herqq::Upnp::HServerService
 {
 Q_OBJECT
 Q_DISABLE_COPY(HTestService)
 
 private:
 
-    virtual Herqq::Upnp::HActionsSetupData createActions();
+    virtual HActionInvokes createActionInvokes();
 
 public:
 
@@ -81,14 +81,10 @@ Q_SIGNALS:
 // A class created internally to represent our UPnP test device.
 //
 class HTestDevice :
-    public Herqq::Upnp::HDevice
+    public Herqq::Upnp::HServerDevice
 {
 Q_OBJECT
 Q_DISABLE_COPY(HTestDevice)
-
-private:
-
-    virtual Herqq::Upnp::HServicesSetupData* createServices();
 
 public:
 
@@ -112,7 +108,7 @@ private:
     Herqq::Upnp::HDeviceHost* m_deviceHost;
     // ^^ This is needed to host the HTestDevice
 
-    Herqq::Upnp::HDevice* m_testDevice;
+    Herqq::Upnp::HServerDevice* m_testDevice;
     // A root HDevice hosted by a HDeviceHost will not be deleted
     // until the device host is shutdown or deleted. The root device is stored
     // here just for this example to demonstrate that you may use the

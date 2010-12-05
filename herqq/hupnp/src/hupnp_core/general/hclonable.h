@@ -35,7 +35,7 @@ namespace Upnp
  *
  * \headerfile hclonable.h HClonable
  *
- * \remarks this class is thread-safe.
+ * \remarks This class is thread-safe.
  *
  * \ingroup hupnp_common
  */
@@ -105,7 +105,7 @@ public:
      *
      * Destroys the instance.
      */
-    virtual ~HClonable() = 0;
+    virtual ~HClonable();
 
     /*!
      * Returns a deep copy of the instance.

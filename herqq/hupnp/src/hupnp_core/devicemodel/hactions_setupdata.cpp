@@ -34,20 +34,21 @@ namespace Upnp
 /*******************************************************************************
  * HActionSetupPrivate
  ******************************************************************************/
-class HActionSetupPrivate
+class HActionSetupPrivate :
+    public QSharedData
 {
 public:
 
     QString m_name;
-    qint32 m_version;
+    int m_version;
     HInclusionRequirement m_inclusionRequirement;
-    HActionInvoke m_actionInvoke;
     HActionArguments m_inputArgs;
     HActionArguments m_outputArgs;
 
     HActionSetupPrivate() :
-        m_name(), m_version(0), m_inclusionRequirement(InclusionRequirementUnknown),
-        m_actionInvoke(), m_inputArgs(), m_outputArgs()
+        m_name(), m_version(0),
+        m_inclusionRequirement(InclusionRequirementUnknown), m_inputArgs(),
+        m_outputArgs()
     {
     }
 };
@@ -63,64 +64,37 @@ HActionSetup::HActionSetup() :
 HActionSetup::HActionSetup(const QString& name, HInclusionRequirement ireq) :
     h_ptr(new HActionSetupPrivate())
 {
-    h_ptr->m_name = name;
+    setName(name);
+
     h_ptr->m_version = 1;
     h_ptr->m_inclusionRequirement = ireq;
 }
 
 HActionSetup::HActionSetup(
-    const QString& name, qint32 version, HInclusionRequirement ireq) :
+    const QString& name, int version, HInclusionRequirement ireq) :
         h_ptr(new HActionSetupPrivate())
 {
-    h_ptr->m_name = name;
+    setName(name);
+
     h_ptr->m_version = version;
     h_ptr->m_inclusionRequirement = ireq;
-}
-
-HActionSetup::HActionSetup(
-    const QString& name, const HActionInvoke& invoke,
-    HInclusionRequirement ireq) :
-        h_ptr(new HActionSetupPrivate())
-{
-    h_ptr->m_name = name;
-    h_ptr->m_version = 1;
-    h_ptr->m_inclusionRequirement = ireq;
-    h_ptr->m_actionInvoke = invoke;
-}
-
-HActionSetup::HActionSetup(
-    const QString& name, const HActionInvoke& invoke, qint32 version,
-    HInclusionRequirement ireq) :
-        h_ptr(new HActionSetupPrivate())
-{
-    h_ptr->m_name = name;
-    h_ptr->m_version = version;
-    h_ptr->m_inclusionRequirement = ireq;
-    h_ptr->m_actionInvoke = invoke;
 }
 
 HActionSetup::~HActionSetup()
 {
-    delete h_ptr;
 }
 
 HActionSetup::HActionSetup(const HActionSetup& other) :
-    h_ptr(0)
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HActionSetupPrivate(*other.h_ptr);
 }
 
 HActionSetup& HActionSetup::operator=(const HActionSetup& other)
 {
     Q_ASSERT(&other != this);
 
-    HActionSetupPrivate* newHptr =
-        new HActionSetupPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = other.h_ptr;
     return *this;
 }
 
@@ -132,11 +106,6 @@ const HActionArguments& HActionSetup::inputArguments() const
 const HActionArguments& HActionSetup::outputArguments() const
 {
     return h_ptr->m_outputArgs;
-}
-
-HActionInvoke HActionSetup::actionInvoke() const
-{
-    return h_ptr->m_actionInvoke;
 }
 
 HInclusionRequirement HActionSetup::inclusionRequirement() const
@@ -155,7 +124,7 @@ QString HActionSetup::name() const
     return h_ptr->m_name;
 }
 
-qint32 HActionSetup::version() const
+int HActionSetup::version() const
 {
     return h_ptr->m_version;
 }
@@ -170,17 +139,12 @@ void HActionSetup::setOutputArguments(const HActionArguments& args)
     h_ptr->m_outputArgs = args;
 }
 
-void HActionSetup::setActionInvoke(const HActionInvoke& arg)
-{
-    h_ptr->m_actionInvoke = arg;
-}
-
 void HActionSetup::setInclusionRequirement(HInclusionRequirement arg)
 {
     h_ptr->m_inclusionRequirement = arg;
 }
 
-void HActionSetup::setVersion(qint32 version)
+void HActionSetup::setVersion(int version)
 {
     h_ptr->m_version = version;
 }
@@ -206,7 +170,7 @@ HActionsSetupData::HActionsSetupData() :
 
 bool HActionsSetupData::insert(const HActionSetup& setupInfo)
 {
-    if (m_actionSetupInfos.contains(setupInfo.name()))
+    if (m_actionSetupInfos.contains(setupInfo.name()) || !setupInfo.isValid())
     {
         return false;
     }
@@ -229,20 +193,6 @@ bool HActionsSetupData::remove(const QString& actionName)
 HActionSetup HActionsSetupData::get(const QString& actionName) const
 {
     return m_actionSetupInfos.value(actionName);
-}
-
-bool HActionsSetupData::setInvoke(
-    const QString& actionName, const HActionInvoke& actionInvoke)
-{
-    if (m_actionSetupInfos.contains(actionName))
-    {
-        HActionSetup setupInfo = m_actionSetupInfos.value(actionName);
-        setupInfo.setActionInvoke(actionInvoke);
-        m_actionSetupInfos.insert(actionName, setupInfo);
-        return true;
-    }
-
-    return false;
 }
 
 bool HActionsSetupData::setInclusionRequirement(

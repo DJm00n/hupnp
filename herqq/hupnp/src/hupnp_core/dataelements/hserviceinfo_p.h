@@ -36,6 +36,7 @@
 #include "../general/hupnp_global.h"
 
 #include <QtCore/QUrl>
+#include <QtCore/QSharedData>
 
 namespace Herqq
 {
@@ -46,7 +47,8 @@ namespace Upnp
 //
 // Implementation details of HDeviceInfo
 //
-class HServiceInfoPrivate
+class HServiceInfoPrivate :
+    public QSharedData
 {
 
 public: // attributes

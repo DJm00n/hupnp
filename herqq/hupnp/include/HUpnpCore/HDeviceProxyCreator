@@ -1,6 +1,0 @@
-#ifndef H_DEVICEPROXYCREATOR_
-#define H_DEVICEPROXYCREATOR_
-
-#include "public/hdeviceproxy_creator.h"
-
-#endif // H_DEVICEPROXYCREATOR_

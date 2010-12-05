@@ -22,15 +22,15 @@
 
 #include "controlpoint_navigatoritem.h"
 
-#include <HUpnpCore/HAction>
-#include <HUpnpCore/HDevice>
-#include <HUpnpCore/HService>
 #include <HUpnpCore/HServiceId>
 #include <HUpnpCore/HActionInfo>
 #include <HUpnpCore/HDeviceInfo>
 #include <HUpnpCore/HServiceInfo>
-#include <HUpnpCore/HStateVariable>
+#include <HUpnpCore/HClientAction>
+#include <HUpnpCore/HClientDevice>
+#include <HUpnpCore/HClientService>
 #include <HUpnpCore/HStateVariableInfo>
+#include <HUpnpCore/HClientStateVariable>
 
 #include <QUrl>
 #include <QList>
@@ -156,7 +156,7 @@ void ContainerItem::accept(ControlPointNavigatorItemVisitor* /*visitor*/)
  * DeviceItem
  ******************************************************************************/
 DeviceItem::DeviceItem(
-    HDevice* device, ControlPointNavigatorItem* parent) :
+    HClientDevice* device, ControlPointNavigatorItem* parent) :
         ControlPointNavigatorItem(parent), m_device(device)
 {
     Q_ASSERT(m_device);
@@ -180,7 +180,7 @@ void DeviceItem::accept(ControlPointNavigatorItemVisitor* visitor)
  * ServiceItem
  ******************************************************************************/
 ServiceItem::ServiceItem(
-    HService* service, ControlPointNavigatorItem* parent) :
+    HClientService* service, ControlPointNavigatorItem* parent) :
         ControlPointNavigatorItem(parent), m_service(service)
 {
     Q_ASSERT(service);
@@ -204,7 +204,7 @@ void ServiceItem::accept(ControlPointNavigatorItemVisitor* visitor)
  * ActionItem
  ******************************************************************************/
 ActionItem::ActionItem(
-    HAction* action, ControlPointNavigatorItem* parent) :
+    HClientAction* action, ControlPointNavigatorItem* parent) :
         ControlPointNavigatorItem(parent), m_action(action)
 {
     Q_ASSERT(action);
@@ -228,7 +228,7 @@ void ActionItem::accept(ControlPointNavigatorItemVisitor* visitor)
  * StateVariableItem
  ******************************************************************************/
 StateVariableItem::StateVariableItem(
-    HStateVariable* stateVar, ControlPointNavigatorItem* parent) :
+    const HClientStateVariable* stateVar, ControlPointNavigatorItem* parent) :
         ControlPointNavigatorItem(parent), m_stateVar(stateVar)
 {
     Q_ASSERT(stateVar);

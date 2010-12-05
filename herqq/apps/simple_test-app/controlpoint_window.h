@@ -56,7 +56,7 @@ private:
 
 private:
 
-    void connectToEvents(Herqq::Upnp::HDevice*);
+    void connectToEvents(Herqq::Upnp::HClientDevice*);
 
 protected:
 
@@ -65,10 +65,12 @@ protected:
 
 private slots:
 
-    void rootDeviceOnline(Herqq::Upnp::HDeviceProxy*);
-    void rootDeviceOffline(Herqq::Upnp::HDeviceProxy*);
+    void rootDeviceOnline(Herqq::Upnp::HClientDevice*);
+    void rootDeviceOffline(Herqq::Upnp::HClientDevice*);
 
-    void stateVariableChanged(const Herqq::Upnp::HStateVariableEvent&);
+    void stateVariableChanged(
+        const Herqq::Upnp::HClientStateVariable*,
+        const Herqq::Upnp::HStateVariableEvent&);
 
     void on_navigatorTreeView_doubleClicked(QModelIndex);
     void on_navigatorTreeView_clicked(QModelIndex);
@@ -80,7 +82,7 @@ public:
 
 Q_SIGNALS:
 
-    void contentSourceRemoved(Herqq::Upnp::HDevice*);
+    void contentSourceRemoved(Herqq::Upnp::HClientDevice*);
     void closed();
 };
 

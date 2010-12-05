@@ -25,12 +25,12 @@
 
 #include "../../general/hupnp_global_p.h"
 
-#include "../../devicemodel/hservice_p.h"
-#include "../../devicemodel/hdeviceproxy.h"
-#include "../../devicemodel/hserviceproxy.h"
+#include "../../devicemodel/client/hclientdevice.h"
+#include "../../devicemodel/client/hdefault_clientservice_p.h"
 
 #include "../../dataelements/hserviceid.h"
 #include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hserviceinfo.h"
 
 #include "../../../utils/hlogger_p.h"
 
@@ -58,7 +58,7 @@ void HEventSubscriptionManager::subscribed_slot(HEventSubscription* sub)
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(sub);
 
-    emit subscribed(sub->service()->m_serviceProxy);
+    emit subscribed(sub->service());
 }
 
 void HEventSubscriptionManager::subscriptionFailed_slot(HEventSubscription* sub)
@@ -66,7 +66,7 @@ void HEventSubscriptionManager::subscriptionFailed_slot(HEventSubscription* sub)
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(sub);
 
-    HServiceProxy* service = sub->service()->m_serviceProxy;
+    HClientService* service = sub->service();
     sub->resetSubscription();
     emit subscriptionFailed(service);
 }
@@ -76,18 +76,19 @@ void HEventSubscriptionManager::unsubscribed(HEventSubscription* sub)
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(sub);
 
-    emit unsubscribed(sub->service()->m_serviceProxy);
+    emit unsubscribed(sub->service());
 }
 
 HEventSubscription* HEventSubscriptionManager::createSubscription(
-    HServiceController* service, qint32 timeout)
+    HClientService* service, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
+
     Q_ASSERT(service);
     Q_ASSERT(thread() == QThread::currentThread());
 
     QUrl httpSrvRootUrl = getSuitableHttpServerRootUrl(
-        service->m_service->parentDevice()->locations());
+        service->parentDevice()->locations());
 
     Q_ASSERT(!httpSrvRootUrl.isEmpty());
 
@@ -153,17 +154,17 @@ QUrl HEventSubscriptionManager::getSuitableHttpServerRootUrl(
 }
 
 bool HEventSubscriptionManager::subscribe(
-    HDeviceProxy* device, HDevice::DeviceVisitType visitType, 
+    HClientDevice* device, DeviceVisitType visitType,
     qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(device);
 
     bool ok = false;
-    HServiceProxies services(device->serviceProxies());
+    HClientServices services(device->services());
     for(qint32 i = 0; i < services.size(); ++i)
     {
-        HServiceProxy* service = services.at(i);
+        HClientService* service = services.at(i);
         if (service->isEvented())
         {
             if (subscribe(service, timeout) == Sub_Success)
@@ -173,15 +174,15 @@ bool HEventSubscriptionManager::subscribe(
         }
     }
 
-    if (visitType == HDevice::VisitThisAndDirectChildren ||
-        visitType == HDevice::VisitThisRecursively)
+    if (visitType == VisitThisAndDirectChildren ||
+        visitType == VisitThisRecursively)
     {
-        HDeviceProxies devices(device->embeddedProxyDevices());
+        HClientDevices devices(device->embeddedDevices());
         for(qint32 i = 0; i < devices.size(); ++i)
         {
-            HDevice::DeviceVisitType visitTypeForChildren =
-                visitType == HDevice::VisitThisRecursively ?
-                    HDevice::VisitThisRecursively : HDevice::VisitThisOnly;
+            DeviceVisitType visitTypeForChildren =
+                visitType == VisitThisRecursively ?
+                    VisitThisRecursively : VisitThisOnly;
 
             if (subscribe(devices.at(i), visitTypeForChildren, timeout) && !ok)
             {
@@ -194,7 +195,7 @@ bool HEventSubscriptionManager::subscribe(
 }
 
 HEventSubscriptionManager::SubscriptionResult
-    HEventSubscriptionManager::subscribe(HServiceProxy* service, qint32 timeout)
+    HEventSubscriptionManager::subscribe(HClientService* service, qint32 timeout)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
@@ -223,7 +224,7 @@ HEventSubscriptionManager::SubscriptionResult
         for(; it != subs->end(); ++it)
         {
             HEventSubscription* sub = (*it);
-            if (sub->service()->m_service == service)
+            if (sub->service() == service)
             {
                 if (sub->subscriptionStatus() == HEventSubscription::Status_Subscribed)
                 {
@@ -242,9 +243,7 @@ HEventSubscriptionManager::SubscriptionResult
 
 end:
 
-    HServiceController* sc = static_cast<HServiceController*>(service->parent());
-
-    HEventSubscription* sub = createSubscription(sc, timeout);
+    HEventSubscription* sub = createSubscription(service, timeout);
     m_subscribtionsByUuid.insert(sub->id(), sub);
     m_subscriptionsByUdn.insert(deviceUdn, subs);
     subs->append(sub);
@@ -255,7 +254,8 @@ end:
 }
 
 HEventSubscription::SubscriptionStatus
-    HEventSubscriptionManager::subscriptionStatus(const HServiceProxy* service) const
+    HEventSubscriptionManager::subscriptionStatus(
+        const HClientService* service) const
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
@@ -274,7 +274,7 @@ HEventSubscription::SubscriptionStatus
     {
         HEventSubscription* sub = (*it);
 
-        if (sub->service()->m_service == service)
+        if (sub->service() == service)
         {
             return sub->subscriptionStatus();
         }
@@ -284,7 +284,7 @@ HEventSubscription::SubscriptionStatus
 }
 
 bool HEventSubscriptionManager::cancel(
-    HDeviceProxy* device, HDevice::DeviceVisitType visitType, 
+    HClientDevice* device, DeviceVisitType visitType,
     bool unsubscribe)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
@@ -313,15 +313,15 @@ bool HEventSubscriptionManager::cancel(
         }
     }
 
-    if (visitType == HDevice::VisitThisAndDirectChildren ||
-        visitType == HDevice::VisitThisRecursively)
+    if (visitType == VisitThisAndDirectChildren ||
+        visitType == VisitThisRecursively)
     {
-        HDeviceProxies devices(device->embeddedProxyDevices());
+        HClientDevices devices(device->embeddedDevices());
         for(qint32 i = 0; i < devices.size(); ++i)
         {
-            HDevice::DeviceVisitType visitTypeForChildren =
-                visitType == HDevice::VisitThisRecursively ?
-                    HDevice::VisitThisRecursively : HDevice::VisitThisOnly;
+            DeviceVisitType visitTypeForChildren =
+                visitType == VisitThisRecursively ?
+                    VisitThisRecursively : VisitThisOnly;
 
             cancel(devices.at(i), visitTypeForChildren, unsubscribe);
         }
@@ -330,7 +330,7 @@ bool HEventSubscriptionManager::cancel(
     return true;
 }
 
-bool HEventSubscriptionManager::remove(HDeviceProxy* device, bool recursive)
+bool HEventSubscriptionManager::remove(HClientDevice* device, bool recursive)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(device);
@@ -358,7 +358,7 @@ bool HEventSubscriptionManager::remove(HDeviceProxy* device, bool recursive)
 
     if (recursive)
     {
-        HDeviceProxies devices(device->embeddedProxyDevices());
+        HClientDevices devices(device->embeddedDevices());
         for(qint32 i = 0; i < devices.size(); ++i)
         {
             remove(devices.at(i), recursive);
@@ -368,13 +368,13 @@ bool HEventSubscriptionManager::remove(HDeviceProxy* device, bool recursive)
     return true;
 }
 
-bool HEventSubscriptionManager::cancel(HServiceProxy* service, bool unsubscribe)
+bool HEventSubscriptionManager::cancel(HClientService* service, bool unsubscribe)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
     Q_ASSERT(thread() == QThread::currentThread());
 
-    HDeviceProxy* parentDevice = service->parentProxyDevice();
+    HClientDevice* parentDevice = service->parentDevice();
 
     HUdn udn = parentDevice->info().udn();
 
@@ -390,7 +390,7 @@ bool HEventSubscriptionManager::cancel(HServiceProxy* service, bool unsubscribe)
     {
         HEventSubscription* sub = (*it);
 
-        if (sub->service()->m_service != service)
+        if (sub->service() != service)
         {
             continue;
         }
@@ -410,13 +410,13 @@ bool HEventSubscriptionManager::cancel(HServiceProxy* service, bool unsubscribe)
     return false;
 }
 
-bool HEventSubscriptionManager::remove(HServiceProxy* service)
+bool HEventSubscriptionManager::remove(HClientService* service)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(service);
     Q_ASSERT(thread() == QThread::currentThread());
 
-    HDeviceProxy* parentDevice = service->parentProxyDevice();
+    HClientDevice* parentDevice = service->parentDevice();
 
     HUdn udn = parentDevice->info().udn();
 
@@ -432,7 +432,7 @@ bool HEventSubscriptionManager::remove(HServiceProxy* service)
     {
         HEventSubscription* sub = (*it);
 
-        if (sub->service()->m_service != service)
+        if (sub->service() != service)
         {
             continue;
         }
@@ -480,7 +480,7 @@ void HEventSubscriptionManager::removeAll()
 }
 
 StatusCode HEventSubscriptionManager::onNotify(
-    const QUuid& id, const NotifyRequest& req)
+    const QUuid& id, const HNotifyRequest& req)
 {
     HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
     Q_ASSERT(thread() == QThread::currentThread());

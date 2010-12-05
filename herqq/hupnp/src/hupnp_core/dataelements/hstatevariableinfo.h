@@ -25,6 +25,8 @@
 #include <HUpnpCore/HUpnp>
 #include <HUpnpCore/HUpnpDataTypes>
 
+#include <QtCore/QSharedDataPointer>
+
 class QString;
 class QVariant;
 
@@ -46,7 +48,7 @@ class HStateVariableInfoPrivate;
  * name() and the dataType().
  *
  * In addition to the information found in the service description document,
- * the HService containing the HStateVariable that is depicted by the
+ * the UPnP service containing the state variable that is depicted by the
  * HStateVariableInfo object may have specified additional information
  * about the state variable:
  *
@@ -67,9 +69,9 @@ class HStateVariableInfoPrivate;
  *
  * \ingroup hupnp_common
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
- * \sa HStateVariable, HDeviceInfo, HServiceInfo and HActionInfo.
+ * \sa HDeviceInfo, HServiceInfo and HActionInfo.
  */
 class H_UPNP_CORE_EXPORT HStateVariableInfo
 {
@@ -108,7 +110,7 @@ public:
 
 private:
 
-    HStateVariableInfoPrivate* h_ptr;
+    QSharedDataPointer<HStateVariableInfoPrivate> h_ptr;
 
 public:
 

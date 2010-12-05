@@ -22,7 +22,7 @@
 #ifndef HCONTROLPOINT_H_
 #define HCONTROLPOINT_H_
 
-#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HClientDevice>
 #include <HUpnpCore/HResourceType>
 
 #include <QtCore/QObject>
@@ -65,7 +65,7 @@ class HControlPointConfiguration;
  * - HControlPoint::rootDeviceOffline(), which is emitted when a UPnP device in
  * control of the control point has gone offline.
  * - HControlPoint::rootDeviceRemoved(), which is emitted when a control point has
- * removed and deleted an HDeviceProxy. Note, an HDeviceProxy is never deleted without
+ * removed and deleted an HClientDevice. Note, an HClientDevice is never deleted without
  * an explicit request from a user. See removeRootDevice() for further information.
  *
  * Consider an example:
@@ -87,8 +87,8 @@ class HControlPointConfiguration;
  *
  * private slots:
  *
- *     void rootDeviceOnline(Herqq::Upnp::HDeviceProxy*);
- *     void rootDeviceOffline(Herqq::Upnp::HDeviceProxy*);
+ *     void rootDeviceOnline(Herqq::Upnp::HClientDevice*);
+ *     void rootDeviceOffline(Herqq::Upnp::HClientDevice*);
  *
  * public:
  *
@@ -98,22 +98,22 @@ class HControlPointConfiguration;
  * // myclass.cpp
  *
  * #include "myclass.h"
- * #include <HUpnpCore/HDeviceProxy>
+ * #include <HUpnpCore/HClientDevice>
  *
  * MyClass::MyClass(QObject* parent) :
  *     QObject(parent), m_controlPoint(new Herqq::Upnp::HControlPoint(this))
  * {
  *     connect(
  *         m_controlPoint,
- *         SIGNAL(rootDeviceOnline(Herqq::Upnp::HDeviceProxy*)),
+ *         SIGNAL(rootDeviceOnline(Herqq::Upnp::HClientDevice*)),
  *         this,
- *         SLOT(rootDeviceOnline(Herqq::Upnp::HDeviceProxy*)));
+ *         SLOT(rootDeviceOnline(Herqq::Upnp::HClientDevice*)));
  *
  *     connect(
  *         m_controlPoint,
- *         SIGNAL(rootDeviceOffline(Herqq::Upnp::HDeviceProxy*)),
+ *         SIGNAL(rootDeviceOffline(Herqq::Upnp::HClientDevice*)),
  *         this,
- *         SLOT(rootDeviceOffline(Herqq::Upnp::HDeviceProxy*)));
+ *         SLOT(rootDeviceOffline(Herqq::Upnp::HClientDevice*)));
  *
  *     if (!m_controlPoint->init())
  *     {
@@ -130,7 +130,7 @@ class HControlPointConfiguration;
  *     // remember also that the current thread has to have an event loop
  * }
  *
- * void MyClass::rootDeviceOnline(Herqq::Upnp::HDeviceProxy* newDevice)
+ * void MyClass::rootDeviceOnline(Herqq::Upnp::HClientDevice* newDevice)
  * {
  *     // device discovered, should something be done with it? Perhaps we want
  *     // to learn something from it:
@@ -138,7 +138,7 @@ class HControlPointConfiguration;
  *     // do something with the info object
  * }
  *
- * void MyClass::rootDeviceOffline(Herqq::Upnp::HDeviceProxy* rootDevice)
+ * void MyClass::rootDeviceOffline(Herqq::Upnp::HClientDevice* rootDevice)
  * {
  *     // device announced that it is going away and the control point sends
  *     // a notification of this. However, the device isn't removed from the
@@ -149,12 +149,12 @@ class HControlPointConfiguration;
  *
  * \endcode
  *
- * Once you have obtained a pointer to a HDeviceProxy you can
+ * Once you have obtained a pointer to a HClientDevice you can
  * enumerate its services, invoke its actions, listen for events of changed
- * state and so on. Basically, a root \c %HDeviceProxy object at the control
+ * state and so on. Basically, a root \c %HClientDevice object at the control
  * point side is an entry point to a very accurate object model depicting the
  * real root UPnP device that has been discovered. For more information about
- * the \c %HDeviceProxy and the object model, see the page detailing the
+ * the \c %HClientDevice and the object model, see the page detailing the
  * HUPnP \ref hupnp_devicemodel.
  *
  * You can call quit() to stop an initialized control point instance from listening
@@ -166,13 +166,13 @@ class HControlPointConfiguration;
  * \li You can use \c QObject::moveToThread() on the \c %HControlPoint, which causes
  * the control point and every object managed by it to be moved to the chosen thread.
  * However, you cannot move individual objects managed by \c %HControlPoint.
- * \li a control point never transfers the ownership of the HDeviceProxy objects it manages.
- * \li <b>%HControlPoint always destroys every %HDeviceProxy it manages when it is
+ * \li a control point never transfers the ownership of the HClientDevice objects it manages.
+ * \li <b>%HControlPoint always destroys every %HClientDevice it manages when it is
  * being destroyed</b>.
  *
- * \warning see notes about object deletion in ~HControlPoint().
+ * \warning See notes about object deletion in ~HControlPoint().
  *
- * \sa HDeviceProxy, HDeviceProxies, hupnp_devicemodel
+ * \sa HClientDevice, HClientDevices, hupnp_devicemodel
  */
 class H_UPNP_CORE_EXPORT HControlPoint :
     public QObject
@@ -398,7 +398,7 @@ private:
      * - This method takes precedence over any configuration options provided
      * to the control point at the time of its construction
      * - This method is called when:
-     *   - a new root HDeviceProxy has been built and
+     *   - a new root HClientDevice has been built and
      *   - a previously known device comes back online with the same UPnP device
      *   configuration value it had before it went offline.
      *
@@ -412,7 +412,7 @@ private:
      *
      * \sa DeviceDiscoveryAction()
      */
-    virtual DeviceDiscoveryAction acceptRootDevice(HDeviceProxy* device);
+    virtual DeviceDiscoveryAction acceptRootDevice(HClientDevice* device);
 
     /*!
      * This method is called whenever a new a device has been detected on
@@ -583,40 +583,41 @@ public:
      * control point is being destroyed. In addition, you can call
      * removeRootDevice() to remove and delete a \b root device. However, the call
      * will fail if you pass it an embedded device. Moreover, do not delete a
-     * device object directly. The ownership of an HDeviceProxy is \b never
+     * device object directly. The ownership of an HClientDevice is \b never
      * transferred.
      *
      * \remarks this method does not perform a network scan. The search is run
      * against the devices that are already in the control of the control point.
      * You can call scan() to perform an explicit network scan.
      */
-    HDeviceProxy* device(
-        const HUdn& udn, HDevice::TargetDeviceType deviceType = HDevice::RootDevices) const;
+    HClientDevice* device(
+        const HUdn& udn,
+        TargetDeviceType deviceType = RootDevices) const;
 
     /*!
      * Returns a list of UPnP root devices the control point is currently managing.
      *
-     * The returned list contains pointers to root HDeviceProxy objects that are currently
+     * The returned list contains pointers to root HClientDevice objects that are currently
      * managed by this instance.
      *
-     * \return a list of pointers to root HDeviceProxy objects the control point
+     * \return a list of pointers to root HClientDevice objects the control point
      * is currently managing.
      *
      * \warning the returned devices will be deleted at the latest when the
      * control point is being destroyed. In addition, you can call
      * removeRootDevice() to remove and delete a root device. However, do not delete
-     * the device objects directly. The ownership of an HDeviceProxy is \b never
+     * the device objects directly. The ownership of an HClientDevice is \b never
      * transferred.
      *
      * \remarks this method does not perform a network scan.
      */
-    HDeviceProxies rootDevices() const;
+    HClientDevices rootDevices() const;
 
     /*!
      * Returns a list of UPnP devices the control point is currently managing and
      * that match the provided search criteria.
      *
-     * The returned list contains pointers to HDeviceProxy objects that are currently
+     * The returned list contains pointers to HClientDevice objects that are currently
      * managed by this instance. It is important to note that unlike the method
      * rootDevices() this method may return pointers to both root and
      * embedded devices.
@@ -630,23 +631,23 @@ public:
      * \param deviceTypes specifies whether the search should consider root
      * devices only. The default is to search root devices only.
      *
-     * \return a list of pointers to HDeviceProxy objects the control point
+     * \return a list of pointers to HClientDevice objects the control point
      * is currently managing.
      *
      * \warning the returned devices will be deleted at the latest when the
      * control point is being destroyed. In addition, you can call
      * removeRootDevice() to remove and delete a \b root device. However, the call
      * will fail if you pass it an embedded device. Moreover, do not delete the
-     * device objects directly. The ownership of an HDeviceProxy is \b never transferred.
+     * device objects directly. The ownership of an HClientDevice is \b never transferred.
      *
      * \remarks this method does not perform a network scan. The search is run
      * against the devices that are already in the control of the control point.
      * You can call scan() to perform an explicit network scan.
      */
-    HDeviceProxies devices(
+    HClientDevices devices(
         const HResourceType& deviceType,
-        HResourceType::VersionMatch versionMatch = HResourceType::InclusiveVersionMatch,
-        HDevice::TargetDeviceType deviceTypes = HDevice::RootDevices);
+        HResourceType::VersionMatch versionMatch = HResourceType::Inclusive,
+        TargetDeviceType deviceTypes = RootDevices);
 
     /*!
      * Removes the root device from the control point and deletes it.
@@ -666,7 +667,7 @@ public:
      *
      * \sa error(), errorDescription()
      */
-    bool removeRootDevice(HDeviceProxy* rootDevice);
+    bool removeRootDevice(HClientDevice* rootDevice);
 
     /*!
      * Subscribes to events of the specified services contained by the
@@ -704,7 +705,7 @@ public:
      * \sa error(), errorDescription()
      */
     bool subscribeEvents(
-        HDeviceProxy* device, HDevice::DeviceVisitType visitType);
+        HClientDevice* device, DeviceVisitType visitType);
 
     /*!
      * Subscribes to the events of the service.
@@ -735,7 +736,7 @@ public:
      *
      * \sa error(), errorDescription()
      */
-    bool subscribeEvents(HServiceProxy* service);
+    bool subscribeEvents(HClientService* service);
 
     /*!
      * Checks if there exists a subscription to the events of the specified service.
@@ -752,7 +753,7 @@ public:
      * \retval HControlPoint::Subscribed when there exists an active
      * subscription to the specified service.
      */
-    SubscriptionStatus subscriptionStatus(const HServiceProxy* service) const;
+    SubscriptionStatus subscriptionStatus(const HClientService* service) const;
 
     /*!
      * Cancels the event subscriptions of every service contained by the device.
@@ -783,7 +784,7 @@ public:
      *
      * \sa error(), errorDescription()
      */
-    bool cancelEvents(HDeviceProxy* device, HDevice::DeviceVisitType visitType);
+    bool cancelEvents(HClientDevice* device, DeviceVisitType visitType);
 
     /*!
      * Cancels the event subscription of the service.
@@ -807,7 +808,7 @@ public:
      *
      * \sa error(), errorDescription()
      */
-    bool cancelEvents(HServiceProxy* service);
+    bool cancelEvents(HClientService* service);
 
     /*!
      * Scans the network for resources of interest.
@@ -916,7 +917,7 @@ Q_SIGNALS:
      *
      * \sa subscriptionFailed()
      */
-    void subscriptionSucceeded(Herqq::Upnp::HServiceProxy* service);
+    void subscriptionSucceeded(Herqq::Upnp::HClientService* service);
 
     /*!
      * This signal is emitted when an event subscription to the specified
@@ -934,7 +935,7 @@ Q_SIGNALS:
      *
      * \sa subscriptionSucceeded()
      */
-    void subscriptionFailed(Herqq::Upnp::HServiceProxy* service);
+    void subscriptionFailed(Herqq::Upnp::HClientService* service);
 
     /*!
      * This signal is emitted when an event subscription to the specified
@@ -942,7 +943,7 @@ Q_SIGNALS:
      *
      * \param service specifies the service, which subscription was canceled.
      */
-    void subscriptionCanceled(Herqq::Upnp::HServiceProxy* service);
+    void subscriptionCanceled(Herqq::Upnp::HClientService* service);
 
     /*!
      * This signal is emitted when a device has been discovered.
@@ -955,7 +956,7 @@ Q_SIGNALS:
      *
      * \sa rootDeviceOffline(), removeRootDevice()
      */
-    void rootDeviceOnline(Herqq::Upnp::HDeviceProxy* device);
+    void rootDeviceOnline(Herqq::Upnp::HClientDevice* device);
 
     /*!
      * This signal is sent when a root device has announced that it is going
@@ -978,7 +979,7 @@ Q_SIGNALS:
      *
      * \sa rootDeviceOnline(), rootDeviceInvalidated(), removeRootDevice()
      */
-    void rootDeviceOffline(Herqq::Upnp::HDeviceProxy* device);
+    void rootDeviceOffline(Herqq::Upnp::HClientDevice* device);
 
     /*!
      * This signal is emitted when a previously discovered device has changed its
@@ -990,7 +991,7 @@ Q_SIGNALS:
      * If the configuration changes the old device tree has to be discarded in
      * place of the new one.
      *
-     * After this signal is emitted the specified HDeviceProxy object has become
+     * After this signal is emitted the specified HClientDevice object has become
      * invalid and should be discarded and removed immediately.
      * In addition, rootDeviceOnline() signal may be emitted shortly after this
      * signal, but only when the new configuration of the device is accepted
@@ -998,7 +999,7 @@ Q_SIGNALS:
      *
      * \param device is the device that has been invalidated.
      */
-    void rootDeviceInvalidated(Herqq::Upnp::HDeviceProxy* device);
+    void rootDeviceInvalidated(Herqq::Upnp::HClientDevice* device);
 
     /*!
      * This signal is emitted when a root device has been removed from the control

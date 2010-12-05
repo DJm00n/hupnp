@@ -22,19 +22,7 @@
 #include "hactionarguments.h"
 #include "hactionarguments_p.h"
 
-#include <QtCore/QMetaType>
-
-static bool registerMetaTypes()
-{
-    qRegisterMetaType<Herqq::Upnp::HActionArgument>("Herqq::Upnp::HActionArgument");
-    qRegisterMetaType<Herqq::Upnp::HActionArguments>("Herqq::Upnp::HActionArguments");
-    qRegisterMetaType<Herqq::Upnp::HActionArgument>("Herqq::Upnp::HActionArgument");
-    qRegisterMetaType<Herqq::Upnp::HActionArguments>("Herqq::Upnp::HActionArguments");
-
-    return true;
-}
-
-static bool test = registerMetaTypes();
+#include <QtCore/QUrl>
 
 namespace Herqq
 {
@@ -182,6 +170,7 @@ HActionArgumentsPrivate::HActionArgumentsPrivate(
 
     for (; ci != args.constEnd(); ++ci)
     {
+        Q_ASSERT_X(*ci, H_AT, "A provided action argument cannot be null");
         m_argumentsOrdered.push_back(*ci);
         m_arguments[(*ci)->name()] = *ci;
     }
@@ -244,22 +233,16 @@ HActionArguments::~HActionArguments()
 }
 
 HActionArguments::HActionArguments(const HActionArguments& other) :
-    h_ptr(0)
+    h_ptr(new HActionArgumentsPrivate(*other.h_ptr))
 {
     Q_ASSERT(&other != this);
-    h_ptr = new HActionArgumentsPrivate(*other.h_ptr);
 }
 
 HActionArguments& HActionArguments::operator=(const HActionArguments& other)
 {
     Q_ASSERT(&other != this);
-
-    HActionArgumentsPrivate* newHptr =
-        new HActionArgumentsPrivate(*other.h_ptr);
-
     delete h_ptr;
-    h_ptr = newHptr;
-
+    h_ptr = new HActionArgumentsPrivate(*other.h_ptr);
     return *this;
 }
 
@@ -355,6 +338,8 @@ bool HActionArguments::isEmpty() const
 
 void HActionArguments::clear()
 {
+    qDeleteAll(h_ptr->m_argumentsOrdered);
+
     h_ptr->m_arguments.clear();
     h_ptr->m_argumentsOrdered.clear();
 }
@@ -369,6 +354,7 @@ bool HActionArguments::remove(const QString& name)
         {
             if ((*it)->name() == name)
             {
+                delete *it;
                 h_ptr->m_argumentsOrdered.erase(it);
                 return true;
             }

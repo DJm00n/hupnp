@@ -116,6 +116,9 @@ QtSoapType::Type convertToSoapType(HUpnpDataTypes::DataType upnpDataType)
     case HUpnpDataTypes::uuid:
         return QtSoapType::ID;
 
+    case HUpnpDataTypes::Undefined:
+        return QtSoapType::Other;
+
     default:
         Q_ASSERT(false);
     }

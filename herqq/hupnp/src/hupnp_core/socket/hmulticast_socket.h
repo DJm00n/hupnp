@@ -35,7 +35,7 @@ namespace Upnp
 class HMulticastSocketPrivate;
 
 /*!
- * Class for multicast communication.
+ * A class for multicast communication.
  *
  * \headerfile hmulticast_socket.h HMulticastSocket
  *
@@ -51,7 +51,7 @@ H_DECLARE_PRIVATE(HMulticastSocket)
 protected:
 
     HMulticastSocketPrivate* h_ptr;
-    HMulticastSocket(HMulticastSocketPrivate& dd, QObject* parent=0);
+    HMulticastSocket(HMulticastSocketPrivate& dd, QObject* parent = 0);
 
 public:
 
@@ -63,6 +63,8 @@ public:
     explicit HMulticastSocket(QObject* parent = 0);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the instance.
      */
     virtual ~HMulticastSocket();

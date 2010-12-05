@@ -35,9 +35,6 @@
 
 class QString;
 class QByteArray;
-class HHttpHeader;
-class HHttpRequestHeader;
-class HHttpResponseHeader;
 
 namespace Herqq
 {
@@ -45,62 +42,63 @@ namespace Herqq
 namespace Upnp
 {
 
-class MessagingInfo;
+class HHttpHeader;
+class HMessagingInfo;
+class HHttpRequestHeader;
+class HHttpResponseHeader;
 
 //
 //
 //
-class HHttpMessageCreator
+class H_UPNP_CORE_EXPORT HHttpMessageCreator
 {
+H_FORCE_SINGLETON(HHttpMessageCreator)
+
 private:
 
-    HHttpMessageCreator();
-    ~HHttpMessageCreator();
-
     static QByteArray setupData(
-        MessagingInfo&, qint32 statusCode,
+        const HMessagingInfo&, qint32 statusCode,
         const QString& reasonPhrase, const QString& body,
         ContentType ct = Undefined);
 
 public:
 
-    static QByteArray setupData(HHttpHeader& hdr, MessagingInfo&);
+    static QByteArray setupData(HHttpHeader& hdr, const HMessagingInfo&);
+
     static QByteArray setupData(
-        HHttpHeader& hdr, const QByteArray& body, MessagingInfo&,
+        HHttpHeader& hdr, const QByteArray& body, const HMessagingInfo&,
         ContentType = Undefined);
 
-    inline static QByteArray createResponse(StatusCode sc, MessagingInfo& mi)
+    inline static QByteArray createResponse(
+        StatusCode sc, const HMessagingInfo& mi)
     {
         return createResponse(sc, mi, QByteArray());
     }
 
     static QByteArray createResponse(
-        StatusCode, MessagingInfo&, const QByteArray& body,
+        StatusCode, const HMessagingInfo&, const QByteArray& body,
         ContentType = Undefined);
 
     static QByteArray createResponse(
-        MessagingInfo&, qint32 actionErrCode, const QString& msg="");
+        const HMessagingInfo&, qint32 actionErrCode, const QString& msg="");
 
-    static QByteArray create(const NotifyRequest&     , MessagingInfo&);
-    static QByteArray create(const SubscribeRequest&  , MessagingInfo&);
-    static QByteArray create(const UnsubscribeRequest&, MessagingInfo&);
-    static QByteArray create(const SubscribeResponse& , MessagingInfo&);
+    static QByteArray create(const HNotifyRequest&     , HMessagingInfo*);
+    static QByteArray create(const HSubscribeRequest&  , const HMessagingInfo&);
+    static QByteArray create(const HUnsubscribeRequest&, HMessagingInfo*);
+    static QByteArray create(const HSubscribeResponse& , const HMessagingInfo&);
 
-    static NotifyRequest::RetVal create(
+    static HNotifyRequest::RetVal create(
         const HHttpRequestHeader& reqHdr, const QByteArray& body,
-        NotifyRequest& req);
+        HNotifyRequest& req);
 
-    static SubscribeRequest::RetVal create(
-        const HHttpRequestHeader& reqHdr,
-        SubscribeRequest& req);
+    static HSubscribeRequest::RetVal create(
+        const HHttpRequestHeader& reqHdr, HSubscribeRequest& req);
 
-    static UnsubscribeRequest::RetVal create(
-        const HHttpRequestHeader& reqHdr,
-        UnsubscribeRequest& req);
+    static HUnsubscribeRequest::RetVal create(
+        const HHttpRequestHeader& reqHdr, HUnsubscribeRequest& req);
 
     static bool create(
-        const HHttpResponseHeader& respHdr,
-        SubscribeResponse& resp);
+        const HHttpResponseHeader& respHdr, HSubscribeResponse& resp);
 };
 
 }

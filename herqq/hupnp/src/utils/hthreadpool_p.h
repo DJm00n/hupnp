@@ -51,7 +51,8 @@ class HThreadPool;
 //
 //
 class HRunnable :
-    public QRunnable
+    public QRunnable,
+    public QObject
 {
 H_DISABLE_COPY(HRunnable)
 friend class HThreadPool;
@@ -108,7 +109,7 @@ private:
 
 public:
 
-    HThreadPool();
+    HThreadPool(QObject* parent);
     virtual ~HThreadPool();
 
     void start(HRunnable*);

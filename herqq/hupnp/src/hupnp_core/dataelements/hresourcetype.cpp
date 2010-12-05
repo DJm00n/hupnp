@@ -188,14 +188,20 @@ bool HResourceType::compare(
     {
     case Ignore:
         break;
-    case ExactVersionMatch:
+    case Exact:
         if (other.version() != version())
         {
             return false;
         }
         break;
-    case InclusiveVersionMatch:
+    case Inclusive:
         if (version() > other.version())
+        {
+            return false;
+        }
+        break;
+    case EqualOrGreater:
+        if (version() < other.version())
         {
             return false;
         }

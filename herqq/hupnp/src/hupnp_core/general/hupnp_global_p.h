@@ -31,8 +31,7 @@
 //
 
 #include "hupnp_fwd.h"
-#include "../devicemodel/hdeviceproxy.h"
-#include "../devicemodel/hserviceproxy.h"
+#include "hupnp_defs.h"
 
 #include <QtCore/QUrl>
 #include <QtCore/QPair>
@@ -57,6 +56,7 @@ namespace Upnp
 //
 class HSysInfo
 {
+H_DISABLE_COPY(HSysInfo)
 
 private:
 
@@ -108,16 +108,6 @@ QString readElementValue(
 //
 //
 QString toString(const QDomElement&);
-
-//
-//
-//
-bool verifySpecVersion(const QDomElement& rootElement, QString* err = 0);
-
-//
-//
-//
-qint32 readConfigId(const QDomElement& rootElement);
 
 //
 //

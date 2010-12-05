@@ -24,7 +24,7 @@
 #define CONTROLPOINT_NAVIGATORITEM_H_
 
 #include <HUpnpCore/HUpnp>
-#include <HUpnpCore/HDevice>
+#include <HUpnpCore/HClientDevice>
 
 #include <QString>
 
@@ -130,19 +130,19 @@ class DeviceItem :
 {
 private:
 
-    Herqq::Upnp::HDevice* m_device;
+    Herqq::Upnp::HClientDevice* m_device;
 
 public:
 
     explicit DeviceItem(
-        Herqq::Upnp::HDevice* device,
+        Herqq::Upnp::HClientDevice* device,
         ControlPointNavigatorItem* parent = 0);
 
     virtual ~DeviceItem();
 
     virtual QVariant data (int column) const;
 
-    inline Herqq::Upnp::HDevice* device() const { return m_device; }
+    inline Herqq::Upnp::HClientDevice* device() const { return m_device; }
 
     virtual void accept(ControlPointNavigatorItemVisitor*);
 };
@@ -155,18 +155,18 @@ class ServiceItem :
 {
 private:
 
-    Herqq::Upnp::HService* m_service;
+    Herqq::Upnp::HClientService* m_service;
 
 public:
 
     explicit ServiceItem(
-        Herqq::Upnp::HService* service, ControlPointNavigatorItem* parent = 0);
+        Herqq::Upnp::HClientService* service, ControlPointNavigatorItem* parent = 0);
 
     virtual ~ServiceItem();
 
     virtual QVariant data (int column) const;
 
-    inline Herqq::Upnp::HService* service() const { return m_service; }
+    inline Herqq::Upnp::HClientService* service() const { return m_service; }
 
     virtual void accept(ControlPointNavigatorItemVisitor*);
 };
@@ -179,19 +179,19 @@ class ActionItem :
 {
 private:
 
-    Herqq::Upnp::HAction* m_action;
+    Herqq::Upnp::HClientAction* m_action;
 
 public:
 
     explicit ActionItem(
-        Herqq::Upnp::HAction* action,
+        Herqq::Upnp::HClientAction* action,
         ControlPointNavigatorItem* parent = 0);
 
     virtual ~ActionItem();
 
     virtual QVariant data (int column) const;
 
-    inline Herqq::Upnp::HAction* action() const { return m_action; }
+    inline Herqq::Upnp::HClientAction* action() const { return m_action; }
 
     virtual void accept(ControlPointNavigatorItemVisitor*);
 };
@@ -204,19 +204,19 @@ class StateVariableItem :
 {
 private:
 
-    Herqq::Upnp::HStateVariable* m_stateVar;
+    const Herqq::Upnp::HClientStateVariable* m_stateVar;
 
 public:
 
     explicit StateVariableItem(
-        Herqq::Upnp::HStateVariable* stateVar,
+        const Herqq::Upnp::HClientStateVariable* stateVar,
         ControlPointNavigatorItem* parent = 0);
 
     virtual ~StateVariableItem();
 
     virtual QVariant data (int column) const;
 
-    inline Herqq::Upnp::HStateVariable* stateVariable() const
+    inline const Herqq::Upnp::HClientStateVariable* stateVariable() const
     {
         return m_stateVar;
     }

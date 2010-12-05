@@ -38,7 +38,6 @@
 #include "../devicehosting/messages/hevent_messages_p.h"
 
 #include <QtCore/QHash>
-#include <QtCore/QUuid>
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
 #include <QtNetwork/QAbstractSocket>
@@ -63,6 +62,16 @@ Q_OBJECT
 H_DISABLE_COPY(HHttpAsyncOperation)
 friend class HHttpAsyncHandler;
 
+public:
+
+    enum OpType
+    {
+        MsgIO,
+        SendOnly,
+        ReceiveRequest,
+        ReceiveResponse
+    };
+
 private:
 
     enum InternalState
@@ -79,7 +88,7 @@ private:
         Internal_FinishedSuccessfully
     };
 
-    MessagingInfo* m_mi;
+    HMessagingInfo* m_mi;
 
     QByteArray m_dataToSend;
     // the data which will be sent to the target socket
@@ -105,15 +114,13 @@ private:
     // the amount of data that should be available (once the operation is
     // successfully completed)
 
-    QUuid m_uuid;
+    unsigned int m_id;
     // id for the operation
 
     const QByteArray m_loggingIdentifier;
 
-    bool m_waitingHttpRequest;
-    // waiting http request or response
-    // used when expecting data only. that is, there has been no prior
-    // send() and the instance is used only to read http data from a socket.
+    OpType m_opType;
+    // what the operation is supposed to do
 
 private:
 
@@ -150,18 +157,18 @@ public:
     };
 
     HHttpAsyncOperation(
-        const QByteArray& loggingIdentifier, MessagingInfo* mi,
+        const QByteArray& loggingIdentifier, unsigned int id, HMessagingInfo* mi,
         bool waitingRequest, QObject* parent);
 
     HHttpAsyncOperation(
-        const QByteArray& loggingIdentifier, MessagingInfo* mi,
-        const QByteArray& data, QObject* parent);
+        const QByteArray& loggingIdentifier, unsigned int id, HMessagingInfo* mi,
+        const QByteArray& data, bool sendOnly, QObject* parent);
 
     virtual ~HHttpAsyncOperation();
 
     State state() const;
 
-    inline QUuid uuid() const { return m_uuid; }
+    inline unsigned int id() const { return m_id; }
 
     // the data of the response
     inline QByteArray dataRead() const { return m_dataRead; }
@@ -169,18 +176,26 @@ public:
     // the header of the response
     inline const HHttpHeader* headerRead() const { return m_headerRead; }
 
-    inline MessagingInfo* messagingInfo() const { return m_mi; }
+    inline HMessagingInfo* messagingInfo() const { return m_mi; }
+
+    inline HMessagingInfo* takeMessagingInfo()
+    {
+        HMessagingInfo* retVal = m_mi; m_mi = 0;
+        return retVal;
+    }
+
+    inline OpType opType() const { return m_opType; }
 
 Q_SIGNALS:
 
-    void done(const QUuid&);
+    void done(unsigned int);
 };
 
 //
 // Performs async messaging utilizing the event loop.
 // This class is not thread-safe.
 //
-class HHttpAsyncHandler :
+class H_UPNP_CORE_EXPORT HHttpAsyncHandler :
     public QObject
 {
 Q_OBJECT
@@ -191,11 +206,13 @@ private:
 
     const QByteArray m_loggingIdentifier;
 
-    QHash<QUuid, HHttpAsyncOperation*> m_operations;
+    QHash<unsigned int, HHttpAsyncOperation*> m_operations;
+
+    unsigned int m_lastIdUsed;
 
 private Q_SLOTS:
 
-    void done(const QUuid&);
+    void done(unsigned int);
 
 Q_SIGNALS:
 
@@ -214,19 +231,24 @@ public:
     // \return an object that contains state data for the operation.
     // once the operation is done, user is expected to delete the object, but
     // NOT any sooner!
-    HHttpAsyncOperation* msgIo(MessagingInfo* mi, const QByteArray& data);
+    HHttpAsyncOperation* msgIo(HMessagingInfo* mi, const QByteArray& data);
 
     //
     // Helper overload
     //
     HHttpAsyncOperation* msgIo(
-        MessagingInfo*, HHttpRequestHeader&, const QtSoapMessage&);
+        HMessagingInfo*, HHttpRequestHeader&, const QtSoapMessage&);
+
+    //
+    //
+    //
+    HHttpAsyncOperation* send(HMessagingInfo*, const QByteArray& data);
 
     //
     // waitingRequest == expecting to receive HHttpRequestHeader, otherwise
     // expecting to receive HHttpResponseHeader
     //
-    HHttpAsyncOperation* receive(MessagingInfo*, bool waitingRequest);
+    HHttpAsyncOperation* receive(HMessagingInfo*, bool waitingRequest);
 };
 
 }

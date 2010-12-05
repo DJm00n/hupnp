@@ -42,7 +42,6 @@ namespace Upnp
 //
 class HMulticastSocketPrivate
 {
-
 };
 
 HMulticastSocket::HMulticastSocket(QObject* parent) :

@@ -23,6 +23,7 @@
 #define HSERVICES_SETUPDATA_H_
 
 #include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HServiceId>
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
@@ -36,21 +37,19 @@ namespace Upnp
 class HServiceSetupPrivate;
 
 /*!
- * This class is used to specify information that is required to setup an
- * HService.
+ * This class is used to specify information that can be used to validate
+ * a UPnP service.
  *
  * \headerfile hservices_setupdata.h HServiceSetup
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HServicesSetupData, HService
+ * \sa HServicesSetupData, HClientService, HServerService
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HServiceSetup
 {
-H_DISABLE_COPY(HServiceSetup)
-
 private:
 
     HServiceSetupPrivate* h_ptr;
@@ -101,56 +100,22 @@ public:
     HServiceSetup(
         const HServiceId& id,
         const HResourceType& serviceType,
-        qint32 version,
+        int version,
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Creates a new instance.
+     * Assignment operator.
      *
-     * \param id specifies the service ID.
-     *
-     * \param serviceType specifies the service type.
-     *
-     * \param service specifies a pointer to a heap-allocated HService.
-     * This instance takes the ownership of the object.
-     *
-     * \param incReq specifies the \e inclusion \e requirement of the
-     * service.
-     *
-     * \sa isValid()
-     *
-     * \remarks the version() is set to 1.
+     * Copies the contents of \a other to this.
      */
-    HServiceSetup(
-        const HServiceId& id,
-        const HResourceType& serviceType,
-        HService* service,
-        HInclusionRequirement incReq = InclusionMandatory);
+    HServiceSetup& operator=(const HServiceSetup&);
 
     /*!
-     * Creates a new instance.
+     * Copy constructor.
      *
-     * \param id specifies the service ID.
-     *
-     * \param serviceType specifies the service type.
-     *
-     * \param service specifies a pointer to a heap-allocated HService.
-     * This instance takes the ownership of the object.
-     *
-     * \param version specifies the version of the UPnP device, which first
-     * specified the service.
-     *
-     * \param incReq specifies the \e inclusion \e requirement of the
-     * service.
-     *
-     * \sa isValid()
+     * Creates a copy of \a other.
      */
-    HServiceSetup(
-        const HServiceId& id,
-        const HResourceType& serviceType,
-        HService* service,
-        qint32 version,
-        HInclusionRequirement incReq = InclusionMandatory);
+    HServiceSetup(const HServiceSetup&);
 
     /*!
      * Destroys the instance.
@@ -181,16 +146,6 @@ public:
     bool isValid(HValidityCheckLevel checkLevel) const;
 
     /*!
-     * Returns the HService pointer associated with the instance.
-     *
-     * \return the HService pointer associated with the instance. The ownership
-     * of the HService is not transferred to the caller.
-     *
-     * \sa setService(), takeService()
-     */
-    HService* service() const;
-
-    /*!
      * Returns the service ID.
      *
      * \return the service ID.
@@ -215,7 +170,7 @@ public:
      *
      * \sa setVersion()
      */
-    qint32 version() const;
+    int version() const;
 
     /*!
      * Sets the the <em>inclusion requirement</em>.
@@ -245,19 +200,6 @@ public:
     void setServiceType(const HResourceType& arg);
 
     /*!
-     * Associates an HService pointer with this instance.
-     *
-     * \param arg specifies the HService pointer to be associated with this
-     * instance. The instance takes the ownership of the provided HService.
-     *
-     * \remarks if the instance already has an HService pointer associated with it,
-     * the old HService is first deleted, even if the provided HService is null.
-     *
-     * \sa service()
-     */
-    void setService(HService* arg);
-
-    /*!
      * Sets the version of the UPnP device, which first specified the service.
      *
      * \param version defines the version of the UPnP device,
@@ -265,37 +207,25 @@ public:
      *
      * \sa version()
      */
-    void setVersion(qint32 version);
-
-     /*!
-     * Returns the HService pointer associated with the instance and passes
-     * the ownership of the object to the caller.
-     *
-     * \return the HService pointer associated with the instance and passes
-     * the ownership of the object to the caller.
-     *
-     * \sa service()
-     */
-    HService* takeService();
+    void setVersion(int version);
 };
 
 /*!
- * This class is used to specify information that can be used to setup multiple
- * HService instances.
+ * This class is used to specify information that can be used to validate
+ * UPnP services.
  *
  * \headerfile hservices_setupdata.h HServicesSetupData
  *
  * \ingroup hupnp_devicemodel
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HServicesSetupData
 {
-H_DISABLE_COPY(HServicesSetupData)
 
 private:
 
-    QHash<HServiceId, HServiceSetup*> m_serviceSetupInfos;
+    QHash<HServiceId, HServiceSetup> m_serviceSetupInfos;
 
 public:
 
@@ -318,14 +248,13 @@ public:
      *
      * \param id specifies the service ID of the item.
      *
-     * \return the item with the specified service ID. A null pointer is returned
-     * in case no item with the specified service ID was found.
+     * \return the item with the specified service ID. Note that the returned item
+     * is invalid, i.e. HServiceSetup::isValid() returns false in case no item
+     * with the specified service ID was found.
      *
-     * \remarks the ownership of the object is \b not transferred.
-     *
-     * \sa take(), contains()
+     * \sa contains()
      */
-    HServiceSetup* get(const HServiceId& id) const;
+    HServiceSetup get(const HServiceId& id) const;
 
     /*!
      * Indicates if the instance contains a service setup item that has the
@@ -333,7 +262,7 @@ public:
      *
      * \param id specifies the service ID of the item.
      *
-     * \return \e true when the instance contains an item with the specified
+     * \return \e true if the instance contains an item with the specified
      * service ID.
      *
      * \sa get()
@@ -352,7 +281,7 @@ public:
      *
      * \return the number of contained items.
      */
-    qint32 size() const;
+    int size() const;
 
     /*!
      * Returns the service IDs of the contained items.
@@ -366,16 +295,15 @@ public:
      *
      * \param newItem specifies the item to be added.
      *
-     * \return \e true in case the item was added. The \c newItem will not be added
-     * if the instance already contains an item that has the
-     * same HServiceSetup::serviceId() as the \c newItem or the \c newItem is null.
+     * \param overWrite specifies whether to replace an already existing item
+     * with the same service ID. The default is \c false.
      *
-     * \remarks
-     * \li The \c newItem has to be heap-allocated and
-     * \li the instance takes the ownership of the \c newItem, even if it is not
-     * added. If the item is not added the item is deleted.
+     * \return \e true in case the item was added. The \a newItem will not be added
+     * if the instance already contains an item that has the same
+     * HServiceSetup::serviceId() as the \a newItem and the \a overWrite is
+     * \c false, or the \a newItem is invalid.
      */
-    bool insert(HServiceSetup* newItem);
+    bool insert(const HServiceSetup& newItem, bool overWrite = false);
 
     /*!
      * Removes an existing item.
@@ -385,37 +313,6 @@ public:
      * \return \e true in case the item was found and removed.
      */
     bool remove(const HServiceId& id);
-
-    /*!
-     * Associates an HService pointer with an item.
-     *
-     * \param id specifies the service ID of the item.
-     *
-     * \param service specifies a heap-allocated pointer to an HService to be
-     * associated with the item. Note that the item takes
-     * the ownership of the HService.
-     *
-     * \return \e true when an item with the specified service ID was found
-     * and the provided HService pointer was associated with it.
-     *
-     * \remarks if an item with the specified ID exists and it already has
-     * an HService pointer associated with it, the existing HService is deleted.
-     */
-    bool setService(const HServiceId& id, HService* service);
-
-    /*!
-     * Retrieves a service setup object and removes it from the instance.
-     *
-     * \param id specifies the service ID of the item.
-     *
-     * \return the item with the specified service ID. A null pointer is returned
-     * in case no item with the specified service ID was found.
-     *
-     * \remarks the ownership of the object \b is transferred to the caller.
-     *
-     * \sa get()
-     */
-    HServiceSetup* take(const HServiceId& id);
 };
 
 }

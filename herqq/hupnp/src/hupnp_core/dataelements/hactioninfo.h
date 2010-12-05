@@ -24,6 +24,8 @@
 
 #include <HUpnpCore/HUpnp>
 
+#include <QtCore/QSharedDataPointer>
+
 class QString;
 
 namespace Herqq
@@ -51,7 +53,7 @@ class HActionInfoPrivate;
  * designated as the return value. Note that this may not be defined.
  *
  * In addition to the information found in the service description document,
- * the HService containing the HAction that is depicted by the HActionInfo object
+ * the UPnP service containing the action that is depicted by the HActionInfo object
  * may have specified additional information about the action. Currently
  * only inclusionRequirement() is available and it details
  * whether the action is considered as mandatory or optional.
@@ -60,9 +62,9 @@ class HActionInfoPrivate;
  *
  * \ingroup hupnp_common
  *
- * \remarks this class is not thread-safe.
+ * \remarks This class is not thread-safe.
  *
-  \sa HAction, HDeviceInfo, HServiceInfo and HStateVariableInfo.
+  \sa HDeviceInfo, HServiceInfo and HStateVariableInfo.
  */
 class H_UPNP_CORE_EXPORT HActionInfo
 {
@@ -71,7 +73,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    HActionInfoPrivate* h_ptr;
+    QSharedDataPointer<HActionInfoPrivate> h_ptr;
 
 public:
 

@@ -61,14 +61,14 @@ H_DISABLE_COPY(HSsdpPrivate)
 
 private:
 
-    qint32 parseCacheControl(const QString& str);
-    void checkHost(const QString& host);
+    bool parseCacheControl(const QString&, qint32*);
+    bool checkHost(const QString& host);
 
-    HDiscoveryResponse   parseDiscoveryResponse(const HHttpResponseHeader& hdr);
-    HDiscoveryRequest    parseDiscoveryRequest (const HHttpRequestHeader& hdr);
-    HResourceAvailable   parseDeviceAvailable  (const HHttpRequestHeader& hdr);
-    HResourceUnavailable parseDeviceUnavailable(const HHttpRequestHeader& hdr);
-    HResourceUpdate      parseDeviceUpdate     (const HHttpRequestHeader& hdr);
+    bool parseDiscoveryResponse(const HHttpResponseHeader&, HDiscoveryResponse*);
+    bool parseDiscoveryRequest (const HHttpRequestHeader&, HDiscoveryRequest*);
+    bool parseDeviceAvailable  (const HHttpRequestHeader&, HResourceAvailable*);
+    bool parseDeviceUnavailable(const HHttpRequestHeader&, HResourceUnavailable*);
+    bool parseDeviceUpdate     (const HHttpRequestHeader&, HResourceUpdate*);
 
     void clear();
 
@@ -85,6 +85,8 @@ public: // attributes
     HSsdp* q_ptr;
 
     HSsdp::AllowedMessages m_allowedMessages;
+
+    QString m_lastError;
 
 public: // methods
 

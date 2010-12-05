@@ -44,19 +44,23 @@ private:
 
     const QByteArray m_loggingIdentifier;
     QUrl m_rootDir;
-    QByteArray retrieveData(const QUrl& baseUrl, const QUrl& query);
+
+    QString m_lastError;
+
+    bool retrieveData(const QUrl& baseUrl, const QUrl& query, QByteArray*);
 
 public:
 
     DeviceHostDataRetriever(
         const QByteArray& loggingId, const QUrl& rootDir);
 
-    QString retrieveServiceDescription(
-        const QUrl& deviceLocation, const QUrl& scpdUrl);
+    bool retrieveServiceDescription(
+        const QUrl& deviceLocation, const QUrl& scpdUrl, QString*);
 
-    QByteArray retrieveIcon(const QUrl& deviceLocation, const QUrl& iconUrl);
+    bool retrieveIcon(
+        const QUrl& deviceLocation, const QUrl& iconUrl, QByteArray*);
 
-    QString retrieveDeviceDescription(const QString& filePath);
+    bool retrieveDeviceDescription(const QString& path, QString*);
 };
 
 }

@@ -31,15 +31,12 @@
 //
 
 #include "hevent_notifier_p.h"
-#include "hdevicehost_configuration.h"
+#include "hserverdevicecontroller_p.h"
 
 #include "../hdevicestorage_p.h"
-
-#include "../../general/hupnp_defs.h"
 #include "../../http/hhttp_server_p.h"
-#include "../../http/hhttp_header_p.h"
 
-#include "../../devicemodel/haction_p.h"
+#include <QtCore/QPointer>
 
 namespace Herqq
 {
@@ -50,90 +47,70 @@ namespace Upnp
 //
 //
 //
-class HActionInvocationInfo
+class HOpInfo
 {
-H_DISABLE_COPY(HActionInvocationInfo)
-
 public:
 
-    HActionInvocationInfo(
-        HActionController* action, HActionArguments* inArgs,
-        HActionArguments* outArgs) :
-            m_action(action), m_inArgs(inArgs), m_outArgs(outArgs)
+    HServerService* m_service;
+    HSubscribeRequest m_req;
+    HServiceEventSubscriber* m_subscriber;
+
+    HOpInfo() :
+        m_service(0), m_req(), m_subscriber(0)
     {
-        Q_ASSERT(action);
-        Q_ASSERT(inArgs);
-        Q_ASSERT(outArgs);
     }
 
-    HActionController* m_action;
-    HActionArguments* m_inArgs;
-    HActionArguments* m_outArgs;
-    qint32 m_retVal;
+    HOpInfo(HServerService* service, const HSubscribeRequest& sreq,
+        HServiceEventSubscriber* subscriber) :
+            m_service(service), m_req(sreq), m_subscriber(subscriber)
+    {
+    }
+
+    inline bool isValid() const { return m_service; }
 };
 
 //
 // Internal class that provides minimal HTTP server functionality for the needs of
 // Device Host
 //
-class DeviceHostHttpServer :
+class HDeviceHostHttpServer :
     public HHttpServer
 {
 Q_OBJECT
-H_DISABLE_COPY(DeviceHostHttpServer)
-    friend class HDeviceHostPrivate;
+H_DISABLE_COPY(HDeviceHostHttpServer)
 
 private:
 
-    DeviceStorage& m_deviceStorage;
-    EventNotifier& m_eventNotifier;
-    HDeviceHostConfiguration::ThreadingModel m_threadingModel;
+    HDeviceStorage<HServerDevice, HServerService, HServerDeviceController>& m_deviceStorage;
+    HEventNotifier& m_eventNotifier;
+    QString m_ddPostFix;
 
-private Q_SLOTS:
-
-    void processSubscription_slot(const SubscribeRequest*, HService*, HSid*,
-            StatusCode*, HRunnable*);
-
-    void removeSubscriber_slot(const UnsubscribeRequest*, bool*, HRunnable*);
-
-    void invokeFromMainThread_slot(HActionInvocationInfo*, HRunnable*);
-
-Q_SIGNALS:
-
-    void processSubscription_sig(const SubscribeRequest*, HService*, HSid*,
-            StatusCode*, HRunnable*);
-
-    void removeSubscriber_sig(const UnsubscribeRequest*, bool*, HRunnable*);
-
-    void invokeFromMainThread(HActionInvocationInfo*, HRunnable*);
+    QList<QPair<QPointer<HHttpAsyncOperation>, HOpInfo> > m_ops;
 
 protected:
 
     virtual void incomingSubscriptionRequest(
-        MessagingInfo&, const SubscribeRequest&, HRunnable*);
+        HMessagingInfo*, const HSubscribeRequest&);
 
     virtual void incomingUnsubscriptionRequest(
-        MessagingInfo&, const UnsubscribeRequest&, HRunnable*);
+        HMessagingInfo*, const HUnsubscribeRequest&);
 
     virtual void incomingControlRequest(
-        MessagingInfo&, const InvokeActionRequest&, HRunnable*);
-
-    virtual void incomingUnknownHeadRequest(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+        HMessagingInfo*, const HInvokeActionRequest&);
 
     virtual void incomingUnknownGetRequest(
-        MessagingInfo&, const HHttpRequestHeader&, HRunnable*);
+        HMessagingInfo*, const HHttpRequestHeader&);
 
-    virtual void incomingUnknownPostRequest(
-        MessagingInfo&, const HHttpRequestHeader&, const QByteArray& body, HRunnable*);
+    virtual bool sendComplete(HHttpAsyncOperation*);
 
 public:
 
-    DeviceHostHttpServer(const QByteArray& loggingId,
-            HDeviceHostConfiguration::ThreadingModel, DeviceStorage&,
-            EventNotifier&, QObject* parent = 0);
+    HDeviceHostHttpServer(
+        const QByteArray& loggingId, const QString& ddPostFix,
+        HDeviceStorage<HServerDevice, HServerService, HServerDeviceController>&, HEventNotifier&,
+        QObject* parent = 0);
 
-    virtual ~DeviceHostHttpServer();
+    virtual ~HDeviceHostHttpServer();
 };
 
 }

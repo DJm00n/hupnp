@@ -23,9 +23,9 @@
 #include "controlpoint_navigator.h"
 #include "controlpoint_navigatoritem.h"
 
-#include <HUpnpCore/HDevice>
-#include <HUpnpCore/HService>
 #include <HUpnpCore/HDeviceInfo>
+#include <HUpnpCore/HClientDevice>
+#include <HUpnpCore/HClientService>
 
 #include <QVariant>
 #include <QModelIndex>
@@ -44,24 +44,24 @@ ControlPointNavigator::~ControlPointNavigator()
 }
 
 ControlPointNavigatorItem* ControlPointNavigator::buildModel(
-    HDevice* device, ControlPointNavigatorItem* parentItem)
+    HClientDevice* device, ControlPointNavigatorItem* parentItem)
 {
     DeviceItem* deviceItem = new DeviceItem(device, parentItem);
 
-    HServices services(device->services());
+    HClientServices services(device->services());
     for(qint32 i = 0; i < services.size(); ++i)
     {
-        HService* service = services.at(i);
+        HClientService* service = services.at(i);
         ServiceItem* serviceItem = new ServiceItem(service, deviceItem);
 
         ContainerItem* stateVariablesItem =
             new ContainerItem("State Variables", serviceItem);
 
-        QList<HStateVariable*> stateVars = service->stateVariables();
-        foreach(HStateVariable* stateVar, stateVars)
+        HClientStateVariables stateVars = service->stateVariables();
+        foreach(const QString& name, stateVars.keys())
         {
             StateVariableItem* stateVarItem =
-                new StateVariableItem(stateVar, stateVariablesItem);
+                new StateVariableItem(stateVars.value(name), stateVariablesItem);
 
             stateVariablesItem->appendChild(stateVarItem);
         }
@@ -69,10 +69,12 @@ ControlPointNavigatorItem* ControlPointNavigator::buildModel(
         ContainerItem* actionsItem =
             new ContainerItem("Actions", serviceItem);
 
-        QList<HAction*> actions = service->actions();
-        foreach(HAction* action, actions)
+        HClientActions actions = service->actions();
+        foreach(const QString& name, actions.keys())
         {
-            ActionItem* actionItem = new ActionItem(action, actionsItem);
+            ActionItem* actionItem =
+                new ActionItem(actions.value(name), actionsItem);
+
             actionsItem->appendChild(actionItem);
         }
 
@@ -82,7 +84,7 @@ ControlPointNavigatorItem* ControlPointNavigator::buildModel(
         deviceItem->appendChild(serviceItem);
     }
 
-    foreach(HDevice* embeddedDevice, device->embeddedDevices())
+    foreach(HClientDevice* embeddedDevice, device->embeddedDevices())
     {
         ControlPointNavigatorItem* childItem =
             buildModel(embeddedDevice, deviceItem);
@@ -93,7 +95,7 @@ ControlPointNavigatorItem* ControlPointNavigator::buildModel(
     return deviceItem;
 }
 
-void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
+void ControlPointNavigator::rootDeviceOnline(HClientDevice* newDevice)
 {
     ControlPointNavigatorItem* childItem = buildModel(newDevice, m_rootItem);
 
@@ -105,8 +107,8 @@ void ControlPointNavigator::rootDeviceOnline(HDevice* newDevice)
     endInsertRows();
 }
 
-void ControlPointNavigator::rootDeviceOffline(HDevice* device)
-{    
+void ControlPointNavigator::rootDeviceOffline(HClientDevice* device)
+{
     for(qint32 i = 0; i < m_rootItem->childCount(); ++i)
     {
         DeviceItem* deviceItem = static_cast<DeviceItem*>(m_rootItem->child(i));

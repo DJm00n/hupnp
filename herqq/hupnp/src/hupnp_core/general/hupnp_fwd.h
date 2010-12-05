@@ -22,8 +22,13 @@
 #ifndef HUPNPFWD_H_
 #define HUPNPFWD_H_
 
+class QString;
+
 template<typename T>
 class QList;
+
+template<typename T, typename U>
+class QHash;
 
 namespace Herqq
 {
@@ -37,10 +42,18 @@ namespace Upnp
  * and a few common type definitions.
  */
 
+class HClientAction;
+class HClientDevice;
+class HClientService;
+class HClientStateVariable;
+
+class HServerAction;
+class HServerDevice;
+class HServerService;
+class HServerStateVariable;
+
 class HUdn;
-class HAction;
-class HDevice;
-class HService;
+class HSsdp;
 class HAsyncOp;
 class HExecArgs;
 class HEndpoint;
@@ -50,18 +63,15 @@ class HDeviceHost;
 class HDeviceInfo;
 class HActionSetup;
 class HServiceInfo;
-class HDeviceProxy;
 class HDeviceSetup;
-class HServiceProxy;
 class HControlPoint;
 class HServiceSetup;
 class HResourceType;
-class HObjectCreator;
-class HStateVariable;
+class HProductToken;
+class HDeviceStatus;
 class HProductTokens;
 class HDiscoveryType;
 class HActionArgument;
-class HDeviceProxyList;
 class HActionArguments;
 class HActionsSetupData;
 class HDevicesSetupData;
@@ -70,8 +80,6 @@ class HStateVariableInfo;
 class HServicesSetupData;
 class HStateVariableEvent;
 class HDeviceConfiguration;
-class HWritableStateVariable;
-class HReadableStateVariable;
 class HStateVariablesSetupData;
 class HDeviceHostConfiguration;
 class HDeviceHostRuntimeStatus;
@@ -94,63 +102,93 @@ typedef QList<HEndpoint> HEndpoints;
 
 /*!
  * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HService instances.
+ * Herqq::Upnp::HClientService instances.
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HService
+ * \sa HClientService
  */
-typedef QList<HService*> HServices;
+typedef QList<HClientService*> HClientServices;
 
 /*!
  * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HServiceProxy instances.
+ * Herqq::Upnp::HServerService instances.
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HServiceProxy
+ * \sa HServerService
  */
-typedef QList<HServiceProxy*> HServiceProxies;
+typedef QList<HServerService*> HServerServices;
 
 /*!
  * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HDevice instances.
+ * Herqq::Upnp::HClientDevice instances.
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HDevice
+ * \sa HClientDevice
  */
-typedef QList<HDevice*> HDevices;
+typedef QList<HClientDevice*> HClientDevices;
 
 /*!
  * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HDeviceProxy instances.
+ * Herqq::Upnp::HServerDevice instances.
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HDeviceProxy
+ * \sa HServerDevice
  */
-typedef QList<HDeviceProxy*> HDeviceProxies;
+typedef QList<HServerDevice*> HServerDevices;
 
 /*!
  * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HStateVariable instances.
+ * Herqq::Upnp::HClientStateVariable instances.
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HStateVariable
+ * \sa HClientStateVariable
  */
-typedef QList<HStateVariable*> HStateVariables;
+typedef QHash<QString, const HClientStateVariable*> HClientStateVariables;
 
 /*!
  * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HAction instances.
+ * Herqq::Upnp::HServerStateVariable instances.
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa HAction
+ * \sa HServerStateVariable
  */
-typedef QList<HAction*> HActions;
+typedef QHash<QString, HServerStateVariable*> HServerStateVariables;
+
+/*!
+ * This is a type definition for a collection of
+ * Herqq::Upnp::HStateVariableInfo instances.
+ *
+ * \ingroup hupnp_devicemodel
+ *
+ * \sa HStateVariableInfo
+ */
+typedef QHash<QString, HStateVariableInfo> HStateVariableInfos;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HClientAction instances.
+ *
+ * \ingroup hupnp_devicemodel
+ *
+ * \sa HClientAction
+ */
+typedef QHash<QString, HClientAction*> HClientActions;
+
+/*!
+ * This is a type definition for a collection of pointers to
+ * Herqq::Upnp::HServerAction instances.
+ *
+ * \ingroup hupnp_devicemodel
+ *
+ * \sa HServerAction
+ */
+typedef QHash<QString, HServerAction*> HServerActions;
 
 }
 }

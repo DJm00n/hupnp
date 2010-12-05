@@ -21,9 +21,11 @@
 
 #include "hasyncop.h"
 
-#include "../../utils/hmisc_utils_p.h"
-
+#include <QtCore/QMutex>
 #include <QtCore/QString>
+
+static unsigned int s_lastInt = 0;
+static QMutex s_lastIntMutex;
 
 namespace Herqq
 {
@@ -31,81 +33,150 @@ namespace Herqq
 namespace Upnp
 {
 
+namespace
+{
+inline unsigned int getNextId()
+{
+    unsigned int retVal;
+    s_lastIntMutex.lock();
+    retVal = ++s_lastInt;
+    s_lastIntMutex.unlock();
+    return retVal;
+}
+}
+
+class HAsyncOpPrivate
+{
+H_DISABLE_COPY(HAsyncOpPrivate)
+
+public:
+
+    int m_refCount;
+
+    const unsigned int m_id;
+    int m_returnValue;
+    void* m_userData;
+    QString* m_errorDescription;
+
+    inline HAsyncOpPrivate() :
+        m_refCount(1), m_id(0), m_returnValue(0), m_userData(0),
+        m_errorDescription(0)
+    {
+    }
+
+    inline HAsyncOpPrivate(int id) :
+        m_refCount(1), m_id(id), m_returnValue(0), m_userData(0),
+        m_errorDescription(0)
+    {
+    }
+
+    inline ~HAsyncOpPrivate()
+    {
+        delete m_errorDescription;
+    }
+};
+
 HAsyncOp::HAsyncOp() :
-    m_id(QUuid::createUuid()),
-    m_waitTimeout(-1), m_waitCode(WaitSuccess), m_returnValue(0),
-    m_userData(new volatile void*),
-    m_errorDescription(0)
+    h_ptr(new HAsyncOpPrivate(getNextId()))
 {
 }
 
-HAsyncOp::HAsyncOp(qint32 rc, const QString& errorDescription) :
-    m_id(QUuid()),
-    m_waitTimeout(-1), m_waitCode(WaitInvalidObjectState), m_returnValue(rc),
-    m_userData(new volatile void*),
-    m_errorDescription(new QString(errorDescription))
+HAsyncOp::HAsyncOp(int rc, const QString& errorDescription) :
+    h_ptr(new HAsyncOpPrivate())
 {
+    h_ptr->m_returnValue = rc;
+    h_ptr->m_errorDescription = new QString(errorDescription);
 }
 
 HAsyncOp::~HAsyncOp()
 {
-    delete m_errorDescription;
+    if (--h_ptr->m_refCount == 0)
+    {
+        delete h_ptr;
+    }
 }
 
-HAsyncOp::HAsyncOp(const HAsyncOp& other) :
-    m_id(other.m_id), m_waitTimeout(other.m_waitTimeout),
-    m_waitCode(other.m_waitCode), m_returnValue(other.m_returnValue),
-    m_userData(other.m_userData),
-    m_errorDescription(
-        other.m_errorDescription ? new QString(*other.m_errorDescription) : 0)
+HAsyncOp::HAsyncOp(const HAsyncOp& op) :
+    h_ptr(op.h_ptr)
 {
+    Q_ASSERT(this != &op);
+    ++h_ptr->m_refCount;
+}
+
+HAsyncOp& HAsyncOp::operator=(const HAsyncOp& op)
+{
+    Q_ASSERT(this != &op);
+
+    if (--h_ptr->m_refCount == 0)
+    {
+        delete h_ptr;
+    }
+    h_ptr = op.h_ptr;
+    ++h_ptr->m_refCount;
+
+    return *this;
 }
 
 QString HAsyncOp::errorDescription() const
 {
-    return m_errorDescription ? QString(*m_errorDescription) : QString();
+    return h_ptr->m_errorDescription ?
+        QString(*h_ptr->m_errorDescription) : QString();
 }
 
 void HAsyncOp::setErrorDescription(const QString& arg)
 {
-    if (m_errorDescription)
+    if (h_ptr->m_errorDescription)
     {
-        delete m_errorDescription;
-        m_errorDescription = 0;
+        delete h_ptr->m_errorDescription;
+        h_ptr->m_errorDescription = 0;
     }
 
-    m_errorDescription = new QString(arg);
+    h_ptr->m_errorDescription = new QString(arg);
 }
 
 void HAsyncOp::setUserData(void* userData)
 {
-    *m_userData = userData;
+    h_ptr->m_userData = userData;
 }
 
 void* HAsyncOp::userData() const
 {
-    return const_cast<void*>(*m_userData);
+    return h_ptr->m_userData;
 }
 
-HAsyncOp HAsyncOp::createInvalid(qint32 returnCode, const QString& errorDescr)
+int HAsyncOp::returnValue() const
+{
+    return h_ptr->m_returnValue;
+}
+
+void HAsyncOp::setReturnValue(int returnValue)
+{
+   h_ptr->m_returnValue = returnValue;
+}
+
+unsigned int HAsyncOp::id() const
+{
+    return h_ptr->m_id;
+}
+
+bool HAsyncOp::isNull() const
+{
+    return h_ptr->m_id == 0;
+}
+
+HAsyncOp HAsyncOp::createInvalid(int returnCode, const QString& errorDescr)
 {
     return HAsyncOp(returnCode, errorDescr);
 }
 
 bool operator==(const HAsyncOp& arg1, const HAsyncOp& arg2)
 {
-    return arg1.m_id == arg2.m_id;
+    return arg1.h_ptr->m_id == arg2.h_ptr->m_id;
 }
 
 bool operator!=(const HAsyncOp& arg1, const HAsyncOp& arg2)
 {
     return !(arg1 == arg2);
-}
-
-quint32 qHash(const HAsyncOp& key)
-{
-    QByteArray data = key.id().toString().toLocal8Bit();
-    return hash(data.constData(), data.size());
 }
 
 }

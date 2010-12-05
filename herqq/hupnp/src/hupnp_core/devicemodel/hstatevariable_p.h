@@ -32,9 +32,9 @@
 
 #include "../dataelements/hstatevariableinfo.h"
 
-#include <QtCore/QMutex>
 #include <QtCore/QString>
 #include <QtCore/QVariant>
+#include <QtCore/QByteArray>
 
 namespace Herqq
 {
@@ -42,50 +42,10 @@ namespace Herqq
 namespace Upnp
 {
 
-class HService;
-class HStateVariable;
-
-//
-// Implementation details of HStateVariableEvent
-//
-class HStateVariableEventPrivate
-{
-public:
-
-    HStateVariable* m_eventSource;
-    QVariant m_previousValue;
-    QVariant m_newValue;
-
-public:
-
-    HStateVariableEventPrivate ();
-    ~HStateVariableEventPrivate();
-};
-
-//
-// This is an internal class that provides more powerful interface for interacting
-// with HService than what the HServices's public interface offers.
-//
-// These features are required so that the HUpnpContolPoint and HDeviceHost
-// can appropriately manage the HService instances they own.
-//
-class HStateVariableController
-{
-H_DISABLE_COPY(HStateVariableController)
-
-public:
-
-    HStateVariable* m_stateVariable;
-
-    HStateVariableController(HStateVariable* stateVar);
-    virtual ~HStateVariableController();
-
-    bool setValue(const QVariant& newValue);
-};
-
 //
 // Implementation details of HStateVariable
 //
+template<typename ParentService>
 class HStateVariablePrivate
 {
 H_DISABLE_COPY(HStateVariablePrivate)
@@ -94,18 +54,37 @@ public:
 
     HStateVariableInfo m_info;
 
-    QVariant  m_value;
-    QMutex    m_valueMutex;
-    HService* m_parentService;
+    QVariant m_value;
+    ParentService* m_parentService;
 
     const QByteArray m_loggingIdentifier;
 
 public:
 
-    HStateVariablePrivate();
-    virtual ~HStateVariablePrivate();
+    HStateVariablePrivate() : m_info(), m_value(), m_parentService(0) {}
+    ~HStateVariablePrivate(){}
 
-    bool setValue(const QVariant& value, QString* err = 0);
+    bool setValue(const QVariant& value, QString* err)
+    {
+        if (value == m_value)
+        {
+            if (err)
+            {
+                *err = QString("The new and the old value are equal: [%1]").arg(
+                    value.toString());
+            }
+            return false;
+        }
+
+        QVariant convertedValue;
+        if (m_info.isValidValue(value, &convertedValue, err))
+        {
+            m_value = convertedValue;
+            return true;
+        }
+
+        return false;
+    }
 };
 
 }

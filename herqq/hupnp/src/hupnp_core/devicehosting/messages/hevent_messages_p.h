@@ -53,7 +53,7 @@ namespace Upnp
 //
 // Class that represents the UPnP eventing subscription request.
 //
-class SubscribeRequest
+class HSubscribeRequest
 {
 private:
 
@@ -76,19 +76,19 @@ public:
 public:
 
     // creates an empty, invalid object.
-    SubscribeRequest();
+    HSubscribeRequest();
 
     // creates a renew subscription object (HSid present)
-    SubscribeRequest(
+    HSubscribeRequest(
         const QUrl& eventUrl, const HSid& sid, const HTimeout& timeout);
 
     // creates a normal subscription request with a single callback
-    SubscribeRequest(
+    HSubscribeRequest(
         const QUrl& eventUrl, const HProductTokens& userAgent,
         const QUrl& callback, const HTimeout& timeout);
 
     // creates a normal subscription request with multiple callbacks
-    SubscribeRequest(
+    HSubscribeRequest(
         const QUrl& eventUrl, const HProductTokens& userAgent,
         const QList<QUrl>& callbacks, const HTimeout& timeout);
 
@@ -98,7 +98,7 @@ public:
         const QString& callback, const QString& timeout,
         const QString& userAgent);
 
-    ~SubscribeRequest();
+    ~HSubscribeRequest();
 
     inline HNt nt() const
     {
@@ -150,7 +150,7 @@ public:
 //
 //
 //
-class SubscribeResponse
+class HSubscribeResponse
 {
 private:
 
@@ -161,12 +161,12 @@ private:
 
 public:
 
-    SubscribeResponse();
-    SubscribeResponse(
+    HSubscribeResponse();
+    HSubscribeResponse(
         const HSid& sid, const HProductTokens& server, const HTimeout& timeout,
         const QDateTime& responseGenerated = QDateTime::currentDateTime());
 
-    ~SubscribeResponse();
+    ~HSubscribeResponse();
 
     inline bool isValid(bool strict) const
     {
@@ -197,7 +197,7 @@ public:
 //
 //
 //
-class UnsubscribeRequest
+class HUnsubscribeRequest
 {
 private:
 
@@ -216,10 +216,10 @@ public:
 
 public:
 
-    UnsubscribeRequest();
-    UnsubscribeRequest(const QUrl& eventUrl, const HSid& sid);
+    HUnsubscribeRequest();
+    HUnsubscribeRequest(const QUrl& eventUrl, const HSid& sid);
 
-    ~UnsubscribeRequest();
+    ~HUnsubscribeRequest();
 
     RetVal setContents(const QUrl& eventUrl, const QString& sid);
 
@@ -242,7 +242,7 @@ public:
 //
 //
 //
-class NotifyRequest
+class HNotifyRequest
 {
 public:
 
@@ -267,13 +267,13 @@ private:
 
 public:
 
-    NotifyRequest();
+    HNotifyRequest();
 
-    NotifyRequest(
+    HNotifyRequest(
         const QUrl& callback, const HSid& sid,
         quint32 seq, const QByteArray& contents);
 
-    ~NotifyRequest();
+    ~HNotifyRequest();
 
     RetVal setContents(
         const QUrl& callback,

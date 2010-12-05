@@ -67,7 +67,7 @@ HRunnable::Status HRunnable::wait()
 {
     QMutexLocker locker(&m_statusMutex);
     Q_ASSERT(m_status != NotStarted);
-    while(true)
+    for(;;)
     {
         if (m_status == Exiting || m_status == WaitingNewTask)
         {
@@ -95,15 +95,15 @@ bool HRunnable::setupNewTask()
 /*******************************************************************************
  * HThreadPool
  ******************************************************************************/
-HThreadPool::HThreadPool() :
-    m_threadPool(new QThreadPool())
+HThreadPool::HThreadPool(QObject* parent) :
+    QObject(parent),
+        m_threadPool(new QThreadPool(this))
 {
 }
 
 HThreadPool::~HThreadPool()
 {
     shutdown();
-    delete m_threadPool;
 }
 
 void HThreadPool::exiting(HRunnable* runnable)

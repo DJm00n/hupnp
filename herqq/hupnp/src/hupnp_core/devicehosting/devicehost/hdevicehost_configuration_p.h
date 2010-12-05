@@ -32,10 +32,11 @@
 
 #include "hdevicehost_configuration.h"
 
-#include "../hdevicecreator.h"
+#include "../../devicemodel/server/hdevicemodelcreator.h"
 
 #include <QtCore/QList>
 #include <QtCore/QString>
+#include <QtCore/QScopedPointer>
 #include <QtNetwork/QHostAddress>
 
 namespace Herqq
@@ -53,13 +54,13 @@ H_DISABLE_COPY(HDeviceConfigurationPrivate)
 
 public: // attributes
 
-    QString        m_pathToDeviceDescriptor;
-    qint32         m_cacheControlMaxAgeInSecs;
-    HDeviceCreator m_deviceCreator;
+    QString m_pathToDeviceDescriptor;
+    qint32  m_cacheControlMaxAgeInSecs;
 
 public: // methods
 
     HDeviceConfigurationPrivate();
+    ~HDeviceConfigurationPrivate();
 };
 
 //
@@ -81,7 +82,7 @@ public:
 
     QList<QHostAddress> m_networkAddresses;
 
-    HDeviceHostConfiguration::ThreadingModel m_threadingModel;
+    QScopedPointer<HDeviceModelCreator> m_deviceCreator;
 
     HDeviceHostConfigurationPrivate();
 };

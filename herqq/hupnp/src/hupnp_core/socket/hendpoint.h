@@ -41,7 +41,7 @@ namespace Upnp
  *
  * \headerfile hendpoint.h HEndpoint
  *
- * \remarks this class provides an assignment operator that is not thread-safe.
+ * \remarks This class is not thread-safe.
  */
 class H_UPNP_CORE_EXPORT HEndpoint
 {
