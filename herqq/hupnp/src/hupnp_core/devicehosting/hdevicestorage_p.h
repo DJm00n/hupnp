@@ -500,7 +500,7 @@ public: // instance methods
         Q_ASSERT(root);
         Q_ASSERT(!root->parentDevice());
 
-        const HDeviceInfo& devInfo = root->info();
+        HDeviceInfo devInfo = root->info();
 
         bool ok = m_rootDevices.removeOne(root);
         if (!ok)
