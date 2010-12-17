@@ -52,44 +52,52 @@ class HServerDevice;
 class HServerService;
 class HServerStateVariable;
 
+class HActionSetup;
+class HDeviceSetup;
+class HServiceSetup;
+class HDevicesSetupData;
+class HActionsSetupData;
+class HServicesSetupData;
+class HServicesSetupData;
+class HStateVariablesSetupData;
+
+class HActionInfo;
+class HDeviceInfo;
+class HServiceInfo;
+class HActionArgument;
+class HActionArguments;
+class HStateVariableInfo;
+class HStateVariableEvent;
+
 class HUdn;
-class HSsdp;
-class HAsyncOp;
-class HExecArgs;
 class HEndpoint;
 class HServiceId;
-class HActionInfo;
-class HDeviceHost;
-class HDeviceInfo;
-class HActionSetup;
-class HServiceInfo;
-class HDeviceSetup;
-class HControlPoint;
-class HServiceSetup;
 class HResourceType;
 class HProductToken;
 class HDeviceStatus;
 class HProductTokens;
 class HDiscoveryType;
-class HActionArgument;
-class HActionArguments;
-class HActionsSetupData;
-class HDevicesSetupData;
-class HServicesSetupData;
-class HStateVariableInfo;
-class HServicesSetupData;
-class HStateVariableEvent;
-class HDeviceConfiguration;
-class HStateVariablesSetupData;
-class HDeviceHostConfiguration;
-class HDeviceHostRuntimeStatus;
-class HControlPointConfiguration;
 
+class HSsdp;
 class HResourceUpdate;
 class HDiscoveryRequest;
 class HDiscoveryResponse;
 class HResourceAvailable;
 class HResourceUnavailable;
+
+class HDeviceModelCreator;
+class HDeviceModelValidator;
+class HDeviceModelInfoProvider;
+
+class HAsyncOp;
+class HExecArgs;
+class HControlPoint;
+class HControlPointConfiguration;
+
+class HDeviceHost;
+class HDeviceConfiguration;
+class HDeviceHostConfiguration;
+class HDeviceHostRuntimeStatus;
 
 /*!
  * This is a type definition for a collection of Herqq::Upnp::HEndpoint instances.

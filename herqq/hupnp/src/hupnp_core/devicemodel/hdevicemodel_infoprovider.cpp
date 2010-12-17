@@ -19,7 +19,12 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hclonable.h"
+#include "hdevicemodel_infoprovider.h"
+
+#include "hdevices_setupdata.h"
+#include "hactions_setupdata.h"
+#include "hservices_setupdata.h"
+#include "hstatevariables_setupdata.h"
 
 namespace Herqq
 {
@@ -27,26 +32,36 @@ namespace Herqq
 namespace Upnp
 {
 
-HClonable::HClonable()
+HDeviceModelInfoProvider::HDeviceModelInfoProvider()
 {
 }
 
-HClonable::~HClonable()
+HDeviceModelInfoProvider::~HDeviceModelInfoProvider()
 {
 }
 
-void HClonable::doClone(HClonable*) const
+HServicesSetupData HDeviceModelInfoProvider::servicesSetupData(
+    const HDeviceInfo&) const
 {
+    return HServicesSetupData();
 }
 
-HClonable* HClonable::clone() const
+HDevicesSetupData HDeviceModelInfoProvider::embedddedDevicesSetupData(
+    const HDeviceInfo&) const
 {
-    HClonable* newClone = newInstance();
-    if (!newClone) { return 0; }
+    return HDevicesSetupData();
+}
 
-    doClone(newClone);
+HActionsSetupData HDeviceModelInfoProvider::actionsSetupData(
+    const HServiceInfo&, const HDeviceInfo&) const
+{
+    return HActionsSetupData();
+}
 
-    return newClone;
+HStateVariablesSetupData HDeviceModelInfoProvider::stateVariablesSetupData(
+    const HServiceInfo&, const HDeviceInfo&) const
+{
+    return HStateVariablesSetupData();
 }
 
 }

@@ -32,7 +32,8 @@ namespace Upnp
 /*******************************************************************************
  * HDeviceSetupPrivate
  ******************************************************************************/
-class HDeviceSetupPrivate
+class HDeviceSetupPrivate :
+    public QSharedData
 {
 public:
 
@@ -79,23 +80,19 @@ HDeviceSetup::HDeviceSetup(
 
 HDeviceSetup::~HDeviceSetup()
 {
-    delete h_ptr;
 }
 
 HDeviceSetup& HDeviceSetup::operator=(const HDeviceSetup& other)
 {
     Q_ASSERT(&other != this);
 
-    HDeviceSetupPrivate* newHptr = new HDeviceSetupPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
+    h_ptr = other.h_ptr;
 
     return *this;
 }
 
 HDeviceSetup::HDeviceSetup(const HDeviceSetup& other) :
-    h_ptr(new HDeviceSetupPrivate(*other.h_ptr))
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(this != &other);
 }

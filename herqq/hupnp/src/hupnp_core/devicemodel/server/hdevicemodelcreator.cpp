@@ -22,11 +22,6 @@
 #include "hdevicemodelcreator.h"
 #include "hdefault_serverdevice_p.h"
 
-#include "../hdevices_setupdata.h"
-#include "../hactions_setupdata.h"
-#include "../hservices_setupdata.h"
-#include "../hstatevariables_setupdata.h"
-
 namespace Herqq
 {
 
@@ -44,30 +39,6 @@ HDeviceModelCreator::~HDeviceModelCreator()
 HServerDevice* HDeviceModelCreator::createDevice(const HDeviceInfo&) const
 {
     return new HDefaultServerDevice();
-}
-
-HServicesSetupData HDeviceModelCreator::servicesSetupData(
-    const HDeviceInfo&) const
-{
-    return HServicesSetupData();
-}
-
-HDevicesSetupData HDeviceModelCreator::embedddedDevicesSetupData(
-    const HDeviceInfo&) const
-{
-    return HDevicesSetupData();
-}
-
-HActionsSetupData HDeviceModelCreator::actionsSetupData(
-    const HServiceInfo&) const
-{
-    return HActionsSetupData();
-}
-
-HStateVariablesSetupData HDeviceModelCreator::stateVariablesSetupData(
-    const HServiceInfo&) const
-{
-    return HStateVariablesSetupData();
 }
 
 }

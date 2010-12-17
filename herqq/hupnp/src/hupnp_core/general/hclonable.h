@@ -70,7 +70,7 @@ protected:
      * \param target specifies the target object to which the contents of
      * \c this instance are cloned.
      */
-    virtual void doClone(HClonable* target) const = 0;
+    virtual void doClone(HClonable* target) const;
 
     /*!
      * Creates a new instance.

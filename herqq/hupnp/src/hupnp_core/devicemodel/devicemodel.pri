@@ -12,6 +12,7 @@ HEADERS += \
     $$SRC_LOC/devicemodel/hservices_setupdata.h \
     $$SRC_LOC/devicemodel/hstatevariable_event.h \
     $$SRC_LOC/devicemodel/hstatevariable_p.h \
+    $$SRC_LOC/devicemodel/hdevicemodel_infoprovider.h \
     $$SRC_LOC/devicemodel/hstatevariables_setupdata.h \
     $$SRC_LOC/devicemodel/client/hclientaction.h \
     $$SRC_LOC/devicemodel/client/hclientaction_p.h \
@@ -50,6 +51,7 @@ SOURCES += \
     $$SRC_LOC/devicemodel/hservices_setupdata.cpp \
     $$SRC_LOC/devicemodel/hstatevariable_event.cpp \
     $$SRC_LOC/devicemodel/hstatevariables_setupdata.cpp \
+    $$SRC_LOC/devicemodel/hdevicemodel_infoprovider.cpp \
     $$SRC_LOC/devicemodel/client/hclientdevice.cpp \
     $$SRC_LOC/devicemodel/client/hclientaction.cpp \
     $$SRC_LOC/devicemodel/client/hclientservice.cpp \

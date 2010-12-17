@@ -32,8 +32,6 @@
 
 #include "hdevicehost_configuration.h"
 
-#include "../../devicemodel/server/hdevicemodelcreator.h"
-
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include <QtCore/QScopedPointer>
@@ -83,6 +81,7 @@ public:
     QList<QHostAddress> m_networkAddresses;
 
     QScopedPointer<HDeviceModelCreator> m_deviceCreator;
+    QScopedPointer<HDeviceModelInfoProvider> m_infoProvider;
 
     HDeviceHostConfigurationPrivate();
 };

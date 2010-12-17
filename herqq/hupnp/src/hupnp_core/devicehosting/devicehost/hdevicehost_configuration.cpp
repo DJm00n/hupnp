@@ -22,6 +22,9 @@
 #include "hdevicehost_configuration.h"
 #include "hdevicehost_configuration_p.h"
 
+#include "../../devicemodel/hdevicemodel_infoprovider.h"
+#include "../../devicemodel/server/hdevicemodelcreator.h"
+
 #include "../../general/hupnp_global_p.h"
 #include "../../../utils/hmisc_utils_p.h"
 
@@ -124,7 +127,8 @@ HDeviceHostConfigurationPrivate::HDeviceHostConfigurationPrivate() :
     m_individualAdvertisementCount(2),
     m_subscriptionExpirationTimeout(0),
     m_networkAddresses(),
-    m_deviceCreator(0)
+    m_deviceCreator(0),
+    m_infoProvider(0)
 {
     QHostAddress ha = findBindableHostAddress();
     m_networkAddresses.append(ha);
@@ -183,10 +187,11 @@ void HDeviceHostConfiguration::doClone(HClonable* target) const
     qDeleteAll(conf->h_ptr->m_collection);
     conf->h_ptr->m_collection = confCollection;
 
-    HDeviceModelCreator* creator =
-        h_ptr->m_deviceCreator ? h_ptr->m_deviceCreator->clone() : 0;
+    conf->h_ptr->m_deviceCreator.reset(
+        h_ptr->m_deviceCreator ? h_ptr->m_deviceCreator->clone() : 0);
 
-    conf->h_ptr->m_deviceCreator.reset(creator);
+    conf->h_ptr->m_infoProvider.reset(
+        h_ptr->m_infoProvider ? h_ptr->m_infoProvider->clone() : 0);
 }
 
 HDeviceHostConfiguration* HDeviceHostConfiguration::clone() const
@@ -231,10 +236,21 @@ HDeviceModelCreator* HDeviceHostConfiguration::deviceModelCreator() const
     return h_ptr->m_deviceCreator.data();
 }
 
+HDeviceModelInfoProvider* HDeviceHostConfiguration::deviceModelInfoProvider() const
+{
+    return h_ptr->m_infoProvider.data();
+}
+
 void HDeviceHostConfiguration::setDeviceModelCreator(
     const HDeviceModelCreator& deviceCreator)
 {
     h_ptr->m_deviceCreator.reset(deviceCreator.clone());
+}
+
+void HDeviceHostConfiguration::setDeviceModelInfoProvider(
+    const HDeviceModelInfoProvider& infoProvider)
+{
+    h_ptr->m_infoProvider.reset(infoProvider.clone());
 }
 
 void HDeviceHostConfiguration::setIndividualAdvertisementCount(qint32 arg)

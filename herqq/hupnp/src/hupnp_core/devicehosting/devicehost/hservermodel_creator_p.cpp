@@ -29,9 +29,12 @@
 #include "../../datatypes/hupnp_datatypes.h"
 #include "../../datatypes/hdatatype_mappings_p.h"
 
+#include "../../devicemodel/hdevicemodel_infoprovider.h"
+
 #include "../../devicemodel/server/hserverservice.h"
 #include "../../devicemodel/server/hserverservice_p.h"
 #include "../../devicemodel/server/hserverdevice_p.h"
+#include "../../devicemodel/server/hdevicemodelcreator.h"
 #include "../../devicemodel/server/hdefault_serverdevice_p.h"
 #include "../../devicemodel/server/hdefault_serveraction_p.h"
 #include "../../devicemodel/server/hdefault_serverstatevariable_p.h"
@@ -57,21 +60,19 @@ namespace Upnp
  ******************************************************************************/
 HServerModelCreationArgs::HServerModelCreationArgs(
     HDeviceModelCreator* creator) :
-        m_deviceModelCreator(creator ? creator->clone() : 0),
-        m_ddPostFix()
+        m_deviceModelCreator(creator), m_infoProvider(0), m_ddPostFix()
 {
 }
 
 HServerModelCreationArgs::~HServerModelCreationArgs()
 {
-    delete m_deviceModelCreator;
 }
 
 HServerModelCreationArgs::HServerModelCreationArgs(
     const HServerModelCreationArgs& other) :
         HModelCreationArgs(other),
-            m_deviceModelCreator(other.m_deviceModelCreator ?
-                other.m_deviceModelCreator->clone() : 0),
+            m_deviceModelCreator(other.m_deviceModelCreator),
+            m_infoProvider(other.m_infoProvider),
             m_ddPostFix(other.m_ddPostFix)
 {
 }
@@ -80,12 +81,11 @@ HServerModelCreationArgs& HServerModelCreationArgs::operator=(
     const HServerModelCreationArgs& other)
 {
     Q_ASSERT(this != &other);
-    delete m_deviceModelCreator;
 
     HModelCreationArgs::operator=(other);
 
-    m_deviceModelCreator =
-        other.m_deviceModelCreator ? other.m_deviceModelCreator->clone() : 0;
+    m_deviceModelCreator = other.m_deviceModelCreator;
+    m_infoProvider = other.m_infoProvider;
     m_ddPostFix = other.m_ddPostFix;
 
     return *this;
@@ -107,12 +107,55 @@ HServerModelCreator::HServerModelCreator(
     Q_ASSERT(!creationParameters.deviceDescriptionPostfix().isEmpty());
 }
 
+HStateVariablesSetupData HServerModelCreator::getStateVariablesSetupData(
+    HServerService* service)
+{
+    if (m_creationParameters->infoProvider())
+    {
+        return m_creationParameters->infoProvider()->stateVariablesSetupData(
+            service->info(), service->parentDevice()->info());
+    }
+    return HStateVariablesSetupData();
+}
+
+HActionsSetupData HServerModelCreator::getActionsSetupData(
+    HServerService* service)
+{
+    if (m_creationParameters->infoProvider())
+    {
+        return m_creationParameters->infoProvider()->actionsSetupData(
+            service->info(), service->parentDevice()->info());
+    }
+    return HActionsSetupData();
+}
+
+HServicesSetupData HServerModelCreator::getServicesSetupData(
+    HServerDevice* device)
+{
+    if (m_creationParameters->infoProvider())
+    {
+        return m_creationParameters->infoProvider()->servicesSetupData(
+            device->info());
+    }
+    return HServicesSetupData();
+}
+
+HDevicesSetupData HServerModelCreator::getDevicesSetupData(
+    HServerDevice* device)
+{
+    if (m_creationParameters->infoProvider())
+    {
+        return m_creationParameters->infoProvider()->embedddedDevicesSetupData(
+            device->info());
+    }
+    return HDevicesSetupData();
+}
+
 bool HServerModelCreator::parseStateVariables(
     HServerService* service, QDomElement stateVariableElement)
 {
     HStateVariablesSetupData stateVariablesSetup =
-        m_creationParameters->creator()->stateVariablesSetupData(
-            service->info());
+        getStateVariablesSetupData(service);
 
     while(!stateVariableElement.isNull())
     {
@@ -196,8 +239,7 @@ bool HServerModelCreator::parseActions(
     HServerService* service, QDomElement actionElement,
     const HStateVariableInfos& svInfos)
 {
-    HActionsSetupData actionsSetupData =
-        m_creationParameters->creator()->actionsSetupData(service->info());
+    HActionsSetupData actionsSetupData = getActionsSetupData(service);
 
     QHash<QString, HActionInvoke> actionInvokes = service->createActionInvokes();
 
@@ -310,8 +352,7 @@ bool HServerModelCreator::parseServiceList(
     QDomElement serviceElement =
         serviceListElement.firstChildElement("service");
 
-    HServicesSetupData setupData =
-        m_creationParameters->creator()->servicesSetupData(device->info());
+    HServicesSetupData setupData = getServicesSetupData(device);
 
     while(!serviceElement.isNull())
     {
@@ -324,7 +365,7 @@ bool HServerModelCreator::parseServiceList(
         }
 
         QScopedPointer<HServerService> service(
-            m_creationParameters->creator()->createService(info));
+            m_creationParameters->creator()->createService(info, device->info()));
 
         if (!service)
         {
@@ -336,9 +377,15 @@ bool HServerModelCreator::parseServiceList(
             return 0;
         }
 
-        service->setParent(device);
-        service->h_ptr->m_parentDevice = device;
-        service->h_ptr->m_serviceInfo = info;
+        if (!service->init(info, device))
+        {
+            m_lastError = InitializationError;
+            m_lastErrorDescription =
+                QString("Failed to initialize service [%1]").arg(
+                    info.serviceId().toString());
+
+            return false;
+        }
 
         if (!m_creationParameters->m_serviceDescriptionFetcher(
                 extractBaseUrl(m_creationParameters->m_deviceLocations[0]),
@@ -440,10 +487,16 @@ HServerDevice* HServerModelCreator::parseDevice(
         device.reset(new HDefaultServerDevice());
     }
 
-    device->setParent(parentDevice);
-    device->h_ptr->m_deviceInfo.reset(new HDeviceInfo(deviceInfo));
-    device->h_ptr->q_ptr = device.data();
-    device->h_ptr->m_parent = parentDevice;
+    if (!device->init(deviceInfo, parentDevice))
+    {
+        m_lastError = InitializationError;
+        m_lastErrorDescription =
+            QString("Failed to initialize device [%1]").arg(
+                deviceInfo.udn().toString());
+
+        return false;
+    }
+
     device->h_ptr->m_deviceDescription =
         m_creationParameters->m_deviceDescription;
 
@@ -462,8 +515,7 @@ HServerDevice* HServerModelCreator::parseDevice(
         device->h_ptr->m_services = services;
     }
 
-    HDevicesSetupData setupData =
-        m_creationParameters->creator()->embedddedDevicesSetupData(deviceInfo);
+    HDevicesSetupData setupData = getDevicesSetupData(device.data());
 
     QDomElement deviceListElement = deviceElement.firstChildElement("deviceList");
     if (!deviceListElement.isNull())

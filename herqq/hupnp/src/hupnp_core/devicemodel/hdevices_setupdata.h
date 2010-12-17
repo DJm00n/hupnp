@@ -27,6 +27,7 @@
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
+#include <QtCore/QSharedDataPointer>
 
 namespace Herqq
 {
@@ -53,7 +54,7 @@ class H_UPNP_CORE_EXPORT HDeviceSetup
 
 private:
 
-    HDeviceSetupPrivate* h_ptr;
+    QSharedDataPointer<HDeviceSetupPrivate> h_ptr;
 
 public:
 

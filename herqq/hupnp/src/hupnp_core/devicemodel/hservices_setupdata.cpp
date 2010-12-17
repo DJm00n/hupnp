@@ -34,7 +34,8 @@ namespace Upnp
 /*******************************************************************************
  * HServiceSetupPrivate
  ******************************************************************************/
-class HServiceSetupPrivate
+class HServiceSetupPrivate :
+    public QSharedData
 {
 
 public:
@@ -87,23 +88,19 @@ HServiceSetup::HServiceSetup(
 
 HServiceSetup::~HServiceSetup()
 {
-    delete h_ptr;
 }
 
 HServiceSetup& HServiceSetup::operator=(const HServiceSetup& other)
 {
     Q_ASSERT(&other != this);
 
-    HServiceSetupPrivate* newHptr = new HServiceSetupPrivate(*other.h_ptr);
-
-    delete h_ptr;
-    h_ptr = newHptr;
+    h_ptr = other.h_ptr;
 
     return *this;
 }
 
 HServiceSetup::HServiceSetup(const HServiceSetup& other) :
-    h_ptr(new HServiceSetupPrivate(*other.h_ptr))
+    h_ptr(other.h_ptr)
 {
     Q_ASSERT(this != &other);
 }

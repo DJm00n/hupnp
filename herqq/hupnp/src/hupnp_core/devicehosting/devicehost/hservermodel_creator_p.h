@@ -33,7 +33,6 @@
 #include "../hddoc_parser_p.h"
 #include "../hmodelcreation_p.h"
 #include "../../devicemodel/hactioninvoke.h"
-#include "../../devicemodel/server/hdevicemodelcreator.h"
 
 namespace Herqq
 {
@@ -50,6 +49,11 @@ class HServerModelCreationArgs :
 private:
 
     HDeviceModelCreator* m_deviceModelCreator;
+    // Not owned.
+
+    HDeviceModelInfoProvider* m_infoProvider;
+    // Not owned.
+
     QString m_ddPostFix;
 
 public:
@@ -61,7 +65,20 @@ public:
 
     HServerModelCreationArgs& operator=(const HServerModelCreationArgs&);
 
-    inline HDeviceModelCreator* creator() const { return m_deviceModelCreator; }
+    inline void setInfoProvider(HDeviceModelInfoProvider* arg)
+    {
+        m_infoProvider = arg;
+    }
+
+    inline HDeviceModelCreator* creator() const
+    {
+        return m_deviceModelCreator;
+    }
+
+    inline HDeviceModelInfoProvider* infoProvider() const
+    {
+        return m_infoProvider;
+    }
 
     inline void setDeviceDescriptionPostfix(const QString& arg)
     {
@@ -104,6 +121,11 @@ private:
     ErrorType m_lastError;
 
 private:
+
+    HStateVariablesSetupData getStateVariablesSetupData(HServerService*);
+    HActionsSetupData getActionsSetupData(HServerService*);
+    HServicesSetupData getServicesSetupData(HServerDevice*);
+    HDevicesSetupData getDevicesSetupData(HServerDevice*);
 
     QList<QPair<QUrl, QByteArray> > parseIconList(
         const QDomElement& iconListElement);

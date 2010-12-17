@@ -155,8 +155,16 @@ HTestDevice::~HTestDevice()
  *******************************************************************************/
 namespace
 {
-class Creator : public HDeviceModelCreator
+class Creator :
+    public HDeviceModelCreator
 {
+protected:
+
+    virtual Creator* newInstance() const
+    {
+        return new Creator();
+    }
+
 public:
 
     virtual HServerDevice* createDevice(const HDeviceInfo& info) const
@@ -169,19 +177,15 @@ public:
         return 0;
     }
 
-    virtual HServerService* createService(const HServiceInfo& info) const
+    virtual HServerService* createService(
+        const HServiceInfo& serviceInfo, const HDeviceInfo&) const
     {
-        if (info.serviceType().toString() == "urn:herqq-org:service:HTestService:1")
+        if (serviceInfo.serviceType().toString() == "urn:herqq-org:service:HTestService:1")
         {
             return new HTestService();
         }
 
         return 0;
-    }
-
-    virtual HDeviceModelCreator* clone() const
-    {
-        return new Creator();
     }
 };
 }

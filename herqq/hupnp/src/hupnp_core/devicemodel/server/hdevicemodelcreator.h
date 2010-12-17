@@ -22,7 +22,7 @@
 #ifndef HDEVICEMODEL_CREATOR_H_
 #define HDEVICEMODEL_CREATOR_H_
 
-#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HClonable>
 
 namespace Herqq
 {
@@ -67,14 +67,15 @@ class HDeviceModelCreatorPrivate;
  *
  * \sa hupnp_devicehosting, HServerDevice, HServerService
  */
-class H_UPNP_CORE_EXPORT HDeviceModelCreator
+class H_UPNP_CORE_EXPORT HDeviceModelCreator :
+    public HClonable
 {
 H_DISABLE_COPY(HDeviceModelCreator)
 
 public:
 
     /*!
-     * Constructor.
+     * Creates a new instance.
      *
      * Creates a new instance.
      */
@@ -103,70 +104,19 @@ public:
     /*!
      * Creates a service matching the provided service information.
      *
-     * \param info specifies information of the service type the creator is asked
-     * to create.
+     * \param serviceInfo specifies information of the service type the
+     * creator is asked to create.
+     *
+     * \param parentDeviceInfo specifies information about the parent UPnP device
+     * that contains this service.
      *
      * \return a heap allocated service matching the provided service information
      * or \c null in case the creator does not recognize the specified service type.
      *
      * \remarks The ownership of the created service is transferred to the caller.
      */
-    virtual HServerService* createService(const HServiceInfo& info) const = 0;
-
-    /*!
-     * Returns information of the services contained or possibly contained by
-     * the specified device type.
-     *
-     * \param info specifies the device type.
-     *
-     * \return information of the services contained or possibly contained by
-     * the specified device type.
-     */
-    virtual HServicesSetupData servicesSetupData(const HDeviceInfo& info) const;
-
-    /*!
-     * Returns information of the embedded devices contained or possibly
-     * contained by the specified device type.
-     *
-     * \param info specifies the device type.
-     *
-     * \return information of the embedded devices contained or possibly
-     * contained by the specified device type.
-     */
-    virtual HDevicesSetupData embedddedDevicesSetupData(
-        const HDeviceInfo& info) const;
-
-    /*!
-     * Returns information of the actions contained or possibly contained by
-     * the specified service type.
-     *
-     * \param info specifies the service type.
-     *
-     * \return information of the actions contained or possibly contained by
-     * the specified service type.
-     */
-    virtual HActionsSetupData actionsSetupData(const HServiceInfo& info) const;
-
-    /*!
-     * Returns information of the state variables contained or possibly
-     * contained by the specified service type.
-     *
-     * \param info specifies the service type.
-     *
-     * \return information of the state variables contained or possibly
-     * contained by the specified service type.
-     */
-    virtual HStateVariablesSetupData stateVariablesSetupData(
-        const HServiceInfo& info) const;
-
-    /*!
-     * Clones this instance.
-     *
-     * \return a clone of this instance. This must never be null.
-     *
-     * \remarks The ownership of the returned instance is transferred to the caller.
-     */
-    virtual HDeviceModelCreator* clone() const = 0;
+    virtual HServerService* createService(
+        const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const = 0;
 };
 
 }

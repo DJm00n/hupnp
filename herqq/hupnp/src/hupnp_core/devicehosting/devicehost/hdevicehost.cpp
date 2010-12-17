@@ -171,6 +171,7 @@ bool HDeviceHostPrivate::createRootDevices()
         creatorParams.m_deviceDescription = deviceDescr;
         creatorParams.m_deviceLocations = m_httpServer->rootUrls();
         creatorParams.setDeviceDescriptionPostfix(deviceDescriptionPostFix());
+        creatorParams.setInfoProvider(m_config->deviceModelInfoProvider());
 
         creatorParams.m_serviceDescriptionFetcher =
             ServiceDescriptionFetcher(

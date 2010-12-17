@@ -27,6 +27,7 @@
 
 #include <QtCore/QHash>
 #include <QtCore/QString>
+#include <QtCore/QSharedDataPointer>
 
 namespace Herqq
 {
@@ -52,7 +53,7 @@ class H_UPNP_CORE_EXPORT HServiceSetup
 {
 private:
 
-    HServiceSetupPrivate* h_ptr;
+    QSharedDataPointer<HServiceSetupPrivate> h_ptr;
 
 public:
 

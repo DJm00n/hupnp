@@ -322,6 +322,15 @@ public:
     HDeviceModelCreator* deviceModelCreator() const;
 
     /*!
+     * Returns the device model info provider the HDeviceHost should use to
+     * validate device model components.
+     *
+     * \return the device model info provider the HDeviceHost should use to
+     * validate device model components.
+     */
+    HDeviceModelInfoProvider* deviceModelInfoProvider() const;
+
+    /*!
      * Sets the device model creator the HDeviceHost should use
      * to create HServerDevice instances.
      *
@@ -331,6 +340,15 @@ public:
      * \sa deviceModelCreator()
      */
     void setDeviceModelCreator(const HDeviceModelCreator& creator);
+
+    /*!
+     * Sets the device model info provider the HDeviceHost should use to
+     * validate device model components.
+     *
+     * \param infoProvider specifies the device model info provider the
+     * HDeviceHost should use to validate device model components.
+     */
+    void setDeviceModelInfoProvider(const HDeviceModelInfoProvider& infoProvider);
 
     /*!
      * Specifies how many times the device host sends each individual
