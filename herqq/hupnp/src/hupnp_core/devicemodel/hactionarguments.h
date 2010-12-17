@@ -592,6 +592,41 @@ public:
     bool append(HActionArgument* arg);
 
     /*!
+     * Returns the value of the specified state variable, if such exists.
+     *
+     * This is a convenience method for retrieving the value of the specified
+     * state variable. Semantically this call is comparable to
+     * <c>get("stateVariable_name")->value()</c>, but it also ensures that the
+     * specified state variable exists before attempting to get its value.
+     *
+     * \param name specifies the name of the state variable.
+     *
+     * \param ok specifies a pointer to \c bool, which will be \e true if
+     * the specified state variable was found. This parameter is optional.
+     *
+     * \return the value of the specified state variable, if such exists.
+     * Otherwise the returned \c QVariant is invalid.
+     */
+    QVariant value(const QString& name, bool* ok = 0) const;
+
+    /*!
+     * Attempts to set the value of the specified state variable.
+     *
+     * This is a convenience method for setting the value of the specified
+     * state variable. Semantically this call is comparable to
+     * <c>get("stateVariable_name")->setValue(value)</c>, but it also ensures that the
+     * specified state variable exists before attempting to set its value.
+     *
+     * \param name specifies the name of the state variable.
+     *
+     * \param value specifies the value of the state variable.
+     *
+     * \return \e true in case the value of the specified state variable was
+     * changed.
+     */
+    bool setValue(const QString& name, const QVariant& value);
+
+    /*!
      * Returns a string representation of the object.
      *
      * \return a string representation of the object. The

@@ -381,6 +381,31 @@ bool HActionArguments::append(HActionArgument *arg)
     return true;
 }
 
+QVariant HActionArguments::value(const QString& name, bool* ok) const
+{
+    QVariant retVal;
+
+    HActionArgument* arg = h_ptr->m_arguments.value(name);
+    if (arg)
+    {
+        retVal = arg->value();
+    }
+
+    if (ok) { *ok = arg; }
+
+    return retVal;
+}
+
+bool HActionArguments::setValue(const QString& name, const QVariant& value)
+{
+    HActionArgument* arg = h_ptr->m_arguments.value(name);
+    if (arg)
+    {
+        return arg->setValue(value);
+    }
+    return false;
+}
+
 QString HActionArguments::toString() const
 {
     QString retVal;
