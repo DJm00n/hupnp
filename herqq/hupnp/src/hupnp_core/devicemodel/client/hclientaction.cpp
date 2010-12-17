@@ -82,7 +82,7 @@ void HActionProxy::error(QNetworkReply::NetworkError err)
              err == QNetworkReply::HostNotFoundError)
     {
         HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
-            m_owner->m_parentService->parentDevice()->info().udn().toSimpleUuid(),
+            m_owner->q_ptr->parentService()->parentDevice()->info().udn().toSimpleUuid(),
             m_locations[m_iNextLocationToTry].toString()));
 
         if (m_iNextLocationToTry < m_locations.size() - 1)
@@ -210,19 +210,19 @@ void HActionProxy::send()
     {
         // store the device locations only upon action invocation, and only
         // if they haven't been stored yet.
-        m_locations = m_owner->m_parentService->parentDevice()->locations(BaseUrl);
+        m_locations = m_owner->q_ptr->parentService()->parentDevice()->locations(BaseUrl);
         Q_ASSERT(!m_locations.isEmpty());
         m_iNextLocationToTry = 0;
     }
 
     QtSoapNamespaces::instance().registerNamespace(
-        "u", m_owner->m_parentService->info().serviceType().toString());
+        "u", m_owner->q_ptr->parentService()->info().serviceType().toString());
 
     QtSoapMessage soapMsg;
     soapMsg.setMethod(
         QtSoapQName(
             m_owner->m_info->name(),
-            m_owner->m_parentService->info().serviceType().toString()));
+            m_owner->q_ptr->parentService()->info().serviceType().toString()));
 
     HActionArguments::const_iterator ci = m_inArgs.constBegin();
     for(; ci != m_inArgs.constEnd(); ++ci)
@@ -248,14 +248,14 @@ void HActionProxy::send()
 
     QString soapActionHdrField("\"");
     soapActionHdrField.append(
-        m_owner->m_parentService->info().serviceType().toString());
+        m_owner->q_ptr->parentService()->info().serviceType().toString());
 
     soapActionHdrField.append("#").append(m_owner->m_info->name()).append("\"");
     req.setRawHeader("SOAPAction", soapActionHdrField.toUtf8());
 
     QUrl url = resolveUri(
         m_locations[m_iNextLocationToTry],
-        m_owner->m_parentService->info().controlUrl());
+        m_owner->q_ptr->parentService()->info().controlUrl());
 
     req.setUrl(url);
 
@@ -274,7 +274,7 @@ void HActionProxy::send()
  * HClientActionPrivate
  ******************************************************************************/
 HClientActionPrivate::HClientActionPrivate() :
-    m_loggingIdentifier(), q_ptr(0), m_info(), m_parentService(0),
+    m_loggingIdentifier(), q_ptr(0), m_info(),
     m_proxy(0), m_invocations()
 {
 }
@@ -338,7 +338,6 @@ HClientAction::HClientAction(const HActionInfo& info, HClientService* parent) :
 {
     Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
     Q_ASSERT_X(info.isValid(), H_AT, "Action information must be defined.");
-    h_ptr->m_parentService = parent;
 
     h_ptr->m_info.reset(new HActionInfo(info));
     h_ptr->q_ptr = this;
@@ -351,7 +350,7 @@ HClientAction::~HClientAction()
 
 HClientService* HClientAction::parentService() const
 {
-    return h_ptr->m_parentService;
+    return reinterpret_cast<HClientService*>(parent());
 }
 
 const HActionInfo& HClientAction::info() const

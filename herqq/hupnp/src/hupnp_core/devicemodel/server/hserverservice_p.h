@@ -64,13 +64,11 @@ public: // attributes
     QHash<QString, HServerStateVariable*> m_stateVariables;
 
     HServerService* q_ptr;
-    bool m_eventsEnabled;
-
-    HServerDevice* m_parentDevice;
-
-    bool m_evented;
 
     QByteArray m_loggingIdentifier;
+
+    bool m_eventsEnabled;
+    bool m_evented;
 
 public: // methods
 

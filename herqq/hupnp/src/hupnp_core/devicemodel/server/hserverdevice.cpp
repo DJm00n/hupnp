@@ -22,19 +22,14 @@
 #include "hserverdevice.h"
 #include "hserverdevice_p.h"
 #include "hserverservice.h"
-#include "hserverservice_p.h"
 #include "hdefault_serverdevice_p.h"
-
-#include "../hdevices_setupdata.h"
-#include "../hservices_setupdata.h"
-
-#include "../../../utils/hlogger_p.h"
-#include "../../general/hupnp_global_p.h"
 
 #include "../../dataelements/hserviceid.h"
 #include "../../dataelements/hdeviceinfo.h"
+#include "../../dataelements/hserviceinfo.h"
 
-#include <QtCore/QTimer>
+#include "../../general/hupnp_global_p.h"
+
 #include <QtCore/QString>
 
 namespace Herqq
@@ -47,7 +42,7 @@ namespace Upnp
  * HServerDevicePrivate
  ******************************************************************************/
 HServerDevicePrivate::HServerDevicePrivate() :
-    m_deviceInfo(0), m_embeddedDevices(), m_services(), m_parent(0),
+    m_deviceInfo(0), m_embeddedDevices(), m_services(), m_parentDevice(0),
     q_ptr(0), m_locations(), m_deviceDescription(), m_deviceStatus(0)
 {
 }
@@ -83,17 +78,32 @@ bool HServerDevice::finalizeInit(QString*)
     return true;
 }
 
+bool HServerDevice::init(const HDeviceInfo& info, HServerDevice* parentDevice)
+{
+    if (h_ptr->q_ptr)
+    {
+        return false;
+    }
+
+    if (parentDevice) { setParent(parentDevice); }
+    h_ptr->m_parentDevice = parentDevice;
+    h_ptr->m_deviceInfo.reset(new HDeviceInfo(info));
+    h_ptr->q_ptr = this;
+
+    return true;
+}
+
 HServerDevice* HServerDevice::parentDevice() const
 {
-    return h_ptr->m_parent;
+    return h_ptr->m_parentDevice;
 }
 
 HServerDevice* HServerDevice::rootDevice() const
 {
     HServerDevice* root = const_cast<HServerDevice*>(this);
-    while(root->h_ptr->m_parent)
+    while(root->h_ptr->m_parentDevice)
     {
-        root = root->h_ptr->m_parent;
+        root = root->h_ptr->m_parentDevice;
     }
 
     return root;
@@ -142,6 +152,26 @@ const HServerDevices& HServerDevice::embeddedDevices() const
     return h_ptr->m_embeddedDevices;
 }
 
+HServerDevices HServerDevice::embeddedDevicesByType(
+    const HResourceType& type, HResourceType::VersionMatch versionMatch) const
+{
+    if (!type.isValid())
+    {
+        return HServerDevices();
+    }
+
+    HServerDevices retVal;
+    foreach(HServerDevice* dev, h_ptr->m_embeddedDevices)
+    {
+        if (dev->info().deviceType().compare(type, versionMatch))
+        {
+            retVal.push_back(dev);
+        }
+    }
+
+    return retVal;
+}
+
 const HDeviceInfo& HServerDevice::info() const
 {
     return *h_ptr->m_deviceInfo;
@@ -154,11 +184,11 @@ QString HServerDevice::description() const
 
 QList<QUrl> HServerDevice::locations(LocationUrlType urlType) const
 {
-    if (h_ptr->m_parent)
+    if (h_ptr->m_parentDevice)
     {
         // the root device "defines" the locations and they are the same for each
         // embedded device.
-        return h_ptr->m_parent->locations(urlType);
+        return h_ptr->m_parentDevice->locations(urlType);
     }
 
     QList<QUrl> retVal;

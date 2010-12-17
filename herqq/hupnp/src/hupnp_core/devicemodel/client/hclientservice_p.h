@@ -62,7 +62,6 @@ public: // attributes
     QHash<QString, const HClientStateVariable*> m_stateVariablesConst;
 
     HClientService* q_ptr;
-    HClientDevice* m_parentDevice;
 
     bool m_eventsEnabled;
     bool m_evented;

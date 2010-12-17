@@ -51,7 +51,6 @@ HClientServicePrivate::HClientServicePrivate() :
     m_actions          (),
     m_stateVariables   (),
     q_ptr              (0),
-    m_parentDevice     (0),
     m_eventsEnabled    (true),
     m_evented          (false),
     m_loggingIdentifier()
@@ -178,7 +177,6 @@ HClientService::HClientService(
     Q_ASSERT_X(parentDevice, "", "Parent device must be defined!");
 
     h_ptr->m_serviceInfo = info;
-    h_ptr->m_parentDevice = parentDevice;
     h_ptr->q_ptr = this;
 }
 
@@ -189,7 +187,7 @@ HClientService::~HClientService()
 
 HClientDevice* HClientService::parentDevice() const
 {
-    return h_ptr->m_parentDevice;
+    return reinterpret_cast<HClientDevice*>(parent());
 }
 
 const HServiceInfo& HClientService::info() const

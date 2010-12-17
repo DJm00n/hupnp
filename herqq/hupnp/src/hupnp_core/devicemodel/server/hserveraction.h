@@ -69,11 +69,15 @@ protected:
     HServerActionPrivate* h_ptr;
 
     /*!
-     * Initializes the instance with the specified name.
-     * \param name specifies the name of the action.
+     * Creates a new instance.
      *
+     * \param info specifies information of the action. This is usually read
+     * from a service description document.
+     *
+     * \param parentService specifies the UPnP service instance that contains
+     * this action.
      */
-    HServerAction(const HActionInfo& info, HServerService* parent);
+    HServerAction(const HActionInfo& info, HServerService* parentService);
 
 public:
 

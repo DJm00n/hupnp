@@ -50,10 +50,9 @@ HServerServicePrivate::HServerServicePrivate() :
     m_actions          (),
     m_stateVariables   (),
     q_ptr              (0),
+    m_loggingIdentifier(),
     m_eventsEnabled    (true),
-    m_parentDevice     (0),
-    m_evented          (false),
-    m_loggingIdentifier()
+    m_evented          (false)
 {
 }
 
@@ -168,7 +167,7 @@ bool HServerServicePrivate::updateVariables(
 }
 
 /*******************************************************************************
- *HServerService
+ * HServerService
  ******************************************************************************/
 HServerService::HServerService() :
     h_ptr(new HServerServicePrivate())
@@ -185,6 +184,22 @@ HServerService::~HServerService()
     delete h_ptr;
 }
 
+bool HServerService::init(
+    const HServiceInfo& info, HServerDevice* parentDevice)
+{
+    if (h_ptr->q_ptr)
+    {
+        return false;
+    }
+
+    Q_ASSERT_X(parentDevice, "parentDevice", "Parent device has to be defined.");
+    setParent(reinterpret_cast<QObject*>(parentDevice));
+    h_ptr->m_serviceInfo = info;
+    h_ptr->q_ptr = this;
+
+    return true;
+}
+
 bool HServerService::finalizeInit(QString*)
 {
     // intentionally empty.
@@ -193,7 +208,7 @@ bool HServerService::finalizeInit(QString*)
 
 HServerDevice* HServerService::parentDevice() const
 {
-    return h_ptr->m_parentDevice;
+    return reinterpret_cast<HServerDevice*>(parent());
 }
 
 const HServiceInfo& HServerService::info() const

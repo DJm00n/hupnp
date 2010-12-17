@@ -57,7 +57,6 @@ public:
 
     HServerAction* q_ptr;
     QScopedPointer<HActionInfo> m_info;
-    HServerService* m_parentService;
     HActionInvoke m_actionInvoke;
 
 public:

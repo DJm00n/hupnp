@@ -36,8 +36,6 @@
 #include "../../dataelements/hactioninfo.h"
 
 #include <QtCore/QUrl>
-#include <QtCore/QHash>
-#include <QtCore/QUuid>
 #include <QtCore/QQueue>
 #include <QtCore/QString>
 #include <QtCore/QScopedPointer>
@@ -71,8 +69,6 @@ public:
 
     HClientAction* q_ptr;
     QScopedPointer<HActionInfo> m_info;
-
-    HClientService* m_parentService;
 
     HActionProxy* m_proxy;
     QQueue<HInvocationInfo> m_invocations;

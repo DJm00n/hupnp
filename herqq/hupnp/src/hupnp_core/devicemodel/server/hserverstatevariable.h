@@ -35,7 +35,6 @@ namespace Herqq
 namespace Upnp
 {
 
-template<typename T>
 class HStateVariablePrivate;
 
 /*!
@@ -69,12 +68,12 @@ H_DISABLE_COPY(HServerStateVariable)
 
 protected:
 
-    HStateVariablePrivate<HServerService>* h_ptr;
+    HStateVariablePrivate* h_ptr;
 
     /*!
      * Creates a new instance.
      *
-     * \param info specifies information of the state variable. This is often
+     * \param info specifies information of the state variable. This is usually
      * read from a service description document.
      *
      * \param parent specifies the UPnP service instance that contains this

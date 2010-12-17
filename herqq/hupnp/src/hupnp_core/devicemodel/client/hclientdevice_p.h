@@ -59,7 +59,7 @@ public: // attributes
     QScopedPointer<HDeviceInfo> m_deviceInfo;
     QList<HDefaultClientDevice*> m_embeddedDevices;
     QList<HDefaultClientService*> m_services;
-    HClientDevice* m_parent;
+    HClientDevice* m_parentDevice;
     // ^^ this is not the "QObject" parent, but rather the parent in the
     // device tree.
 

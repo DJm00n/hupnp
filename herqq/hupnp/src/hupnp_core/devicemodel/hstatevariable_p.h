@@ -45,7 +45,6 @@ namespace Upnp
 //
 // Implementation details of HStateVariable
 //
-template<typename ParentService>
 class HStateVariablePrivate
 {
 H_DISABLE_COPY(HStateVariablePrivate)
@@ -53,15 +52,11 @@ H_DISABLE_COPY(HStateVariablePrivate)
 public:
 
     HStateVariableInfo m_info;
-
     QVariant m_value;
-    ParentService* m_parentService;
-
-    const QByteArray m_loggingIdentifier;
 
 public:
 
-    HStateVariablePrivate() : m_info(), m_value(), m_parentService(0) {}
+    HStateVariablePrivate() : m_info(), m_value() {}
     ~HStateVariablePrivate(){}
 
     bool setValue(const QVariant& value, QString* err)

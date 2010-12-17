@@ -33,7 +33,6 @@ namespace Herqq
 namespace Upnp
 {
 
-template<typename T>
 class HStateVariablePrivate;
 
 /*!
@@ -67,7 +66,7 @@ H_DISABLE_COPY(HClientStateVariable)
 
 protected:
 
-    HStateVariablePrivate<HClientService>* h_ptr;
+    HStateVariablePrivate* h_ptr;
 
     /*!
      * Creates a new instance.

@@ -167,16 +167,32 @@ protected:
     /*!
      * Creates a new instance.
      *
-     * Creates a new instance.
+     * You have to call init() to fully initialize the instance.
+     *
+     * \sa init()
      */
     HServerService();
 
     //
     // \internal
     //
-    // Creates a new instance and re-uses the h-ptr.
+    // Creates a new instance and re-uses the h_ptr.
     //
     HServerService(HServerServicePrivate& dd);
+
+    /*!
+     * Initializes the instance.
+     *
+     * This method will succeed only once after construction. Subsequent
+     * calls will do nothing.
+     *
+     * \param info specifies information of the service. This is usually read
+     * from a device description document.
+     *
+     * \param parentDevice specifies the UPnP device instance that contains
+     * this service.
+     */
+    bool init(const HServiceInfo& info, HServerDevice* parentDevice);
 
 public:
 

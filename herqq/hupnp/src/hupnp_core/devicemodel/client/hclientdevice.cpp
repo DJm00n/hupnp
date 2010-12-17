@@ -44,7 +44,7 @@ namespace Upnp
  * HClientDevicePrivate
  ******************************************************************************/
 HClientDevicePrivate::HClientDevicePrivate() :
-    m_deviceInfo(0), m_embeddedDevices(), m_services(), m_parent(0),
+    m_deviceInfo(0), m_embeddedDevices(), m_services(), m_parentDevice(0),
     q_ptr(0), m_locations(), m_deviceDescription()
 {
 }
@@ -62,7 +62,7 @@ HClientDevice::HClientDevice(
         QObject(parentDev),
             h_ptr(new HClientDevicePrivate())
 {
-    h_ptr->m_parent = parentDev;
+    h_ptr->m_parentDevice = parentDev;
     h_ptr->m_deviceInfo.reset(new HDeviceInfo(info));
     h_ptr->q_ptr = this;
 }
@@ -74,15 +74,15 @@ HClientDevice::~HClientDevice()
 
 HClientDevice* HClientDevice::parentDevice() const
 {
-    return h_ptr->m_parent;
+    return h_ptr->m_parentDevice;
 }
 
 HClientDevice* HClientDevice::rootDevice() const
 {
     HClientDevice* root = const_cast<HClientDevice*>(this);
-    while(root->h_ptr->m_parent)
+    while(root->h_ptr->m_parentDevice)
     {
-        root = root->h_ptr->m_parent;
+        root = root->h_ptr->m_parentDevice;
     }
 
     return root;
@@ -143,6 +143,26 @@ HClientDevices HClientDevice::embeddedDevices() const
     return retVal;
 }
 
+HClientDevices HClientDevice::embeddedDevicesByType(
+    const HResourceType& type, HResourceType::VersionMatch versionMatch) const
+{
+    if (!type.isValid())
+    {
+        return HClientDevices();
+    }
+
+    HClientDevices retVal;
+    foreach(HDefaultClientDevice* dev, h_ptr->m_embeddedDevices)
+    {
+        if (dev->info().deviceType().compare(type, versionMatch))
+        {
+            retVal.push_back(dev);
+        }
+    }
+
+    return retVal;
+}
+
 const HDeviceInfo& HClientDevice::info() const
 {
     return *h_ptr->m_deviceInfo;
@@ -155,11 +175,11 @@ QString HClientDevice::description() const
 
 QList<QUrl> HClientDevice::locations(LocationUrlType urlType) const
 {
-    if (h_ptr->m_parent)
+    if (h_ptr->m_parentDevice)
     {
         // the root device "defines" the locations and they are the same for each
         // embedded device.
-        return h_ptr->m_parent->locations(urlType);
+        return h_ptr->m_parentDevice->locations(urlType);
     }
 
     QList<QUrl> retVal;

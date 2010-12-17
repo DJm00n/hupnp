@@ -37,7 +37,7 @@ namespace Upnp
  * HServerActionPrivate
  ******************************************************************************/
 HServerActionPrivate::HServerActionPrivate() :
-    q_ptr(0), m_info(), m_parentService(0), m_actionInvoke()
+    q_ptr(0), m_info(), m_actionInvoke()
 {
 }
 
@@ -65,7 +65,6 @@ HServerAction::HServerAction(const HActionInfo& info, HServerService* parent) :
 {
     Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
     Q_ASSERT_X(info.isValid(), H_AT, "Action information must be defined.");
-    h_ptr->m_parentService = parent;
 
     h_ptr->m_info.reset(new HActionInfo(info));
     h_ptr->q_ptr = this;
@@ -78,7 +77,7 @@ HServerAction::~HServerAction()
 
 HServerService* HServerAction::parentService() const
 {
-    return h_ptr->m_parentService;
+    return reinterpret_cast<HServerService*>(parent());
 }
 
 const HActionInfo& HServerAction::info() const

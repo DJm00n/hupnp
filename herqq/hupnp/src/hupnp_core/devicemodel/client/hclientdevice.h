@@ -182,6 +182,27 @@ public:
     HClientDevices embeddedDevices() const;
 
     /*!
+     * Returns the embedded devices of a specific UPnP device type.
+     *
+     * \param deviceType specifies the UPnP device type of interest.
+     * Only devices matching the type are returned.
+     *
+     * \param versionMatch specifies how the version information in argument
+     * \a deviceType should be used. The default is <em>inclusive match</em>,
+     * which essentially means that any device with a device type version that
+     * is \b less than or \b equal to the version specified in argument
+     * \a deviceType is successfully matched.
+     *
+     * \return the embedded devices of the specified type.
+     *
+     * \remarks the pointers are guaranteed to be valid throughout the lifetime
+     * of this object.
+     */
+    HClientDevices embeddedDevicesByType(
+        const HResourceType& deviceType,
+        HResourceType::VersionMatch versionMatch = HResourceType::Inclusive) const;
+
+    /*!
      * Returns information about the device.
      *
      * \return information about the device. This is often read from the

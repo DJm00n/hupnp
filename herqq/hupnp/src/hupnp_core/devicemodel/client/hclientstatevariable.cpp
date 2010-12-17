@@ -25,8 +25,6 @@
 #include "../hstatevariable_p.h"
 #include "../hstatevariable_event.h"
 
-#include "../../../utils/hlogger_p.h"
-
 namespace Herqq
 {
 
@@ -39,13 +37,11 @@ namespace Upnp
 HClientStateVariable::HClientStateVariable(
     const HStateVariableInfo& info, HClientService* parent) :
         QObject(reinterpret_cast<QObject*>(parent)),
-            h_ptr(new HStateVariablePrivate<HClientService>())
+            h_ptr(new HStateVariablePrivate())
 {
-    HLOG(H_AT, H_FUN);
     Q_ASSERT_X(parent, H_AT, "Parent service must be defined.");
     Q_ASSERT_X(info.isValid(), H_AT, "Info object must be valid.");
 
-    h_ptr->m_parentService = parent;
     h_ptr->m_info = info;
     setValue(info.defaultValue());
 }
@@ -57,8 +53,7 @@ HClientStateVariable::~HClientStateVariable()
 
 HClientService* HClientStateVariable::parentService() const
 {
-    Q_ASSERT(h_ptr->m_parentService);
-    return h_ptr->m_parentService;
+    return reinterpret_cast<HClientService*>(parent());
 }
 
 QVariant HClientStateVariable::value() const
@@ -73,14 +68,11 @@ const HStateVariableInfo& HClientStateVariable::info() const
 
 bool HClientStateVariable::setValue(const QVariant& newValue)
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
     QVariant oldValue = h_ptr->m_value;
 
     QString err;
     if (!h_ptr->setValue(newValue, &err))
     {
-        //HLOG_WARN();
         return false;
     }
 

@@ -64,10 +64,9 @@ public: // attributes
     QList<HServerService*> m_services;
     // The services this instance contains.
 
-    HServerDevice* m_parent;
+    HServerDevice* m_parentDevice;
     // ^^ this is not the "QObject" parent, but rather the parent in the
-    // device tree. In other words, this device controller contains the HDevice
-    // that is our "UPnP device parent".
+    // device tree.
 
     HServerDevice* q_ptr;
     // The "parent" QObject
