@@ -33,12 +33,38 @@ namespace Upnp
 class HDeviceModelInfoProviderPrivate;
 
 /*!
+ * A protocol class for providing information that is used to validate
+ * components of UPnP's device architecture and to setup components of
+ * HUPnP's device model.
  *
- * \headerfile HDeviceModelInfoProvider.h HDeviceModelInfoProvider
+ * The main purpose of this class is to define an interface that enables the
+ * users to provide information that HUPnP can use for verification and
+ * validation purposes. Although optional, this information can be especially
+ * useful when provided to HDeviceHost via HDeviceHostConfiguration. This enables
+ * HUPnP to use the information to verify that device and service descriptions
+ * are setup according to the specified information.
+ *
+ * The benefit of this is that your custom device model components can rest
+ * assured that all the required state variables, actions, services and
+ * embedded devices are properly defined and initialized before the instantiation
+ * of the HUPnP's device model (device tree) is published for control points to use.
+ *
+ * The benefits of this may be somewhat difficult to realize at first, since most
+ * of the time it is you, the user, who provides the implementation and
+ * the description documents. Apart from inadvertent mistakes, you usually
+ * get those right. However, when someone else provides the implementation of
+ * the HUPnP's device model or the description documents, mismatches can easily
+ * occur and this is where the benefits of this additional information are truly
+ * useful. Remember, in UPnP architecture the description documents are used to
+ * marshal device model information from servers to clients. If the description
+ * documents do not accurately reflect the server-side implementation, the
+ * client-side may not be able to correctly invoke the server-side.
+ *
+ * \headerfile hdevicemodel_infoprovider.h HDeviceModelInfoProvider
  *
  * \ingroup hupnp_devicemodel
  *
- * \sa hupnp_devicehosting, HServerDevice, HServerService
+ * \sa hupnp_devicehosting, HDeviceHostConfiguration
  */
 class H_UPNP_CORE_EXPORT HDeviceModelInfoProvider :
     public HClonable
@@ -114,6 +140,8 @@ public:
     virtual HStateVariablesSetupData stateVariablesSetupData(
         const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const;
 
+    //
+    // Documented in HClonable
     virtual HDeviceModelInfoProvider* clone() const;
 };
 

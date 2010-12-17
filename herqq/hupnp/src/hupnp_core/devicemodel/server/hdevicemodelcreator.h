@@ -37,29 +37,8 @@ class HDeviceModelCreatorPrivate;
  *
  * The primary purpose of this protocol class is to build instances of the HUPnP's
  * \ref hupnp_devicemodel at server-side. If you wish to host a device in an
- * HDeviceHost you have to derive from this class and override its abstract methods.
- *
- * The secondary purpose of this class is to provide users the possibility to
- * specify additional information about the components of the device model, which
- * HUPnP can use for verification and validation purposes. This information is
- * optional, but if provided, HUPnP uses it to verify that device and
- * service descriptions are setup according to the specified information.
- *
- * The benefit of this is that your custom device model components can rest
- * assured that all the required state variables, actions, services and
- * embedded devices are properly defined and initialized before the instantiation
- * of the device model (device tree) is published for control points to use.
- *
- * The benefits of this may be somewhat difficult to realize at first, since most
- * of the time it is you, the user, who provides the implementation and
- * the description documents. Apart from inadvertent mistakes, you usually
- * get those right. However, when someone else provides the implementation of
- * the HUPnP's device model or the description documents, mismatches can easily
- * occur and this is where the benefits of this additional information are truly
- * useful. Remember, in UPnP architecture the description documents are used to
- * marshal device model information from servers to clients. If the description
- * documents do not accurately reflect the server-side implementation, the
- * client-side may not be able to correctly invoke the server-side.
+ * HDeviceHost you have to derive from this class and override its
+ * abstract methods.
  *
  * \headerfile hdevicemodelcreator.h HDeviceModelCreator
  *
@@ -118,6 +97,8 @@ public:
     virtual HServerService* createService(
         const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const = 0;
 
+    //
+    // Documented in HClonable
     virtual HDeviceModelCreator* clone() const;
 };
 

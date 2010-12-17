@@ -86,15 +86,30 @@ class HDeviceHostPrivate;
  *
  * class MyCreator : public Herqq::Upnp::HDeviceModelCreator
  * {
+ *
+ * private:
+ *
+ *   // overridden from HDeviceModelCreator
+ *   virtual MyCreator* newInstance() const;
+ *
  * public:
  *
- *   virtual MyHServerDevice* createDevice(const Herqq::Upnp::HDeviceInfo& info) const;
- *   virtual MyHServerService* createService(const Herqq::Upnp::HServiceInfo& info) const;
- *   virtual Herqq::Upnp::HDeviceModelCreator* clone() const;
+ *   // overridden from HDeviceModelCreator
+ *   virtual MyHServerDevice* createDevice(
+ *       const Herqq::Upnp::HDeviceInfo& info) const;
+ *
+ *   // overridden from HDeviceModelCreator
+ *   virtual MyHServerService* createService(
+ *       const Herqq::Upnp::HServiceInfo& serviceInfo,
+ *       const Herqq::Upnp::HDeviceInfo& parentDeviceInfo) const;
  * };
  *
- *
  * // myclass.cpp
+ *
+ * MyCreator* MyCreator::newInstance() const
+ * {
+ *     return new MyCreator();
+ * }
  *
  * MyHServerDevice* MyCreator::createDevice(const Herqq::Upnp::HDeviceInfo& info) const
  * {
@@ -106,19 +121,20 @@ class HDeviceHostPrivate;
  *     return 0;
  * }
  *
- * MyHServerService* MyCreator::createService(const Herqq::Upnp::HServiceInfo& info) const
+ * MyHServerService* MyCreator::createService(
+ *     const Herqq::Upnp::HServiceInfo& serviceInfo,
+ *     const Herqq::Upnp::HDeviceInfo& parentDeviceInfo) const
  * {
- *     if (info.serviceType().toString() == "urn:herqq-org:service:MyService:1")
+ *     if (serviceInfo.serviceType().toString() == "urn:herqq-org:service:MyService:1")
  *     {
  *         return new HMyServerService();
  *     }
  *
- *      return 0;
- * }
+ *     // Note, parentDeviceInfo is not needed in this case, but there are
+ *     // scenarios when it is mandatory to know information of the parent
+ *     // device to create the correct HServerService type.
  *
- * Herqq::Upnp::HDeviceModelCreator* MyCreator::clone() const
- * {
- *     return new MyCreator();
+ *     return 0;
  * }
  *
  * MyClass::MyClass(QObject* parent) :

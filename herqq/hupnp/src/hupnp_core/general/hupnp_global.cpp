@@ -657,15 +657,8 @@ namespace Upnp
  *         return Herqq::Upnp::UpnpInvalidArgs;
  *     }
  *
- *     Herqq::Upnp::HActionArgument* retTargetValue = outArgs->get("RetTargetValue");
- *     if (!retTargetValue)
- *     {
- *         // See the comments above. The same thing applies here as well.
- *         return UpnpInvalidArgs;
- *     }
- *
  *     bool b = stateVariables().value("Target")->value().toBool();
- *     retTargetValue->setValue(b);
+ *     outArgs->setValue("RetTargetValue", b);
  *
  *     return Herqq::Upnp::UpnpSuccess;
  * }
@@ -679,15 +672,8 @@ namespace Upnp
  *         return UpnpInvalidArgs;
  *     }
  *
- *     Herqq::Upnp::HActionArgument* resultStatus = outArgs->get("ResultStatus");
- *     if (!resultStatus)
- *     {
- *         // See the comments above. The same thing applies here as well.
- *         return Herqq::Upnp::UpnpInvalidArgs;
- *     }
- *
  *     bool b = stateVariables().value("Status")->value().toBool();
- *     resultStatus->setValue(b);
+ *     outArgs->setValue("ResultStatus", b);
  *
  *     return Herqq::Upnp::UpnpSuccess;
  * }
@@ -800,8 +786,18 @@ namespace Upnp
  *
  * class MyCreator : public Herqq::Upnp::HDeviceModelCreator
  * {
+ *
+ * private:
+ *
+ *   // overridden from HDeviceModelCreator
+ *   virtual MyCreator* newInstance() const
+ *   {
+ *       return new MyCreator();
+ *   }
+ *
  * public:
  *
+ *   // overridden from HDeviceModelCreator
  *   virtual MyHServerDevice* createDevice(const Herqq::Upnp::HDeviceInfo& info) const
  *   {
  *       if (info.deviceType().toString() == "urn:herqq-org:device:MyDevice:1")
@@ -812,19 +808,21 @@ namespace Upnp
  *       return 0;
  *   }
  *
- *   virtual MyHServerService* createService(const Herqq::Upnp::HServiceInfo& info) const
+ *   // overridden from HDeviceModelCreator
+ *   virtual MyHServerService* createService(
+ *       const Herqq::Upnp::HServiceInfo& serviceInfo,
+ *       const Herqq::Upnp::HDeviceInfo& parentDeviceInfo) const
  *   {
- *       if (info.serviceType().toString() == "urn:herqq-org:service:MyService:1")
+ *       if (serviceInfo.serviceType().toString() == "urn:herqq-org:service:MyService:1")
  *       {
  *           return new HMyServerService();
  *       }
  *
- *       return 0;
- *   }
+ *       // Note, parentDeviceInfo is not needed in this case, but there are
+ *       // scenarios when it is mandatory to know information of the parent
+ *       // device to create the correct HServerService type.
  *
- *   virtual Herqq::Upnp::HDeviceModelCreator* clone() const
- *   {
- *       return new MyCreator();
+ *       return 0;
  *   }
  * };
  * \endcode
@@ -938,9 +936,9 @@ namespace Upnp
  *
  * Once you have set up the action mappings, your custom HServerService
  * is ready to be used. However, there is much more you can do with
- * Herqq::Upnp::HDeviceModelCreator::actionsSetupData() to ensure that the
+ * Herqq::Upnp::HDeviceModelInfoProvider::actionsSetupData() to ensure that the
  * service description containing the action definitions is correct. Similarly,
- * you can override Herqq::Upnp::HDeviceModelCreator::stateVariablesSetupData()
+ * you can override Herqq::Upnp::HDeviceModelInfoProvider::stateVariablesSetupData()
  * to provide additional information to HUPnP in order to make sure that the
  * service description document is appropriately set up in terms of state
  * variables as well. This may not be important to you if you are writing a
@@ -952,21 +950,21 @@ namespace Upnp
  * When implementing a custom \c %HServerService class you are required to implement
  * only the \c createActionInvokes(). You \b may provide additional information
  * about the structure and details of a UPnP service via
- * HDeviceModelCreator::actionsSetupData() and
- * HDeviceModelCreator::stateVariablesSetupData(), but those are always optional.
+ * HDeviceModelInfoProvider::actionsSetupData() and
+ * HDeviceModelInfoProvider::stateVariablesSetupData(), but those are always optional.
  *
  * \section providing_more_info_to_model_setup Providing more information to the model setup process
  *
  * There are a few ways to provide in-depth information of a UPnP device to ensure
  * that a device model will get built as desired. All of the methods described
- * here require HDeviceModelCreator. First, you can override
- * HDeviceModelCreator::embedddedDevicesSetupData() and HDeviceModelCreator::servicesSetupData()
+ * here require HDeviceModelInfoProvider. First, you can override
+ * HDeviceModelInfoProvider::embedddedDevicesSetupData() and HDeviceModelInfoProvider::servicesSetupData()
  * methods to specify what embedded devices and services has to be defined in the
  * device description for an instance of the device type to function correctly.
  * Second, you can provide detailed information of expected actions and their
- * arguments when you override HDeviceModelCreator::actionsSetupData(). Third,
+ * arguments when you override HDeviceModelInfoProvider::actionsSetupData(). Third,
  * you can provide detailed information of expected state variables when you override
- * HDeviceModelCreator::stateVariablesSetupData().
+ * HDeviceModelInfoProvider::stateVariablesSetupData().
  *
  * \note All of these methods and techniques described here are optional.
  *
@@ -978,13 +976,14 @@ namespace Upnp
  * yourself and you do not have to check everywhere if an embedded device,
  * a service, a required action, an action argument or a state variable is provided.
  * But if your device and service types are created for internal or
- * otherwise controlled use only, overriding these methods may be unnecessary.
+ * otherwise controlled use only, implementing your own HDeviceModelInfoProvider
+ * may be unnecessary.
  *
  * An example of \c servicesSetupData():
  *
  * \code
  *
- * Herqq::Upnp::HServicesSetupData MyDeviceModelCreator::servicesSetupData(
+ * Herqq::Upnp::HServicesSetupData MyDeviceModelInfoProvider::servicesSetupData(
  *     const Herqq::Upnp::HDeviceInfo& info)
  * {
  *  Herqq::Upnp::HServicesSetupData retVal;
@@ -1018,7 +1017,8 @@ namespace Upnp
  * An example of \c embedddedDevicesSetupData():
  *
  * \code
- * Herqq::Upnp::HDevicesSetupData MyDeviceModelCreator::embedddedDevicesSetupData()
+ * Herqq::Upnp::HDevicesSetupData MyDeviceModelInfoProvider::embedddedDevicesSetupData(
+ *     const HDeviceInfo& info)
  * {
  *  Herqq::Upnp::HDevicesSetupData retVal;
  *
@@ -1049,8 +1049,8 @@ namespace Upnp
  * An example of \c stateVariablesSetupData():
  *
  * \code
- * Herqq::Upnp::HStateVariablesSetupData MyDeviceModelCreator::stateVariablesSetupData(
- *     const Herqq::Upnp::HServiceInfo& info)
+ * Herqq::Upnp::HStateVariablesSetupData MyDeviceModelInfoProvider::stateVariablesSetupData(
+ *     const Herqq::Upnp::HServiceInfo& serviceInfo, const Herqq::Upnp::HDeviceInfo& parentDeviceInfo)
  * {
  *  Herqq::Upnp::HStateVariablesSetupData retVal;
  *
@@ -1098,9 +1098,12 @@ namespace Upnp
  * returns HDeviceHost::InvalidServiceDescriptionError. See the documentation of
  * HStateVariableInfo for more information of what can be validated.
  *
- * Finally, you can override HDeviceModelCreator::actionsSetupData() to
+ * Finally, you can override HDeviceModelInfoProvider::actionsSetupData() to
  * provide detailed information about the action and its expected arguments.
  * See HActionSetup for more information of this.
+ *
+ * \note It is planned that in the future this same information could be used to
+ * create instances of HUPnP's device model without description documents.
  *
  * \sa hupnp_devicehosting
  */
@@ -1163,24 +1166,33 @@ namespace Upnp
  * class MyDeviceModelCreator :
  *     public Herqq::Upnp::HDeviceModelCreator
  * {
+ * private:
+ *
+ *     // overridden from HDeviceModelCreator
+ *     virtual MyDeviceModelCreator* newInstance() const
+ *     {
+ *         return new MyDeviceModelCreator();
+ *     }
+ *
  * public:
- *     virtual HServerDevice* createDevice(const HDeviceInfo& info) const
+ *
+ *     // overridden from HDeviceModelCreator
+ *     virtual Herqq::Upnp::HServerDevice* createDevice(
+ *         const Herqq::Upnp::HDeviceInfo& info) const
  *     {
  *         // You should check the info object to see what object HUPnP wants
  *         // created and return null if your creator cannot create it.
  *         return new MyHDevice(); // your class derived from HDevice
  *     }
  *
- *     virtual HServerService* createService(const HServiceInfo& info) const
+ *     // overridden from HDeviceModelCreator
+ *     virtual HServerService* createService(
+ *         const Herqq::Upnp::HServiceInfo& serviceInfo,
+ *         const Herqq::Upnp::HDeviceInfo& parentDeviceInfo) const
  *     {
- *         // You should check the info object to see what object HUPnP wants
+ *         // You should check the info objects to see what object HUPnP wants
  *         // created and return null if your creator cannot create it.
  *         return new MyHService();
- *     }
- *
- *     virtual HDeviceModelCreator* clone() const
- *     {
- *         return new MyDeviceModelCreator();
  *     }
  * };
  *

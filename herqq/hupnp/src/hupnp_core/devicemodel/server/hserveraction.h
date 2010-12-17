@@ -120,14 +120,14 @@ public:
      * \code
      *
      * Herqq::Upnp::HActionArguments inArgs = action->info().inputArguments();
-     * inArgs["EchoInArgument"]->setValue("Ping");
+     * inArgs.setValue("EchoInArgument", "Ping");
      *
      * Herqq::Upnp::HActionArguments outArgs;
      *
      * qint32 retVal = action->invoke(inArgs, &outArgs);
      * if (retVal == Herqq::Upnp::HServerAction::Success)
      * {
-     *     qDebug() << outArgs["EchoOutArgument"]->value().toString();
+     *     qDebug() << outArgs.value("EchoOutArgument").toString();
      * }
      *
      * \endcode
