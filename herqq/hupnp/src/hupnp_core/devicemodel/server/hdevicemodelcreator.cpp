@@ -41,5 +41,10 @@ HServerDevice* HDeviceModelCreator::createDevice(const HDeviceInfo&) const
     return new HDefaultServerDevice();
 }
 
+HDeviceModelCreator* HDeviceModelCreator::clone() const
+{
+    return static_cast<HDeviceModelCreator*>(HClonable::clone());
+}
+
 }
 }

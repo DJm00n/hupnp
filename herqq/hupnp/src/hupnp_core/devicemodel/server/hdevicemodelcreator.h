@@ -117,6 +117,8 @@ public:
      */
     virtual HServerService* createService(
         const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const = 0;
+
+    virtual HDeviceModelCreator* clone() const;
 };
 
 }

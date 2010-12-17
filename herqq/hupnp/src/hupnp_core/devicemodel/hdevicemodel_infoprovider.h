@@ -113,6 +113,8 @@ public:
      */
     virtual HStateVariablesSetupData stateVariablesSetupData(
         const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const;
+
+    virtual HDeviceModelInfoProvider* clone() const;
 };
 
 }

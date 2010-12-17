@@ -64,5 +64,10 @@ HStateVariablesSetupData HDeviceModelInfoProvider::stateVariablesSetupData(
     return HStateVariablesSetupData();
 }
 
+HDeviceModelInfoProvider* HDeviceModelInfoProvider::clone() const
+{
+    return static_cast<HDeviceModelInfoProvider*>(HClonable::clone());
+}
+
 }
 }
