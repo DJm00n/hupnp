@@ -17,10 +17,16 @@ win32 {
     }
 
     LIBS += -lws2_32
+    
+    DESCRIPTIONS = $$PWD\\descriptions
+    DESCRIPTIONS = $${replace(DESCRIPTIONS, /, \\)}
+    QMAKE_POST_LINK += xcopy $$DESCRIPTIONS ..\\..\\hupnp\\bin\\descriptions /E /Y /C /I 
 }
 else {
     LIBS += -lQtSolutions_SOAP-2.7
     !macx:QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN
+    
+    QMAKE_POST_LINK += cp -Rf $$PWD/descriptions ../../hupnp/bin
 }
 
 macx {
