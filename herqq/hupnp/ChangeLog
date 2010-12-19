@@ -1,5 +1,59 @@
 # HUPnP Changelog
 
+HUPnP 0.8.0 [Dec 19, 2010]
+--------------------------------------------------------------------------------
+- Separated the client-side and server-side to use their own device model types.
+For example, there's now HClientDevice and HServerDevice in place of HDevice.
+
+- Fine tuned the device model types for their purposes more precisely.
+For instance, server-side action type does not have asynchronous invocation API and client-side 
+action types does not have synchronous invocation API anymore.
+
+- Removed the possibility for the user to plug-in client-side device model classes.
+
+- Decoupled the "type creation" and "setup data" API away from the device model 
+components to their own types (HDeviceModelCreator and HDeviceModelInfoProvider).
+
+- Modified the client-side action invocation semantics to send the "results" 
+directly through the specified callback or the invokeComplete() signal.
+
+- Moved the UPnP action return codes directly to Herqq::Upnp namespace.
+
+- Modified the HControlPoint and HDeviceHost to run in a single thread only.
+
+- Removed exceptions from HUPnP altogether.
+
+- Removed the dependency to QtGui library by replacing the use of QImage with 
+QByteArray. QImage was used to store icon data. 
+
+- Replaced the internal use of QHttpHeader, QHttpRequestHeader and QHttpResponseHeader 
+with similar custom classes.
+
+- Added convenience methods to HActionArguments for getting and setting a state 
+variable value safely.
+
+- Fixed a few bugs in HTTP header parsing.
+
+- Fixed a few memory leaks.
+
+- Fixed several errors in the project files and added the possibility to define the
+install location of HUPnP.
+
+- Did various optimizations that improve speed and decrease the memory foot print.
+
+- Fixed a problem with QtCreator's "shadow build feature" that caused the launch of 
+SimpleTestApp's HTestDevice to fail, as the required description documents could not be found.
+
+- Did internal refactoring in various places.
+
+- Did code cleansing and a number of general improvements not worth mentioning individually.
+ 
+- Updated documentation.
+
+Special thanks to Jukka Kinnunen <kinnujuk@gmail.com> and 
+João Xavier <smogzer@gmail.com> for reporting their findings to me.
+Much appreciated. 
+
 HUPnP 0.7.0 [Oct 6, 2010]
 --------------------------------------------------------------------------------
 - Added classes for setting up each component of the device model. 
