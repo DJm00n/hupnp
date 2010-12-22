@@ -30,13 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
-#include <HUpnpCore/HDeviceStatus>
-#include <HUpnpCore/HClientDevice>
-
-#include <QtCore/QUrl>
-#include <QtCore/QList>
-#include <QtCore/QString>
-#include <QtCore/QScopedPointer>
+#include "hdefault_clientdevice_p.h"
+#include "../hdevice_p.h"
 
 namespace Herqq
 {
@@ -45,35 +40,19 @@ namespace Upnp
 {
 
 class HDefaultClientDevice;
-class HDefaultClientService;
 
 //
-// Base class for the implementation details of HClientDevice
 //
-class H_UPNP_CORE_EXPORT HClientDevicePrivate
+//
+class HClientDevicePrivate :
+    public HDevicePrivate<HClientDevice, HClientService>
 {
 H_DISABLE_COPY(HClientDevicePrivate)
 
-public: // attributes
+public:
 
-    QScopedPointer<HDeviceInfo> m_deviceInfo;
-    QList<HDefaultClientDevice*> m_embeddedDevices;
-    QList<HDefaultClientService*> m_services;
-    HClientDevice* m_parentDevice;
-    // ^^ this is not the "QObject" parent, but rather the parent in the
-    // device tree.
-
-    HClientDevice* q_ptr;
-
-    QList<QUrl> m_locations;
-    QString m_deviceDescription;
-
-public: // methods
-
-    HClientDevicePrivate();
-    ~HClientDevicePrivate();
-
-    inline bool isValid() const { return m_deviceInfo.data(); }
+    HClientDevicePrivate(){}
+    virtual ~HClientDevicePrivate(){}
 };
 
 }

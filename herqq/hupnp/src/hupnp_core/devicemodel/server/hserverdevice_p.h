@@ -30,15 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
-#include <HUpnpCore/HDeviceStatus>
 #include <HUpnpCore/HServerDevice>
-
-#include <QtCore/QUrl>
-#include <QtCore/QList>
-#include <QtCore/QString>
-#include <QtCore/QScopedPointer>
-
-class QTimer;
+#include <HUpnpCore/private/hdevice_p.h>
 
 namespace Herqq
 {
@@ -47,45 +40,17 @@ namespace Upnp
 {
 
 //
-// Base class for the implementation details of HDevice
 //
-class H_UPNP_CORE_EXPORT HServerDevicePrivate
+//
+class H_UPNP_CORE_EXPORT HServerDevicePrivate :
+    public HDevicePrivate<HServerDevice, HServerService>
 {
 H_DISABLE_COPY(HServerDevicePrivate)
 
-public: // attributes
+public:
 
-    QScopedPointer<HDeviceInfo> m_deviceInfo;
-    // The static device information read from a device description.
-
-    QList<HServerDevice*> m_embeddedDevices;
-    // The embedded devices this instance contains.
-
-    QList<HServerService*> m_services;
-    // The services this instance contains.
-
-    HServerDevice* m_parentDevice;
-    // ^^ this is not the "QObject" parent, but rather the parent in the
-    // device tree.
-
-    HServerDevice* q_ptr;
-    // The "parent" QObject
-
-    QList<QUrl> m_locations;
-    // The URLs at which this device is available
-
-    QString m_deviceDescription;
-    // The full device description.
-    // CONSIDER: would it be better to load this into memory only when needed?
-
-    QScopedPointer<HDeviceStatus> m_deviceStatus;
-
-public: // methods
-
-    HServerDevicePrivate();
-    virtual ~HServerDevicePrivate();
-
-    inline bool isValid() const { return m_deviceInfo.data(); }
+    HServerDevicePrivate(){}
+    virtual ~HServerDevicePrivate(){}
 };
 
 }

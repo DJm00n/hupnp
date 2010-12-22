@@ -41,15 +41,6 @@ namespace Upnp
 /*******************************************************************************
  * HServerDevicePrivate
  ******************************************************************************/
-HServerDevicePrivate::HServerDevicePrivate() :
-    m_deviceInfo(0), m_embeddedDevices(), m_services(), m_parentDevice(0),
-    q_ptr(0), m_locations(), m_deviceDescription(), m_deviceStatus(0)
-{
-}
-
-HServerDevicePrivate::~HServerDevicePrivate()
-{
-}
 
 /*******************************************************************************
  * HServerDevice
@@ -100,26 +91,12 @@ HServerDevice* HServerDevice::parentDevice() const
 
 HServerDevice* HServerDevice::rootDevice() const
 {
-    HServerDevice* root = const_cast<HServerDevice*>(this);
-    while(root->h_ptr->m_parentDevice)
-    {
-        root = root->h_ptr->m_parentDevice;
-    }
-
-    return root;
+    return h_ptr->rootDevice();
 }
 
 HServerService* HServerDevice::serviceById(const HServiceId& serviceId) const
 {
-    foreach(HServerService* sc, h_ptr->m_services)
-    {
-        if (sc->info().serviceId() == serviceId)
-        {
-            return sc;
-        }
-    }
-
-    return 0;
+    return h_ptr->serviceById(serviceId);
 }
 
 const HServerServices& HServerDevice::services() const
@@ -130,21 +107,7 @@ const HServerServices& HServerDevice::services() const
 HServerServices HServerDevice::servicesByType(
     const HResourceType& type, HResourceType::VersionMatch versionMatch) const
 {
-    if (!type.isValid())
-    {
-        return HServerServices();
-    }
-
-    HServerServices retVal;
-    foreach(HServerService* sc, h_ptr->m_services)
-    {
-        if (sc->info().serviceType().compare(type, versionMatch))
-        {
-            retVal.push_back(sc);
-        }
-    }
-
-    return retVal;
+    return h_ptr->servicesByType(type, versionMatch);
 }
 
 const HServerDevices& HServerDevice::embeddedDevices() const
@@ -155,21 +118,7 @@ const HServerDevices& HServerDevice::embeddedDevices() const
 HServerDevices HServerDevice::embeddedDevicesByType(
     const HResourceType& type, HResourceType::VersionMatch versionMatch) const
 {
-    if (!type.isValid())
-    {
-        return HServerDevices();
-    }
-
-    HServerDevices retVal;
-    foreach(HServerDevice* dev, h_ptr->m_embeddedDevices)
-    {
-        if (dev->info().deviceType().compare(type, versionMatch))
-        {
-            retVal.push_back(dev);
-        }
-    }
-
-    return retVal;
+    return h_ptr->embeddedDevicesByType(type, versionMatch);
 }
 
 const HDeviceInfo& HServerDevice::info() const

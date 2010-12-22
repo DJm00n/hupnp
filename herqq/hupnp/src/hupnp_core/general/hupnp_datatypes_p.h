@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HDATATYPE_MAPPINGS_H_
-#define HDATATYPE_MAPPINGS_H_
+#ifndef HUPNP_DATATYPES_P_H_
+#define HUPNP_DATATYPES_P_H_
 
 //
 // !! Warning !!
@@ -32,12 +32,11 @@
 
 #include "hupnp_datatypes.h"
 
-#include <QtCore/QVariant>
-
 #include <QtSoapType>
 #include <QtSoapSimpleType>
 
 class QString;
+class QVariant;
 
 namespace Herqq
 {
@@ -52,28 +51,15 @@ class SoapType :
     public QtSoapSimpleType
 {
 public:
-    SoapType(const QString& name, HUpnpDataTypes::DataType dt, const QVariant& value);
+    SoapType(const QString& name, HUpnpDataTypes::DataType, const QVariant& value);
 };
 
 //
 // \internal
 //
-QtSoapType::Type convertToSoapType(
-    HUpnpDataTypes::DataType upnpDataType);
-
-//
-// \internal
-//
-QVariant::Type convertToVariantType(
-    HUpnpDataTypes::DataType upnpDataType);
-
-//
-// \internal
-//
-QVariant convertToRightVariantType(
-    const QString& value, HUpnpDataTypes::DataType upnpDataType);
+QtSoapType::Type convertToSoapType(HUpnpDataTypes::DataType);
 
 }
 }
 
-#endif /* HDATATYPE_MAPPINGS_H_ */
+#endif /* HUPNP_DATATYPES_P_H_ */

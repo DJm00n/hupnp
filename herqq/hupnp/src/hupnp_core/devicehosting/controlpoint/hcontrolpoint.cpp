@@ -28,8 +28,7 @@
 #include "hcontrolpoint_dataretriever_p.h"
 
 #include "../../general/hupnp_global_p.h"
-
-#include "../../datatypes/hdatatype_mappings_p.h"
+#include "../../general/hupnp_datatypes_p.h"
 
 #include "../../dataelements/hdeviceinfo.h"
 #include "../../dataelements/hdiscoverytype.h"
@@ -192,6 +191,10 @@ HDefaultClientDevice* HControlPointPrivate::buildDevice(
 
     HClientModelCreator creator(creatorParams);
     HDefaultClientDevice* device = creator.createRootDevice();
+    if (!device && err)
+    {
+        *err = creator.lastErrorDescription();
+    }
 
     return device;
 }

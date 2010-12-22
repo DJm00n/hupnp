@@ -28,7 +28,7 @@
 #include "../../../utils/hlogger_p.h"
 
 #include "../../general/hupnp_global_p.h"
-#include "../../datatypes/hdatatype_mappings_p.h"
+#include "../../general/hupnp_datatypes_p.h"
 
 #include "../../dataelements/hudn.h"
 #include "../../dataelements/hactioninfo.h"
@@ -193,8 +193,9 @@ void HActionProxy::finished()
 
         HActionArgument* userArg = outArgs.get(oarg->name());
 
-        userArg->setValue(convertToRightVariantType(
-            arg.value().toString(), oarg->dataType()));
+        userArg->setValue(
+            HUpnpDataTypes::convertToRightVariantType(
+                arg.value().toString(), oarg->dataType()));
     }
 
     invocationDone(UpnpSuccess, &outArgs);

@@ -21,8 +21,8 @@
 
 #include "hclientdevice.h"
 #include "hclientdevice_p.h"
-#include "hdefault_clientservice_p.h"
 #include "hdefault_clientdevice_p.h"
+#include "hdefault_clientservice_p.h"
 
 #include "../../../utils/hlogger_p.h"
 #include "../../general/hupnp_global_p.h"
@@ -43,16 +43,6 @@ namespace Upnp
 /*******************************************************************************
  * HClientDevicePrivate
  ******************************************************************************/
-HClientDevicePrivate::HClientDevicePrivate() :
-    m_deviceInfo(0), m_embeddedDevices(), m_services(), m_parentDevice(0),
-    q_ptr(0), m_locations(), m_deviceDescription()
-{
-}
-
-HClientDevicePrivate::~HClientDevicePrivate()
-{
-    HLOG(H_AT, H_FUN);
-}
 
 /*******************************************************************************
  * HClientDevice
@@ -79,88 +69,34 @@ HClientDevice* HClientDevice::parentDevice() const
 
 HClientDevice* HClientDevice::rootDevice() const
 {
-    HClientDevice* root = const_cast<HClientDevice*>(this);
-    while(root->h_ptr->m_parentDevice)
-    {
-        root = root->h_ptr->m_parentDevice;
-    }
-
-    return root;
+    return h_ptr->rootDevice();
 }
 
 HClientService* HClientDevice::serviceById(const HServiceId& serviceId) const
 {
-    foreach(HDefaultClientService* sc, h_ptr->m_services)
-    {
-        if (sc->info().serviceId() == serviceId)
-        {
-            return sc;
-        }
-    }
-
-    return 0;
+    return h_ptr->serviceById(serviceId);
 }
 
 HClientServices HClientDevice::services() const
 {
-    HClientServices retVal;
-    foreach(HDefaultClientService* sc, h_ptr->m_services)
-    {
-        retVal.push_back(sc);
-    }
-
-    return retVal;
+    return h_ptr->m_services;
 }
 
 HClientServices HClientDevice::servicesByType(
     const HResourceType& type, HResourceType::VersionMatch versionMatch) const
 {
-    if (!type.isValid())
-    {
-        return HClientServices();
-    }
-
-    HClientServices retVal;
-    foreach(HDefaultClientService* sc, h_ptr->m_services)
-    {
-        if (sc->info().serviceType().compare(type, versionMatch))
-        {
-            retVal.push_back(sc);
-        }
-    }
-
-    return retVal;
+    return h_ptr->servicesByType(type, versionMatch);
 }
 
 HClientDevices HClientDevice::embeddedDevices() const
 {
-    HClientDevices retVal;
-    foreach(HDefaultClientDevice* dev, h_ptr->m_embeddedDevices)
-    {
-        retVal.push_back(dev);
-    }
-
-    return retVal;
+    return h_ptr->m_embeddedDevices;
 }
 
 HClientDevices HClientDevice::embeddedDevicesByType(
     const HResourceType& type, HResourceType::VersionMatch versionMatch) const
 {
-    if (!type.isValid())
-    {
-        return HClientDevices();
-    }
-
-    HClientDevices retVal;
-    foreach(HDefaultClientDevice* dev, h_ptr->m_embeddedDevices)
-    {
-        if (dev->info().deviceType().compare(type, versionMatch))
-        {
-            retVal.push_back(dev);
-        }
-    }
-
-    return retVal;
+    return h_ptr->embeddedDevicesByType(type, versionMatch);
 }
 
 const HDeviceInfo& HClientDevice::info() const
@@ -220,13 +156,21 @@ HDefaultClientDevice::HDefaultClientDevice(
 void HDefaultClientDevice::setServices(
     const QList<HDefaultClientService*>& services)
 {
-    h_ptr->m_services = services;
+    h_ptr->m_services.clear();
+    foreach(HDefaultClientService* srv, services)
+    {
+        h_ptr->m_services.append(srv);
+    }
 }
 
 void HDefaultClientDevice::setEmbeddedDevices(
     const QList<HDefaultClientDevice*>& devices)
 {
-    h_ptr->m_embeddedDevices = devices;
+    h_ptr->m_embeddedDevices.clear();
+    foreach(HDefaultClientDevice* dev, devices)
+    {
+        h_ptr->m_embeddedDevices.append(dev);
+    }
 }
 
 quint32 HDefaultClientDevice::deviceTimeoutInSecs() const
@@ -255,9 +199,9 @@ void HDefaultClientDevice::startStatusNotifier(SearchCriteria searchCriteria)
     }
     if (searchCriteria & EmbeddedDevices)
     {
-        foreach(HDefaultClientDevice* dc, h_ptr->m_embeddedDevices)
+        foreach(HClientDevice* dc, h_ptr->m_embeddedDevices)
         {
-            dc->startStatusNotifier(searchCriteria);
+            static_cast<HDefaultClientDevice*>(dc)->startStatusNotifier(searchCriteria);
         }
     }
 
@@ -275,9 +219,9 @@ void HDefaultClientDevice::stopStatusNotifier(SearchCriteria searchCriteria)
     }
     if (searchCriteria & EmbeddedDevices)
     {
-        foreach(HDefaultClientDevice* dc, h_ptr->m_embeddedDevices)
+        foreach(HClientDevice* dc, h_ptr->m_embeddedDevices)
         {
-            dc->stopStatusNotifier(searchCriteria);
+            static_cast<HDefaultClientDevice*>(dc)->stopStatusNotifier(searchCriteria);
         }
     }
 }
@@ -296,9 +240,9 @@ bool HDefaultClientDevice::isTimedout(SearchCriteria searchCriteria) const
 
     if (searchCriteria & EmbeddedDevices)
     {
-        foreach(HDefaultClientDevice* dc, h_ptr->m_embeddedDevices)
+        foreach(HClientDevice* dc, h_ptr->m_embeddedDevices)
         {
-            if (dc->isTimedout(searchCriteria))
+            if (static_cast<HDefaultClientDevice*>(dc)->isTimedout(searchCriteria))
             {
                 return true;
             }

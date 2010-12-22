@@ -23,7 +23,7 @@
 #include "hstatevariableinfo_p.h"
 
 #include "../general/hupnp_global_p.h"
-#include "../datatypes/hdatatype_mappings_p.h"
+#include "../general/hupnp_datatypes_p.h"
 
 #include "../../utils/hmisc_utils_p.h"
 
@@ -209,7 +209,7 @@ bool HStateVariableInfoPrivate::setDataType(
     }
 
     m_dataType = arg;
-    m_variantDataType = convertToVariantType(m_dataType);
+    m_variantDataType = HUpnpDataTypes::convertToVariantType(m_dataType);
     m_defaultValue = QVariant(m_variantDataType);
 
     return true;

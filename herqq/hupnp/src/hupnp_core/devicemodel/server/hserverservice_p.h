@@ -30,14 +30,11 @@
 // change or the file may be removed without of notice.
 //
 
-#include <HUpnpCore/HServiceInfo>
+#include <HUpnpCore/private/hservice_p.h>
 
-#include <QtCore/QUrl>
-#include <QtCore/QHash>
-#include <QtCore/QList>
-#include <QtCore/QString>
-
-class QByteArray;
+#include <HUpnpCore/HServerAction>
+#include <HUpnpCore/HServerService>
+#include <HUpnpCore/HServerStateVariable>
 
 namespace Herqq
 {
@@ -45,43 +42,21 @@ namespace Herqq
 namespace Upnp
 {
 
-class HServerStateVariable;
-
 //
 // Implementation details of HServerService
 //
-class H_UPNP_CORE_EXPORT HServerServicePrivate
+class H_UPNP_CORE_EXPORT HServerServicePrivate :
+    public HServicePrivate<HServerService, HServerAction, HServerStateVariable>
 {
 H_DECLARE_PUBLIC(HServerService)
 H_DISABLE_COPY(HServerServicePrivate)
 
-public: // attributes
-
-    HServiceInfo m_serviceInfo;
-    QString m_serviceDescription;
-
-    QHash<QString, HServerAction*> m_actions;
-    QHash<QString, HServerStateVariable*> m_stateVariables;
-
-    HServerService* q_ptr;
-
-    QByteArray m_loggingIdentifier;
-
-    bool m_eventsEnabled;
-    bool m_evented;
-
 public: // methods
 
     HServerServicePrivate();
-
     virtual ~HServerServicePrivate();
 
-    bool addStateVariable(HServerStateVariable* stateVariable);
-
-    bool updateVariable(
-        const QString& stateVarName, const QVariant& value);
-
-    bool updateVariables(
+    ReturnValue updateVariables(
         const QList<QPair<QString, QString> >& variables, bool sendEvent);
 };
 

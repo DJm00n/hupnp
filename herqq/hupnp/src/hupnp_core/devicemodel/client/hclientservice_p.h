@@ -30,13 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include <HUpnpCore/HServiceInfo>
-
-#include <QtCore/QPair>
-#include <QtCore/QList>
-#include <QtCore/QHash>
-#include <QtCore/QString>
-#include <QtCore/QByteArray>
+#include "../hservice_p.h"
 
 namespace Herqq
 {
@@ -47,39 +41,24 @@ namespace Upnp
 //
 // Implementation details of HClientService
 //
-class H_UPNP_CORE_EXPORT HClientServicePrivate
+class HClientServicePrivate :
+    public HServicePrivate<HClientService, HClientAction, HClientStateVariable>
 {
 H_DECLARE_PUBLIC(HClientService)
 H_DISABLE_COPY(HClientServicePrivate)
 
 public: // attributes
 
-    HServiceInfo m_serviceInfo;
-    QString m_serviceDescription;
-
-    QHash<QString, HClientAction*> m_actions;
-    QHash<QString, HClientStateVariable*> m_stateVariables;
     QHash<QString, const HClientStateVariable*> m_stateVariablesConst;
-
-    HClientService* q_ptr;
-
-    bool m_eventsEnabled;
-    bool m_evented;
-
-    QByteArray m_loggingIdentifier;
 
 public: // methods
 
     HClientServicePrivate();
 
     virtual ~HClientServicePrivate();
+    virtual bool addStateVariable(HClientStateVariable*);
 
-    bool addStateVariable(HClientStateVariable*);
-
-    bool updateVariable(
-        const QString& stateVarName, const QVariant& value);
-
-    bool updateVariables(
+    ReturnValue updateVariables(
         const QList<QPair<QString, QString> >& variables, bool sendEvent);
 };
 

@@ -26,8 +26,7 @@
 #include "../../dataelements/hdeviceinfo.h"
 
 #include "../../general/hupnp_global_p.h"
-#include "../../datatypes/hupnp_datatypes.h"
-#include "../../datatypes/hdatatype_mappings_p.h"
+#include "../../general/hupnp_datatypes_p.h"
 
 #include "../../devicemodel/hdevicemodel_infoprovider.h"
 

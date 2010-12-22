@@ -133,7 +133,7 @@ public:
         const QHash<QString, HStateVariableInfo>&,
         HActionInfo*);
 
-    bool verifySpecVersion(const QDomElement&);
+    bool verifySpecVersion(const QDomElement&, QString* err = 0);
 };
 
 //

@@ -25,6 +25,7 @@
 #include <HUpnpCore/HUpnp>
 
 #include <QtCore/QString>
+#include <QtCore/QVariant>
 
 class QUrl;
 class QDate;
@@ -50,7 +51,7 @@ H_DISABLE_COPY(HUpnpDataTypes)
 
 private:
 
-    HUpnpDataTypes ();
+    HUpnpDataTypes();
     ~HUpnpDataTypes();
 
 public:
@@ -665,6 +666,10 @@ public:
      * \return the UDA defined string representation of the specified data type.
      */
     static QString toString(DataType datatype);
+
+    static QVariant::Type convertToVariantType(HUpnpDataTypes::DataType);
+    static QVariant convertToRightVariantType(
+        const QString& value, HUpnpDataTypes::DataType);
 };
 
 }

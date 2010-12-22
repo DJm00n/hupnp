@@ -26,8 +26,7 @@
 #include "../dataelements/hresourcetype.h"
 
 #include "../general/hupnp_global_p.h"
-#include "../datatypes/hupnp_datatypes.h"
-#include "../datatypes/hdatatype_mappings_p.h"
+#include "../general/hupnp_datatypes_p.h"
 
 #include "../../utils/hlogger_p.h"
 
@@ -51,6 +50,8 @@ HStateVariableInfo HDocParser::parseStateVariableInfo_str(
     const QString& name, const QVariant& defValue, const QDomElement& svElement,
     HStateVariableInfo::EventingType evType, HInclusionRequirement incReq)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     QStringList allowedValues;
 
     QDomElement allowedValueListElement =
@@ -94,9 +95,9 @@ HStateVariableInfo HDocParser::parseStateVariableInfo_numeric(
 
     if (minimumStr.isEmpty())
     {
-        QString descr = QString("State variable [%1] is missing a "
-            "mandatory <minimum> element within <allowedValueRange>.").arg(
-                name);
+        QString descr = QString(
+            "State variable [%1] is missing a mandatory <minimum> element "
+            "within <allowedValueRange>.").arg(name);
 
         if (m_cLevel == StrictChecks)
         {
@@ -115,9 +116,9 @@ HStateVariableInfo HDocParser::parseStateVariableInfo_numeric(
 
     if (maximumStr.isEmpty())
     {
-        QString descr = QString("State variable [%1] is missing a "
-            "mandatory <maximum> element within <allowedValueRange>.").arg(
-                name);
+        QString descr = QString(
+            "State variable [%1] is missing a mandatory <maximum> element "
+            "within <allowedValueRange>.").arg(name);
 
         if (m_cLevel == StrictChecks)
         {
@@ -167,6 +168,8 @@ bool HDocParser::parseActionArguments(
     QVector<HActionArgument*>* outArgs,
     bool* hasRetVal)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     bool firstOutArgFound  = false;
 
     QDomElement argumentElement = argListElement.firstChildElement("argument");
@@ -185,8 +188,8 @@ bool HDocParser::parseActionArguments(
         {
             m_lastError = InvalidServiceDescriptionError;
             m_lastErrorDescription = QString(
-                "The specified <relatedStateVariable> [%1] is undefined").arg(
-                    relatedSvStr);
+                "Invalid action argument: the specified <relatedStateVariable> "
+                "[%1] is undefined.").arg(relatedSvStr);
 
             return false;
         }
@@ -199,7 +202,11 @@ bool HDocParser::parseActionArguments(
                 if (firstOutArgFound)
                 {
                     m_lastError = InvalidServiceDescriptionError;
-                    m_lastErrorDescription = "[retval] must be the first [out] argument.";
+                    m_lastErrorDescription = QString(
+                        "Invalid action argument ordering: "
+                        "[retval] MUST be the first [out] argument.").arg(
+                            relatedSvStr);
+
                     return false;
                 }
 
@@ -217,7 +224,7 @@ bool HDocParser::parseActionArguments(
             {
                 m_lastError = InvalidServiceDescriptionError;
                 m_lastErrorDescription =
-                    "Invalid argument order. Input arguments must all come "
+                    "Invalid action argument order. Input arguments MUST all come "
                     "before output arguments.";
 
                 return false;
@@ -230,7 +237,8 @@ bool HDocParser::parseActionArguments(
         {
             m_lastError = InvalidServiceDescriptionError;
             m_lastErrorDescription = QString(
-                "Invalid [direction] value: [%1].").arg(dirStr);
+                "Invalid action argument: "
+                "invalid [direction] value: [%1].").arg(dirStr);
 
             return false;
         }
@@ -265,6 +273,8 @@ QList<QUrl> HDocParser::parseIconList(
 bool HDocParser::parseRoot(
     const QString& docStr, QDomDocument* doc, QDomElement* rootEl)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     Q_ASSERT(doc);
     Q_ASSERT(rootEl);
 
@@ -273,9 +283,8 @@ bool HDocParser::parseRoot(
     {
         m_lastError = InvalidDeviceDescriptionError;
         m_lastErrorDescription = QString(
-            "Could not parse the device description file: "
-            "[%1] @ line [%2]:\n[%3]").arg(
-                errMsg, QString::number(errLine), docStr);
+            "Failed to parse the device description: [%1] @ line [%2].").arg(
+                errMsg, QString::number(errLine));
 
         return false;
     }
@@ -287,21 +296,34 @@ bool HDocParser::parseRoot(
     if (rootElement.isNull())
     {
         m_lastError = InvalidDeviceDescriptionError;
-        m_lastErrorDescription = "Invalid device description: no <root> element defined";
+        m_lastErrorDescription =
+            "Invalid device description: missing <root> element.";
+
         return false;
     }
 
-    if (!verifySpecVersion(rootElement))
+    if (!verifySpecVersion(rootElement, &m_lastErrorDescription))
     {
-        m_lastError = InvalidDeviceDescriptionError;
-        return false;
+        if (m_cLevel == StrictChecks)
+        {
+            m_lastError = InvalidDeviceDescriptionError;
+            return false;
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(QString(
+                "Error in device description: %1").arg(m_lastErrorDescription));
+        }
     }
 
     QDomElement rootDeviceElement = rootElement.firstChildElement("device");
     if (rootDeviceElement.isNull())
     {
         m_lastError = InvalidDeviceDescriptionError;
-        m_lastErrorDescription = "The specified file does not contain a valid root device definition";
+        m_lastErrorDescription =
+            "Invalid device description: no valid root device definition "
+            "was found.";
+
         return false;
     }
 
@@ -311,6 +333,8 @@ bool HDocParser::parseRoot(
 
 qint32 HDocParser::readConfigId(const QDomElement& rootElement)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     bool ok = false;
 
     QString cid = readElementValue("configId", rootElement);
@@ -372,13 +396,21 @@ bool HDocParser::parseDeviceInfo(
 
     QString tmp = readElementValue("presentationURL", deviceElement, &wasDefined);
 
-    if (m_cLevel == StrictChecks && wasDefined && tmp.isEmpty())
+    if (wasDefined && tmp.isEmpty())
     {
-        m_lastError = InvalidDeviceDescriptionError;
-        m_lastErrorDescription = "Presentation URL has to be defined, if the "
-                                 "corresponding element is used.";
+        QString err = "Presentation URL should be defined if the "
+                      "corresponding element is used.";
 
-        return false;
+        if (m_cLevel == StrictChecks)
+        {
+            m_lastError = InvalidDeviceDescriptionError;
+            m_lastErrorDescription = err;
+            return false;
+        }
+        else
+        {
+            HLOG_WARN(QString("Error in device description: %1").arg(err));
+        }
     }
 
     QUrl presentationUrl(tmp);
@@ -403,9 +435,8 @@ bool HDocParser::parseDeviceInfo(
     if (!info->isValid(m_cLevel))
     {
         m_lastError = InvalidDeviceDescriptionError;
-        m_lastErrorDescription =
-            QString("Invalid device description: %1").arg(
-                m_lastErrorDescription);
+        m_lastErrorDescription = QString(
+            "Invalid device description: %1").arg(m_lastErrorDescription);
 
         return false;
     }
@@ -430,6 +461,7 @@ bool HDocParser::parseServiceInfo(
     {
         m_lastError = InvalidDeviceDescriptionError;
         m_lastErrorDescription = QString(
+            "Invalid <service> definition. "
             "Missing mandatory <serviceId> element:\n%1").arg(
                 toString(serviceDefinition));
 
@@ -443,6 +475,7 @@ bool HDocParser::parseServiceInfo(
     {
         m_lastError = InvalidDeviceDescriptionError;
         m_lastErrorDescription = QString(
+            "Invalid <service> definition. "
             "Missing mandatory <serviceType> element:\n%1").arg(
                 toString(serviceDefinition));
 
@@ -454,6 +487,7 @@ bool HDocParser::parseServiceInfo(
     {
         m_lastError = InvalidDeviceDescriptionError;
         m_lastErrorDescription = QString(
+            "Invalid <service> definition. "
             "Missing mandatory <SCPDURL> element:\n%1").arg(
                 toString(serviceDefinition));
 
@@ -467,6 +501,7 @@ bool HDocParser::parseServiceInfo(
     {
         m_lastError = InvalidDeviceDescriptionError;
         m_lastErrorDescription = QString(
+            "Invalid <service> definition. "
             "Missing mandatory <controlURL> element:\n%1").arg(
                 toString(serviceDefinition));
 
@@ -480,6 +515,7 @@ bool HDocParser::parseServiceInfo(
     {
         m_lastError = InvalidDeviceDescriptionError;
         m_lastErrorDescription = QString(
+            "Invalid <service> definition. "
             "Missing mandatory <eventSubURL> element:\n%1").arg(
                 toString(serviceDefinition));
 
@@ -508,6 +544,8 @@ bool HDocParser::parseServiceDescription(
     const QString& docStr, QDomDocument* doc,
     QDomElement* stateVarElement, QDomElement* retVal)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     Q_ASSERT(stateVarElement);
     Q_ASSERT(retVal);
 
@@ -517,8 +555,8 @@ bool HDocParser::parseServiceDescription(
     {
         m_lastError = InvalidServiceDescriptionError;
         m_lastErrorDescription = QString(
-            "Could not parse the service description document: [%1] @ line [%2]:\n[%3]").arg(
-                errMsg, QString::number(errLine), docStr);
+            "Failed to parse the service description: [%1] @ line [%2].").arg(
+                errMsg, QString::number(errLine));
 
         return false;
     }
@@ -529,14 +567,24 @@ bool HDocParser::parseServiceDescription(
     if (scpdElement.isNull())
     {
         m_lastError = InvalidServiceDescriptionError;
-        m_lastErrorDescription = "Invalid service description: missing <scpd> element";
+        m_lastErrorDescription =
+            "Invalid service description: missing <scpd> element.";
+
         return false;
     }
 
-    if (!verifySpecVersion(scpdElement))
+    if (!verifySpecVersion(scpdElement, &m_lastErrorDescription))
     {
-        m_lastError = InvalidServiceDescriptionError;
-        return false;
+        if (m_cLevel == StrictChecks)
+        {
+            m_lastError = InvalidServiceDescriptionError;
+            return false;
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(QString("Error in service description: %1").arg(
+                m_lastErrorDescription));
+        }
     }
 
     QDomElement serviceStateTableElement =
@@ -545,8 +593,10 @@ bool HDocParser::parseServiceDescription(
     if (serviceStateTableElement.isNull())
     {
         m_lastError = InvalidServiceDescriptionError;
-       m_lastErrorDescription = "Missing mandatory <serviceStateTable> element.";
-       return false;
+        m_lastErrorDescription =
+            "Service description is missing a mandatory <serviceStateTable> element.";
+
+        return false;
     }
 
     QDomElement stateVariableElement =
@@ -556,13 +606,17 @@ bool HDocParser::parseServiceDescription(
     {
         QString err = "Service description document does not have a "
                       "single <stateVariable> element. "
-                      "Each service MUST have at least one state variable";
+                      "Each service MUST have at least one state variable.";
 
         if (m_cLevel == StrictChecks)
         {
             m_lastError = InvalidServiceDescriptionError;
             m_lastErrorDescription = err;
             return false;
+        }
+        else
+        {
+            HLOG_WARN_NONSTD(err);
         }
     }
 
@@ -584,6 +638,10 @@ bool HDocParser::parseServiceDescription(
             m_lastErrorDescription = err;
             return false;
         }
+        else
+        {
+            HLOG_WARN(err);
+        }
     }
 
     *stateVarElement = stateVariableElement;
@@ -594,6 +652,8 @@ bool HDocParser::parseServiceDescription(
 bool HDocParser::parseStateVariable(
     const QDomElement& stateVariableElement, HStateVariableInfo* svInfo)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     Q_ASSERT(svInfo);
 
     QString strSendEvents = stateVariableElement.attribute("sendEvents", "no");
@@ -606,7 +666,8 @@ bool HDocParser::parseStateVariable(
     {
         m_lastError = InvalidServiceDescriptionError;
         m_lastErrorDescription = QString(
-            "Invalid value for [sendEvents] attribute:\n%1.").arg(
+            "Invalid <stateVariable> definition: "
+            "invalid value for [sendEvents] attribute:\n%1.").arg(
                 toString(stateVariableElement));
 
         return false;
@@ -622,7 +683,8 @@ bool HDocParser::parseStateVariable(
     {
         m_lastError = InvalidServiceDescriptionError;
         m_lastErrorDescription = QString(
-            "Invalid value for [multicast]: %1.").arg(
+            "Invalid <stateVariable> definition: "
+            "invalid value for [multicast]: %1.").arg(
                 toString(stateVariableElement));
 
         return false;
@@ -638,19 +700,20 @@ bool HDocParser::parseStateVariable(
     QString name = readElementValue("name", stateVariableElement);
     QString dataType = readElementValue("dataType", stateVariableElement);
 
-    HUpnpDataTypes::DataType dataTypeEnumValue =
-        HUpnpDataTypes::dataType(dataType);
+    HUpnpDataTypes::DataType dtEnumValue = HUpnpDataTypes::dataType(dataType);
 
     bool defValueWasDefined = false;
     QString defaultValueStr = readElementValue(
         "defaultValue", stateVariableElement, &defValueWasDefined);
 
-    QVariant defaultValue = defValueWasDefined ?
-        convertToRightVariantType(defaultValueStr, dataTypeEnumValue) : QVariant();
+    QVariant defaultValue =
+        defValueWasDefined ?
+            HUpnpDataTypes::convertToRightVariantType(
+                defaultValueStr, dtEnumValue) : QVariant();
 
     HStateVariableInfo parsedInfo;
 
-    if (dataTypeEnumValue == HUpnpDataTypes::string)
+    if (dtEnumValue == HUpnpDataTypes::string)
     {
         parsedInfo = parseStateVariableInfo_str(
             name,
@@ -659,7 +722,7 @@ bool HDocParser::parseStateVariable(
             evType,
             InclusionMandatory);
     }
-    else if (HUpnpDataTypes::isNumeric(dataTypeEnumValue))
+    else if (HUpnpDataTypes::isNumeric(dtEnumValue))
     {
         parsedInfo = parseStateVariableInfo_numeric(
             name,
@@ -667,13 +730,13 @@ bool HDocParser::parseStateVariable(
             stateVariableElement,
             evType,
             InclusionMandatory,
-            dataTypeEnumValue);
+            dtEnumValue);
     }
     else
     {
         parsedInfo = HStateVariableInfo(
             name,
-            dataTypeEnumValue,
+            dtEnumValue,
             defaultValue,
             evType,
             InclusionMandatory,
@@ -684,7 +747,7 @@ bool HDocParser::parseStateVariable(
     {
         m_lastError = InvalidServiceDescriptionError;
         m_lastErrorDescription =
-            QString("Failed to parse <stateVariable> [%1]: %2").arg(
+            QString("Invalid <stateVariable> [%1] definition: %2").arg(
                 name, m_lastErrorDescription);
 
         return false;
@@ -699,6 +762,8 @@ bool HDocParser::parseActionInfo(
     const QHash<QString, HStateVariableInfo>& stateVars,
     HActionInfo* ai)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     QString name = readElementValue("name", actionElement);
 
     bool hasRetVal = false;
@@ -733,7 +798,8 @@ bool HDocParser::parseActionInfo(
     {
         m_lastError = InvalidServiceDescriptionError;
         m_lastErrorDescription = QString(
-            "Failed to parse action [%1]: %2").arg(name, m_lastErrorDescription);
+            "Invalid <action> [%1] definition: %2").arg(
+                name, m_lastErrorDescription);
 
         return false;
     }
@@ -742,12 +808,14 @@ bool HDocParser::parseActionInfo(
     return true;
 }
 
-bool HDocParser::verifySpecVersion(const QDomElement& rootElement)
+bool HDocParser::verifySpecVersion(const QDomElement& rootElement, QString* err)
 {
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
     QDomElement specVersionElement = rootElement.firstChildElement("specVersion");
     if (specVersionElement.isNull())
     {
-        m_lastErrorDescription = "Missing mandatory <specVersion> element";
+        if (err) { *err = "Missing mandatory <specVersion> element."; }
         return false;
     }
 
@@ -758,20 +826,19 @@ bool HDocParser::verifySpecVersion(const QDomElement& rootElement)
     qint32 major = majorVersion.toInt(&ok);
     if (!ok || major != 1)
     {
-        m_lastErrorDescription = "Major element of <specVersion> is not 1";
+        if (err) { *err = "Major element of <specVersion> is not 1."; }
         return false;
     }
 
     qint32 minor = minorVersion.toInt(&ok);
     if (!ok || (minor != 1 && minor != 0))
     {
-        m_lastErrorDescription = "minor element of <specVersion> is not 0 or 1";
+        if (err) { *err = "Minor element of <specVersion> is not 0 or 1."; }
         return false;
     }
 
     return true;
 }
-
 
 }
 }

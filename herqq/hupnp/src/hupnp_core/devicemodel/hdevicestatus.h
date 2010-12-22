@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HDEVICE_P_H_
-#define HDEVICE_P_H_
+#ifndef HDEVICESTATUS_H_
+#define HDEVICESTATUS_H_
 
 //
 // !! Warning !!
@@ -78,4 +78,4 @@ public:
 }
 }
 
-#endif /* HDEVICE_P_H_ */
+#endif /* HDEVICESTATUS_H_ */

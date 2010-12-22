@@ -27,7 +27,7 @@
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../general/hupnp_global_p.h"
-#include "../../datatypes/hdatatype_mappings_p.h"
+#include "../../general/hupnp_datatypes_p.h"
 
 #include "../../devicemodel/hactionarguments.h"
 #include "../../devicemodel/server/hserveraction.h"
@@ -310,7 +310,8 @@ void HDeviceHostHttpServer::incomingControlRequest(
         }
 
         if (!iarg->setValue(
-            convertToRightVariantType(arg.value().toString(), iarg->dataType())))
+                HUpnpDataTypes::convertToRightVariantType(
+                    arg.value().toString(), iarg->dataType())))
         {
             mi->setKeepAlive(false);
             m_httpHandler->send(mi, HHttpMessageCreator::createResponse(

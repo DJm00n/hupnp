@@ -24,17 +24,9 @@
 #include "hdefault_clientservice_p.h"
 
 #include "hclientaction.h"
-#include "hclientaction_p.h"
-
 #include "hclientstatevariable.h"
-#include "../hstatevariable_p.h"
 
-#include "../../../utils/hlogger_p.h"
-
-#include "../../datatypes/hupnp_datatypes.h"
-#include "../../datatypes/hdatatype_mappings_p.h"
-
-#include <QtCore/QByteArray>
+#include "../../dataelements/hactioninfo.h"
 
 namespace Herqq
 {
@@ -46,124 +38,37 @@ namespace Upnp
  * HClientServicePrivate
  ******************************************************************************/
 HClientServicePrivate::HClientServicePrivate() :
-    m_serviceInfo      (),
-    m_serviceDescription(),
-    m_actions          (),
-    m_stateVariables   (),
-    q_ptr              (0),
-    m_eventsEnabled    (true),
-    m_evented          (false),
-    m_loggingIdentifier()
+    m_stateVariablesConst()
 {
 }
 
 HClientServicePrivate::~HClientServicePrivate()
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    qDeleteAll(m_actions);
-    qDeleteAll(m_stateVariables);
 }
 
 bool HClientServicePrivate::addStateVariable(HClientStateVariable* sv)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    Q_ASSERT(sv);
-
-    const HStateVariableInfo& info = sv->info();
-    Q_ASSERT(!m_stateVariables.contains(info.name()));
-
-    m_stateVariables.insert(info.name(), sv);
-    m_stateVariablesConst.insert(info.name(), sv);
-
-    if (!m_evented && info.eventingType() != HStateVariableInfo::NoEvents)
+    if (HServicePrivate<HClientService, HClientAction, HClientStateVariable>::addStateVariable(sv))
     {
-        m_evented = true;
+        m_stateVariablesConst.insert(sv->info().name(), sv);
+        return true;
     }
 
-    return true;
+    return false;
 }
 
-bool HClientServicePrivate::updateVariable(
-    const QString& stateVarName, const QVariant& value)
-{
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-
-    HClientStateVariable* sv = m_stateVariables.value(stateVarName);
-
-    return sv ? sv->setValue(value) : false;
-}
-
-bool HClientServicePrivate::updateVariables(
+HClientServicePrivate::ReturnValue HClientServicePrivate::updateVariables(
     const QList<QPair<QString, QString> >& variables, bool sendEvent)
 {
-    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    ReturnValue rv =
+        HServicePrivate<HClientService, HClientAction, HClientStateVariable>::updateVariables(variables);
 
-    // before modifying anything, it is better to be sure that the incoming
-    // data is valid and can be set completely.
-    for (int i = 0; i < variables.size(); ++i)
-    {
-        HClientStateVariable* stateVar =
-            m_stateVariables.value(variables[i].first);
-
-        if (!stateVar)
-        {
-            HLOG_WARN(QString("Cannot update state variable: no state variable [%1]").arg(
-                variables[i].first));
-
-            return false;
-        }
-
-        const HStateVariableInfo& info = stateVar->info();
-        if (!info.isValidValue(
-            convertToRightVariantType(variables[i].second, info.dataType())))
-        {
-            HLOG_WARN(QString(
-                "Cannot update state variable [%1]. New value is invalid: [%2]").
-                    arg(info.name(), variables[i].second));
-
-            return false;
-        }
-    }
-
-    bool changed = false;
-    m_eventsEnabled = false;
-    for (int i = 0; i < variables.size(); ++i)
-    {
-        HClientStateVariable* stateVar =
-            m_stateVariables.value(variables[i].first);
-
-        Q_ASSERT(stateVar);
-
-        const HStateVariableInfo& info = stateVar->info();
-
-        bool ok = stateVar->setValue(
-            convertToRightVariantType(variables[i].second, info.dataType()));
-
-        if (ok)
-        {
-            changed = true;
-        }
-        else
-        {
-            // this is not too severe and should not be a warning. most often
-            // this situation is caused by a new value being equal to the old
-            // value
-
-            HLOG_DBG(QString(
-                "Failed to set the value of state variable: [%1] to [%2]").arg(
-                    info.name(), variables[i].second));
-        }
-    }
-    m_eventsEnabled = true;
-
-    if (changed && sendEvent && m_evented)
+    if (rv == Updated && sendEvent && m_evented)
     {
         emit q_ptr->stateChanged(q_ptr);
     }
 
-    return true;
+    return rv;
 }
 
 /*******************************************************************************
@@ -212,16 +117,10 @@ const HClientStateVariables& HClientService::stateVariables() const
 
 void HClientService::notifyListeners()
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-
-    if (!h_ptr->m_evented || !h_ptr->m_eventsEnabled)
+    if (h_ptr->m_evented)
     {
-        return;
+        emit stateChanged(this);
     }
-
-    HLOG_DBG("Notifying listeners.");
-
-    emit stateChanged(this);
 }
 
 bool HClientService::isEvented() const
@@ -258,8 +157,7 @@ void HDefaultClientService::setDescription(const QString& description)
 bool HDefaultClientService::updateVariables(
     const QList<QPair<QString, QString> >& variables, bool sendEvent)
 {
-    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
-    return h_ptr->updateVariables(variables, sendEvent);
+    return h_ptr->updateVariables(variables, sendEvent) != HClientServicePrivate::Failed;
 }
 
 }

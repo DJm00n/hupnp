@@ -33,7 +33,7 @@
 #include "hvaluerange_p.h"
 #include "hstatevariableinfo.h"
 #include "../general/hupnp_global.h"
-#include "../datatypes/hupnp_datatypes.h"
+#include "../general/hupnp_datatypes.h"
 
 #include <QtCore/QString>
 #include <QtCore/QVariant>

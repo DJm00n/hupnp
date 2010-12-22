@@ -8,6 +8,8 @@ HEADERS += \
     $$SRC_LOC/devicemodel/hactionarguments.h \
     $$SRC_LOC/devicemodel/hactionarguments_p.h \
     $$SRC_LOC/devicemodel/hdevicestatus.h \
+    $$SRC_LOC/devicemodel/hservice_p.h \
+    $$SRC_LOC/devicemodel/hdevice_p.h \
     $$SRC_LOC/devicemodel/hdevices_setupdata.h \
     $$SRC_LOC/devicemodel/hservices_setupdata.h \
     $$SRC_LOC/devicemodel/hstatevariable_event.h \
@@ -37,8 +39,8 @@ HEADERS += \
     $$SRC_LOC/devicemodel/server/hdefault_serverstatevariable_p.h
 
 EXPORTED_PRIVATE_HEADERS += \
-    $$SRC_LOC/devicemodel/client/hclientdevice_p.h \
-    $$SRC_LOC/devicemodel/client/hclientservice_p.h \
+    $$SRC_LOC/devicemodel/hservice_p.h \
+	$$SRC_LOC/devicemodel/hdevice_p.h \
     $$SRC_LOC/devicemodel/server/hserverdevice_p.h \
     $$SRC_LOC/devicemodel/server/hserverservice_p.h
 
