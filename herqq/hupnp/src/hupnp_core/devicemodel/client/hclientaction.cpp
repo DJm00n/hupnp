@@ -309,10 +309,8 @@ void HClientActionPrivate::invokeCompleted(
         }
     }
 
-    if (!m_invocations.isEmpty())
+    if (!m_invocations.isEmpty() && !m_proxy->invocationInProgress())
     {
-        Q_ASSERT(!m_proxy->invocationInProgress());
-
         const HInvocationInfo& inv = m_invocations.head();
         m_proxy->setInputArgs(inv.m_inArgs);
         m_proxy->send();
