@@ -59,6 +59,7 @@ SOURCES += \
     $$SRC_LOC/devicemodel/client/hclientaction.cpp \
     $$SRC_LOC/devicemodel/client/hclientactionop.cpp \
     $$SRC_LOC/devicemodel/client/hclientservice.cpp \
+    $$SRC_LOC/devicemodel/client/hclientstatevariable.cpp \
     $$SRC_LOC/devicemodel/server/hserveraction.cpp \
     $$SRC_LOC/devicemodel/server/hserverdevice.cpp \
     $$SRC_LOC/devicemodel/server/hserverservice.cpp \
