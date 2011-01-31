@@ -89,7 +89,7 @@ public: // methods
         qDeleteAll(m_stateVariables);
     }
 
-    virtual bool addStateVariable(StateVariable* stateVariable)
+    bool addStateVariable(StateVariable* stateVariable)
     {
         Q_ASSERT(stateVariable);
 
@@ -169,6 +169,28 @@ public: // methods
         }
 
         return changed ? Updated : Ignored;
+    }
+
+    QVariant value(const QString& stateVarName, bool* ok = 0) const
+    {
+        if (m_stateVariables.contains(stateVarName))
+        {
+            if (ok) { *ok = true; }
+            return m_stateVariables.value(stateVarName)->value();
+        }
+
+        if (ok) { *ok = false; }
+        return QVariant();
+    }
+
+    bool setValue(const QString& stateVarName, const QVariant& value)
+    {
+        if (m_stateVariables.contains(stateVarName))
+        {
+            return m_stateVariables.value(stateVarName)->setValue(value);
+        }
+
+        return false;
     }
 };
 

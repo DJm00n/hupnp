@@ -164,10 +164,5 @@ bool operator==(const HServiceInfo& obj1, const HServiceInfo& obj2)
            obj1.h_ptr->m_serviceType == obj2.h_ptr->m_serviceType;
 }
 
-bool operator!=(const HServiceInfo& obj1, const HServiceInfo& obj2)
-{
-    return !(obj1 == obj2);
-}
-
 }
 }

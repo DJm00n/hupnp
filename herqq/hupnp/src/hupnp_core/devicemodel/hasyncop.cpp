@@ -20,9 +20,9 @@
  */
 
 #include "hasyncop.h"
+#include "hasyncop_p.h"
 
 #include <QtCore/QMutex>
-#include <QtCore/QString>
 
 static unsigned int s_lastInt = 0;
 static QMutex s_lastIntMutex;
@@ -45,40 +45,32 @@ inline unsigned int getNextId()
 }
 }
 
-class HAsyncOpPrivate
+unsigned int HAsyncOpPrivate::genId()
 {
-H_DISABLE_COPY(HAsyncOpPrivate)
+    return getNextId();
+}
 
-public:
-
-    int m_refCount;
-
-    const unsigned int m_id;
-    int m_returnValue;
-    void* m_userData;
-    QString* m_errorDescription;
-
-    inline HAsyncOpPrivate() :
-        m_refCount(1), m_id(0), m_returnValue(0), m_userData(0),
-        m_errorDescription(0)
-    {
-    }
-
-    inline HAsyncOpPrivate(int id) :
-        m_refCount(1), m_id(id), m_returnValue(0), m_userData(0),
-        m_errorDescription(0)
-    {
-    }
-
-    inline ~HAsyncOpPrivate()
-    {
-        delete m_errorDescription;
-    }
-};
+HAsyncOpPrivate::~HAsyncOpPrivate()
+{
+    delete m_errorDescription;
+}
 
 HAsyncOp::HAsyncOp() :
     h_ptr(new HAsyncOpPrivate(getNextId()))
 {
+}
+
+HAsyncOp::HAsyncOp(HAsyncOpPrivate& dd) :
+    h_ptr(&dd)
+{
+}
+
+HAsyncOp::HAsyncOp(
+    qint32 returnCode, const QString& errorDescription, HAsyncOpPrivate& dd) :
+        h_ptr(&dd)
+{
+    h_ptr->m_returnValue = returnCode;
+    h_ptr->m_errorDescription = new QString(errorDescription);
 }
 
 HAsyncOp::HAsyncOp(int rc, const QString& errorDescription) :
@@ -134,16 +126,6 @@ void HAsyncOp::setErrorDescription(const QString& arg)
     h_ptr->m_errorDescription = new QString(arg);
 }
 
-void HAsyncOp::setUserData(void* userData)
-{
-    h_ptr->m_userData = userData;
-}
-
-void* HAsyncOp::userData() const
-{
-    return h_ptr->m_userData;
-}
-
 int HAsyncOp::returnValue() const
 {
     return h_ptr->m_returnValue;
@@ -156,27 +138,17 @@ void HAsyncOp::setReturnValue(int returnValue)
 
 unsigned int HAsyncOp::id() const
 {
-    return h_ptr->m_id;
+    return h_ptr->id();
 }
 
 bool HAsyncOp::isNull() const
 {
-    return h_ptr->m_id == 0;
+    return h_ptr->id() == 0;
 }
 
-HAsyncOp HAsyncOp::createInvalid(int returnCode, const QString& errorDescr)
+void HAsyncOp::abort()
 {
-    return HAsyncOp(returnCode, errorDescr);
-}
-
-bool operator==(const HAsyncOp& arg1, const HAsyncOp& arg2)
-{
-    return arg1.h_ptr->m_id == arg2.h_ptr->m_id;
-}
-
-bool operator!=(const HAsyncOp& arg1, const HAsyncOp& arg2)
-{
-    return !(arg1 == arg2);
+    // The default implementation does nothing.
 }
 
 }

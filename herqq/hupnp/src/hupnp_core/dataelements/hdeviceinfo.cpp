@@ -473,10 +473,5 @@ bool operator==(const HDeviceInfo& obj1, const HDeviceInfo& obj2)
              obj1.h_ptr->m_icons              == obj2.h_ptr->m_icons;
 }
 
-bool operator!=(const HDeviceInfo& obj1, const HDeviceInfo& obj2)
-{
-    return !(obj1 == obj2);
-}
-
 }
 }

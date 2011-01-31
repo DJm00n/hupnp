@@ -74,10 +74,14 @@ class HServerServicePrivate;
  * <h2>Sub-classing</h2>
  *
  * Writing a custom \c %HServerService is simple, because you only have to
- * override createActionInvokes(), in which you provide the implementations of the
- * actions of the service. See \ref builddevice_tutorial and \ref setting_up_the_devicemodel
- * for more information about creating your own HServerServices with custom
- * functionality.
+ * provide the implementations of the actions the service exposes. You can do this
+ * by overriding createActionInvokes() in which you create the \e callable
+ * \e entities that will be called upon action invocation. You can also mark
+ * member functions implementing actions of a service as \c Q_INVOKABLE, which
+ * enables HUPnP to automatically create the previsously mentioned \e callable
+ * \e entities for you. See \ref builddevice_tutorial and
+ * \ref setting_up_the_devicemodel for more information about creating your
+ * own HServerService types with custom functionality.
  *
  * \headerfile hserverservice.h HServerService
  *
@@ -129,7 +133,7 @@ protected:
      *
      * \return the implementations of the actions this \c %HServerService exposes.
      */
-    virtual HActionInvokes createActionInvokes() = 0;
+    virtual HActionInvokes createActionInvokes();
 
     /*!
      * Provides an opportunity to do post-construction initialization routines
@@ -256,6 +260,44 @@ public:
      * will never be emitted and the notifyListeners() method does nothing.
      */
     bool isEvented() const;
+
+    /*!
+     * Returns the value of the specified state variable, if such exists.
+     *
+     * This is a convenience method for retrieving a state variable by name and
+     * getting its value.
+     *
+     * \param stateVarName specifies the name of the state variable.
+     *
+     * \param ok specifies a pointer to a \c bool, which will contain \e true
+     * if the specified state variable was found and its value was returned.
+     * This is optional.
+     *
+     * \return the value of the specified state variable, if such exists.
+     * If this service does not contain the specified state variable, an
+     * invalid \c QVariant is returned.
+     *
+     * \remarks The value of the state variable may be represented by an
+     * invalid \c QVariant. Because of this, if you want to be sure that the
+     * specified state variable was found and its value was returned, you should
+     * use the \a ok parameter.
+     */
+    QVariant value(const QString& stateVarName, bool* ok = 0) const;
+
+    /*!
+     * Sets the value of the specified state variable, if such exists.
+     *
+     * This is a convenience method for retrieving a state variable by name and
+     * setting its value.
+     *
+     * \param stateVarName specifies the name of the state variable.
+     *
+     * \param value specifies the new value of the state variable.
+     *
+     * \return \e true in case the specified state variable was found and its
+     * value was changed.
+     */
+    bool setValue(const QString& stateVarName, const QVariant& value);
 
 public Q_SLOTS:
 

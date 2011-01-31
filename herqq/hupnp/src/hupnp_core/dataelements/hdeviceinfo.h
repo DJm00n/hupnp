@@ -432,7 +432,10 @@ H_UPNP_CORE_EXPORT bool operator==(const HDeviceInfo&, const HDeviceInfo&);
  *
  * \relates HDeviceInfo
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HDeviceInfo&, const HDeviceInfo&);
+inline bool operator!=(const HDeviceInfo& obj1, const HDeviceInfo& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

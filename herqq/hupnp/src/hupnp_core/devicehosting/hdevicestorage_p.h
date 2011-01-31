@@ -31,7 +31,7 @@
 //
 
 #include "../general/hupnp_global_p.h"
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <HUpnpCore/HUdn>
 #include <HUpnpCore/HEndpoint>
@@ -362,6 +362,11 @@ public: // instance methods
     {
         qDeleteAll(m_rootDevices);
         m_rootDevices.clear();
+        for(int i = 0; i < m_deviceControllers.size(); ++i)
+        {
+            delete m_deviceControllers.at(i).second;
+        }
+        m_deviceControllers.clear();
     }
 
     Controller* getController(const Device* device) const

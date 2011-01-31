@@ -217,7 +217,10 @@ H_UPNP_CORE_EXPORT bool operator==(const HServiceId&, const HServiceId&);
  *
  * \relates HServiceId
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HServiceId&, const HServiceId&);
+inline bool operator!=(const HServiceId& obj1, const HServiceId& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 /*!
  * Returns a value that can be used as a unique key in a hash-map identifying

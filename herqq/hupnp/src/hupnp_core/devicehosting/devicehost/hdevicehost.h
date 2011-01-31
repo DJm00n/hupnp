@@ -377,6 +377,8 @@ public:
     explicit HDeviceHost(QObject* parent = 0);
 
     /*!
+     * Destroys the instance.
+     *
      * Destroys the device host and every hosted device.
      */
     virtual ~HDeviceHost();

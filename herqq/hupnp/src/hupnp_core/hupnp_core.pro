@@ -4,7 +4,7 @@ QT      += network xml
 QT      -= gui
 CONFIG  += warn_on dll thread
 DEFINES += H_BUILD_UPNP_CORE_LIB
-VERSION = 0.8.0
+VERSION = 0.9.0
 
 QMAKE_CXXFLAGS_WARN_ON +=
 

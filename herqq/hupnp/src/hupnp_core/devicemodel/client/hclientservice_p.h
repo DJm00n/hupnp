@@ -38,11 +38,13 @@ namespace Herqq
 namespace Upnp
 {
 
+class HDefaultClientStateVariable;
+
 //
 // Implementation details of HClientService
 //
 class HClientServicePrivate :
-    public HServicePrivate<HClientService, HClientAction, HClientStateVariable>
+    public HServicePrivate<HClientService, HClientAction, HDefaultClientStateVariable>
 {
 H_DECLARE_PUBLIC(HClientService)
 H_DISABLE_COPY(HClientServicePrivate)
@@ -56,7 +58,7 @@ public: // methods
     HClientServicePrivate();
 
     virtual ~HClientServicePrivate();
-    virtual bool addStateVariable(HClientStateVariable*);
+    bool addStateVariable(HDefaultClientStateVariable*);
 
     ReturnValue updateVariables(
         const QList<QPair<QString, QString> >& variables, bool sendEvent);

@@ -41,6 +41,8 @@ H_DISABLE_COPY(HDefaultClientStateVariable)
 public:
     HDefaultClientStateVariable(
         const HStateVariableInfo&, HClientService* parent);
+
+    using HClientStateVariable::setValue;
 };
 
 }

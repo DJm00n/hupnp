@@ -302,6 +302,32 @@ HStateVariableInfo::HStateVariableInfo() :
 HStateVariableInfo::HStateVariableInfo(
     const QString& name,
     HUpnpDataTypes::DataType datatype,
+    HInclusionRequirement inclusionReq,
+    QString* err) :
+        h_ptr(new HStateVariableInfoPrivate())
+{
+    QScopedPointer<HStateVariableInfoPrivate> hptr(
+        new HStateVariableInfoPrivate());
+
+    if (!hptr->setName(name, err))
+    {
+        return;
+    }
+
+    if (!hptr->setDataType(datatype, err))
+    {
+        return;
+    }
+
+    hptr->m_eventingType = NoEvents;
+    hptr->m_inclusionRequirement = inclusionReq;
+
+    h_ptr = hptr.take();
+}
+
+HStateVariableInfo::HStateVariableInfo(
+    const QString& name,
+    HUpnpDataTypes::DataType datatype,
     EventingType eventingType,
     HInclusionRequirement inclusionReq,
     QString* err) :
@@ -591,11 +617,6 @@ bool operator==(const HStateVariableInfo& arg1, const HStateVariableInfo& arg2)
            arg1.h_ptr->m_allowedValueList == arg2.h_ptr->m_allowedValueList &&
            arg1.h_ptr->m_allowedValueRange == arg2.h_ptr->m_allowedValueRange &&
            arg1.h_ptr->m_inclusionRequirement == arg2.h_ptr->m_inclusionRequirement;
-}
-
-bool operator!=(const HStateVariableInfo& arg1, const HStateVariableInfo& arg2)
-{
-    return !(arg1 == arg2);
 }
 
 quint32 qHash(const HStateVariableInfo& key)

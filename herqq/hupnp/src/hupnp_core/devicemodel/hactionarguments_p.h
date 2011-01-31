@@ -48,22 +48,39 @@ class HActionArgumentsPrivate
 {
 public: // attributes
 
-    QVector<HActionArgument*> m_argumentsOrdered;
+    QVector<HActionArgument> m_argumentsOrdered;
     // UDA 1.1 mandates that action arguments are always transmitted in the order
     // they were specified in the service description.
 
-    QHash<QString, HActionArgument*> m_arguments;
-    // QHash has a very low memory footprint and it provides us a constant-time
-    // lookup using argument names regardless of the number of arguments.
+    QHash<QString, HActionArgument> m_arguments;
+    // for fast name-based lookups
 
 public: // functions
 
     HActionArgumentsPrivate();
-    explicit HActionArgumentsPrivate(const QVector<HActionArgument*>& args);
-    ~HActionArgumentsPrivate();
+    explicit HActionArgumentsPrivate(const QVector<HActionArgument>& args);
 
-    HActionArgumentsPrivate(const HActionArgumentsPrivate& other);
-    HActionArgumentsPrivate& operator=(const HActionArgumentsPrivate& other);
+    inline void append(const HActionArgument& arg)
+    {
+        Q_ASSERT_X(arg.isValid(), H_AT, "A provided action argument has to be valid");
+        m_argumentsOrdered.push_back(arg);
+        m_arguments[arg.name()] = arg;
+    }
+
+    template<typename T>
+    static HActionArgumentsPrivate* copy(const T& source)
+    {
+        HActionArgumentsPrivate* contents = new HActionArgumentsPrivate();
+
+        for(typename T::const_iterator ci = source.constBegin(); ci != source.constEnd(); ++ci)
+        {
+            HActionArgument arg = *ci;
+            arg.detach();
+            contents->append(arg);
+        }
+
+        return contents;
+    }
 };
 
 }

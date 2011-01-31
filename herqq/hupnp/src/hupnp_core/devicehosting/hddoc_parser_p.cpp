@@ -28,7 +28,7 @@
 #include "../general/hupnp_global_p.h"
 #include "../general/hupnp_datatypes_p.h"
 
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 namespace Herqq
 {
@@ -164,8 +164,8 @@ HStateVariableInfo HDocParser::parseStateVariableInfo_numeric(
 bool HDocParser::parseActionArguments(
     const QDomElement& argListElement,
     const QHash<QString, HStateVariableInfo>& stateVars,
-    QVector<HActionArgument*>* inArgs,
-    QVector<HActionArgument*>* outArgs,
+    QVector<HActionArgument>* inArgs,
+    QVector<HActionArgument>* outArgs,
     bool* hasRetVal)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -194,7 +194,7 @@ bool HDocParser::parseActionArguments(
             return false;
         }
 
-        HActionArgument* createdArg = 0;
+        HActionArgument createdArg;
         if (dirStr.compare("out", Qt::CaseInsensitive) == 0)
         {
             if (retValWasDefined)
@@ -215,7 +215,18 @@ bool HDocParser::parseActionArguments(
 
             firstOutArgFound = true;
 
-            createdArg = new HActionArgument(name, stateVars[relatedSvStr]);
+            createdArg = HActionArgument(
+                name, stateVars.value(relatedSvStr), &m_lastErrorDescription);
+
+            if (!createdArg.isValid())
+            {
+                m_lastError = InvalidServiceDescriptionError;
+                m_lastErrorDescription = QString(
+                    "Invalid action argument: %1").arg(m_lastErrorDescription);
+
+                return false;
+            }
+
             outArgs->push_back(createdArg);
         }
         else if (dirStr.compare("in", Qt::CaseInsensitive) == 0)
@@ -230,7 +241,17 @@ bool HDocParser::parseActionArguments(
                 return false;
             }
 
-            createdArg = new HActionArgument(name, stateVars[relatedSvStr]);
+            createdArg = HActionArgument(name, stateVars.value(relatedSvStr));
+
+            if (!createdArg.isValid())
+            {
+                m_lastError = InvalidServiceDescriptionError;
+                m_lastErrorDescription = QString(
+                    "Invalid action argument: %1").arg(m_lastErrorDescription);
+
+                return false;
+            }
+
             inArgs->push_back(createdArg);
         }
         else
@@ -249,8 +270,7 @@ bool HDocParser::parseActionArguments(
     return true;
 }
 
-QList<QUrl> HDocParser::parseIconList(
-    const QDomElement& iconListElement)
+QList<QUrl> HDocParser::parseIconList(const QDomElement& iconListElement)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
@@ -767,8 +787,8 @@ bool HDocParser::parseActionInfo(
     QString name = readElementValue("name", actionElement);
 
     bool hasRetVal = false;
-    QVector<HActionArgument*> inputArguments;
-    QVector<HActionArgument*> outputArguments;
+    QVector<HActionArgument> inputArguments;
+    QVector<HActionArgument> outputArguments;
 
     QDomElement argumentListElement =
         actionElement.firstChildElement("argumentList");
@@ -782,8 +802,10 @@ bool HDocParser::parseActionInfo(
                 &outputArguments,
                 &hasRetVal))
         {
-            qDeleteAll(inputArguments);
-            qDeleteAll(outputArguments);
+            m_lastErrorDescription = QString(
+                "Invalid action [%1] definition: %2").arg(
+                    name, m_lastErrorDescription);
+
             return false;
         }
     }

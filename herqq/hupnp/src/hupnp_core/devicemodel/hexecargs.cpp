@@ -41,10 +41,6 @@ bool operator==(const HExecArgs& arg1, const HExecArgs& arg2)
     return arg1.m_execType == arg2.m_execType;
 }
 
-bool operator!=(const HExecArgs& arg1, const HExecArgs& arg2)
-{
-    return !(arg1 == arg2);
-}
 
 }
 }

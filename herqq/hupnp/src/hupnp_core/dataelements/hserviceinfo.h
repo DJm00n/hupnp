@@ -218,7 +218,10 @@ H_UPNP_CORE_EXPORT bool operator==(const HServiceInfo&, const HServiceInfo&);
  *
  * \relates HServiceInfo
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HServiceInfo&, const HServiceInfo&);
+inline bool operator!=(const HServiceInfo& obj1, const HServiceInfo& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

@@ -163,6 +163,29 @@ public:
      */
     bool isEvented() const;
 
+    /*!
+     * Returns the value of the specified state variable, if such exists.
+     *
+     * This is a convenience method for retrieving a state variable by name and
+     * getting its value.
+     *
+     * \param stateVarName specifies the name of the state variable.
+     *
+     * \param ok specifies a pointer to a \c bool, which will contain \e true
+     * if the specified state variable was found and its value was returned.
+     * This is optional.
+     *
+     * \return the value of the specified state variable, if such exists.
+     * If this service does not contain the specified state variable, an
+     * invalid \c QVariant is returned.
+     *
+     * \remarks The value of the state variable may be represented by an
+     * invalid \c QVariant. Because of this, if you want to be sure that the
+     * specified state variable was found and its value was returned, you should
+     * use the \a ok parameter.
+     */
+    QVariant value(const QString& stateVarName, bool* ok = 0) const;
+
 public Q_SLOTS:
 
     /*!

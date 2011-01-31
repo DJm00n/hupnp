@@ -30,6 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
+#include "hclientactionop.h"
+
 #include "../hexecargs.h"
 #include "../hactionarguments.h"
 #include "../hactioninvoke_callback.h"
@@ -93,10 +95,9 @@ public:
     HExecArgs execArgs;
 
     HActionArguments m_inArgs;
-    HAsyncOp m_invokeId;
-    HActionArguments m_outArgs;
+    HClientActionOp m_invokeId;
 
-    inline HInvocationInfo() : callback(), execArgs() { }
+    inline HInvocationInfo() : callback(), execArgs(), m_inArgs(), m_invokeId() { }
     inline ~HInvocationInfo() { }
 
     inline HInvocationInfo(
@@ -106,8 +107,7 @@ public:
             callback(cb),
             execArgs(eargs),
             m_inArgs(inArgs),
-            m_invokeId(),
-            m_outArgs()
+            m_invokeId(inArgs)
     {
     }
 };

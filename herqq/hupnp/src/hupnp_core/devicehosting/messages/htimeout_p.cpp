@@ -88,10 +88,5 @@ bool operator==(const HTimeout& obj1, const HTimeout& obj2)
     return obj1.m_value == obj2.m_value;
 }
 
-bool operator!=(const HTimeout& obj1, const HTimeout& obj2)
-{
-    return !(obj1 == obj2);
-}
-
 }
 }

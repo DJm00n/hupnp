@@ -30,7 +30,8 @@
 // change or the file may be removed without of notice.
 //
 
-#include "hglobal.h"
+#include <HUpnpCore/HUpnp>
+
 class QString;
 
 namespace Herqq
@@ -39,7 +40,7 @@ namespace Herqq
 //
 //
 //
-class HLogger
+class H_UPNP_CORE_EXPORT HLogger
 {
 H_DISABLE_COPY(HLogger)
 

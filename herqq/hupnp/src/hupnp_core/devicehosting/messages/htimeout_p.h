@@ -76,7 +76,10 @@ public:
 };
 
 bool operator==(const HTimeout&, const HTimeout&);
-bool operator!=(const HTimeout&, const HTimeout&);
+inline bool operator!=(const HTimeout& obj1, const HTimeout& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

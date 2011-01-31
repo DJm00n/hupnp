@@ -22,6 +22,10 @@
 #include "hserverservice.h"
 #include "hserverservice_p.h"
 
+#include "../../general/hlogger_p.h"
+
+#include <QtCore/QMetaMethod>
+
 namespace Herqq
 {
 
@@ -87,6 +91,109 @@ bool HServerService::init(
     return true;
 }
 
+namespace
+{
+class MetaMethodInvoker
+{
+private:
+
+    const char* m_typeName;
+    HServerService* m_methodOwner;
+    QMetaMethod m_mm;
+
+public:
+
+    MetaMethodInvoker(
+        HServerService* methodOwner, const QMetaMethod& mm,
+        const char* typeName) :
+            m_typeName(typeName), m_methodOwner(methodOwner), m_mm(mm)
+    {
+        Q_ASSERT(methodOwner);
+    }
+
+    int operator()(
+        const HActionArguments& inArgs, HActionArguments* outArgs)
+    {
+        int retVal = UpnpSuccess;
+
+        bool ok = m_mm.invoke(
+            m_methodOwner,
+            Qt::DirectConnection,
+            //Q_RETURN_ARG(int, retVal),
+            QGenericReturnArgument(m_typeName, static_cast<void*>(&retVal)),
+            Q_ARG(Herqq::Upnp::HActionArguments, inArgs),
+            Q_ARG(Herqq::Upnp::HActionArguments*, outArgs));
+
+        Q_ASSERT(ok); Q_UNUSED(ok)
+
+        // Q_RETURN_ARG is not used above, because it cannot handle typedefs
+        // and in this case it is perfectly reasonable for the user to
+        // use "int" or "qint32" as the return type. Certainly other typedefs
+        // besides "qint32" should be valid too, but for now the typeName has to
+        // be either "int" or "qint32". The restriction is enforced in the
+        // createActionInvokes() method below.
+
+        // For instance, a user could have one action defined as:
+        // qint32 myAction(const HActionArguments&, HActionArguments*);
+        // and another as:
+        // int myAction2(const HActionArguments&, HActionArguments*);
+
+        return retVal;
+    }
+};
+}
+
+HServerService::HActionInvokes HServerService::createActionInvokes()
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    HActionInvokes retVal;
+
+    const QMetaObject* mob = metaObject();
+
+    for(int i = mob->methodOffset(); i < mob->methodCount(); ++i)
+    {
+        QMetaMethod mm = mob->method(i);
+
+        QString typeName = mm.typeName();
+        if (typeName != "int" && typeName != "qint32")
+        {
+            continue;
+        }
+
+        QList<QByteArray> parTypes = mm.parameterTypes();
+        if (parTypes.size() != 2)
+        {
+            continue;
+        }
+
+        QString firstPar = parTypes.at(0);
+        if (firstPar != "Herqq::Upnp::HActionArguments" &&
+            firstPar != "HActionArguments")
+        {
+            continue;
+        }
+
+        QString secondPar = parTypes.at(1);
+        if (secondPar != "Herqq::Upnp::HActionArguments*" &&
+            secondPar != "HActionArguments*")
+        {
+            continue;
+        }
+
+        QString signature = mm.signature();
+        signature = signature.left(signature.indexOf('('));
+
+        Q_ASSERT(!retVal.contains(signature));
+
+        retVal.insert(signature, MetaMethodInvoker(this, mm, mm.typeName()));
+        // See the comment in MetaMethodInvoker why the typeName() is passed
+        // there as well.
+    }
+
+    return retVal;
+}
+
 bool HServerService::finalizeInit(QString*)
 {
     // intentionally empty.
@@ -129,6 +236,16 @@ void HServerService::notifyListeners()
 bool HServerService::isEvented() const
 {
     return h_ptr->m_evented;
+}
+
+QVariant HServerService::value(const QString& stateVarName, bool* ok) const
+{
+    return h_ptr->value(stateVarName, ok);
+}
+
+bool HServerService::setValue(const QString& stateVarName, const QVariant& value)
+{
+    return h_ptr->setValue(stateVarName, value);
 }
 
 }

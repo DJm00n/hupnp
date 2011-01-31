@@ -164,11 +164,14 @@ H_UPNP_CORE_EXPORT bool operator==(const HEndpoint&, const HEndpoint&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HEndpoint
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HEndpoint&, const HEndpoint&);
+inline bool operator!=(const HEndpoint& obj1, const HEndpoint& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 /*!
  * Returns a value that can be used as a unique key in a hash-map identifying

@@ -49,7 +49,7 @@ class HServerActionPrivate;
  * input and output arguments. You can invoke an action synchronously using
  * invoke().
  *
- * \headerfile haction.h HServerAction
+ * \headerfile hserveraction.h HServerAction
  *
  * \ingroup hupnp_devicemodel
  *

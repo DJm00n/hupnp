@@ -21,7 +21,7 @@
 
 #include "hproduct_tokens.h"
 
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <QtCore/QRegExp>
 #include <QtCore/QVector>
@@ -425,11 +425,6 @@ QString HProductTokens::toString() const
 bool operator==(const HProductTokens& ht1, const HProductTokens& ht2)
 {
     return ht1.toString() == ht2.toString();
-}
-
-bool operator!=(const HProductTokens& ht1, const HProductTokens& ht2)
-{
-    return !(ht1 == ht2);
 }
 
 }

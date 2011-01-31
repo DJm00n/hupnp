@@ -38,6 +38,8 @@ namespace Herqq
 namespace Upnp
 {
 
+class HDefaultClientStateVariable;
+
 //
 // Default implementation of HClientService
 //
@@ -50,7 +52,7 @@ public:
 
     HDefaultClientService(const HServiceInfo&, HClientDevice* parentDevice);
     void addAction(HClientAction*);
-    void addStateVariable(HClientStateVariable*);
+    void addStateVariable(HDefaultClientStateVariable*);
     void setDescription(const QString& description);
 
     bool updateVariables(

@@ -21,7 +21,7 @@
 
 #include "hserviceid.h"
 
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 #include "../../utils/hmisc_utils_p.h"
 
 #include <QtCore/QString>
@@ -241,11 +241,6 @@ bool operator==(const HServiceId& sid1, const HServiceId& sid2)
     }
 
     return true;
-}
-
-bool operator!=(const HServiceId& sid1, const HServiceId& sid2)
-{
-    return !(sid1 == sid2);
 }
 
 quint32 qHash(const HServiceId& key)

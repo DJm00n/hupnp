@@ -226,11 +226,6 @@ bool operator==(const HResourceType& arg1, const HResourceType& arg2)
     return arg1.m_resourceElements == arg2.m_resourceElements;
 }
 
-bool operator!=(const HResourceType& arg1, const HResourceType& arg2)
-{
-    return !(arg1 == arg2);
-}
-
 quint32 qHash(const HResourceType& key)
 {
     QByteArray data = key.toString().toLocal8Bit();

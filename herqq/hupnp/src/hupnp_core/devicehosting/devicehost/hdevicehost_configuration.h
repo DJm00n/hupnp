@@ -218,7 +218,7 @@ public:
      *
      * Creates a new, empty instance.
      *
-     * \is isEmpty(), isValid()
+     * \sa isEmpty(), isValid()
      */
     HDeviceHostConfiguration();
 

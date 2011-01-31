@@ -25,7 +25,7 @@
 #include "hhttp_utils_p.h"
 
 #include "../dataelements/hactioninfo.h"
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include "../general/hupnp_global_p.h"
 

@@ -38,7 +38,7 @@ class HStateVariableEventPrivate;
 /*!
  * A class used to transfer state variable event information.
  *
- * \headerfile hstatevariable.h HStateVariableEvent
+ * \headerfile hstatevariable_event.h HStateVariableEvent
  *
  * \ingroup hupnp_devicemodel
  *
@@ -55,9 +55,9 @@ private:
 public:
 
     /*!
-     * Creates a new, invalid instance.
+     * Creates a new, empty instance.
      *
-     * \sa isValid()
+     * \sa isEmpty()
      */
     HStateVariableEvent();
 
@@ -91,6 +91,7 @@ public:
 
     /*!
      * Assigns the contents of the other object to this.
+     *
      * \return reference to this object.
      */
     HStateVariableEvent& operator=(const HStateVariableEvent&);

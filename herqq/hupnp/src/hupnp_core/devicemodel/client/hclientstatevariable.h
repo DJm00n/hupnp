@@ -79,6 +79,26 @@ protected:
      */
     HClientStateVariable(const HStateVariableInfo& info, HClientService* parent);
 
+    /*!
+     * Changes the value of the state variable. If the instance is evented,
+     * the valueChanged() signal is emitted after the value has been changed.
+     *
+     * \param newValue specifies the new value of the state variable. The new value
+     * must have the same underlying data type as the previous value
+     * (and the default value). If the new value has different data type, the value
+     * is not changed, no event is sent and false is returned.
+     *
+     * \retval true in case the new value was successfully set.
+     * \retval false in case the new value could not be set.
+     *
+     * \remarks the new value will be set if the value:
+     *  - does not violate the defined constraints
+     *  - has the same variant type or the type of the new value can be converted
+     *  to the same variant type
+     *  - is not QVariant::Invalid
+     */
+    bool setValue(const QVariant& newValue);
+
 public:
 
     /*!
@@ -116,26 +136,6 @@ public:
      * from a service description document.
      */
     const HStateVariableInfo& info() const;
-
-    /*!
-     * Changes the value of the state variable. If the instance is evented,
-     * the valueChanegd() signal is emitted after the value has been changed.
-     *
-     * \param newValue specifies the new value of the state variable. The new value
-     * must have the same underlying data type as the previous value
-     * (and the default value). If the new value has different data type, the value
-     * is not changed, no event is sent and false is returned.
-     *
-     * \retval true in case the new value was successfully set.
-     * \retval false in case the new value could not be set.
-     *
-     * \remarks the new value will be set if the value:
-     *  - does not violate the defined constraints
-     *  - has the same variant type or the type of the new value can be converted
-     *  to the same variant type
-     *  - is not QVariant::Invalid
-     */
-    bool setValue(const QVariant& newValue);
 
 Q_SIGNALS:
 

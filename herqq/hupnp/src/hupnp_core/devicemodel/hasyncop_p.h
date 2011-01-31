@@ -19,7 +19,12 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hvaluerange_p.h"
+#ifndef HASYNCOP_P_H_
+#define HASYNCOP_P_H_
+
+#include <HUpnpCore/HUpnp>
+
+#include <QtCore/QString>
 
 namespace Herqq
 {
@@ -27,12 +32,45 @@ namespace Herqq
 namespace Upnp
 {
 
-bool operator==(const HValueRange& arg1, const HValueRange& arg2)
+//
+// Implementation details of HAsyncOp
+//
+class H_UPNP_CORE_EXPORT HAsyncOpPrivate
 {
-    return arg1.maximum() == arg2.maximum() &&
-           arg1.minimum() == arg2.minimum() &&
-           arg1.step() == arg2.step();
-}
+H_DISABLE_COPY(HAsyncOpPrivate)
+
+private:
+
+    const unsigned int m_id;
+
+public:
+
+    int m_refCount;
+
+    int m_returnValue;
+    void* m_userData;
+    QString* m_errorDescription;
+
+    inline HAsyncOpPrivate() :
+        m_id(0), m_refCount(1), m_returnValue(0), m_userData(0),
+        m_errorDescription(0)
+    {
+    }
+
+    inline HAsyncOpPrivate(int id) :
+        m_id(id), m_refCount(1), m_returnValue(0), m_userData(0),
+        m_errorDescription(0)
+    {
+    }
+
+    static unsigned int genId();
+
+    virtual ~HAsyncOpPrivate();
+
+    inline unsigned int id() const { return m_id; }
+};
 
 }
 }
+
+#endif /* HASYNCOP_P_H_ */

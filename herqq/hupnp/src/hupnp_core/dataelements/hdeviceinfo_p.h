@@ -33,7 +33,7 @@
 #include "hudn.h"
 #include "hresourcetype.h"
 
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <QtCore/QUrl>
 #include <QtCore/QList>

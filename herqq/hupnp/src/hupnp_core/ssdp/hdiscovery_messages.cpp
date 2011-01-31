@@ -27,7 +27,7 @@
 #include "../dataelements/hproduct_tokens.h"
 
 #include "../socket/hendpoint.h"
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <QtNetwork/QHostAddress>
 #include <QtCore/QDateTime>
@@ -213,11 +213,6 @@ bool operator==(const HResourceAvailable& obj1, const HResourceAvailable& obj2)
            obj1.h_ptr->m_searchPort   == obj2.h_ptr->m_searchPort;
 }
 
-bool operator!=(const HResourceAvailable& obj1, const HResourceAvailable& obj2)
-{
-    return !(obj1 == obj2);
-}
-
 /*******************************************************************************
  * HResourceUnavailablePrivate
  ******************************************************************************/
@@ -334,11 +329,6 @@ bool operator==(const HResourceUnavailable& obj1, const HResourceUnavailable& ob
     return obj1.h_ptr->m_usn      == obj2.h_ptr->m_usn &&
            obj1.h_ptr->m_bootId   == obj2.h_ptr->m_bootId &&
            obj1.h_ptr->m_configId == obj2.h_ptr->m_configId;
-}
-
-bool operator!=(const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
-{
-    return !(obj1 == obj2);
 }
 
 /*******************************************************************************
@@ -490,11 +480,6 @@ bool operator==(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
            obj1.h_ptr->m_searchPort == obj2.h_ptr->m_searchPort;
 }
 
-bool operator!=(const HResourceUpdate& obj1, const HResourceUpdate& obj2)
-{
-    return !(obj1 == obj2);
-}
-
 /*******************************************************************************
  * HDiscoveryRequestPrivate
  ******************************************************************************/
@@ -632,11 +617,6 @@ bool operator==(const HDiscoveryRequest& obj1, const HDiscoveryRequest& obj2)
     return obj1.h_ptr->m_mx        == obj2.h_ptr->m_mx &&
            obj1.h_ptr->m_st        == obj2.h_ptr->m_st &&
            obj1.h_ptr->m_userAgent == obj2.h_ptr->m_userAgent;
-}
-
-bool operator!=(const HDiscoveryRequest& obj1, const HDiscoveryRequest& obj2)
-{
-    return !(obj1 == obj2);
 }
 
 /*******************************************************************************
@@ -814,11 +794,6 @@ bool operator==(const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)
     // in Qt. A datetime object created using the currentDateTime() function
     // copy constructed to another datetime object seems to result a logically
     // different object.
-}
-
-bool operator!=(const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)
-{
-    return !(obj1 == obj2);
 }
 
 }

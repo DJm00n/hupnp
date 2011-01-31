@@ -74,7 +74,8 @@ protected:
 private slots:
 
     void on_invokeButton_clicked();
-    void invokeComplete(Herqq::Upnp::HAsyncOp, const Herqq::Upnp::HActionArguments&);
+    void invokeComplete(
+        Herqq::Upnp::HClientAction*, const Herqq::Upnp::HClientActionOp&);
 };
 
 #endif // INVOKEACTIONDIALOG_H

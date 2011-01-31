@@ -122,11 +122,14 @@ H_UPNP_CORE_EXPORT bool operator==(const HExecArgs&, const HExecArgs&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HExecArgs
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HExecArgs&, const HExecArgs&);
+inline bool operator!=(const HExecArgs& obj1, const HExecArgs& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

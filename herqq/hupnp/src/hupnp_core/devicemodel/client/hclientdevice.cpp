@@ -24,7 +24,7 @@
 #include "hdefault_clientdevice_p.h"
 #include "hdefault_clientservice_p.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 #include "../../general/hupnp_global_p.h"
 
 #include "../../dataelements/hserviceid.h"

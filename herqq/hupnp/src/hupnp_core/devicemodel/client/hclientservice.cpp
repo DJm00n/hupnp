@@ -24,7 +24,7 @@
 #include "hdefault_clientservice_p.h"
 
 #include "hclientaction.h"
-#include "hclientstatevariable.h"
+#include "hdefault_clientstatevariable_p.h"
 
 #include "../../dataelements/hactioninfo.h"
 
@@ -46,9 +46,9 @@ HClientServicePrivate::~HClientServicePrivate()
 {
 }
 
-bool HClientServicePrivate::addStateVariable(HClientStateVariable* sv)
+bool HClientServicePrivate::addStateVariable(HDefaultClientStateVariable* sv)
 {
-    if (HServicePrivate<HClientService, HClientAction, HClientStateVariable>::addStateVariable(sv))
+    if (HServicePrivate<HClientService, HClientAction, HDefaultClientStateVariable>::addStateVariable(sv))
     {
         m_stateVariablesConst.insert(sv->info().name(), sv);
         return true;
@@ -61,7 +61,7 @@ HClientServicePrivate::ReturnValue HClientServicePrivate::updateVariables(
     const QList<QPair<QString, QString> >& variables, bool sendEvent)
 {
     ReturnValue rv =
-        HServicePrivate<HClientService, HClientAction, HClientStateVariable>::updateVariables(variables);
+        HServicePrivate<HClientService, HClientAction, HDefaultClientStateVariable>::updateVariables(variables);
 
     if (rv == Updated && sendEvent && m_evented)
     {
@@ -128,6 +128,11 @@ bool HClientService::isEvented() const
     return h_ptr->m_evented;
 }
 
+QVariant HClientService::value(const QString& stateVarName, bool* ok) const
+{
+    return h_ptr->value(stateVarName, ok);
+}
+
 /*******************************************************************************
  * HDefaultClientService
  ******************************************************************************/
@@ -144,7 +149,7 @@ void HDefaultClientService::addAction(HClientAction* action)
     h_ptr->m_actions.insert(action->info().name(), action);
 }
 
-void HDefaultClientService::addStateVariable(HClientStateVariable* sv)
+void HDefaultClientService::addStateVariable(HDefaultClientStateVariable* sv)
 {
     h_ptr->addStateVariable(sv);
 }

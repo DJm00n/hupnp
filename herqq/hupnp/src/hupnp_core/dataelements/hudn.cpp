@@ -90,11 +90,6 @@ bool operator==(const HUdn& udn1, const HUdn& udn2)
     return udn1.toString() == udn2.toString();
 }
 
-bool operator!=(const HUdn& udn1, const HUdn& udn2)
-{
-    return !(udn1 == udn2);
-}
-
 quint32 qHash(const HUdn& key)
 {
     QByteArray data = key.toString().toLocal8Bit();

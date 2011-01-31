@@ -89,7 +89,10 @@ public:
 };
 
 bool operator==(const HSid&, const HSid&);
-bool operator!=(const HSid&, const HSid&);
+inline bool operator!=(const HSid& obj1, const HSid& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 quint32 qHash(const HSid& key);
 

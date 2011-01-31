@@ -170,7 +170,10 @@ public:
 };
 
 bool operator==(const HValueRange& arg1, const HValueRange& arg2);
-bool operator!=(const HValueRange& arg1, const HValueRange& arg2);
+inline bool operator!=(const HValueRange& arg1, const HValueRange& arg2)
+{
+    return !(arg1 == arg2);
+}
 
 }
 }

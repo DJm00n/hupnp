@@ -158,11 +158,14 @@ H_UPNP_CORE_EXPORT bool operator==(const HUdn&, const HUdn&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return true in case the object are not logically equivalent.
+ * \return true in case the objects are not logically equivalent.
  *
  * \relates HUdn
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HUdn&, const HUdn&);
+inline bool operator!=(const HUdn& obj1, const HUdn& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 /*!
  * Returns a value that can be used as a unique key in a hash-map identifying

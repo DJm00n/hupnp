@@ -227,11 +227,14 @@ H_UPNP_CORE_EXPORT bool operator==(const HActionInfo&, const HActionInfo&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HActionInfo
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HActionInfo&, const HActionInfo&);
+inline bool operator!=(const HActionInfo& obj1, const HActionInfo& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 /*!
  * Returns a value that can be used as a unique key in a hash-map identifying

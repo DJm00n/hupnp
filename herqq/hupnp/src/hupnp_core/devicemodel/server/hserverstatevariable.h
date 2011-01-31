@@ -121,7 +121,7 @@ public:
 
     /*!
      * Changes the value of the state variable. If the instance is evented,
-     * the valueChanegd() signal is emitted after the value has been changed.
+     * the valueChanged() signal is emitted after the value has been changed.
      *
      * \param newValue specifies the new value of the state variable. The new value
      * must have the same underlying data type as the previous value
@@ -152,7 +152,7 @@ Q_SIGNALS:
      * resides. Do not connect to this signal from other threads.
      */
     void valueChanged(
-        Herqq::Upnp::HServerStateVariable*,
+        Herqq::Upnp::HServerStateVariable* source,
         const Herqq::Upnp::HStateVariableEvent& event);
 };
 

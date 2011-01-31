@@ -77,8 +77,8 @@ qint32 HTestService::echoAction(
     // Simple implementation of the echo service:
     // merely echos the received message back to the invoker.
 
-    QString echoMsg = inArgs["MessageIn"]->value().toString();
-    (*outArgs)["MessageOut"]->setValue(echoMsg);
+    QString echoMsg = inArgs["MessageIn"].value().toString();
+    (*outArgs)["MessageOut"].setValue(echoMsg);
 
     emit actionInvoked(
         "Echo", QString("Argument was set to [%1].").arg(echoMsg));
@@ -124,8 +124,8 @@ qint32 HTestService::chargenAction(
     const HActionArguments& inArgs,
     HActionArguments* outArgs)
 {
-    qint32 charCount = inArgs["Count"]->value().toInt();
-    (*outArgs)["Characters"]->setValue(QString(charCount, 'z'));
+    qint32 charCount = inArgs["Count"].value().toInt();
+    (*outArgs)["Characters"].setValue(QString(charCount, 'z'));
 
     emit actionInvoked(
         "Chargen",

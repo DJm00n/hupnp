@@ -20,7 +20,7 @@
  */
 
 #include "hmulticast_socket.h"
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #ifdef Q_OS_WIN
 #include <winsock2.h>

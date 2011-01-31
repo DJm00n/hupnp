@@ -103,11 +103,6 @@ bool operator==(const HSid& sid1, const HSid& sid2)
     return sid1.m_valueAsStr == sid2.m_valueAsStr;
 }
 
-bool operator!=(const HSid& sid1, const HSid& sid2)
-{
-    return !(sid1 == sid2);
-}
-
 quint32 qHash(const HSid& key)
 {
     QByteArray data = key.toString().toLocal8Bit();

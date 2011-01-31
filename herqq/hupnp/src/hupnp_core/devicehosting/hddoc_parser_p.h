@@ -80,8 +80,8 @@ private:
     bool parseActionArguments(
         const QDomElement& argListElement,
         const QHash<QString, HStateVariableInfo>&,
-        QVector<HActionArgument*>* inArgs,
-        QVector<HActionArgument*>* outArgs,
+        QVector<HActionArgument>* inArgs,
+        QVector<HActionArgument>* outArgs,
         bool* hasRetVal);
 
     HStateVariableInfo parseStateVariableInfo_str(

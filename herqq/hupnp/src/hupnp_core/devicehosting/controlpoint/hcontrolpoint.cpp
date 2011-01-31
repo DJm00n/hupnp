@@ -39,7 +39,7 @@
 
 #include "../../http/hhttp_messagecreator_p.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 #include "../../../utils/hsysutils_p.h"
 
 #include <QtCore/QUrl>
@@ -765,6 +765,9 @@ void HControlPoint::quit()
         delete h_ptr->m_ssdps[i].second; h_ptr->m_ssdps[i].second = 0;
     }
     h_ptr->m_ssdps.clear();
+
+    h_ptr->m_deviceStorage.clear();
+
     delete h_ptr->m_eventSubscriber; h_ptr->m_eventSubscriber = 0;
 
     h_ptr->m_state = HControlPointPrivate::Uninitialized;

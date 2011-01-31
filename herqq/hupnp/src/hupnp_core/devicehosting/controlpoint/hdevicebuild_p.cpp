@@ -24,7 +24,7 @@
 
 #include "../../devicemodel/client/hdefault_clientdevice_p.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 
 namespace Herqq
 {

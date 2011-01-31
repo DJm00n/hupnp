@@ -83,8 +83,10 @@ HActionInfo::HActionInfo(
     }
 
     h_ptr->m_name = name;
+
     h_ptr->m_inputArguments = inputArguments;
     h_ptr->m_outputArguments = outputArguments;
+
     h_ptr->m_hasRetValArg = hasRetVal;
     h_ptr->m_inclusionRequirement = ireq;
 }
@@ -123,7 +125,7 @@ const HActionArguments& HActionInfo::outputArguments() const
 
 QString HActionInfo::returnArgumentName() const
 {
-    return h_ptr->m_hasRetValArg ? h_ptr->m_outputArguments.get(0)->name() : "";
+    return h_ptr->m_hasRetValArg ? h_ptr->m_outputArguments.get(0).name() : "";
 }
 
 HInclusionRequirement HActionInfo::inclusionRequirement() const
@@ -143,11 +145,6 @@ bool operator==(const HActionInfo& arg1, const HActionInfo& arg2)
            arg1.h_ptr->m_inclusionRequirement == arg2.h_ptr->m_inclusionRequirement &&
            arg1.h_ptr->m_inputArguments == arg2.h_ptr->m_inputArguments &&
            arg1.h_ptr->m_outputArguments == arg2.h_ptr->m_outputArguments;
-}
-
-bool operator!=(const HActionInfo& arg1, const HActionInfo& arg2)
-{
-    return !(arg1 == arg2);
 }
 
 quint32 qHash(const HActionInfo& key)

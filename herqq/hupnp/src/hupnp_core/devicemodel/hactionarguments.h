@@ -27,7 +27,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/QVariant>
-#include <QtCore/QSharedDataPointer>
+#include <QtCore/QExplicitlySharedDataPointer>
 
 template<typename T, typename U>
 class QHash;
@@ -41,6 +41,8 @@ namespace Herqq
 namespace Upnp
 {
 
+class HActionArgumentPrivate;
+
 /*!
  * A class that represents an argument used in a UPnP action invocation.
  *
@@ -52,6 +54,8 @@ namespace Upnp
  * invocation. On the other hand, a UPnP \e output \e argument relays information
  * back from the callee to the caller and thus it is often modified during
  * action invocation.
+ *
+ * \section actionargument_basicuse Basic Use
  *
  * A UPnP argument has an unique name() within the definition
  * of the action that contains it. A UPnP argument contains a value, which you
@@ -92,6 +96,15 @@ namespace Upnp
  * that these types of state variables have to have a name that includes the
  * prefix \b A_ARG_TYPE.
  *
+ * \section actionargument_copysemantics Copy Semantics
+ *
+ * HActionArgument is designed to be used by value. However, the class uses
+ * \e explicit \e sharing, which essentially means that every copy of an
+ * HActionArgument instance accesses and modifies the same data until detach()
+ * is called. The detach() function effectively modifies an HActionArgument instance to use
+ * a "private" copy of the underlying data until the instance is copied
+ * via a copy constructor or an assignment operator.
+ *
  * \remarks This class is not thread-safe.
  *
  * \headerfile hactionarguments.h HActionArgument
@@ -107,9 +120,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 
 private:
 
-    QString m_name;
-    HStateVariableInfo m_stateVariableInfo;
-    QVariant m_value;
+    QExplicitlySharedDataPointer<HActionArgumentPrivate> h_ptr;
 
 public:
 
@@ -125,8 +136,13 @@ public:
     /*!
      * Initializes a new instance with the specified name and related state variable.
      *
-     * \param name specifies the name of the argument
+     * \param name specifies the name of the argument.
+     *
      * \param stateVariableInfo specifies the related state variable.
+     *
+     * \param err specifies a pointer to a \c QString, which will contain an
+     * error description in case the provided arguments were not valid. This
+     * is optional
      *
      * \remarks in case the name parameter fails the criteria specified for
      * UPnP action arguments in UPnP Device Architecture 1.1 specification
@@ -137,7 +153,8 @@ public:
      */
     HActionArgument(
         const QString& name,
-        const HStateVariableInfo& stateVariableInfo);
+        const HStateVariableInfo& stateVariableInfo,
+        QString* err = 0);
 
     /*!
      * Copy constructor.
@@ -159,6 +176,15 @@ public:
      * Destroys the instance.
      */
     ~HActionArgument();
+
+    /*!
+     * Creates a deep copy of the instance, if necessary.
+     *
+     * If the underlying reference count of this instance is greater than one,
+     * this function creates a deep copy of the shared data and modifies this
+     * instance to refer to the copied data.
+     */
+    void detach();
 
     /*!
      * Returns the name of the argument.
@@ -237,7 +263,8 @@ public:
      *
      * The format of the return value is \c "name: theValue".
      *
-     * \return a string representation of the object.
+     * \return a string representation of the object. An empty string is returned
+     * if the object is invalid.
      */
     QString toString() const;
 
@@ -272,7 +299,7 @@ H_UPNP_CORE_EXPORT bool operator==(
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HActionArgument
  */
@@ -314,8 +341,8 @@ private:
 
 public:
 
-    typedef HActionArgument** iterator;
-    typedef const HActionArgument* const* const_iterator;
+    typedef HActionArgument* iterator;
+    typedef const HActionArgument* const_iterator;
 
     /*!
      * Swaps the contents of the two containers.
@@ -334,15 +361,14 @@ public:
     HActionArguments();
 
     /*!
-     * Creates a new instance from the specified input arguments and takes the
-     * ownership of the provided arguments.
+     * Creates a new instance from the specified input arguments.
      *
      * \param args specifies the action argument objects this instance will
-     * manage.
+     * contain.
      *
      * \sa isEmpty()
      */
-    HActionArguments(const QVector<HActionArgument*>& args);
+    HActionArguments(const QVector<HActionArgument>& args);
 
     /*!
      * Copy constructor.
@@ -379,64 +405,30 @@ public:
     bool contains(const QString& argumentName) const;
 
     /*!
-     * Retrieves an action argument.
-     *
-     * Retrieves an action argument with the specified name.
+     * Returns an action argument with the specified name.
      *
      * \param argumentName specifies the name of the argument to be retrieved.
      *
-     * \return a pointer to the action argument with the specified name
-     * or a null pointer in case no argument has the specified name.
-     *
-     * \warning
-     * \li Do not delete the return value. The ownership of the object is
-     * not transferred.
-     * \li The returned object is deleted when this container is being deleted.
+     * \return an action argument with the specified name. If no argument is found
+     * with the specified name, the returned instance is invalid, i.e.
+     * HActionArgument::isValid() returns \e false.
      *
      * \remarks this is a \e constant-time operation.
      */
-    HActionArgument* get(const QString& argumentName);
+    HActionArgument get(const QString& argumentName) const;
 
     /*!
-     * \overload
-     *
-     * \param argumentName specifies the name of the argument to be retrieved.
-     *
-     * \return a pointer to the action argument with the specified name
-     * or a null pointer in case no argument has the specified name.
-     */
-    const HActionArgument* get(const QString& argumentName) const;
-
-    /*!
-     * Retrieves an action argument from the specified \e index.
+     * Returns an action argument at the specified index.
      *
      * \param index specifies the index of the action argument to return. The
      * index has to be valid position in the container, i.e. it must be
      * 0 <= i < size().
      *
-     * \return a pointer to the action argument that can be found at the specified
-     * index.
-     *
-     * \warning
-     * \li Do not delete the return value. The ownership of the object is
-     * not transferred.
-     * \li The returned object is deleted when this container is being deleted.
+     * \return an action argument at the specified \a index.
      *
      * \remarks this is a \e constant-time operation.
      */
-    HActionArgument* get(qint32 index);
-
-    /*!
-     * \overload
-     *
-     * \param index specifies the index of the action argument to return. The
-     * index has to be valid position in the container, i.e. it must be
-     * 0 <= i < size().
-     *
-     * \return a pointer to the action argument that can be found at the specified
-     * index.
-     */
-    const HActionArgument* get(qint32 index) const;
+    HActionArgument get(qint32 index) const;
 
     /*!
      * Returns a const STL-style iterator pointing to the first item.
@@ -486,14 +478,14 @@ public:
     HActionArguments::const_iterator end() const;
 
     /*!
-     * Returns the number of arguments.
+     * Returns the number of contained action arguments.
      *
-     * \return the number of arguments.
+     * \return the number of contained action arguments.
      */
     qint32 size() const;
 
     /*!
-     * Retrieves an action argument from the specified \e index.
+     * Returns an action argument at the specified index.
      *
      * This is the same as calling get() with the specified index. This method is
      * provided for convenience.
@@ -502,102 +494,80 @@ public:
      * index has to be valid position in the container, i.e. it must be
      * 0 <= i < size().
      *
-     * \return a pointer to the action argument that can be found at the specified
-     * index.
+     * \return an action argument at the specified index.
      */
-    HActionArgument* operator[](qint32 index);
+    HActionArgument operator[](qint32 index) const;
 
     /*!
-     * \overload
-     *
-     * \param index specifies the index of the action argument to return. The
-     * index has to be valid position in the container, i.e. it must be
-     * 0 <= i < size().
-     *
-     * \return a pointer to the action argument that can be found at the specified
-     * index.
-     */
-    const HActionArgument* operator[](qint32 index) const;
-
-    /*!
-     * Returns the action argument matching the specified name, if any.
+     * Returns an action argument with the specified name.
      *
      * This is the same as calling get() with the specified argument name.
      * This method is provided for convenience.
      *
      * \param argName specifies the name of the argument to be retrieved.
      *
-     * \return a pointer to the action argument with the specified name
-     * or a null pointer in case no argument has the specified name.
+     * \return an action argument with the specified name. If no argument is found
+     * with the specified name, the returned instance is invalid, i.e.
+     * HActionArgument::isValid() returns \e false.
+     *
+     * \remarks this is a \e constant-time operation.
      */
-    HActionArgument* operator[](const QString& argName);
+    HActionArgument operator[](const QString& argName) const;
 
     /*!
-     * \overload
+     * Returns the names of all the contained action arguments.
      *
-     * \param argName specifies the name of the argument to be retrieved.
-     *
-     * \return a pointer to the action argument with the specified name
-     * or a null pointer in case no argument has the specified name.
+     * \return the names of all the contained action arguments.
      */
-    const HActionArgument* operator[](const QString& argName) const;
+    QStringList names() const;
 
     /*!
-     * The names of all the arguments.
+     * Indicates if the object is empty, i.e. it has no action arguments.
      *
-     * \return names of all the arguments.
-     */
-    QList<QString> names() const;
-
-    /*!
-     * Indicates if the object is empty, i.e. it has no arguments.
-     *
-     * \return \e true when the object has no arguments.
+     * \return \e true when the object has no action arguments.
      */
     bool isEmpty() const;
 
     /*!
-     * Removes and deletes every contained HActionArgument from this instance.
+     * Removes every contained HActionArgument from this instance.
      *
-     * \warning Calling this function makes active iterators invalid.
+     * \remarks
+     * A call to this function makes active iterators invalid and
      */
     void clear();
 
     /*!
-     * Removes and deletes an HActionArgument with the specified name.
+     * Removes an HActionArgument with the specified name.
      *
      * \param name specifies the name of the HActionArgument to be removed.
      *
      * \return \e true if an HActionArgument was found and removed.
      *
-     * \warning Calling this function makes active iterators invalid.
+     * \remarks
+     * A call to this function makes active iterators invalid and
      */
     bool remove(const QString& name);
 
     /*!
-     * Inserts a new HActionArgument to this instance.
+     * Inserts an HActionArgument to this instance.
      *
      * \param arg specifies the HActionArgument to be added.
      *
      * \return \e true if the specified argument was added. The action argument
      * will not be added if the instance already contains an action argument
-     * instance with the same name or the provided pointer is null.
+     * instance with the same name or the provided instance is invalid.
      *
      * \remarks
-     * \li This instance takes the ownership of the provided HActionArgument
-     * object.
-     *
-     * \warning Calling this function makes active iterators invalid.
+     * A call to this function makes active iterators invalid and
      */
-    bool append(HActionArgument* arg);
+    bool append(const HActionArgument& arg);
 
     /*!
      * Returns the value of the specified state variable, if such exists.
      *
      * This is a convenience method for retrieving the value of the specified
      * state variable. Semantically this call is comparable to
-     * <c>get("stateVariable_name")->value()</c>, but it also ensures that the
-     * specified state variable exists before attempting to get its value.
+     * <c>get("stateVariable_name").value()</c>.
      *
      * \param name specifies the name of the state variable.
      *
@@ -614,15 +584,14 @@ public:
      *
      * This is a convenience method for setting the value of the specified
      * state variable. Semantically this call is comparable to
-     * <c>get("stateVariable_name")->setValue(value)</c>, but it also ensures that the
-     * specified state variable exists before attempting to set its value.
+     * <c>get("stateVariable_name").setValue(value)</c>.
      *
      * \param name specifies the name of the state variable.
      *
      * \param value specifies the value of the state variable.
      *
      * \return \e true in case the value of the specified state variable was
-     * changed.
+     * found and its value was changed.
      */
     bool setValue(const QString& name, const QVariant& value);
 
@@ -633,6 +602,9 @@ public:
      * returned string contains all the arguments represented as strings and
      * separated from each other by a new-line. The string representation of
      * an argument is retrieved using HActionArgument::toString().
+     *
+     * \remarks
+     *  An empty string is returned if the object is invalid.
      */
     QString toString() const;
 };
@@ -650,12 +622,15 @@ H_UPNP_CORE_EXPORT bool operator==(
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HActionArguments
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HActionArguments&, const HActionArguments&);
+inline bool operator!=(
+    const HActionArguments& obj1, const HActionArguments& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

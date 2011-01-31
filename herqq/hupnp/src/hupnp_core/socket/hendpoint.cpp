@@ -101,11 +101,6 @@ bool operator==(const HEndpoint& ep1, const HEndpoint& ep2)
            ep1.m_portNumber  == ep2.m_portNumber;
 }
 
-bool operator!=(const HEndpoint& ep1, const HEndpoint& ep2)
-{
-    return !(ep1 == ep2);
-}
-
 quint32 qHash(const HEndpoint& key)
 {
     quint32 tmp = key.m_hostAddress.toIPv4Address() ^ key.portNumber();

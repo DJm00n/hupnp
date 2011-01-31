@@ -30,6 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
+#include <HUpnpCore/HDeviceInfo>
 #include <HUpnpCore/HDeviceStatus>
 #include <HUpnpCore/HResourceType>
 
@@ -48,7 +49,7 @@ namespace Upnp
 //
 //
 template<typename Device, typename Service>
-class H_UPNP_CORE_EXPORT HDevicePrivate
+class HDevicePrivate
 {
 H_DISABLE_COPY(HDevicePrivate)
 

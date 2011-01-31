@@ -45,7 +45,18 @@ namespace Upnp
 class HClientAction;
 class HClientDevice;
 class HClientService;
+class HClientActionOp;
 class HClientStateVariable;
+
+struct HNullValue;
+
+template<typename T>
+class HClientAdapterOp;
+
+typedef HClientAdapterOp<HNullValue> HClientAdapterOpNull;
+
+class HClientDeviceAdapter;
+class HClientServiceAdapter;
 
 class HServerAction;
 class HServerDevice;
@@ -100,7 +111,7 @@ class HDeviceHostConfiguration;
 class HDeviceHostRuntimeStatus;
 
 /*!
- * This is a type definition for a collection of Herqq::Upnp::HEndpoint instances.
+ * This is a type definition to a list of Herqq::Upnp::HEndpoint instances.
  *
  * \ingroup hupnp_common
  *
@@ -109,7 +120,7 @@ class HDeviceHostRuntimeStatus;
 typedef QList<HEndpoint> HEndpoints;
 
 /*!
- * This is a type definition for a collection of pointers to
+ * This is a type definition to a list of pointers to
  * Herqq::Upnp::HClientService instances.
  *
  * \ingroup hupnp_devicemodel
@@ -119,7 +130,7 @@ typedef QList<HEndpoint> HEndpoints;
 typedef QList<HClientService*> HClientServices;
 
 /*!
- * This is a type definition for a collection of pointers to
+ * This is a type definition to a list of pointers to
  * Herqq::Upnp::HServerService instances.
  *
  * \ingroup hupnp_devicemodel
@@ -129,7 +140,7 @@ typedef QList<HClientService*> HClientServices;
 typedef QList<HServerService*> HServerServices;
 
 /*!
- * This is a type definition for a collection of pointers to
+ * This is a type definition to a list of pointers to
  * Herqq::Upnp::HClientDevice instances.
  *
  * \ingroup hupnp_devicemodel
@@ -139,7 +150,7 @@ typedef QList<HServerService*> HServerServices;
 typedef QList<HClientDevice*> HClientDevices;
 
 /*!
- * This is a type definition for a collection of pointers to
+ * This is a type definition to a list of pointers to
  * Herqq::Upnp::HServerDevice instances.
  *
  * \ingroup hupnp_devicemodel
@@ -149,8 +160,9 @@ typedef QList<HClientDevice*> HClientDevices;
 typedef QList<HServerDevice*> HServerDevices;
 
 /*!
- * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HClientStateVariable instances.
+ * This is a type definition to a hash table of pointers to
+ * const Herqq::Upnp::HServerStateVariable instances keyed with the
+ * state variable names.
  *
  * \ingroup hupnp_devicemodel
  *
@@ -159,8 +171,8 @@ typedef QList<HServerDevice*> HServerDevices;
 typedef QHash<QString, const HClientStateVariable*> HClientStateVariables;
 
 /*!
- * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HServerStateVariable instances.
+ * This is a type definition to a hash table of pointers to
+ * Herqq::Upnp::HServerStateVariable instances keyed with the state variable names.
  *
  * \ingroup hupnp_devicemodel
  *
@@ -169,8 +181,8 @@ typedef QHash<QString, const HClientStateVariable*> HClientStateVariables;
 typedef QHash<QString, HServerStateVariable*> HServerStateVariables;
 
 /*!
- * This is a type definition for a collection of
- * Herqq::Upnp::HStateVariableInfo instances.
+ * This is a type definition to a hash table of
+ * Herqq::Upnp::HStateVariableInfo instances keyed with the state variable names.
  *
  * \ingroup hupnp_devicemodel
  *
@@ -179,8 +191,8 @@ typedef QHash<QString, HServerStateVariable*> HServerStateVariables;
 typedef QHash<QString, HStateVariableInfo> HStateVariableInfos;
 
 /*!
- * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HClientAction instances.
+ * This is a type definition to a hash table of pointers to
+ * Herqq::Upnp::HClientAction instances keyed with the action names.
  *
  * \ingroup hupnp_devicemodel
  *
@@ -189,8 +201,8 @@ typedef QHash<QString, HStateVariableInfo> HStateVariableInfos;
 typedef QHash<QString, HClientAction*> HClientActions;
 
 /*!
- * This is a type definition for a collection of pointers to
- * Herqq::Upnp::HServerAction instances.
+ * This is a type definition to a hash table of pointers to
+ * Herqq::Upnp::HServerAction instances keyed with the action names.
  *
  * \ingroup hupnp_devicemodel
  *

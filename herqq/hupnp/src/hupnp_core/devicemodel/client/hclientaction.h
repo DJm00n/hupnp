@@ -126,13 +126,13 @@ public:
      * \param execArgs specifies information used to control the execution of
      * the action invocation procedure. This is optional.
      *
-     * \return the ID used to identify the asynchronous operation. This ID will
-     * be sent through the invokeComplete() signal along with the output
-     * arguments once the invocation is done.
+     * \return an object that identifies the asynchronous operation. This object will
+     * be sent through the invokeComplete() signal once the invocation is done.
      *
      * \sa invokeComplete()
      */
-    HAsyncOp beginInvoke(const HActionArguments& inArgs, HExecArgs* execArgs = 0);
+    HClientActionOp beginInvoke(
+        const HActionArguments& inArgs, HExecArgs* execArgs = 0);
 
     /*!
      * Schedules the action to be invoked.
@@ -164,13 +164,12 @@ public:
      * \param execArgs specifies information used to control the execution of
      * the action invocation procedure. This is optional.
      *
-     * \return the ID used to identify the asynchronous operation. This ID will
-     * be sent through the callback and the invokeComplete() signal along with the output
-     * arguments once the invocation is done.
+     * \return an object that identifies the asynchronous operation. This object will
+     * be sent through the callback and the invokeComplete() once the invocation is done.
      *
      * \sa invokeComplete()
      */
-    HAsyncOp beginInvoke(
+    HClientActionOp beginInvoke(
         const HActionArguments& inArgs,
         const HActionInvokeCallback& completionCallback,
         HExecArgs* execArgs = 0);
@@ -178,19 +177,22 @@ public:
 Q_SIGNALS:
 
     /*!
-     * Unless an invocation was started as <em>fire and forget</em>,
-     * this signal is emitted when the invocation has been successfully
-     * completed or the invocation failed.
+     * This signal is emitted when an invocation has been successfully
+     * completed or the invocation failed, unless the invocation was started
+     * as <em>fire and forget</em>.
      *
-     * \param asyncOp identifies the asynchronous operation that completed.
+     * \param source identifies the HClientAction that ran the operation.
      *
-     * \param outArgs specifies the output arguments of the action invocation.
+     * \param operation specifies information of the operation that completed.
      *
      * \sa beginInvoke()
+     *
+     * \remarks This signal has thread affinity to the thread where the object
+     * resides. Do not connect to this signal from other threads.
      */
     void invokeComplete(
-        Herqq::Upnp::HAsyncOp asyncOp,
-        const Herqq::Upnp::HActionArguments& outArgs);
+        Herqq::Upnp::HClientAction* source,
+        const Herqq::Upnp::HClientActionOp& operation);
 };
 
 }

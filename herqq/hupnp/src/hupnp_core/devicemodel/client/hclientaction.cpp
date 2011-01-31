@@ -21,11 +21,12 @@
 
 #include "hclientaction.h"
 #include "hclientaction_p.h"
-#include "hdefault_clientaction_p.h"
-#include "hclientservice.h"
-#include "hclientdevice.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "hclientdevice.h"
+#include "hclientservice.h"
+#include "hdefault_clientaction_p.h"
+
+#include "../../general/hlogger_p.h"
 
 #include "../../general/hupnp_global_p.h"
 #include "../../general/hupnp_datatypes_p.h"
@@ -35,7 +36,7 @@
 #include "../../dataelements/hdeviceinfo.h"
 #include "../../dataelements/hserviceinfo.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 
 #include <QtCore/QList>
 #include <QtSoapMessage>
@@ -101,7 +102,10 @@ void HActionProxy::error(QNetworkReply::NetworkError err)
     HLOG_WARN(QString(
         "Action invocation failed: [%1]").arg(m_reply->errorString()));
 
-    invocationDone(UpnpUndefinedFailure);
+    QVariant statusCode =
+        m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+
+    invocationDone(statusCode.isValid() ? statusCode.toInt() : UpnpUndefinedFailure);
 }
 
 void HActionProxy::finished()
@@ -176,26 +180,23 @@ void HActionProxy::finished()
     }
 
     HActionArguments outArgs = m_owner->m_info->outputArguments();
-
-    HActionArguments::const_iterator ci =
-        m_owner->m_info->outputArguments().constBegin();
-
-    for(; ci != m_owner->m_info->outputArguments().constEnd(); ++ci)
+    HActionArguments::const_iterator ci = outArgs.constBegin();
+    for(; ci != outArgs.constEnd(); ++ci)
     {
-        const HActionArgument* oarg = (*ci);
+        HActionArgument oarg = *ci;
 
-        const QtSoapType& arg = root[oarg->name()];
+        const QtSoapType& arg = root[oarg.name()];
         if (!arg.isValid())
         {
             invocationDone(UpnpUndefinedFailure);
             return;
         }
 
-        HActionArgument* userArg = outArgs.get(oarg->name());
+        HActionArgument userArg = outArgs.get(oarg.name());
 
-        userArg->setValue(
+        userArg.setValue(
             HUpnpDataTypes::convertToRightVariantType(
-                arg.value().toString(), oarg->dataType()));
+                arg.value().toString(), oarg.dataType()));
     }
 
     invocationDone(UpnpSuccess, &outArgs);
@@ -228,15 +229,15 @@ void HActionProxy::send()
     HActionArguments::const_iterator ci = m_inArgs.constBegin();
     for(; ci != m_inArgs.constEnd(); ++ci)
     {
-        const HActionArgument* const iarg = (*ci);
-        if (!m_inArgs.contains(iarg->name()))
+        HActionArgument iarg = *ci;
+        if (!m_inArgs.contains(iarg.name()))
         {
             invocationDone(UpnpInvalidArgs);
             return;
         }
 
         QtSoapType* soapArg =
-            new SoapType(iarg->name(), iarg->dataType(), iarg->value());
+            new SoapType(iarg.name(), iarg.dataType(), iarg.value());
 
         soapMsg.addMethodArgument(soapArg);
     }
@@ -292,20 +293,19 @@ void HClientActionPrivate::invokeCompleted(
     HInvocationInfo inv = m_invocations.dequeue();
 
     inv.m_invokeId.setReturnValue(rc);
+    inv.m_invokeId.setOutputArguments(outArgs ? *outArgs : HActionArguments());
 
     if (inv.execArgs.execType() != HExecArgs::FireAndForget)
     {
         bool sendEvent = true;
         if (inv.callback)
         {
-            sendEvent = inv.callback(
-                inv.m_invokeId, outArgs ? *outArgs : HActionArguments());
+            sendEvent = inv.callback(q_ptr, inv.m_invokeId);
         }
 
         if (sendEvent)
         {
-            emit q_ptr->invokeComplete(
-                inv.m_invokeId, outArgs ? *outArgs : HActionArguments());
+            emit q_ptr->invokeComplete(q_ptr, inv.m_invokeId);
         }
     }
 
@@ -357,13 +357,13 @@ const HActionInfo& HClientAction::info() const
     return *h_ptr->m_info;
 }
 
-HAsyncOp HClientAction::beginInvoke(
+HClientActionOp HClientAction::beginInvoke(
     const HActionArguments& inArgs, HExecArgs* execArgs)
 {
     return beginInvoke(inArgs, HActionInvokeCallback(), execArgs);
 }
 
-HAsyncOp HClientAction::beginInvoke(
+HClientActionOp HClientAction::beginInvoke(
     const HActionArguments& inArgs,
     const HActionInvokeCallback& cb,
     HExecArgs* execArgs)
@@ -377,6 +377,7 @@ HAsyncOp HClientAction::beginInvoke(
         h_ptr->m_proxy->send();
     }
 
+    inv.m_invokeId.setReturnValue(UpnpInvocationInProgress);
     return inv.m_invokeId;
 }
 

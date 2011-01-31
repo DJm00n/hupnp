@@ -17,6 +17,7 @@ HEADERS += \
     $$SRC_LOC/devicemodel/hdevicemodel_infoprovider.h \
     $$SRC_LOC/devicemodel/hstatevariables_setupdata.h \
     $$SRC_LOC/devicemodel/client/hclientaction.h \
+    $$SRC_LOC/devicemodel/client/hclientactionop.h \
     $$SRC_LOC/devicemodel/client/hclientaction_p.h \
     $$SRC_LOC/devicemodel/client/hclientdevice.h \
     $$SRC_LOC/devicemodel/client/hclientdevice_p.h \
@@ -40,7 +41,7 @@ HEADERS += \
 
 EXPORTED_PRIVATE_HEADERS += \
     $$SRC_LOC/devicemodel/hservice_p.h \
-	$$SRC_LOC/devicemodel/hdevice_p.h \
+    $$SRC_LOC/devicemodel/hdevice_p.h \
     $$SRC_LOC/devicemodel/server/hserverdevice_p.h \
     $$SRC_LOC/devicemodel/server/hserverservice_p.h
 
@@ -56,8 +57,8 @@ SOURCES += \
     $$SRC_LOC/devicemodel/hdevicemodel_infoprovider.cpp \
     $$SRC_LOC/devicemodel/client/hclientdevice.cpp \
     $$SRC_LOC/devicemodel/client/hclientaction.cpp \
+    $$SRC_LOC/devicemodel/client/hclientactionop.cpp \
     $$SRC_LOC/devicemodel/client/hclientservice.cpp \
-    $$SRC_LOC/devicemodel/client/hclientstatevariable.cpp \
     $$SRC_LOC/devicemodel/server/hserveraction.cpp \
     $$SRC_LOC/devicemodel/server/hserverdevice.cpp \
     $$SRC_LOC/devicemodel/server/hserverservice.cpp \

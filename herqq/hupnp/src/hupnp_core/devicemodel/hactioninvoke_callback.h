@@ -22,7 +22,7 @@
 #ifndef HACTIONINVOKE_CALLBACK_H_
 #define HACTIONINVOKE_CALLBACK_H_
 
-#include <HUpnpCore/HAsyncOp>
+#include <HUpnpCore/HUpnp>
 #include <HUpnpCore/HFunctor>
 
 /*!
@@ -109,7 +109,7 @@ namespace Upnp
  * \ingroup hupnp_devicemodel
  */
 typedef Functor<bool, H_TYPELIST_2(
-    const HAsyncOp&, const HActionArguments&)> HActionInvokeCallback;
+    HClientAction*, const HClientActionOp&)> HActionInvokeCallback;
 
 }
 }

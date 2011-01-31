@@ -44,7 +44,7 @@
 #include "../../devicemodel/hservices_setupdata.h"
 #include "../../devicemodel/hstatevariables_setupdata.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 
 #include <QtXml/QDomElement>
 

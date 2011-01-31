@@ -38,7 +38,7 @@
 #include "../../dataelements/hactioninfo.h"
 #include "../../dataelements/hserviceinfo.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 
 #include <QtCore/QUrl>
 #include <QtCore/QPair>
@@ -297,9 +297,9 @@ void HDeviceHostHttpServer::incomingControlRequest(
     HActionArguments::iterator it = iargs.begin();
     for(; it != iargs.end(); ++it)
     {
-        HActionArgument* iarg = (*it);
+        HActionArgument iarg = *it;
 
-        const QtSoapType& arg = method[iarg->name()];
+        const QtSoapType& arg = method[iarg.name()];
         if (!arg.isValid())
         {
             mi->setKeepAlive(false);
@@ -309,9 +309,9 @@ void HDeviceHostHttpServer::incomingControlRequest(
             return;
         }
 
-        if (!iarg->setValue(
+        if (!iarg.setValue(
                 HUpnpDataTypes::convertToRightVariantType(
-                    arg.value().toString(), iarg->dataType())))
+                    arg.value().toString(), iarg.dataType())))
         {
             mi->setKeepAlive(false);
             m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
@@ -327,7 +327,7 @@ void HDeviceHostHttpServer::incomingControlRequest(
     {
         mi->setKeepAlive(false);
         m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-            *mi, UpnpInvalidArgs, soapMsg->toXmlString()));
+            *mi, retVal, soapMsg->toXmlString()));
 
         return;
     }
@@ -340,10 +340,10 @@ void HDeviceHostHttpServer::incomingControlRequest(
         QString("%1%2").arg(action->info().name(), "Response"),
         service->info().serviceType().toString()));
 
-    foreach(const HActionArgument* oarg, outArgs)
+    foreach(const HActionArgument& oarg, outArgs)
     {
         QtSoapType* soapArg =
-            new SoapType(oarg->name(), oarg->dataType(), oarg->value());
+            new SoapType(oarg.name(), oarg.dataType(), oarg.value());
 
         soapResponse.addMethodArgument(soapArg);
     }

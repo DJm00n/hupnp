@@ -128,6 +128,27 @@ public:
      *
      * \param dataType specifies the UPnP data type of the state variable.
      *
+     * \param incReq specifies whether the service is required or optional.
+     * This parameter is optional.
+     *
+     * \param err specifies a pointer to a \c QString that will contain
+     * an error description in case the construction failed. This is optional.
+     *
+     * \sa isValid()
+     */
+    HStateVariableInfo(
+        const QString& name,
+        HUpnpDataTypes::DataType dataType,
+        HInclusionRequirement incReq,
+        QString* err = 0);
+
+    /*!
+     * Creates a new instance.
+     *
+     * \param name specifies the name of the state variable.
+     *
+     * \param dataType specifies the UPnP data type of the state variable.
+     *
      * \param eventingType specifies the type of eventing used with the
      * state variable. This is optional.
      *
@@ -521,12 +542,15 @@ H_UPNP_CORE_EXPORT bool operator==(
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HStateVariableInfo
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HStateVariableInfo&, const HStateVariableInfo&);
+inline bool operator!=(
+    const HStateVariableInfo& obj1, const HStateVariableInfo& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 /*!
  * Returns a value that can be used as a unique key in a hash-map identifying

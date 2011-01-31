@@ -24,7 +24,7 @@
 
 #include <HUpnpCore/HUpnp>
 
-#include <QtCore/QUuid>
+class QString;
 
 namespace Herqq
 {
@@ -35,30 +35,29 @@ namespace Upnp
 class HAsyncOpPrivate;
 
 /*!
- * This class is used to identify an asynchronous operation and detail information
- * of it.
+ * This abstract class is used as a base for identifying an asynchronous
+ * operation and detail information of it.
  *
  * Some HUPnP components provide an asynchronous interface for running possible
  * long-standing operations. A most notable example of this is the client-side
  * action invocation initiated with HClientAction::beginInvoke(). In cases
- * like this, instances of this class are used to identify and describe the
- * operations.
+ * like this, the class running the operation returns a derivative of this class,
+ * which is used to identify and describe the running operation.
  *
  * \section Usage
  *
  * The component that runs an asynchronous operation provides an instance
- * of this class when the operation is started. A copy of this instance is
+ * derived from this class when the operation is started. A copy of that instance is
  * provided also when the component signals the operation is complete.
  * The provided instance uniquely identifies the operation, carries information
- * whether the operation eventually succeeded or not, may contain an error
- * description in case of an error and can be used to pass user-defined data from
- * instance to another.
+ * whether the operation eventually succeeded or not and it may contain an error
+ * description in case of an error.
  *
  * For example:
  *
  * \code
  *
- * HAsyncOp op = someObject->beginSomeAsyncOp();
+ * HClientActionOp op = someActionObject->beginInvoke();
  *
  * //
  * // The operation completes, after which you can:
@@ -72,73 +71,57 @@ class HAsyncOpPrivate;
  *
  * \endcode
  *
- * In some scenarios it is useful to pass custom data within an HAsyncOp.
- * For example,
- *
- * \code
- *
- * void MyQObject::slotToBeCalledWhenAsyncOpCompletes(HAsyncOp op)
- * {
- *     SomeClass* someObject = reinterpret_cast<SomeClass*>(op.userData());
- *     someObject->waitForSomeAsyncOp(&op);
- * }
- *
- * void MyQObject::someMethod()
- * {
- *     HAsyncOp op = someObject->beginSomeAsyncOp();
- *     op.setUserData(reinterpret_cast<void*>(someObject));
- *     // call executes and the above slot gets called once the operation completes
- *     // (or fails)
- * }
- * \endcode
- *
- * Note, the contents of the instance are retrievable from \b any copy of the
- * object. That is, the copy constructor and assignment operator make shallow
- * copies of the contents. So for example if an \c %HAsyncOp instance is created
- * by the runner of an asynchronous operation, setting the userData of that
- * instance will associate the userData with all the copies the runner uses too.
- * From this follows that when the runner informs the user an operation is
- * finished, the provided HAsyncOp object contains the previously set userData
- * and you can read the returnValue() from the originally received instance.
- *
- * Note also that the user data is never referenced by the runner of an
- * asynchronous operation. This also means that the ownership of the data is
- * never transferred and you have to ensure the memory is handled correctly in
- * that regard.
+ * \note HAsyncOp and any derivative class provided by HUPnP use \e explicit
+ * \e sharing, which basically means that every copy of an instance references
+ * the same underlying data and any change to that data is visible to all of the
+ * copies.
  *
  * \headerfile hasyncop.h HAsyncOp
  *
  * \ingroup hupnp_devicemodel
  *
- * \remarks this class is thread-safe.
+ * \remarks This class is not thread-safe.
+ *
+ * \sa HClientActionOp
  */
 class H_UPNP_CORE_EXPORT HAsyncOp
 {
+H_DECLARE_PRIVATE(HAsyncOp)
 friend H_UPNP_CORE_EXPORT bool operator==(const HAsyncOp&, const HAsyncOp&);
 
-private:
+protected:
 
     HAsyncOpPrivate* h_ptr;
-    HAsyncOp(qint32 returnCode, const QString& errorDescription);
 
-public:
+    //
+    // \internal
+    //
+    HAsyncOp(HAsyncOpPrivate&);
+
+    //
+    // \internal
+    //
+    HAsyncOp(qint32 returnCode, const QString& errorDescription,
+            HAsyncOpPrivate& dd);
 
     /*!
-     * \brief Creates a new valid instance.
+     * Creates a new valid instance.
      *
      * Creates a new valid instance, i.e isNull() always returns \e false.
      *
-     * \sa isNull(), createInvalid()
+     * \sa isNull()
      */
     HAsyncOp();
 
     /*!
-     * \brief Destroys the instance.
+     * Creates a new instance, invalid instance.
      *
-     * Decreases the reference count or destroys the instance once the reference
-     * count drops to zero.
+     * \param returnCode specifies the return code.
+     *
+     * \param errorDescription specifies a human-readable description of the error
+     * that occurred.
      */
-    ~HAsyncOp();
+    HAsyncOp(qint32 returnCode, const QString& errorDescription);
 
     /*!
      * Copy constructor.
@@ -155,6 +138,16 @@ public:
      * reference count of \a other.
      */
     HAsyncOp& operator=(const HAsyncOp&);
+
+public:
+
+    /*!
+     * \brief Destroys the instance.
+     *
+     * Decreases the reference count or destroys the instance once the reference
+     * count drops to zero.
+     */
+    virtual ~HAsyncOp() = 0;
 
     /*!
      * Returns a human readable error description.
@@ -191,26 +184,6 @@ public:
     void setReturnValue(int returnValue);
 
     /*!
-     * Associates arbitrary user provided data with the asynchronous operation.
-     *
-     * \param userData is the pointer to arbitrary user data.
-     *
-     * \remarks The instance never references the provided data.
-     *
-     * \sa userData()
-     */
-    void setUserData(void* userData);
-
-    /*!
-     * Returns the user provided data if set.
-     *
-     * \return a pointer to user provided data or null if the user data isn't set.
-     *
-     * \sa setUserData()
-     */
-    void* userData() const;
-
-    /*!
      * Returns an identifier of the asynchronous operation.
      *
      * \return an identifier of the asynchronous operation. The identifier
@@ -222,55 +195,37 @@ public:
     /*!
      * Indicates whether the object identifies an asynchronous operation.
      *
-     * \return \e true in case the object identifies an asynchronous operation.
+     * \retval true in case the object does not identify an asynchronous operation.
+     * This is usually the case when an operation was not successfully started.
+     * \retval false in case the object identifies an asynchronous operation.
      */
     bool isNull() const;
 
     /*!
-     * Creates a new invalid instance.
+     * Indicates whether the object identifies an asynchronous operation.
      *
-     * An invalid HAsyncOp represents an asynchronous operation that failed
-     * to begin. Note, isNull() returns \e true always.
+     * This is a convenience method and it is semantically equivalent with isNull().
      *
-     * \param returnCode specifies the return code.
-     *
-     * \param errorDescr specifies the human readable error description.
-     *
-     * \sa returnCode(), errorDescription(), isNull()
+     * \retval true in case the object does not identify an asynchronous operation.
+     * This is usually the case when an operation was not successfully started.
+     * \retval false in case the object identifies an asynchronous operation.
      */
-    static HAsyncOp createInvalid(int returnCode, const QString& errorDescr);
+    inline bool operator!() const
+    {
+        return isNull();
+    }
+
+    /*!
+     * Aborts the execution of the operation.
+     *
+     * Aborts the execution of the operation.
+     *
+     * \remarks
+     * It is up to the implementation to decide whether to implement this. The
+     * default implementation does nothing.
+     */
+    virtual void abort();
 };
-
-/*!
- * Compares the two objects for equality.
- *
- * \return \e true in case the object are logically equivalent.
- *
- * \relates HAsyncOp
- */
-H_UPNP_CORE_EXPORT bool operator==(const HAsyncOp&, const HAsyncOp&);
-
-/*!
- * Compares the two objects for inequality.
- *
- * \return \e true in case the object are not logically equivalent.
- *
- * \relates HAsyncOp
- */
-H_UPNP_CORE_EXPORT bool operator!=(const HAsyncOp&, const HAsyncOp&);
-
-/*!
- * Returns a value that can be used as a unique key in a hash-map identifying
- * the object.
- *
- * \param key specifies the HAsyncOp object from which the hash value is created.
- *
- * \return a value that can be used as a unique key in a hash-map identifying
- * the object.
- *
- * \relates HAsyncOp
- */
-inline quint32 qHash(const HAsyncOp& key) { return key.id(); }
 
 }
 }

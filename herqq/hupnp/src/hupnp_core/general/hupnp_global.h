@@ -122,6 +122,11 @@ enum UpnpErrorCode
     UpnpStringArgumentTooLong = 605,
 
     /*!
+     * The action invocation is in progress.
+     */
+    UpnpInvocationInProgress = 0x00f00000,
+
+    /*!
      * \brief Action invocation failed, but the exact cause could not be determined.
      *
      * Action invocation failed, but the exact cause could not be determined.

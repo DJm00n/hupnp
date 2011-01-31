@@ -27,7 +27,7 @@
 #include "../dataelements/hproduct_tokens.h"
 
 #include "../socket/hendpoint.h"
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <QtCore/QUrl>
 #include <QtCore/QTextStream>

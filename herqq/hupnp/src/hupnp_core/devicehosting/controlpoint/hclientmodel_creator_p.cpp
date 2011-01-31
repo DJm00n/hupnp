@@ -37,7 +37,7 @@
 
 #include "../../devicemodel/hactionarguments.h"
 
-#include "../../../utils/hlogger_p.h"
+#include "../../general/hlogger_p.h"
 
 #include <QtXml/QDomElement>
 

@@ -245,8 +245,11 @@ H_UPNP_CORE_EXPORT bool operator==(
  *
  * \relates HResourceAvailable
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HResourceAvailable&, const HResourceAvailable&);
+inline bool operator!=(
+    const HResourceAvailable& obj1, const HResourceAvailable& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 class HResourceUnavailablePrivate;
 
@@ -393,8 +396,11 @@ H_UPNP_CORE_EXPORT bool operator==(
  *
  * \relates HResourceUnavailable
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HResourceUnavailable&, const HResourceUnavailable&);
+inline bool operator!=(
+    const HResourceUnavailable& obj1, const HResourceUnavailable& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 class HResourceUpdatePrivate;
 
@@ -563,8 +569,11 @@ H_UPNP_CORE_EXPORT bool operator==(
  *
  * \relates HResourceUpdate
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HResourceUpdate&, const HResourceUpdate&);
+inline bool operator!=(
+    const HResourceUpdate& obj1, const HResourceUpdate& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 class HDiscoveryRequestPrivate;
 
@@ -705,8 +714,11 @@ H_UPNP_CORE_EXPORT bool operator==(
  *
  * \relates HDiscoveryRequest
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HDiscoveryRequest&, const HDiscoveryRequest&);
+inline bool operator!=(
+    const HDiscoveryRequest& obj1, const HDiscoveryRequest& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 class HDiscoveryResponsePrivate;
 
@@ -921,8 +933,11 @@ H_UPNP_CORE_EXPORT bool operator==(
  *
  * \relates HDiscoveryResponse
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HDiscoveryResponse&, const HDiscoveryResponse&);
+inline bool operator!=(
+    const HDiscoveryResponse& obj1, const HDiscoveryResponse& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

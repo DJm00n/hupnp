@@ -24,6 +24,9 @@
 
 #include <QtCore/QtGlobal>
 
+#define H_DISABLE_ASSIGN(Class) \
+    Class& operator=(const Class& clazz);
+
 #define H_DISABLE_COPY(Class) \
     Class(const Class& clazz); \
     Class& operator=(const Class& clazz);

@@ -33,6 +33,7 @@
 #include <HUpnpCore/HClientService>
 #include <HUpnpCore/HActionArguments>
 #include <HUpnpCore/HActionArguments>
+#include <HUpnpCore/HClientActionOp>
 #include <HUpnpCore/HClientStateVariable>
 
 #include <QUuid>
@@ -44,10 +45,9 @@
 
 using namespace Herqq::Upnp;
 
-InvokeActionDialog::InvokeActionDialog(
-    HClientAction* action, QWidget* parent) :
-        QDialog(parent),
-            m_ui(new Ui::InvokeActionDialog), m_action(action), m_inputWidgets()
+InvokeActionDialog::InvokeActionDialog(HClientAction* action, QWidget* parent) :
+    QDialog(parent),
+        m_ui(new Ui::InvokeActionDialog), m_action(action), m_inputWidgets()
 {
     Q_ASSERT(action);
 
@@ -55,22 +55,22 @@ InvokeActionDialog::InvokeActionDialog(
     setupArgumentWidgets();
 
     bool ok = connect(
-        action, SIGNAL(invokeComplete(Herqq::Upnp::HAsyncOp, Herqq::Upnp::HActionArguments)),
-        this, SLOT(invokeComplete(Herqq::Upnp::HAsyncOp, Herqq::Upnp::HActionArguments)));
+        action, SIGNAL(invokeComplete(Herqq::Upnp::HClientAction*, Herqq::Upnp::HClientActionOp)),
+        this, SLOT(invokeComplete(Herqq::Upnp::HClientAction*, Herqq::Upnp::HClientActionOp)));
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
 void InvokeActionDialog::invokeComplete(
-    HAsyncOp invokeOp, const Herqq::Upnp::HActionArguments& outArgs)
+    HClientAction*, const HClientActionOp& eventInfo)
 {
-    if (invokeOp.returnValue() == UpnpSuccess)
+    if (eventInfo.returnValue() == UpnpSuccess)
     {
+        HActionArguments outArgs = eventInfo.outputArguments();
         for(qint32 i = 0; i < outArgs.size(); ++i)
         {
-            const HActionArgument* outputArg = outArgs[i];
             m_ui->outputArguments->item(i, 2)->setText(
-                outputArg->value().toString());
+                outArgs[i].value().toString());
         }
     }
     else
@@ -78,8 +78,8 @@ void InvokeActionDialog::invokeComplete(
         QMessageBox* msgBox = new QMessageBox(this);
 
         msgBox->setText(QString("Action invocation [id: %1] failed: %2").arg(
-            QString::number(invokeOp.id()),
-            upnpErrorCodeToString(invokeOp.returnValue())));
+            QString::number(eventInfo.id()),
+            upnpErrorCodeToString(eventInfo.returnValue())));
 
         msgBox->show();
     }
@@ -95,8 +95,8 @@ void InvokeActionDialog::setupArgumentWidgets()
 
     for(qint32 i = 0; i < inputArgs.size(); ++i)
     {
-        HActionArgument* inputArg = inputArgs[i];
-        const HStateVariableInfo& stateVar = inputArg->relatedStateVariable();
+        HActionArgument inputArg = inputArgs[i];
+        const HStateVariableInfo& stateVar = inputArg.relatedStateVariable();
 
         QTableWidgetItem* item =
             new QTableWidgetItem(HUpnpDataTypes::toString(stateVar.dataType()));
@@ -112,7 +112,7 @@ void InvokeActionDialog::setupArgumentWidgets()
 
         IDataHolder* dh = createDataHolder(stateVar);
         Q_ASSERT(dh);
-        m_inputWidgets[inputArg->name()] = dh;
+        m_inputWidgets[inputArg.name()] = dh;
 
         m_ui->inputArguments->setCellWidget(i, 2, dh);
         //m_ui->inputArguments->resizeColumnsToContents();
@@ -124,8 +124,8 @@ void InvokeActionDialog::setupArgumentWidgets()
 
     for(qint32 i = 0; i < outputArgs.size(); ++i)
     {
-        HActionArgument* outputArg = outputArgs[i];
-        const HStateVariableInfo& stateVar = outputArg->relatedStateVariable();
+        HActionArgument outputArg = outputArgs[i];
+        const HStateVariableInfo& stateVar = outputArg.relatedStateVariable();
 
         QTableWidgetItem* item =
             new QTableWidgetItem(HUpnpDataTypes::toString(stateVar.dataType()));
@@ -304,14 +304,14 @@ void InvokeActionDialog::on_invokeButton_clicked()
 
     for(qint32 i = 0; i < inputArgs.size(); ++i)
     {
-        HActionArgument* inputArg = inputArgs[i];
+        HActionArgument inputArg = inputArgs[i];
 
-        IDataHolder* dataHolder = m_inputWidgets[inputArg->name()];
+        IDataHolder* dataHolder = m_inputWidgets[inputArg.name()];
 
         QVariant data = dataHolder->data();
-        if (inputArg->isValidValue(data))
+        if (inputArg.isValidValue(data))
         {
-            bool ok = inputArg->setValue(data);
+            bool ok = inputArg.setValue(data);
             Q_ASSERT(ok); Q_UNUSED(ok)
         }
         else

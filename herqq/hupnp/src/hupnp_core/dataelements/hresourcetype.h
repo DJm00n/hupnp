@@ -352,11 +352,14 @@ H_UPNP_CORE_EXPORT bool operator==(const HResourceType&, const HResourceType&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return true in case the object are not logically equivalent.
+ * \return true in case the objects are not logically equivalent.
  *
  * \relates HResourceType
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HResourceType&, const HResourceType&);
+inline bool operator!=(const HResourceType& obj1, const HResourceType& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 /*!
  * Returns a value that can be used as a unique key in a hash-map identifying

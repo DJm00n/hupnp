@@ -192,7 +192,7 @@ H_UPNP_CORE_EXPORT bool operator==(const HProductToken&, const HProductToken&);
 /*!
  * Compares the two objects for inequality.
  *
- * \return \e true in case the object are not logically equivalent.
+ * \return \e true in case the objects are not logically equivalent.
  *
  * \relates HProductToken
  */
@@ -418,8 +418,10 @@ H_UPNP_CORE_EXPORT bool operator==(
  *
  * \relates HProductTokens
  */
-H_UPNP_CORE_EXPORT bool operator!=(
-    const HProductTokens&, const HProductTokens&);
+inline bool operator!=(const HProductTokens& obj1, const HProductTokens& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

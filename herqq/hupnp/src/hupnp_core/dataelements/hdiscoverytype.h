@@ -412,7 +412,10 @@ H_UPNP_CORE_EXPORT bool operator==(const HDiscoveryType&, const HDiscoveryType&)
  *
  * \relates HDiscoveryType
  */
-H_UPNP_CORE_EXPORT bool operator!=(const HDiscoveryType&, const HDiscoveryType&);
+inline bool operator!=(const HDiscoveryType& obj1, const HDiscoveryType& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

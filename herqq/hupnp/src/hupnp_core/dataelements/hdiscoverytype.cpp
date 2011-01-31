@@ -24,7 +24,7 @@
 #include "../dataelements/hudn.h"
 #include "../dataelements/hresourcetype.h"
 
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -363,11 +363,6 @@ HDiscoveryType HDiscoveryType::createDiscoveryTypeForAllResources()
 bool operator==(const HDiscoveryType& obj1, const HDiscoveryType& obj2)
 {
     return obj1.h_ptr->m_contents == obj2.h_ptr->m_contents;
-}
-
-bool operator!=(const HDiscoveryType& obj1, const HDiscoveryType& obj2)
-{
-    return !(obj1 == obj2);
 }
 
 }

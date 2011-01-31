@@ -25,7 +25,7 @@
 #include "../socket/hendpoint.h"
 #include "../dataelements/hproduct_tokens.h"
 
-#include "../../utils/hlogger_p.h"
+#include "../general/hlogger_p.h"
 
 #include <QtXml/QDomElement>
 #include <QtCore/QTextStream>
@@ -51,7 +51,7 @@ namespace Herqq
 namespace Upnp
 {
 
-/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 0.8
+/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 0.9
  *
  * \section introduction Introduction
  *
@@ -426,15 +426,28 @@ namespace Upnp
  * writing a type for other people to use. For more information of this, see
  * \ref hupnp_devicemodel.
  *
- * To create a concrete class from Herqq::Upnp::HServerService that exposes custom actions
- * you have to override its protected abstract method Herqq::Upnp::HServerService::createActionInvokes().
- * The purpose of this method is to create <em>callable entities</em> that will
- * be called when the corresponding UPnP actions are invoked. Note, the
- * UPnP actions of a particular UPnP service are defined
- * in the service's description file and your service implementation has to
- * implement all of them.
+ * To create a concrete class from Herqq::Upnp::HServerService that exposes
+ * custom actions you can either:
+ * - Override Herqq::Upnp::HServerService::createActionInvokes(), which
+ * purpose is to create <em>callable entities</em> that will
+ * be called when the corresponding UPnP actions are invoked.
+ * - Define \c Q_INVOKABLE methods in your custom type derived from HServerService
+ * using the same method names as the action definitions in the service description
+ * document.
  *
- * \note The callable entities are used internally by HUPnP. HUPnP does not
+ * The first option is much more flexible, as you have full control over
+ * what HUPnP should call when a particular action is invoked. In addition,
+ * callable entities aren't tied to member functions. The second option may
+ * be more convenient, as you don't have to implement
+ * HServerService::createActionInvokes() and create the callable entities by
+ * yourself. Whichever option you choose, every action implementation has to
+ * have a signature of <c>action(const HActionArguments&, HActionArguments*)</c>
+ * and \c int as a return type.
+ *
+ * \note
+ * - The UPnP actions of a particular UPnP service are defined in the service's
+ * description file and your service implementation has to implement all of them.
+ * - The callable entities are used internally by HUPnP. HUPnP does not
  * otherwise expose them directly in the public API for action invocation.
  *
  * To continue with the example we will create two classes, one for the
@@ -610,8 +623,8 @@ namespace Upnp
  * qint32 MySwitchPowerService::setTarget(
  *     const Herqq::Upnp::HActionArguments& inArgs, Herqq::Upnp::HActionArguments* outArgs)
  * {
- *     const Herqq::Upnp::HActionArgument* newTargetValueArg = inArgs.get("newTargetValue");
- *     if (!newTargetValueArg)
+ *     Herqq::Upnp::HActionArgument newTargetValueArg = inArgs.get("newTargetValue");
+ *     if (!newTargetValueArg.isValid())
  *     {
  *         // If MySwitchPowerService class is not made for direct public use
  *         // this check is redundant, since in that case this method is called only by
@@ -621,7 +634,7 @@ namespace Upnp
  *         return Herqq::Upnp::UpnpInvalidArgs;
  *     }
  *
- *     bool newTargetValue = newTargetValueArg->value().toBool();
+ *     bool newTargetValue = newTargetValueArg.value().toBool();
  *     stateVariables().value("Target")->setValue(newTargetValue);
  *
  *     // The above line modifies the state variable "Target", which reflects the
@@ -679,6 +692,50 @@ namespace Upnp
  * }
  *
  * \endcode
+ *
+ * The above example overrode the HServerService::createActionInvokes() and
+ * did the action name - callable entity mapping. However, if you'd rather
+ * have HUPnP do that automatically, you can mark your action implementations
+ * as \c Q_INVOKABLE as follows:
+ *
+ * <c>mybinarylight.h</c>
+ *
+ * \code
+ *
+ * #include <HUpnpCore/HServerService>
+ *
+ * class MySwitchPowerService :
+ *    public Herqq::Upnp::HServerService
+ * {
+ * Q_OBJECT
+ *
+ * public:
+ *
+ *     MySwitchPowerService();
+ *     virtual ~MySwitchPowerService();
+ *
+ *     Q_INVOKABLE qint32 SetTarget(
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs);
+ *
+ *     Q_INVOKABLE qint32 GetTarget(
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs);
+ *
+ *     Q_INVOKABLE qint32 GetStatus(
+ *         const Herqq::Upnp::HActionArguments& inArgs,
+ *         Herqq::Upnp::HActionArguments* outArgs);
+ * };
+ *
+ * \endcode
+ *
+ * Apart from changing the method names to start with capital letters,
+ * the method definitions stay otherwise the same.
+ *
+ * \note
+ * Using \c Q_INVOKABLE methods as action implementations you have to
+ * ensure that the names of the member functions correspond \b exactly to the
+ * action names defined in the service description document.
  *
  * \subsection some_notes_about_switchpower_example Some closing notes
  *
@@ -847,11 +904,12 @@ namespace Upnp
  * is used to refer to anything that can be called with the \c operator(),
  * such as a normal function, functor or a member function.
  *
- * In order to do the mapping, you need to override
+ * There are two ways to do the mapping. You can either override
  * Herqq::Upnp::HServerService::createActionInvokes() in your custom HServerService
- * type.
+ * type, or you can mark member functions of your custom HServerService as
+ * \c Q_INVOKABLE.
  *
- * Consider an example,
+ * Consider an example of overriding the \c createActionInvokes(),
  *
  * \code
  * Herqq::Upnp::HServerService::HActionInvokes MyConnectionManagerService::createActionInvokes()
@@ -934,6 +992,50 @@ namespace Upnp
  *
  * And it doesn't stop there. You can use functors as well.
  *
+ * However, you can also let HUPnP to do the mapping and creation of the callable
+ * entities, but to do that you need to:
+ *
+ * - Make sure your custom HServerService type uses the \c Q_OBJECT macro.
+ * - Mark each member function to be used as an action implemention with \c Q_INVOKABLE
+ * macro.
+ * - Ensure that the member functions are named exactly as the corresponding
+ * actions are defined in the service description document.
+ *
+ * Consider an example of using \c Q_INVOKABLE,
+ *
+ * \code
+ *
+ * class MyConnectionManagerService :
+ *   public HServerService
+ * {
+ *  Q_OBJECT
+ *
+ *  public:
+ *
+ *    MyConnectionManagerService();
+ *    virtual ~MyConnectionManagerService();
+ *
+ *    Q_INVOKABLE qint32 GetProtocolInfo(
+ *        const HActionArguments& inArgs, HActionArguments* outArgs);
+ *
+ *    Q_INVOKABLE qint32 PrepareForConnection(
+ *        const HActionArguments& inArgs, HActionArguments* outArgs);
+ *
+ *    Q_INVOKABLE qint32 ConnectionComplete(
+ *        const HActionArguments& inArgs, HActionArguments* outArgs);
+ *
+ *   Q_INVOKABLE qint32 GetCurrentConnectionIDs(
+ *        const HActionArguments& inArgs, HActionArguments* outArgs);
+ *
+ *   Q_INVOKABLE qint32 GetCurrentConnectionInfo(
+ *        const HActionArguments& inArgs, HActionArguments* outArgs);
+ * };
+ *
+ * \endcode
+ *
+ * Note, the method names are started with capital letters as are the
+ * corresponding actions defined in the ConnectionManager specification.
+ *
  * Once you have set up the action mappings, your custom HServerService
  * is ready to be used. However, there is much more you can do with
  * Herqq::Upnp::HDeviceModelInfoProvider::actionsSetupData() to ensure that the
@@ -947,10 +1049,11 @@ namespace Upnp
  * sure they are appropriately used.
  *
  * \note
- * When implementing a custom \c %HServerService class you are required to implement
- * only the \c createActionInvokes(). You \b may provide additional information
- * about the structure and details of a UPnP service via
- * HDeviceModelInfoProvider::actionsSetupData() and
+ * When implementing a custom \c %HServerService class you have to define the
+ * implementations for the action definitions found in the corresponding
+ * service description document. You are not required to do anything else.
+ * However, you \b may provide additional information about the structure and
+ * details of a UPnP service via HDeviceModelInfoProvider::actionsSetupData() and
  * HDeviceModelInfoProvider::stateVariablesSetupData(), but those are always optional.
  *
  * \section providing_more_info_to_model_setup Providing more information to the model setup process
@@ -1448,7 +1551,7 @@ void HSysInfo::createProductTokens()
 #endif
 
     m_productTokens.reset(
-        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.8").arg(server)));
+        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.9").arg(server)));
 }
 
 void HSysInfo::createLocalNetworks()
