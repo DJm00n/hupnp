@@ -1,5 +1,31 @@
 # HUPnP Changelog
 
+HUPnP 0.9.0 [Feb. 1, 2011]
+--------------------------------------------------------------------------------
+- Modified the client side action invocation and the signaling of action completion to use clearer and more extensible API.
+
+- Modified the HActionArgument class to use explicit sharing, which enabled the HActionArguments class to take in and return instances of HActionArgument, rather than pointers to them.
+
+- Added the possibility to replace the implementation of HServerService::createActionInvokes() with the use of Qt's Meta Object system. That is, HUPnP can now do the mapping of action names to HActionInvoke objects automatically, if the desired methods use the Q_INVOKABLE macro. See the documentation for more details.
+
+- Added convenience methods to HClientService and HServerService for retrieving the value of a state variable. HServerService also has a convenience method for setting the value of a state variable.
+
+- Fixed the HControlPoint to properly relay UPnP action error codes to the user.
+
+- Fixed the HDeviceHost to send proper error codes to control points when action invocation fails.
+
+- Fixed HControlPoint::quit() to properly clean its state as it was supposed to do.
+
+- Fixed a logic error in the handling of client side action invocations.
+
+- Removed a link-time dependency to QtGui library. The dependency to QtGui was in the QtSoap library that is currently included with HUPnP.
+
+- Modified error handling and reporting of the description document parser to be clearer and more thorough.
+
+- Modified the description document parser at client-side to ignore the error of missing the <specVersion> element. This was done to improve interoperability with other UPnP software.
+
+Special thanks to Nikhil Marathe <nsm.nikhil@gmail.com> and Yury G. Kudryashov <urkud.urkud@gmail.com> for reporting their findings to me. Much appreciated. 
+
 HUPnP 0.8.0 [Dec 19, 2010]
 --------------------------------------------------------------------------------
 - Separated the client-side and server-side to use their own device model types.
