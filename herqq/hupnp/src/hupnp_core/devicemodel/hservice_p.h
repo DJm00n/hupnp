@@ -120,8 +120,7 @@ public: // methods
         Updated
     };
 
-    ReturnValue updateVariables(
-        const QList<QPair<QString, QString> >& variables)
+    ReturnValue updateVariables(const QList<QPair<QString, QString> >& variables)
     {
         // before modifying anything, it is better to be sure that the incoming
         // data is valid and it can be set completely.

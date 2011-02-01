@@ -172,7 +172,7 @@ namespace Upnp
  * HUPnP.
  * \li The API documentation of Herqq::Upnp::HControlPoint shows how to discover
  * and use UPnP devices on the network.
- * \li The API documentation of Herqq::Upnp::HDeviceHost shows how to host a Herqq::Upnp::HDevice.
+ * \li The API documentation of Herqq::Upnp::HDeviceHost shows how to host a Herqq::Upnp::HServerDevice.
  * This is how you setup a UPnP device to be found and used by UPnP control points.
  *
  * For more detailed information, you can check
@@ -1285,7 +1285,7 @@ namespace Upnp
  *     {
  *         // You should check the info object to see what object HUPnP wants
  *         // created and return null if your creator cannot create it.
- *         return new MyHDevice(); // your class derived from HDevice
+ *         return new MyHServerDevice(); // your class derived from HServerDevice
  *     }
  *
  *     // overridden from HDeviceModelCreator
@@ -1295,7 +1295,7 @@ namespace Upnp
  *     {
  *         // You should check the info objects to see what object HUPnP wants
  *         // created and return null if your creator cannot create it.
- *         return new MyHService();
+ *         return new MyHServerService();
  *     }
  * };
  *
@@ -1375,48 +1375,47 @@ namespace Upnp
 
 QString upnpErrorCodeToString(qint32 errCode)
 {
-    if (!errCode)
+    QString retVal;
+    switch(errCode)
     {
-        return "Success";
+    case UpnpSuccess:
+        retVal = "Success";
+        break;
+    case UpnpInvalidAction:
+        retVal = "InvalidAction";
+        break;
+    case UpnpInvalidArgs:
+        retVal = "InvalidArgs";
+        break;
+    case UpnpActionFailed:
+        retVal = "ActionFailed";
+        break;
+    case UpnpArgumentValueInvalid:
+        retVal = "ArgumentValueInvalid";
+        break;
+    case UpnpArgumentValueOutOfRange:
+        retVal = "ArgumentValueOutOfRange";
+        break;
+    case UpnpOptionalActionNotImplemented:
+        retVal = "OptionalActionNotImplemented";
+        break;
+    case UpnpOutOfMemory:
+        retVal = "OutOfMemory";
+        break;
+    case UpnpHumanInterventionRequired:
+        retVal = "HumanInterventionRequired";
+        break;
+    case UpnpStringArgumentTooLong:
+        retVal = "StringArgumentTooLong";
+        break;
+    case UpnpUndefinedFailure:
+        retVal = "UndefinedFailure";
+        break;
+    default:
+        retVal = QString::number(errCode);
+        break;
     }
-    else if (errCode == UpnpInvalidArgs)
-    {
-        return "InvalidArgs";
-    }
-    else if (errCode == UpnpArgumentValueInvalid)
-    {
-        return "ArgumentValueInvalid";
-    }
-    else if (errCode == UpnpArgumentValueOutOfRange)
-    {
-        return "ArgumentValueOutOfRange";
-    }
-    else if (errCode == UpnpOptionalActionNotImplemented)
-    {
-        return "OptionalActionNotImplemented";
-    }
-    else if (errCode == UpnpOutOfMemory)
-    {
-        return "OutOfMemory";
-    }
-    else if (errCode == UpnpHumanInterventionRequired)
-    {
-        return "HumanInterventionRequired";
-    }
-    else if (errCode == UpnpStringArgumentTooLong)
-    {
-        return "StringArgumentTooLong";
-    }
-    else if (errCode == UpnpActionFailed)
-    {
-        return "ActionFailed";
-    }
-    else if (errCode == UpnpUndefinedFailure)
-    {
-        return "UndefinedFailure";
-    }
-
-    return "";
+    return retVal;
 }
 
 void SetLoggingLevel(HLogLevel level)

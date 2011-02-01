@@ -123,6 +123,9 @@ enum UpnpErrorCode
 
     /*!
      * The action invocation is in progress.
+     *
+     * \remarks
+     * This value is defined and used by HUPnP in-process only.
      */
     UpnpInvocationInProgress = 0x00f00000,
 
@@ -130,6 +133,9 @@ enum UpnpErrorCode
      * \brief Action invocation failed, but the exact cause could not be determined.
      *
      * Action invocation failed, but the exact cause could not be determined.
+     *
+     * \remarks
+     * This value is defined and used by HUPnP in-process only.
      */
     UpnpUndefinedFailure = 0x0ff00000
 };
