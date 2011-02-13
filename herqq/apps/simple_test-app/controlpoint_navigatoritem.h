@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -26,7 +26,7 @@
 #include <HUpnpCore/HUpnp>
 #include <HUpnpCore/HClientDevice>
 
-#include <QString>
+#include <QtCore/QString>
 
 template<typename T>
 class QList;

@@ -19,19 +19,9 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HSERVERDEVICE_P_H_
-#define HSERVERDEVICE_P_H_
+#include "hupnpinfo.h"
 
-//
-// !! Warning !!
-//
-// This file is not part of public API and it should
-// never be included in client code. The contents of this file may
-// change or the file may be removed without of notice.
-//
-
-#include <HUpnpCore/HServerDevice>
-#include <HUpnpCore/private/hdevice_p.h>
+static const char s_hupnpCoreVersion[] = HUPNP_CORE_VERSION;
 
 namespace Herqq
 {
@@ -39,21 +29,10 @@ namespace Herqq
 namespace Upnp
 {
 
-//
-//
-//
-class H_UPNP_CORE_EXPORT HServerDevicePrivate :
-    public HDevicePrivate<HServerDevice, HServerService>
+const char* hupnpCoreVersion()
 {
-H_DISABLE_COPY(HServerDevicePrivate)
-
-public:
-
-    HServerDevicePrivate(){}
-    virtual ~HServerDevicePrivate(){}
-};
+    return s_hupnpCoreVersion;
+}
 
 }
 }
-
-#endif /* HSERVERDEVICE_P_H_ */

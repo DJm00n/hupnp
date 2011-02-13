@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -162,6 +162,19 @@ namespace Upnp
  * and <c>/usr/lib</c> respectively. This may be useful to you in case you
  * do not want to include the full HUPnP source tree with your software. You can
  * run \c make \c uninstall to remove HUPnP from the selected location.
+ *
+ * \subsection versioning Versioning
+ *
+ * Until the first stable release (1.0) is made, HUPnP follows a versioning practise
+ * where the \e major component is always zero, the \e minor component is
+ * incremented whenever an API or ABI breaking change is introduced and the
+ * \e patch component is increment upon each update that preserves the
+ * API and ABI.
+ *
+ * By including \c HUpnpInfo, you can call hupnpCoreVersion() to query the exact
+ * version of a HUPnP Core library at runtime. At compile-time you can use the macros
+ * HUPNP_CORE_MAJOR_VERSION, HUPNP_CORE_MINOR_VERSION, HUPNP_CORE_PATCH_VERSION
+ * and HUPNP_CORE_VERSION for checking the version of the API.
  *
  * \section gettingstarted Getting Started
  *

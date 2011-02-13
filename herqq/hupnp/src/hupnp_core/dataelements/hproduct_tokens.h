@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -136,16 +136,6 @@ public:
      * \return a string representation of the object.
      */
     QString toString() const;
-
-    /*!
-     * Indicates if the provided product token is a valid \e UPnP \ token.
-     *
-     *
-     *
-     * \return \e true in case the provided token object represents a valid
-     * \e UPnP \e token.
-     */
-    bool isValidUpnpToken();
 
     /*!
      * Attempts to parse the \e version part of a product token to a major and

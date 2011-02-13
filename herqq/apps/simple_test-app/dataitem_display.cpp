@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -34,7 +34,7 @@
 #include <HUpnpCore/HClientStateVariable>
 
 #include <QUrl>
-#include <QStringList>
+#include <QtCore/QStringList>
 
 using namespace Herqq::Upnp;
 

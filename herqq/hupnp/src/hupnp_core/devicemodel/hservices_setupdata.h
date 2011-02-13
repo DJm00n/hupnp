@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -212,6 +212,27 @@ public:
 };
 
 /*!
+ * Compares the two objects for equality.
+ *
+ * \return \e true in case the provided objects are equal, false otherwise.
+ *
+ * \relates HServiceSetup
+ */
+H_UPNP_CORE_EXPORT bool operator==(const HServiceSetup&, const HServiceSetup&);
+
+/*!
+ * Compares the two objects for inequality.
+ *
+ * \return \e true in case the provided objects are not equal, false otherwise.
+ *
+ * \relates HServiceSetup
+ */
+inline bool operator!=(const HServiceSetup& obj1, const HServiceSetup& obj2)
+{
+    return !(obj1 == obj2);
+}
+
+/*!
  * This class is used to specify information that can be used to validate
  * UPnP services.
  *
@@ -223,6 +244,8 @@ public:
  */
 class H_UPNP_CORE_EXPORT HServicesSetupData
 {
+friend H_UPNP_CORE_EXPORT bool operator==(
+    const HServicesSetupData&, const HServicesSetupData&);
 
 private:
 
@@ -315,6 +338,27 @@ public:
      */
     bool remove(const HServiceId& id);
 };
+
+/*!
+ * Compares the two objects for equality.
+ *
+ * \return \e true in case the provided objects are equal, false otherwise.
+ *
+ * \relates HServicesSetupData
+ */
+H_UPNP_CORE_EXPORT bool operator==(const HServicesSetupData&, const HServicesSetupData&);
+
+/*!
+ * Compares the two objects for inequality.
+ *
+ * \return \e true in case the provided objects are not equal, false otherwise.
+ *
+ * \relates HServicesSetupData
+ */
+inline bool operator!=(const HServicesSetupData& obj1, const HServicesSetupData& obj2)
+{
+    return !(obj1 == obj2);
+}
 
 }
 }

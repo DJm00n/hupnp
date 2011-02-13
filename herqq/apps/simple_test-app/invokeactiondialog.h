@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -29,7 +29,7 @@
 #include <HUpnpCore/HAsyncOp>
 
 #include <QHash>
-#include <QString>
+#include <QtCore/QString>
 #include <QtGui/QDialog>
 
 struct QUuid;

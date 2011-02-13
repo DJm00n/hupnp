@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Tuomo Penttinen, all rights reserved.
+ *  Copyright (C) 2010, 2011 Tuomo Penttinen, all rights reserved.
  *
  *  Author: Tuomo Penttinen <tp@herqq.org>
  *
@@ -153,6 +153,14 @@ void HServiceSetup::setVersion(int version)
     h_ptr->m_version = version;
 }
 
+bool operator==(const HServiceSetup& obj1, const HServiceSetup& obj2)
+{
+    return obj1.inclusionRequirement() == obj2.inclusionRequirement() &&
+           obj1.serviceId() == obj2.serviceId() &&
+           obj1.serviceType() == obj2.serviceType() &&
+           obj1.version() == obj2.version();
+}
+
 /*******************************************************************************
  * HServicesSetupData
  ******************************************************************************/
@@ -216,6 +224,11 @@ int HServicesSetupData::size() const
 bool HServicesSetupData::isEmpty() const
 {
     return m_serviceSetupInfos.isEmpty();
+}
+
+bool operator==(const HServicesSetupData& obj1, const HServicesSetupData& obj2)
+{
+    return obj1.m_serviceSetupInfos == obj2.m_serviceSetupInfos;
 }
 
 }
