@@ -63,7 +63,7 @@ namespace Upnp
  *
  * \sa hupnpCoreVersion()
  */
-#define HUPNP_CORE_PATCH_VERSION 0
+#define HUPNP_CORE_PATCH_VERSION 1
 
 /*!
  * This is the version of the HUPnP Core library with which this header

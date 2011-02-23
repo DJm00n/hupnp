@@ -25,6 +25,7 @@
 #include "../socket/hendpoint.h"
 #include "../dataelements/hproduct_tokens.h"
 
+#include "../general/hupnpinfo.h"
 #include "../general/hlogger_p.h"
 
 #include <QtXml/QDomElement>
@@ -1563,7 +1564,8 @@ void HSysInfo::createProductTokens()
 #endif
 
     m_productTokens.reset(
-        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/0.9").arg(server)));
+        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/%2.%3").arg(
+            server, STRX(HUPNP_CORE_MAJOR_VERSION), STRX(HUPNP_CORE_MINOR_VERSION))));
 }
 
 void HSysInfo::createLocalNetworks()

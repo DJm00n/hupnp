@@ -1,5 +1,24 @@
 # HUPnP Changelog
 
+HUPnP 0.9.1 [Feb. 23, 2011]
+--------------------------------------------------------------------------------
+- Modified the main project file to check if the qmake's CONFIG parameter contains:
+  * DISABLE_QTSOAP, in which case qtsoap is not built,
+  * DISABLE_CORE, in which case the hupnp core is not built or
+  * DISABLE_TESTAPP, in which case the simple test app is not built.
+  
+- Updated the copyright statements to include the year 2011.
+
+- Added macros detailing the API version and a function for querying the library version at runtime.
+
+- Removed an unimplemented member function declaration from HProductToken.
+
+- Added equality operators to HServiceSetup and HServicesSetupData classes.
+
+- Updated documentation.
+
+Special thanks to Nikhil Marathe <nsm.nikhil@gmail.com> and Jaroslav Reznik <jreznik@redhat.com> for reporting their ideas and findings to me. Much appreciated.   
+
 HUPnP 0.9.0 [Feb. 1, 2011]
 --------------------------------------------------------------------------------
 - Modified the client side action invocation and the signaling of action completion to use clearer and more extensible API.
