@@ -66,12 +66,18 @@ include (devicehosting/devicehosting.pri)
     }
 }
 
-isEmpty(PREFIX) {
-    PREFIX = ../../deploy
+CONFIG(USE_QT_INSTALL_LOC) {
+    INSTLOC_INC = $$[QT_INSTALL_HEADERS]/HUpnpCore
+    INSTLOC_LIB = $$[QT_INSTALL_LIBS]
 }
+else {
+    isEmpty(PREFIX) {
+        PREFIX = ../../deploy
+    }
 
-INSTLOC_INC = $$PREFIX/include/HUpnpCore
-INSTLOC_LIB = $$PREFIX/lib
+    INSTLOC_INC = $$PREFIX/include/HUpnpCore
+    INSTLOC_LIB = $$PREFIX/lib
+}
 
 includes.files += ../../include/HUpnpCore/H*
 includes.path = $$INSTLOC_INC
