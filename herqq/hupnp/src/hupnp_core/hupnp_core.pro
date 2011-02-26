@@ -6,14 +6,17 @@ CONFIG  += warn_on dll thread
 DEFINES += H_BUILD_UPNP_CORE_LIB
 VERSION = 0.9.1
 
-QMAKE_CXXFLAGS_WARN_ON +=
+INCLUDEPATH += ../../include/
 
-INCLUDEPATH += \
-    ../../include/ \
-    ../../lib/qtsoap-2.7-opensource/src
+CONFIG(DISABLE_QTSOAP) {
+    INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtSoap
+}
+else {
+    INCLUDEPATH += ../../lib/qtsoap-2.7-opensource/src
+}
 
 LIBS += -L"../../bin/"
-LIBS += -L"../../lib/qtsoap-2.7-opensource/lib"
+!CONFIG(DISABLE_QTSOAP): LIBS += -L"../../lib/qtsoap-2.7-opensource/lib"
 
 debug:DEFINES += DEBUG
 
@@ -50,11 +53,13 @@ include (devicemodel/devicemodel.pri)
 include (dataelements/dataelements.pri)
 include (devicehosting/devicehosting.pri)
 
-win32 {
-    QMAKE_POST_LINK += copy ..\\..\\lib\\qtsoap-2.7-opensource\\lib\\* ..\\..\\bin /Y
-}
-else {
-    QMAKE_POST_LINK += cp -fR ../../lib/qtsoap-2.7-opensource/lib/* ../../bin/
+!CONFIG(DISABLE_QTSOAP) {
+    win32 {
+        QMAKE_POST_LINK += copy ..\\..\\lib\\qtsoap-2.7-opensource\\lib\\* ..\\..\\bin /Y
+    }
+    else {
+        QMAKE_POST_LINK += cp -fR ../../lib/qtsoap-2.7-opensource/lib/* ../../bin/
+    }
 }
 
 isEmpty(PREFIX) {
