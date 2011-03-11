@@ -39,13 +39,13 @@ namespace Upnp
 class HSsdpPrivate;
 
 /*!
- * This class is used for sending and receiving SSDP messages defined by the
+ * \brief This class is used for sending and receiving SSDP messages defined by the
  * UPnP Device Architecture specification.
  *
  * Simple Service Discovery Protocol (SSDP) is an expired IETF Internet draft
  * on which the UPnP discovery mechanism is built. This class implements only the
  * SSDP functionality mandated by the UPnP Device Architecture specification.
- * This class does not implement the SSDP draft in full.
+ * \brief This class does not implement the SSDP draft in full.
  *
  * To use this class, you only need to instantiate it and connect to the
  * exposed signals to receive events when SSDP messages are received. You can also
@@ -71,7 +71,7 @@ H_DECLARE_PRIVATE(HSsdp)
 public:
 
     /*!
-     * This enumeration specifies the different discovery methods the 
+     * \brief This enumeration specifies the different discovery methods the 
      * HSsdp class can run.
      */
     enum DiscoveryRequestMethod
@@ -206,14 +206,14 @@ protected:
 public:
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param parent specifies the parent \c QObject.
      */
     HSsdp(QObject* parent=0);
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HSsdp();
 
@@ -264,7 +264,7 @@ public:
     Q_DECLARE_FLAGS(AllowedMessages, AllowedMessage);
 
     /*!
-     * Sets the filter of what message types are accepted for processing.
+     * \brief Sets the filter of what message types are accepted for processing.
      *
      * The default is HSsdp::All.
      *
@@ -276,18 +276,18 @@ public:
     void setFilter(AllowedMessages allowedMessages);
 
     /*!
-     * Returns the message types that are currently accepted for processing.
+     * \brief Returns the message types that are currently accepted for processing.
      *
      * Default is HSsdp::All.
      *
-     * \return the message types that are currently accepted for processing.
+     * \return The message types that are currently accepted for processing.
      *
      * \sa setFilter()
      */
     AllowedMessages filter() const;
 
     /*!
-     * Sets the instance to listen the network for SSDP messages and and attempts to
+     * \brief Sets the instance to listen the network for SSDP messages and and attempts to
      * init the unicast socket of the instance to the address of the first
      * found network address that is up and that is not loopback. If no such
      * interface is found the loopback address is used.
@@ -301,7 +301,7 @@ public:
     bool init();
 
     /*!
-     * Sets the instance to listen the network for SSDP messages and attempts to
+     * \brief Sets the instance to listen the network for SSDP messages and attempts to
      * init a unicast socket of the instance to the specified address.
      *
      * \param unicastAddress specifies the address that should be used for
@@ -318,7 +318,7 @@ public:
     bool init(const QHostAddress& unicastAddress);
 
     /*!
-     * Indicates if the instance is bound to listen for messages using one
+     * \brief Indicates if the instance is bound to listen for messages using one
      * or more network interfaces.
      *
      * \return \e true in case the instance is bound to listen for messages
@@ -327,9 +327,9 @@ public:
     bool isInitialized() const;
 
     /*!
-     * Returns the UDP endpoint that is used for unicast communication.
+     * \brief Returns the UDP endpoint that is used for unicast communication.
      *
-     * \return the UDP endpoint that is used for unicast communication.
+     * \return The UDP endpoint that is used for unicast communication.
      */
     HEndpoint unicastEndpoint() const;
 
@@ -340,7 +340,7 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \return the number of messages sent, 0 in case no messages was sent or
+     * \return The number of messages sent, 0 in case no messages was sent or
      * -1 in case the provided message is not valid.
      */
     qint32 announcePresence(const HResourceAvailable& msg, qint32 count = 1);
@@ -352,7 +352,7 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \return the number of messages sent, 0 in case no messages was sent or
+     * \return The number of messages sent, 0 in case no messages was sent or
      * -1 in case the provided message is not valid.
      */
     qint32 announcePresence(const HResourceUnavailable& msg, qint32 count = 1);
@@ -364,7 +364,7 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \return the number of messages sent, 0 in case no messages was sent or
+     * \return The number of messages sent, 0 in case no messages was sent or
      * -1 in case the provided message is not valid.
      */
     qint32 announceUpdate(const HResourceUpdate& msg, qint32 count = 1);
@@ -379,7 +379,7 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \return the number of messages sent, 0 in case no messages was sent or
+     * \return The number of messages sent, 0 in case no messages was sent or
      * -1 in case the provided message is not valid.
      */
     qint32 sendDiscoveryRequest(const HDiscoveryRequest& msg, qint32 count = 1);
@@ -397,7 +397,7 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \return the number of messages sent, 0 in case no messages was sent or
+     * \return The number of messages sent, 0 in case no messages was sent or
      * -1 in case the provided message or the destination is not valid.
      */
     qint32 sendDiscoveryRequest(
@@ -415,7 +415,7 @@ public:
      * \param count specifies how many times the announcement is send.
      * The default is 1.
      *
-     * \return the number of messages sent, 0 in case no messages was sent or
+     * \return The number of messages sent, 0 in case no messages was sent or
      * -1 in case the provided message is not valid.
      */
     qint32 sendDiscoveryResponse(
@@ -427,7 +427,7 @@ public:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted when a <em>discovery request</em> is received.
+     * \brief This signal is emitted when a <em>discovery request</em> is received.
      *
      * \param msg specifies the received <em>discovery request</em> message.
      * \param source specifies the location where the message came.
@@ -439,7 +439,7 @@ Q_SIGNALS:
         Herqq::Upnp::HSsdp::DiscoveryRequestMethod requestType);
 
     /*!
-     * This signal is emitted when a <em>discovery response</em> is received.
+     * \brief This signal is emitted when a <em>discovery response</em> is received.
      *
      * \param msg specifies the received <em>discovery response</em> message.
      * \param source specifies the location where the message came.
@@ -449,7 +449,7 @@ Q_SIGNALS:
         const Herqq::Upnp::HEndpoint& source);
 
     /*!
-     * This signal is emitted when a <em>device announcement</em> is received.
+     * \brief This signal is emitted when a <em>device announcement</em> is received.
      *
      * \param msg specifies the <em>device announcement</em> message.
      * \param source specifies the location where the message came.
@@ -459,7 +459,7 @@ Q_SIGNALS:
         const Herqq::Upnp::HEndpoint& source);
 
     /*!
-     * This signal is emitted when a <em>device update</em> is received.
+     * \brief This signal is emitted when a <em>device update</em> is received.
      *
      * \param msg specifies the <em>device update</em> message.
      * \param source specifies the location where the message came.
@@ -469,7 +469,7 @@ Q_SIGNALS:
         const Herqq::Upnp::HEndpoint& source);
 
     /*!
-     * This signal is emitted when a <em>device announcement</em> is received.
+     * \brief This signal is emitted when a <em>device announcement</em> is received.
      *
      * \param msg specifies the <em>device announcement</em> message.
      * \param source specifies the location where the message came.

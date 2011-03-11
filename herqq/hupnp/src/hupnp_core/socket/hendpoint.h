@@ -110,42 +110,42 @@ public:
     HEndpoint(const QString& arg);
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HEndpoint();
 
     /*!
-     * Indicates whether or not the end point is properly defined.
+     * \brief Indicates whether or not the end point is properly defined.
      *
      * \return \e true in case the end point is not defined.
      */
     inline bool isNull() const { return m_hostAddress.isNull(); }
 
     /*!
-     * Returns the host address of the endpoint.
+     * \brief Returns the host address of the endpoint.
      *
-     * \return the host address of the endpoint.
+     * \return The host address of the endpoint.
      */
     inline QHostAddress hostAddress() const { return m_hostAddress; }
 
     /*!
-     * Returns the port number of the endpoint.
+     * \brief Returns the port number of the endpoint.
      *
-     * \return the port number of the endpoint.
+     * \return The port number of the endpoint.
      */
     inline quint16 portNumber() const { return m_portNumber; }
 
     /*!
-     * Indicates whether or not the end point refers to a multicast address.
+     * \brief Indicates whether or not the end point refers to a multicast address.
      *
      * \return \e true in case the end point refers to a multicast address.
      */
     bool isMulticast() const;
 
     /*!
-     * Returns a string representation of the endpoint.
+     * \brief Returns a string representation of the endpoint.
      *
-     * \return the address and port number together separated by a ":". E.g
+     * \return The address and port number together separated by a ":". E.g
      * \c "192.168.0.1:80". If the instance is null, i.e. isNull() returns true
      * then an empty string is returned.
      */
@@ -174,7 +174,7 @@ inline bool operator!=(const HEndpoint& obj1, const HEndpoint& obj2)
 }
 
 /*!
- * Returns a value that can be used as a unique key in a hash-map identifying
+ * \brief Returns a value that can be used as a unique key in a hash-map identifying
  * the object.
  *
  * \param key specifies the object from which the hash value is created.

@@ -37,7 +37,7 @@ namespace Upnp
 class HActionSetupPrivate;
 
 /*!
- * This class is used to specify information that can be used to setup
+ * \brief This class is used to specify information that can be used to setup
  * an HServerAction or validate a UPnP action.
  *
  * \headerfile hactions_setupdata.h HActionSetup
@@ -64,7 +64,7 @@ public:
     HActionSetup();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the action. If the name value contains
      * special characters other than hyphens or dots the instance will be
@@ -81,7 +81,7 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the action. If the name value contains
      * special characters other than hyphens or dots the instance will be
@@ -100,55 +100,53 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a copy of \a other.
      */
     HActionSetup(const HActionSetup&);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Copies the contents of \a other to this.
      */
     HActionSetup& operator=(const HActionSetup&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HActionSetup();
 
     /*!
-     * Returns the setup information of the action's input arguments.
+     * \brief Returns the setup information of the action's input arguments.
      *
-     * \return the setup information of the action's input arguments.
+     * \return The setup information of the action's input arguments.
      *
      * \sa setInputArguments()
      */
     const HActionArguments& inputArguments() const;
 
     /*!
-     * Returns the setup information of the action's output arguments.
+     * \brief Returns the setup information of the action's output arguments.
      *
-     * \return the setup information of the action's output arguments.
+     * \return The setup information of the action's output arguments.
      *
      * \sa setOutputArguments()
      */
     const HActionArguments& outputArguments() const;
 
     /*!
-     * Returns the <em>inclusion requirement</em> of the action.
+     * \brief Returns the <em>inclusion requirement</em> of the action.
      *
-     * \return the <em>inclusion requirement</em> of the action.
+     * \return The <em>inclusion requirement</em> of the action.
      *
      * \sa setInclusionRequirement()
      */
     HInclusionRequirement inclusionRequirement() const;
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * \return \e true in case the object is valid, that is,
      * the name(), version() and the inclusionRequirement() are properly defined.
@@ -156,19 +154,19 @@ public:
     bool isValid() const;
 
     /*!
-     * Returns the name of the action.
+     * \brief Returns the name of the action.
      *
-     * \return the name of the action.
+     * \return The name of the action.
      *
      * \sa setName()
      */
     QString name() const;
 
     /*!
-     * Returns the UPnP service version in which the action
+     * \brief Returns the UPnP service version in which the action
      * was first specified.
      *
-     * \return the UPnP service version in which the action
+     * \return The UPnP service version in which the action
      * was first specified.
      *
      * \sa setVersion()
@@ -176,7 +174,7 @@ public:
     int version() const;
 
     /*!
-     * Specifies the action's input arguments.
+     * \brief Specifies the action's input arguments.
      *
      * \param args specifies the setup information for the action's input arguments.
      *
@@ -185,7 +183,7 @@ public:
     void setInputArguments(const HActionArguments& args);
 
     /*!
-     * Specifies the action's output arguments.
+     * \brief Specifies the action's output arguments.
      *
      * \param args specifies the setup information for the action's output arguments.
      *
@@ -194,7 +192,7 @@ public:
     void setOutputArguments(const HActionArguments& args);
 
     /*!
-     * Sets the name of the action.
+     * \brief Sets the name of the action.
      *
      * \param name specifies the name of the action.
      *
@@ -208,7 +206,7 @@ public:
     bool setName(const QString& name, QString* err = 0);
 
      /*!
-     * Sets the <em>inclusion requirement</em> of the action.
+     * \brief Sets the <em>inclusion requirement</em> of the action.
      *
      * \param arg specifies the <em>inclusion requirement</em> of the action.
      *
@@ -217,7 +215,7 @@ public:
     void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
-     * Specifies the UPnP service version in which the action
+     * \brief Specifies the UPnP service version in which the action
      * was first specified.
      *
      * \param version specifies the UPnP service version in which the action
@@ -229,7 +227,7 @@ public:
 };
 
 /*!
- * This class is used to specify information that can be used to setup
+ * \brief This class is used to specify information that can be used to setup
  * HServerAction instances or generally validate the actions of a UPnP service.
  *
  * \headerfile hactions_setupdata.h HActionsSetupData
@@ -250,7 +248,7 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isEmpty()
      */
@@ -281,11 +279,11 @@ public:
     bool remove(const QString& name);
 
     /*!
-     * Retrieves an action setup object.
+     * \brief Retrieves an action setup object.
      *
      * \param name specifies the name of the item to be retrieved.
      *
-     * \return the item with the specified name. Note that the returned item
+     * \return The item with the specified name. Note that the returned item
      * is invalid, i.e. HActionSetup::isValid() returns false in case no item
      * with the specified name was found.
      *
@@ -308,7 +306,7 @@ public:
         const QString& name, HInclusionRequirement incReq);
 
     /*!
-     * Indicates if the instance contains an item with the specified name.
+     * \brief Indicates if the instance contains an item with the specified name.
      *
      * \param name specifies the name of the item.
      *
@@ -322,16 +320,16 @@ public:
     }
 
     /*!
-     * Returns the names of the contained items.
+     * \brief Returns the names of the contained items.
      *
-     * \return the names of the contained items.
+     * \return The names of the contained items.
      */
     QSet<QString> names() const;
 
     /*!
-     * Returns the number of contained items.
+     * \brief Returns the number of contained items.
      *
-     * \return the number of contained items.
+     * \return The number of contained items.
      */
     inline qint32 size() const
     {
@@ -339,7 +337,7 @@ public:
     }
 
     /*!
-     * Indicates if the object is empty.
+     * \brief Indicates if the object is empty.
      *
      * \return \e true in case the instance has no items.
      */

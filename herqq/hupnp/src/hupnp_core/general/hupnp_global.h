@@ -37,7 +37,7 @@ namespace Upnp
 {
 
 /*!
- * This enumeration specifies the generic error codes that UPnP action invocation
+ * \brief This enumeration specifies the generic error codes that UPnP action invocation
  * may return.
  *
  * These values correspond to the values defined in the UDA, excluding
@@ -141,7 +141,7 @@ enum UpnpErrorCode
 };
 
 /*!
- * Returns a string representation of the specified error code.
+ * \brief Returns a string representation of the specified error code.
  *
  * \param errCode specififes the error code.
  *
@@ -150,14 +150,14 @@ enum UpnpErrorCode
 QString H_UPNP_CORE_EXPORT upnpErrorCodeToString(qint32 errCode);
 
 /*!
- * This enumeration specifies how a device tree should be traversed given a
+ * \brief This enumeration specifies how a device tree should be traversed given a
  * starting node.
  *
  * HUPnP \ref hupnp_devicemodel is organized into a tree that has a root
  * device, which may contain embedded devices as its children and they may contain
  * embedded devices as their children recursively.
  *
- * This enumeration is used to specify how a device and its children are traversed.
+ * \brief This enumeration is used to specify how a device and its children are traversed.
  */
 enum DeviceVisitType
 {
@@ -180,7 +180,7 @@ enum DeviceVisitType
 };
 
 /*!
- * This enumeration specifies the device types that are considered as
+ * \brief This enumeration specifies the device types that are considered as
  * \e targets of an operation.
  */
 enum TargetDeviceType
@@ -205,7 +205,7 @@ enum TargetDeviceType
 };
 
 /*!
- * This enumeration specifies the type of a device location URL.
+ * \brief This enumeration specifies the type of a device location URL.
  */
 enum LocationUrlType
 {
@@ -222,7 +222,7 @@ enum LocationUrlType
 };
 
 /*!
- * This enumeration is used to specify the strictness of argument validation.
+ * \brief This enumeration is used to specify the strictness of argument validation.
  *
  * \ingroup hupnp_common
  */
@@ -244,7 +244,7 @@ enum HValidityCheckLevel
 };
 
 /*!
- * This enumeration specifies whether a component of the \ref hupnp_devicemodel is
+ * \brief This enumeration specifies whether a component of the \ref hupnp_devicemodel is
  * mandatory within a specific UPnP device.
  *
  * In more detail, any component of the device model
@@ -302,7 +302,7 @@ enum HInclusionRequirement
 };
 
  /*!
- * This enumeration specifies the logging levels that can be used with the device host.
+ * \brief This enumeration specifies the logging levels that can be used with the device host.
  *
  * \ingroup hupnp_common
  */
@@ -364,7 +364,7 @@ enum HLogLevel
 };
 
 /*!
- * Sets the logging level the HUPnP should use.
+ * \brief Sets the logging level the HUPnP should use.
  *
  * \param level specifies the desired logging level.
  *

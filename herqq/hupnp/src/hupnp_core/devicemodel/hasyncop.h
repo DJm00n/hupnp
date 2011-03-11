@@ -35,7 +35,7 @@ namespace Upnp
 class HAsyncOpPrivate;
 
 /*!
- * This abstract class is used as a base for identifying an asynchronous
+ * \brief This abstract class is used as a base for identifying an asynchronous
  * operation and detail information of it.
  *
  * Some HUPnP components provide an asynchronous interface for running possible
@@ -124,7 +124,7 @@ protected:
     HAsyncOp(qint32 returnCode, const QString& errorDescription);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a shallow copy of \a other increasing the reference count of
      * \a other.
@@ -132,7 +132,7 @@ protected:
     HAsyncOp(const HAsyncOp&);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Switches this instance to refer to the contents of \a other increasing the
      * reference count of \a other.
@@ -150,7 +150,7 @@ public:
     virtual ~HAsyncOp() = 0;
 
     /*!
-     * Returns a human readable error description.
+     * \brief Returns a human readable error description.
      *
      * \return a human readable error description, if any.
      *
@@ -159,7 +159,7 @@ public:
     QString errorDescription() const;
 
     /*!
-     * Sets a human readable error description.
+     * \brief Sets a human readable error description.
      *
      * \param arg specifies the human readable error description.
      *
@@ -168,14 +168,14 @@ public:
     void setErrorDescription(const QString& arg);
 
     /*!
-     * Returns the return value of the asynchronous operation.
+     * \brief Returns the return value of the asynchronous operation.
      *
      * \sa setReturnValue()
      */
     int returnValue() const;
 
     /*!
-     * Sets the return value of the asynchronous operation.
+     * \brief Sets the return value of the asynchronous operation.
      *
      * \param returnValue specifies the return value of the asynchronous operation.
      *
@@ -184,7 +184,7 @@ public:
     void setReturnValue(int returnValue);
 
     /*!
-     * Returns an identifier of the asynchronous operation.
+     * \brief Returns an identifier of the asynchronous operation.
      *
      * \return an identifier of the asynchronous operation. The identifier
      * is "unique" within the process where the library is loaded. More specifically,
@@ -193,7 +193,7 @@ public:
     unsigned int id() const;
 
     /*!
-     * Indicates whether the object identifies an asynchronous operation.
+     * \brief Indicates whether the object identifies an asynchronous operation.
      *
      * \retval true in case the object does not identify an asynchronous operation.
      * This is usually the case when an operation was not successfully started.
@@ -202,7 +202,7 @@ public:
     bool isNull() const;
 
     /*!
-     * Indicates whether the object identifies an asynchronous operation.
+     * \brief Indicates whether the object identifies an asynchronous operation.
      *
      * This is a convenience method and it is semantically equivalent with isNull().
      *

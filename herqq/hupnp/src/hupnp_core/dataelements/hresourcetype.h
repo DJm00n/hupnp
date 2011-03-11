@@ -36,7 +36,7 @@ namespace Upnp
 class HResourceTypePrivate;
 
 /*!
- * A class used to depict a UPnP resource, which is either a UPnP device or a
+ * \brief This is a class used to depict a UPnP resource, which is either a UPnP device or a
  * UPnP service.
  *
  * Both UPnP device and service descriptions use the \em type concept to a give the
@@ -54,7 +54,7 @@ class HResourceTypePrivate;
  * For more information, see the <em>device type</em> and <em>service type</em>
  * definitions in UDA v1.1 at pages 44 and 46, respectively.
  *
- * This class abstracts the above service and device type concepts to a \em resource
+ * \brief This class abstracts the above service and device type concepts to a \em resource
  * and helps in handling the various elements of a <em>resource type</em>.
  *
  * \headerfile hresourcetype.h HResourceType
@@ -71,7 +71,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 public:
 
     /*!
-     * Specifies the type of the resource. See UPnP v1.1 Device Architecture
+     * \brief Specifies the type of the resource. See UPnP v1.1 Device Architecture
      * specification for more information.
      */
     enum Type
@@ -104,7 +104,7 @@ public:
     };
 
     /*!
-     * This enumeration specifies how the version part of a HResourceType
+     * \brief This enumeration specifies how the version part of a HResourceType
      * is matched against a target value.
      */
     enum VersionMatch
@@ -172,21 +172,19 @@ public:
     HResourceType(const QString& resourceTypeAsStr);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HResourceType();
 
     /*!
-     * Returns the type of the resource.
+     * \brief Returns the type of the resource.
      *
-     * \return the type of the resource.
+     * \return The type of the resource.
      */
     inline Type type() const { return m_type; }
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * This method is provided for convenience. It simply checks if the
      * type() is HResourceType::Undefined.
@@ -196,7 +194,7 @@ public:
     inline bool isValid() const { return m_type != Undefined; }
 
     /*!
-     * Indicates whether or not the resource type is a device type.
+     * \brief Indicates whether or not the resource type is a device type.
      *
      * This method is provided for convenience. It checks if the type
      * is either HResourceType::StandardDeviceType or
@@ -211,7 +209,7 @@ public:
     }
 
     /*!
-     * Indicates whether or not the resource type is a service type.
+     * \brief Indicates whether or not the resource type is a service type.
      *
      * This method is provided for convenience. It checks if the type
      * is either HResourceType::StandardServiceType or
@@ -226,7 +224,7 @@ public:
     }
 
     /*!
-     * Indicates whether or not the resource type is a standard type defined
+     * \brief Indicates whether or not the resource type is a standard type defined
      * by the UPnP forum.
      *
      * This method is provided for convenience. It checks if the type
@@ -289,7 +287,7 @@ public:
     Q_DECLARE_FLAGS(Tokens, Token);
 
     /*!
-     * Returns the version of the resource type.
+     * \brief Returns the version of the resource type.
      *
      * \returns the version of the resource type if the object is valid.
      * In case the object is invalid -1 is returned.
@@ -299,7 +297,7 @@ public:
     qint32 version() const;
 
     /*!
-     * Returns a string representation of the object.
+     * \brief Returns a string representation of the object.
      *
      * A resource type can be broken into 5 tokens, which are depicted in the
      * Token enum. This function is used to retrieve an arbitrary combination
@@ -362,7 +360,7 @@ inline bool operator!=(const HResourceType& obj1, const HResourceType& obj2)
 }
 
 /*!
- * Returns a value that can be used as a unique key in a hash-map identifying
+ * \brief Returns a value that can be used as a unique key in a hash-map identifying
  * the resource type object.
  *
  * \param key specifies the <em>resource type</em> from which the hash value is created.

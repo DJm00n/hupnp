@@ -221,6 +221,20 @@ public:
     }
 
     template<typename AnnouncementType>
+    void announce(const HServerDeviceController* rootDevice)
+    {
+        Q_ASSERT(rootDevice);
+
+        QList<AnnouncementType> announcements;
+
+        createAnnouncementMessagesForRootDevice(
+            rootDevice->m_device, rootDevice->deviceTimeoutInSecs(),
+            &announcements);
+
+        sendAnnouncements(announcements);
+    }
+
+    template<typename AnnouncementType>
     void announce(const QList<HServerDeviceController*>& rootDevices)
     {
         QList<AnnouncementType> announcements;

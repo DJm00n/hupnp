@@ -85,7 +85,7 @@ public:
     HActionInfo();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the action.
      *
@@ -104,7 +104,7 @@ public:
         QString* err = 0);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the action.
      *
@@ -144,9 +144,7 @@ public:
     HActionInfo(const HActionInfo& other);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HActionInfo();
 
@@ -158,57 +156,57 @@ public:
     HActionInfo& operator=(const HActionInfo& other);
 
     /*!
-     * Returns the name of the action.
+     * \brief Returns the name of the action.
      *
      * This is the name specified in the corresponding service description file.
      *
-     * \return the name of the action.
+     * \return The name of the action.
      */
     QString name() const;
 
     /*!
-     * Returns the input arguments the action expects.
+     * \brief Returns the input arguments the action expects.
      *
      * These are the arguments the user has to provide when invoking the
      * action that this info object portrays.
      *
-     * \return the input arguments the action.
+     * \return The input arguments the action.
      *
      * \sa outputArguments()
      */
     const HActionArguments& inputArguments() const;
 
     /*!
-     * Returns the output arguments of the action.
+     * \brief Returns the output arguments of the action.
      *
      * These are the arguments each successful action invocation will "return"
      * to user as output values.
      *
-     * \return the output arguments of the action.
+     * \return The output arguments of the action.
      *
      * \sa inputArguments()
      */
     const HActionArguments& outputArguments() const;
 
     /*!
-     * Returns the name of the output argument that is marked as the
+     * \brief Returns the name of the output argument that is marked as the
      * action's return value.
      *
-     * \return the name of the output argument that is marked as the action's
+     * \return The name of the output argument that is marked as the action's
      * return value, or an empty string, if no output argument has been marked as
      * the action's return value.
      */
     QString returnArgumentName() const;
 
     /*!
-     * Indicates whether the action is required or optional.
+     * \brief Indicates whether the action is required or optional.
      *
      * \return value indicating whether the action is required or optional.
      */
     HInclusionRequirement inclusionRequirement() const;
 
     /*!
-     * Indicates if the object is empty.
+     * \brief Indicates if the object is empty.
      *
      * \return \e true in case the object is valid.
      */
@@ -237,7 +235,7 @@ inline bool operator!=(const HActionInfo& obj1, const HActionInfo& obj2)
 }
 
 /*!
- * Returns a value that can be used as a unique key in a hash-map identifying
+ * \brief Returns a value that can be used as a unique key in a hash-map identifying
  * the object.
  *
  * \param key specifies the HActionInfo object from which the hash value is created.

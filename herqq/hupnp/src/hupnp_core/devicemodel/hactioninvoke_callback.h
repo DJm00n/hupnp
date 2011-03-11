@@ -44,7 +44,7 @@ namespace Upnp
  *
  * <tt>
  *
- * bool function(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&);
+ * bool function(Herqq::Upnp::HClientAction*, const Herqq::Upnp::HClientActionOp&);
  *
  * </tt>
  *
@@ -69,7 +69,7 @@ namespace Upnp
  *
  * namespace
  * {
- * bool freefun(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&)
+ * bool freefun(Herqq::Upnp::HClientAction*, const Herqq::Upnp::HClientActionOp&)
  * {
  *     return true;
  * }
@@ -77,14 +77,14 @@ namespace Upnp
  * class MyFunctor
  * {
  * public:
- *     bool operator()(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&)
+ *     bool operator()(Herqq::Upnp::HClientAction*, const Herqq::Upnp::HClientActionOp&)
  *     {
  *         return true;
  *     }
  * };
  * }
  *
- * bool MyClass::memfun(const Herqq::Upnp::HAsyncOp&, const Herqq::Upnp::HActionArguments&)
+ * bool MyClass::memfun(Herqq::Upnp::HClientAction*, const Herqq::Upnp::HClientActionOp&)
  * {
  *     return true;
  * }

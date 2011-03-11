@@ -44,7 +44,7 @@ class HServerActionPrivate;
  * action as command, which takes one or more input or output arguments and that
  * may have a return value.
  *
- * This class is used to invoke the server-side UPnP actions directly in process.
+ * \brief This class is used to invoke the server-side UPnP actions directly in process.
  * You can get information of the action using info(), which includes the action's
  * input and output arguments. You can invoke an action synchronously using
  * invoke().
@@ -69,7 +69,7 @@ protected:
     HServerActionPrivate* h_ptr;
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param info specifies information of the action. This is usually read
      * from a service description document.
@@ -82,7 +82,7 @@ protected:
 public:
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      *
      * An \c %HServerAction is always destroyed by the \c %HServerService that
      * contains it when it is being deleted. Further, unless you hold the
@@ -91,9 +91,9 @@ public:
     virtual ~HServerAction() = 0;
 
     /*!
-     * Returns the parent service of the action.
+     * \brief Returns the parent service of the action.
      *
-     * \return the parent service of the action.
+     * \return The parent service of the action.
      *
      * \warning the pointer is guaranteed to point to a valid object as long
      * as the \c %HServerAction exists, which ultimately is as long as the
@@ -104,7 +104,7 @@ public:
     HServerService* parentService() const;
 
     /*!
-     * Returns information about the action that is read from the
+     * \brief Returns information about the action that is read from the
      * service description.
      *
      * \return information about the action that is read from the

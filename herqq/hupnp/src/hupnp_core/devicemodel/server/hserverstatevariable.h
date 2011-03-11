@@ -38,7 +38,7 @@ namespace Upnp
 class HStateVariablePrivate;
 
 /*!
- * A class that represents a server-side UPnP state variable.
+ * \brief This is a class that represents a server-side UPnP state variable.
  *
  * \c %HServerStateVariable is a core component of the HUPnP's server-side \ref hupnp_devicemodel
  * and it models a UPnP state variable. The UPnP Device Architecture specifies a
@@ -71,7 +71,7 @@ protected:
     HStateVariablePrivate* h_ptr;
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param info specifies information of the state variable. This is usually
      * read from a service description document.
@@ -84,7 +84,7 @@ protected:
 public:
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      *
      * An \c %HServerStateVariable is always destroyed by the
      * \c %HServerService that contains it when it is being deleted.
@@ -94,9 +94,9 @@ public:
     virtual ~HServerStateVariable() = 0;
 
     /*!
-     * Returns the HServerService that contains this state variable.
+     * \brief Returns the HServerService that contains this state variable.
      *
-     * \return the HServerService that contains this state variable.
+     * \return The HServerService that contains this state variable.
      *
      * \warning the pointer is guaranteed to point to a valid object as long
      * as the \c %HServerStateVariable exists, which ultimately is as long as the
@@ -105,14 +105,14 @@ public:
     HServerService* parentService() const;
 
     /*!
-     * Returns the current value of the state variable.
+     * \brief Returns the current value of the state variable.
      *
-     * \return the current value of the state variable.
+     * \return The current value of the state variable.
      */
     QVariant value() const;
 
     /*!
-     * Returns information about the state variable.
+     * \brief Returns information about the state variable.
      *
      * \return information about the state variable. This information is often read
      * from a service description document.
@@ -142,7 +142,7 @@ public:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted when the value of the state variable has changed.
+     * \brief This signal is emitted when the value of the state variable has changed.
      *
      * \param source specifies the state variable that sent the event.
      *

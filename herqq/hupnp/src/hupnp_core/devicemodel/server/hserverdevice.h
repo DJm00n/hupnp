@@ -38,11 +38,6 @@ namespace Upnp
 class HServerDevicePrivate;
 
 /*!
- * \file
- * This file contains the declaration of the HServerDevice component.
- */
-
-/*!
  * \brief This is an abstract base class for server-side UPnP devices hosted
  * by HDeviceHost.
  *
@@ -146,9 +141,7 @@ protected:
     HServerDevice(HServerDevicePrivate& dd);
 
     /*!
-     * Creates a new instance.
-     *
-     * Creates a new instance.
+     * \brief Creates a new instance.
      */
     HServerDevice();
 
@@ -168,16 +161,14 @@ protected:
 public:
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HServerDevice() = 0;
 
     /*!
-     * Returns the parent device of this device, if any.
+     * \brief Returns the parent device of this device, if any.
      *
-     * \return the parent device of this device, if any, or a null pointer
+     * \return The parent device of this device, if any, or a null pointer
      * in case the device is a root device.
      *
      * \remarks The pointer is guaranteed to be valid throughout the lifetime
@@ -186,9 +177,9 @@ public:
     HServerDevice* parentDevice() const;
 
     /*!
-     * Returns the root device of the device tree to which this device belongs.
+     * \brief Returns the root device of the device tree to which this device belongs.
      *
-     * \return the root device of the device tree to which this device belongs.
+     * \return The root device of the device tree to which this device belongs.
      *
      * \remarks This device could be the root device of the device tree in question,
      * in which case a pointer to this instance is returned.
@@ -196,11 +187,11 @@ public:
     HServerDevice* rootDevice() const;
 
     /*!
-     * Returns the service that has the specified service ID.
+     * \brief Returns the service that has the specified service ID.
      *
      * \param serviceId specifies the service to be returned.
      *
-     * \return the service that has the specified service ID or a null pointer
+     * \return The service that has the specified service ID or a null pointer
      * in case there is no service with the specified ID.
      *
      * \remarks The pointer is guaranteed to be valid throughout the lifetime
@@ -209,9 +200,9 @@ public:
     HServerService* serviceById(const HServiceId& serviceId) const;
 
     /*!
-     * Returns the services this device exports.
+     * \brief Returns the services this device exports.
      *
-     * \return the services this device exports. The collection is empty
+     * \return The services this device exports. The collection is empty
      * if the device has no services.
      *
      * \remarks the pointers are guaranteed to be valid throughout the lifetime
@@ -220,7 +211,7 @@ public:
     const HServerServices& services() const;
 
     /*!
-     * Returns the services of a specific UPnP service type.
+     * \brief Returns the services of a specific UPnP service type.
      *
      * \param serviceType specifies the UPnP service type of interest.
      * Only services matching the type are returned.
@@ -231,7 +222,7 @@ public:
      * is \b less than or \b equal to the version specified in argument
      * \c serviceType is successfully matched.
      *
-     * \return the services of the specified type.
+     * \return The services of the specified type.
      *
      * \remarks the pointers are guaranteed to be valid throughout the lifetime
      * of this object.
@@ -241,9 +232,9 @@ public:
         HResourceType::VersionMatch versionMatch = HResourceType::Inclusive) const;
 
     /*!
-     * Returns the embedded devices of this device.
+     * \brief Returns the embedded devices of this device.
      *
-     * \return the embedded devices of this device. The collection is empty
+     * \return The embedded devices of this device. The collection is empty
      * if the device has no embedded devices.
      *
      * \remarks the pointers are guaranteed to be valid throughout the lifetime
@@ -252,7 +243,7 @@ public:
     const HServerDevices& embeddedDevices() const;
 
     /*!
-     * Returns the embedded devices of a specific UPnP device type.
+     * \brief Returns the embedded devices of a specific UPnP device type.
      *
      * \param deviceType specifies the UPnP device type of interest.
      * Only devices matching the type are returned.
@@ -263,7 +254,7 @@ public:
      * is \b less than or \b equal to the version specified in argument
      * \a deviceType is successfully matched.
      *
-     * \return the embedded devices of the specified type.
+     * \return The embedded devices of the specified type.
      *
      * \remarks the pointers are guaranteed to be valid throughout the lifetime
      * of this object.
@@ -273,7 +264,7 @@ public:
         HResourceType::VersionMatch versionMatch = HResourceType::Inclusive) const;
 
     /*!
-     * Returns information about the device.
+     * \brief Returns information about the device.
      *
      * \return information about the device. This is often read from the
      * device description.
@@ -281,9 +272,9 @@ public:
     const HDeviceInfo& info() const;
 
     /*!
-     * Returns the UPnP device description of this device.
+     * \brief Returns the UPnP device description of this device.
      *
-     * \return the UPnP device description that is associated to this device.
+     * \return The UPnP device description that is associated to this device.
      *
      * \remarks an embedded device returns the same device description as
      * its root device.
@@ -291,7 +282,7 @@ public:
     QString description() const;
 
     /*!
-     * Returns a list of locations where the device is currently available.
+     * \brief Returns a list of locations where the device is currently available.
      *
      * \param urlType specifies whether the returned
      * location URLs are absolute URLs for retrieving the device description.

@@ -37,7 +37,7 @@ namespace Upnp
 {
 
 /*!
- * This class represents a <em>product token</em> as defined in the RFC 2616,
+ * \brief This class represents a <em>product token</em> as defined in the RFC 2616,
  * section 3.8.
  *
  * \headerfile hproduct_tokens.h HProductToken
@@ -59,7 +59,7 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance. An object created with the default
+     * \brief Creates a new, empty instance. An object created with the default
      * constructor is invalid.
      *
      * \sa isValid()
@@ -81,14 +81,12 @@ public:
     HProductToken(const QString& token, const QString& productVersion);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HProductToken();
 
     /*!
-     * Indicates if the object is valid, i.e both the token and the product
+     * \brief Indicates if the object is valid, i.e both the token and the product
      * version are defined.
      *
      * \param checkLevel specifies whether the contents of the object are checked
@@ -106,9 +104,9 @@ public:
     bool isValid(HValidityCheckLevel checkLevel) const;
 
     /*!
-     * Returns the \e token part.
+     * \brief Returns the \e token part.
      *
-     * \return the \e token part in case the object is valid.
+     * \return The \e token part in case the object is valid.
      * The token part is used to identify the product and an example
      * of a token is for instance \c "Apache". An empty string is returned in case
      * the object is invalid.
@@ -118,9 +116,9 @@ public:
     inline QString token() const { return m_token; }
 
     /*!
-     * Returns the \e version part.
+     * \brief Returns the \e version part.
      *
-     * \return the \e version part in case the object is valid. An example of a
+     * \return The \e version part in case the object is valid. An example of a
      * version part is \c "1.0". An empty string is returned in case
      * the object is invalid.
      *
@@ -129,7 +127,7 @@ public:
     inline QString version() const { return m_productVersion; }
 
     /*!
-     * Returns a string representation of the object.
+     * \brief Returns a string representation of the object.
      *
      * The format of the returned string is \c "token"/"version".
      *
@@ -146,7 +144,7 @@ public:
      * any further "version information" after the "minor" component separated
      * by a dot. The "minor" component has to be convertible to an integer.
      *
-     * \return the minor version component of the specified product token or -1
+     * \return The minor version component of the specified product token or -1
      * if the specified token does not contain a minor version component that
      * can be represented as an integer.
      */
@@ -163,7 +161,7 @@ public:
      * the major component can be converted to an integer. Any data following
      * the "minor" component and separated from it by a dot is ignored.
      *
-     * \return the major version component of the specified product token or -1
+     * \return The major version component of the specified product token or -1
      * if the specified token does not contain a major version component that
      * can be represented as an integer.
      */
@@ -191,7 +189,7 @@ H_UPNP_CORE_EXPORT bool operator!=(const HProductToken&, const HProductToken&);
 class HProductTokensPrivate;
 
 /*!
- * This class is used to parse the <em>product tokens</em> defined by HTTP/1.1.
+ * \brief This class is used to parse the <em>product tokens</em> defined by HTTP/1.1.
  *
  * According to the HTTP/1.1, <em>Product tokens are used to allow communicating applications
  * to identify themselves by software name and version</em>. In UDA,
@@ -251,16 +249,14 @@ public:
     explicit HProductTokens(const QString& arg);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a copy of the other object.
      */
     HProductTokens(const HProductTokens&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HProductTokens();
 
@@ -272,7 +268,7 @@ public:
     HProductTokens& operator=(const HProductTokens&);
 
     /*!
-     * Indicates whether the object contains at least the UPnP
+     * \brief Indicates whether the object contains at least the UPnP
      * version token defined in the UDA.
      *
      * \return \e true in case the object contains at least the UPnP version
@@ -287,7 +283,7 @@ public:
     bool isValid() const;
 
     /*!
-     * Indicates whether the object contains any information at all.
+     * \brief Indicates whether the object contains any information at all.
      *
      * \return true in case the object does not contain any information.
      *
@@ -298,46 +294,46 @@ public:
     bool isEmpty() const;
 
     /*!
-     * Returns the product token that defines information of an operating system.
+     * \brief Returns the product token that defines information of an operating system.
      *
-     * \return the product token that defines information of an operating system.
+     * \return The product token that defines information of an operating system.
      *
-     * \remarks this is not necessarily defined in a non-empty object.
+     * \remarks This is not necessarily defined in a non-empty object.
      *
      * \sa isValid()
      */
     HProductToken osToken() const;
 
     /*!
-     * Returns the product token that defines UPnP version.
+     * \brief Returns the product token that defines UPnP version.
      *
-     * \return the product token that defines UPnP version. This token always
+     * \return The product token that defines UPnP version. This token always
      * follows the format "UPnP"/majorVersion.minorVersion, where \e majorVersion
      * and \e minorVersion are positive integers. Furthermore, currently
      * the \e majorVersion is \b always 1 and the \e minorVersion is either 0
      * or 1.
      *
-     * \remarks this is always defined in a valid object.
+     * \remarks This is always defined in a valid object.
      *
      * \sa isValid()
      */
     HProductToken upnpToken() const;
 
     /*!
-     * Returns the product token that defines the actual product in the form
+     * \brief Returns the product token that defines the actual product in the form
      * product name/product version.
      *
-     * \return the product token that defines the actual product in the form
+     * \return The product token that defines the actual product in the form
      * product name/product version.
      *
-     * \remarks this is not necessarily defined in a non-empty object.
+     * \remarks This is not necessarily defined in a non-empty object.
      *
      * \sa isValid()
      */
     HProductToken productToken() const;
 
     /*!
-     * Returns the extra tokens.
+     * \brief Returns the extra tokens.
      *
      * A valid \c %HProductTokens object contains at least the
      * upnpToken(). A strictly valid \c %HProductTokens object contains at least
@@ -345,14 +341,14 @@ public:
      * instance may contain more than these three tokens, which are called extra
      * tokens in this context.
      *
-     * \return the extra tokens, if such are defined and the object is valid.
+     * \return The extra tokens, if such are defined and the object is valid.
      *
      * \sa hasExtraTokens(), isValid(), tokens()
      */
     QVector<HProductToken> extraTokens() const;
 
     /*!
-     * Indicates if the object contains extra tokens in addition to
+     * \brief Indicates if the object contains extra tokens in addition to
      * osToken(), upnpToken() and producToken().
      *
      * \return true in case the object contains extra tokens in addition to
@@ -361,7 +357,7 @@ public:
     bool hasExtraTokens() const;
 
     /*!
-     * Returns all product tokens the instance contains.
+     * \brief Returns all product tokens the instance contains.
      *
      * A valid \c %HProductTokens object will return a vector that contains
      * at least one entry, the upnpToken(). A strictly valid \c %HProductTokens
@@ -377,11 +373,11 @@ public:
     QVector<HProductToken> tokens() const;
 
     /*!
-     * Returns a string representation of the object.
+     * \brief Returns a string representation of the object.
      *
      * \return a string representation of the object.
      *
-     * \remarks this method may return a non-empty string even in case
+     * \remarks This method may return a non-empty string even in case
      * isValid() returns false. In this case the instance was created with
      * a string that could not be tokenized according to the UDA and HTTP 1.1
      * specifications.

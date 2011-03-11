@@ -43,7 +43,7 @@ class HServiceInfoPrivate;
  *
  * A device description defines a UPnP device and among other things,
  * the definition includes the declarations of the services the device contains.
- * This class contains the service declaration information.
+ * \brief This class contains the service declaration information.
  *
  * \headerfile hserviceinfo.h HServiceInfo
  *
@@ -65,7 +65,7 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isValid()
      */
@@ -114,14 +114,12 @@ public:
         QString* err = 0);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HServiceInfo();
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of the \c other to this.
      *
@@ -130,7 +128,7 @@ public:
     HServiceInfo(const HServiceInfo& other);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Assigns the contents of the other to this.
      *
@@ -139,7 +137,7 @@ public:
     HServiceInfo& operator=(const HServiceInfo& other);
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * A valid object contains the mandatory data of a UPnP service.
      *
@@ -151,51 +149,51 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Returns the service identifier found in the device description file.
+     * \brief Returns the service identifier found in the device description file.
      *
-     * \return the service identifier found in the device description file.
+     * \return The service identifier found in the device description file.
      */
     const HServiceId& serviceId() const;
 
     /*!
-     * Returns the type of the service found in the device description file.
+     * \brief Returns the type of the service found in the device description file.
      *
-     * \return the type of the service found in the device description file.
+     * \return The type of the service found in the device description file.
      */
     const HResourceType& serviceType() const;
 
     /*!
-     * Returns the URL for service description.
+     * \brief Returns the URL for service description.
      *
      * This is the URL where the service description can be retrieved.
      * This is defined in the device description.
      *
-     * \return the URL for service description.
+     * \return The URL for service description.
      */
     QUrl scpdUrl() const;
 
     /*!
-     * Returns the URL for control.
+     * \brief Returns the URL for control.
      *
      * This is the URL to which the action invocations must be sent.
      * This is defined in the device description.
      *
-     * \return the URL for control.
+     * \return The URL for control.
      */
     QUrl controlUrl() const;
 
     /*!
-     * Returns the URL for eventing.
+     * \brief Returns the URL for eventing.
      *
      * This is the URL to which subscriptions and un-subscriptions are sent.
      * This is defined in the device description.
      *
-     * \return the URL for eventing.
+     * \return The URL for eventing.
      */
     QUrl eventSubUrl() const;
 
     /*!
-     * Indicates whether the service is required or optional.
+     * \brief Indicates whether the service is required or optional.
      *
      * \return value indicating whether the service is required or optional.
      */

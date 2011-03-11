@@ -44,7 +44,7 @@ class HClientActionPrivate;
  * action as a command, which takes one or more input and output arguments and that
  * may have a return value.
  *
- * This class is used to invoke the server-side UPnP actions from the client-side.
+ * \brief This class is used to invoke the server-side UPnP actions from the client-side.
  * You can get information of the action using info(), which includes the action's
  * input and output arguments. You can dispatch an asynchronous action invocation
  * to the server-side using beginInvoke(). Once the server responds, invokeComplete()
@@ -71,7 +71,7 @@ protected:
     HClientActionPrivate* h_ptr;
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param info specifies information of the action.
      *
@@ -82,7 +82,7 @@ protected:
 public:
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      *
      * An \c %HClientAction is always destroyed by the \c %HClientAction that contains
      * it when it is being deleted. Further, unless you hold the ownership of the
@@ -91,9 +91,9 @@ public:
     virtual ~HClientAction() = 0;
 
     /*!
-     * Returns the parent service of the action.
+     * \brief Returns the parent service of the action.
      *
-     * \return the parent service of the action.
+     * \return The parent service of the action.
      *
      * \warning the pointer is guaranteed to point to a valid object as long
      * as the \c %HClientAction exists, which ultimately is as long as the
@@ -104,7 +104,7 @@ public:
     HClientService* parentService() const;
 
     /*!
-     * Returns information about the action that is read from the
+     * \brief Returns information about the action that is read from the
      * service description.
      *
      * \return information about the action that is read from the
@@ -177,7 +177,7 @@ public:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted when an invocation has been successfully
+     * \brief This signal is emitted when an invocation has been successfully
      * completed or the invocation failed, unless the invocation was started
      * as <em>fire and forget</em>.
      *

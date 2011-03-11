@@ -33,7 +33,7 @@ namespace Upnp
 class HClientActionOpPrivate;
 
 /*!
- * This class is used to identify a client-side action invocation and detail
+ * \brief This class is used to identify a client-side action invocation and detail
  * information of it.
  *
  * When you call HClientAction::beginInvoke() you get an instance of this class
@@ -62,9 +62,7 @@ H_DECLARE_PRIVATE(HClientActionOp);
 public:
 
     /*!
-     * Creates a new instance.
-     *
-     * Creates a new instance.
+     * \brief Creates a new instance.
      */
     HClientActionOp();
 
@@ -76,16 +74,14 @@ public:
     HClientActionOp(const HActionArguments& inArgs);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of the \c other to this.
      */
     HClientActionOp(const HClientActionOp&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HClientActionOp();
 
@@ -97,21 +93,21 @@ public:
     HClientActionOp& operator=(const HClientActionOp&);
 
     /*!
-     * Returns the input arguments of the action invocation.
+     * \brief Returns the input arguments of the action invocation.
      *
-     * \return the input arguments of the action invocation.
+     * \return The input arguments of the action invocation.
      */
     const HActionArguments& inputArguments() const;
 
     /*!
-     * Returns the output arguments of the action invocation.
+     * \brief Returns the output arguments of the action invocation.
      *
-     * \return the output arguments of the action invocation.
+     * \return The output arguments of the action invocation.
      */
     const HActionArguments& outputArguments() const;
 
     /*!
-     * Sets the output arguments of the action invocation.
+     * \brief Sets the output arguments of the action invocation.
      *
      * \param outArgs
      */

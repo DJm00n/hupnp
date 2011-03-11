@@ -596,21 +596,21 @@ public:
     typedef QUuid uuidT;
 
     /*!
-     * Returns the UPnP data type enum value that matches the content
+     * \brief Returns the UPnP data type enum value that matches the content
      * of the specified string, if any.
      *
      * \param dataTypeAsStr specifies the "name" of the UPnP data type as string.
      * For example, the string could contain "i4", which in the UDA v1.1 specification
      * is defined as 4-byte signed integer.
      *
-     * \return the UPnP data type enum value that matches the content
+     * \return The UPnP data type enum value that matches the content
      * of the specified string. If the specified string does not correspond
      * to any UPnP data type, HUpnpDataTypes::Undefined is returned.
      */
     static DataType dataType(const QString& dataTypeAsStr);
 
     /*!
-     * Indicates whether or not the specified data type is numeric.
+     * \brief Indicates whether or not the specified data type is numeric.
      *
      * \param datatype specifies the data type to be checked.
      *
@@ -623,7 +623,7 @@ public:
     }
 
     /*!
-     * Indicates whether or not the specified data type is an integer.
+     * \brief Indicates whether or not the specified data type is an integer.
      *
      * \param datatype specifies the data type to be checked.
      *
@@ -636,7 +636,7 @@ public:
     }
 
     /*!
-     * Indicates whether or not the specified data type is a rational number.
+     * \brief Indicates whether or not the specified data type is a rational number.
      *
      * \param arg specifies the data type to be checked.
      *
@@ -659,11 +659,11 @@ public:
     }
 
     /*!
-     * Returns the UDA defined string representation of the specified data type.
+     * \brief Returns the UDA defined string representation of the specified data type.
      *
      * \param datatype specifies the data type which string representation is requested.
      *
-     * \return the UDA defined string representation of the specified data type.
+     * \return The UDA defined string representation of the specified data type.
      */
     static QString toString(DataType datatype);
 

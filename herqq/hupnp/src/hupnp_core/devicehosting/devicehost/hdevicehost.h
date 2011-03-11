@@ -35,7 +35,7 @@ namespace Upnp
 class HDeviceHostPrivate;
 
 /*!
- * A class for creating and hosting \c %HServerDevice instances on the network.
+ * \brief This is a class for creating and hosting \c %HServerDevice instances on the network.
  *
  * \headerfile hdevicehost.h HDeviceHost
  *
@@ -213,7 +213,7 @@ friend class HDeviceHostRuntimeStatus;
 public:
 
     /*!
-     * Specifies return values that some of the methods of the class may return.
+     * \brief Specifies return values that some of the methods of the class may return.
      */
     enum DeviceHostError
     {
@@ -261,7 +261,22 @@ public:
          * For instance, perhaps the HTTP server or could the SSDP listener
          * could not be initialized.
          */
-        CommunicationsError = 5
+        CommunicationsError = 5,
+
+        /*!
+         * Return value used to indicate that the device host instance is not
+         * property initiated.
+         */
+        NotStarted = 6,
+
+        /*!
+         * Return value used to indicate that operation failed due to a resource
+         * conflict.
+         *
+         * For instance, trying to add more than one device with a same UDN
+         * will fail because of this.
+         */
+        ResourceConflict = 7
     };
 
 private:
@@ -332,9 +347,9 @@ protected:
     HDeviceHostPrivate* h_ptr;
 
     /*!
-     * Returns the configuration used to initialize the device host.
+     * \brief Returns the configuration used to initialize the device host.
      *
-     * \return the configuration used to initialize the device host or null
+     * \return The configuration used to initialize the device host or null
      * in case the device host is not initialized.
      *
      * \remarks the returned object is not a copy and the ownership of the
@@ -343,10 +358,10 @@ protected:
     const HDeviceHostConfiguration* configuration() const;
 
     /*!
-     * Returns the object that details information of the status of a
+     * \brief Returns the object that details information of the status of a
      * device host.
      *
-     * \return the object that details information of the status of a
+     * \return The object that details information of the status of a
      * device host.
      *
      * \remarks
@@ -358,7 +373,7 @@ protected:
     const HDeviceHostRuntimeStatus* runtimeStatus() const;
 
     /*!
-     * Sets the type and description of the last error occurred.
+     * \brief Sets the type and description of the last error occurred.
      *
      * \param error specifies the error type.
      * \param errorDescr specifies a human readable description of the error.
@@ -370,27 +385,27 @@ protected:
 public:
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param parent specifies the parent \c QObject.
      */
     explicit HDeviceHost(QObject* parent = 0);
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      *
      * Destroys the device host and every hosted device.
      */
     virtual ~HDeviceHost();
 
     /*!
-     * Returns a root device with the specified Unique Device Name.
+     * \brief Returns a root device with the specified Unique Device Name.
      *
      * \param udn specifies the Unique Device Name of the desired root device.
      * \param target specifies the type of devices that are included in the
      * search.
      *
-     * \return the root device with the specified Unique Device Name, or a
+     * \return The root device with the specified Unique Device Name, or a
      * null pointer in case no currently managed root device has the
      * specified UDN.
      *
@@ -404,7 +419,7 @@ public:
         TargetDeviceType target = RootDevices) const;
 
     /*!
-     * Returns a list of UPnP root devices the host is currently managing.
+     * \brief Returns a list of UPnP root devices the host is currently managing.
      *
      * The returned list contains pointers to root HServerDevice objects
      * that are currently hosted by this instance.
@@ -435,25 +450,46 @@ public:
     bool init(const HDeviceHostConfiguration& configuration);
 
     /*!
-     * Returns the type of the last error occurred.
+     * \brief Returns the type of the last error occurred.
      *
-     * \return the type of the last error occurred.
+     * \return The type of the last error occurred.
      */
     DeviceHostError error() const;
 
     /*!
-     * Returns a human readable description of the last error occurred.
+     * \brief Returns a human readable description of the last error occurred.
      *
      * \return a human readable description of the last error occurred.
      */
     QString errorDescription() const;
 
     /*!
-     * Indicates whether or not the host is successfully started.
+     * \brief Indicates whether or not the host is successfully started.
      *
      * \return \e true in case the host is successfully started.
      */
     bool isStarted() const;
+
+    /*!
+     * Adds a new root device configuration to the device host.
+     *
+     * If the provided configuration is valid, the device host creates a new
+     * device model instance, announces the new resource(s) to the network and adds
+     * the device model available into the control of this instance.
+     *
+     * \param configuration specifies the new root device to add.
+     *
+     * \return \e true if a device model corresponding to the specified
+     * configuration was created and added to the device host. If the method
+     * returns \e false, you can call error() and errorDescription() to get
+     * more information of the error that occurred.
+     *
+     * \remarks The specified device configuration has to be compatible with
+     * the specified HDeviceHostConfiguration specified in init().
+     *
+     * \sa error(), errorDescription()
+     */
+    bool add(const HDeviceConfiguration& configuration);
 
 public Q_SLOTS:
 
@@ -506,22 +542,20 @@ public:
 
     /*!
      * \brief Destroys the instance.
-     *
-     * Destroys the instance.
      */
     virtual ~HDeviceHostRuntimeStatus();
 
     /*!
-     * Returns the IP endpoints that the device host uses for SSDP communications.
+     * \brief Returns the IP endpoints that the device host uses for SSDP communications.
      *
-     * \return the IP endpoints that the device host uses for SSDP communications.
+     * \return The IP endpoints that the device host uses for SSDP communications.
      */
     QList<HEndpoint> ssdpEndpoints() const;
 
     /*!
-     * Returns the IP endpoints that the device host uses for HTTP communications.
+     * \brief Returns the IP endpoints that the device host uses for HTTP communications.
      *
-     * \return the IP endpoints that the device host uses for HTTP communications.
+     * \return The IP endpoints that the device host uses for HTTP communications.
      */
     QList<HEndpoint> httpEndpoints() const;
 };

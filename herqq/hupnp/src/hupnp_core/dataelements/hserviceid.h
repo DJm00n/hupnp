@@ -130,14 +130,12 @@ public:
     HServiceId& operator=(const HServiceId& other);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HServiceId();
 
     /*!
-     * Indicates if the service identifier is properly defined.
+     * \brief Indicates if the service identifier is properly defined.
      *
      * \param level specifies whether the contents of the object are checked
      * for strict validity. Only an object that is strictly valid contains information
@@ -149,7 +147,7 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Indicates whether the service identifier belongs to a standard service
+     * \brief Indicates whether the service identifier belongs to a standard service
      * type defined by the UPnP forum or to a vendor defined service.
      *
      * \retval true in case the service identifier belongs to a standard service
@@ -162,7 +160,7 @@ public:
     bool isStandardType() const;
 
     /*!
-     * Returns the URN of the service identifier.
+     * \brief Returns the URN of the service identifier.
      *
      * \param completeUrn specifies whether the prefix \c urn is returned
      * as well. If the argument is false, only the actual URN is returned. i.e
@@ -177,7 +175,7 @@ public:
     QString urn(bool completeUrn = true) const;
 
     /*!
-     * Returns the service identifier suffix.
+     * \brief Returns the service identifier suffix.
      *
      * \returns the service identifier suffix if the object is valid. For instance, if the
      * service identifier is defined as <c>urn:upnp-org:serviceId:MyServiceId</c>,
@@ -189,7 +187,7 @@ public:
     QString suffix() const;
 
     /*!
-     * Returns a string representation of the instance.
+     * \brief Returns a string representation of the instance.
      *
      * \return a string representation of the instance. The returned string
      * follows the format defined by UDA if the object is valid. In case of a valid
@@ -223,7 +221,7 @@ inline bool operator!=(const HServiceId& obj1, const HServiceId& obj2)
 }
 
 /*!
- * Returns a value that can be used as a unique key in a hash-map identifying
+ * \brief Returns a value that can be used as a unique key in a hash-map identifying
  * the resource type object.
  *
  * \param key specifies the <em>service ID</em> from which the hash value is created.

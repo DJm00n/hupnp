@@ -68,7 +68,7 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isValid()
      */
@@ -187,9 +187,7 @@ public:
         QString* err = 0);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HDeviceInfo();
 
@@ -208,7 +206,7 @@ public:
     HDeviceInfo& operator=(const HDeviceInfo& other);
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * A valid object contains the mandatory data of a device description.
      *
@@ -220,7 +218,7 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Sets the URL for the web site of the manufacturer.
+     * \brief Sets the URL for the web site of the manufacturer.
      *
      * \param arg specifies the URL for the web site of the manufacturer.
      *
@@ -229,7 +227,7 @@ public:
     void setManufacturerUrl(const QUrl& arg);
 
     /*!
-     * Sets the model description.
+     * \brief Sets the model description.
      *
      * A model description is used to display a long description for end user.
      * Should be < 128 characters.
@@ -241,7 +239,7 @@ public:
     void setModelDescription(const QString& arg);
 
     /*!
-     * Sets the model number.
+     * \brief Sets the model number.
      *
      * There is no format specified for the model number,
      * other than it should be < 32 characters.
@@ -253,7 +251,7 @@ public:
     void setModelNumber(const QString& arg);
 
     /*!
-     * Sets the URL for the web site of the model.
+     * \brief Sets the URL for the web site of the model.
      *
      * \param arg specifies the model URL.
      *
@@ -262,7 +260,7 @@ public:
     void setModelUrl(const QUrl& arg);
 
     /*!
-     * Sets the serial number of the device.
+     * \brief Sets the serial number of the device.
      *
      * There is no format specified for the serial number,
      * other than it should be < 64 characters.
@@ -274,7 +272,7 @@ public:
     void setSerialNumber(const QString& arg);
 
     /*!
-     * Sets the Universal Product Code.
+     * \brief Sets the Universal Product Code.
      *
      * UPC is a 12-digit, all-numeric code that
      * identifies the consumer package. Managed by the Uniform Code Council.
@@ -286,7 +284,7 @@ public:
     void setUpc(const QString& arg);
 
     /*!
-     * Sets the icons of the device.
+     * \brief Sets the icons of the device.
      *
      * \param arg specifies the icons of the device.
      *
@@ -295,7 +293,7 @@ public:
     void setIcons(const QList<QUrl>& arg);
 
     /*!
-     * Sets the presentation URL.
+     * \brief Sets the presentation URL.
      *
      * Presentation URL specifies the URL for HTML-based user interface
      * for controlling and/or viewing device status.
@@ -307,37 +305,37 @@ public:
     void setPresentationUrl(const QUrl& arg);
 
     /*!
-     * Returns the type of the device found in the device description file.
+     * \brief Returns the type of the device found in the device description file.
      *
-     * \return the type of the device found in the device description file.
+     * \return The type of the device found in the device description file.
      */
     const HResourceType& deviceType() const;
 
     /*!
-     * Returns short description for end user.
+     * \brief Returns short description for end user.
      *
      * \return short description for end user.
      */
     QString friendlyName() const;
 
     /*!
-     * Returns manufacturer's name.
+     * \brief Returns manufacturer's name.
      *
      * \return manufacturer's name.
      */
     QString manufacturer() const;
 
     /*!
-     * Returns the manufacturer's web site.
+     * \brief Returns the manufacturer's web site.
      *
-     * \return the manufacturer's web site.
+     * \return The manufacturer's web site.
      *
      * \sa setManufacturerUrl()
      */
     QUrl manufacturerUrl() const;
 
     /*!
-     * Returns long description for end user.
+     * \brief Returns long description for end user.
      *
      * \return long description for end user.
      *
@@ -346,41 +344,41 @@ public:
     QString modelDescription() const;
 
     /*!
-     * Returns the model name.
+     * \brief Returns the model name.
      *
-     * \return the model name.
+     * \return The model name.
      */
     QString modelName() const;
 
     /*!
-     * Returns the model number.
+     * \brief Returns the model number.
      *
-     * \return the model number.
+     * \return The model number.
      *
      * \sa setModelNumber()
      */
     QString modelNumber() const;
 
     /*!
-     * Returns the web site for the device model.
+     * \brief Returns the web site for the device model.
      *
-     * \return the web site for the device model.
+     * \return The web site for the device model.
      *
      * \sa setModelUrl()
      */
     QUrl modelUrl() const;
 
     /*!
-     * Returns the serial number.
+     * \brief Returns the serial number.
      *
-     * \return the serial number.
+     * \return The serial number.
      *
      * \sa setSerialNumber()
      */
     QString serialNumber() const;
 
     /*!
-     * Returns the Unique Device Name.
+     * \brief Returns the Unique Device Name.
      *
      * \return Universally-unique identifier for the device, whether root or embedded.
      *
@@ -389,27 +387,27 @@ public:
     const HUdn& udn() const;
 
     /*!
-     * Returns the Universal Product Code.
+     * \brief Returns the Universal Product Code.
      *
-     * \return the Universal Product Code.
+     * \return The Universal Product Code.
      *
      * \sa setUpc()
      */
     QString upc() const;
 
     /*!
-     * Returns the icons of the device, if any.
+     * \brief Returns the icons of the device, if any.
      *
-     * \return the icons of the device.
+     * \return The icons of the device.
      *
      * \sa setIcons()
      */
     QList<QUrl> icons() const;
 
     /*!
-     * Returns the location of the device's presentation page.
+     * \brief Returns the location of the device's presentation page.
      *
-     * \return the location of the device's presentation page.
+     * \return The location of the device's presentation page.
      *
      * \sa setPresentationUrl()
      */

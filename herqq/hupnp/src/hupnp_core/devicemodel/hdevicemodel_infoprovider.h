@@ -74,68 +74,58 @@ H_DISABLE_COPY(HDeviceModelInfoProvider)
 public:
 
     /*!
-     * Creates a new instance.
-     *
-     * Creates a new instance.
+     * \brief Creates a new instance.
      */
     HDeviceModelInfoProvider();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HDeviceModelInfoProvider() = 0;
 
     /*!
-     * Returns information of the services contained or possibly contained by
-     * the specified device type.
+     * \brief Returns information of the services the specified device type may contain.
      *
      * \param info specifies the device type.
      *
-     * \return information of the services contained or possibly contained by
-     * the specified device type.
+     * \return information of the services the specified device type may contain.
      */
     virtual HServicesSetupData servicesSetupData(const HDeviceInfo& info) const;
 
     /*!
-     * Returns information of the embedded devices contained or possibly
-     * contained by the specified device type.
+     * \brief Returns information of the embedded devices the specified device type may contain.
      *
      * \param info specifies the device type.
      *
-     * \return information of the embedded devices contained or possibly
-     * contained by the specified device type.
+     * \return information of the embedded devices the specified device type may contain.
      */
     virtual HDevicesSetupData embedddedDevicesSetupData(
         const HDeviceInfo& info) const;
 
     /*!
-     * Returns information of the actions contained or possibly contained by
-     * the specified service type.
+     * \brief Returns information of the actions the specified service type may contain.
      *
      * \param serviceInfo specifies the service type.
      *
      * \param parentDeviceInfo specifies information about the parent UPnP device
      * that contains this service.
      *
-     * \return information of the actions contained or possibly contained by
-     * the specified service type.
+     * \return information of the actions the specified service type may contain.
      */
     virtual HActionsSetupData actionsSetupData(
         const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const;
 
     /*!
-     * Returns information of the state variables contained or possibly
-     * contained by the specified service type.
+     * \brief Returns information of the state variables the specified service type
+     * may contain.
      *
      * \param serviceInfo specifies the service type.
      *
      * \param parentDeviceInfo specifies information about the parent UPnP device
      * that contains this service.
      *
-     * \return information of the state variables contained or possibly
-     * contained by the specified service type.
+     * \return information of the state variables the specified service type
+     * may contain.
      */
     virtual HStateVariablesSetupData stateVariablesSetupData(
         const HServiceInfo& serviceInfo, const HDeviceInfo& parentDeviceInfo) const;

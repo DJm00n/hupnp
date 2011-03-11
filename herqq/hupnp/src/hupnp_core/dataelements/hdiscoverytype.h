@@ -37,7 +37,7 @@ namespace Upnp
 class HDiscoveryTypePrivate;
 
 /*!
- * A class that depicts the different <em>discovery types</em> used in
+ * \brief This is a class that depicts the different <em>discovery types</em> used in
  * UPnP networking.
  *
  * The <em>UPnP discovery</em> is based on SSDP messages that provide information
@@ -87,7 +87,7 @@ private:
 public:
 
     /*!
-     * Specifies the discovery type. See UPnP v1.1 Device Architecture
+     * \brief Specifies the discovery type. See UPnP v1.1 Device Architecture
      * specification chapter 1 for more information.
      */
     enum Type
@@ -198,7 +198,7 @@ public:
     HDiscoveryType();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * A discovery type created using a valid UDN identifies a UPnP
      * device as the resource. The resource type is not specified.
@@ -223,7 +223,7 @@ public:
         HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * A discovery type created using a valid resource type specifies the device
      * or service type. No UDN is provided, which means the discovery type does not
@@ -240,7 +240,7 @@ public:
     explicit HDiscoveryType(const HResourceType& resourceType);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * A discovery type created with a valid UDN and a valid resource type
      * identifies a specific UPnP device or UPnP service that is of certain type.
@@ -261,7 +261,7 @@ public:
         HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param resource specifies the contents of the object. In case the
      * the provided argument cannot be parsed to a valid resource identifier the
@@ -291,7 +291,7 @@ public:
         const QString& resource, HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HDiscoveryType();
 
@@ -308,17 +308,17 @@ public:
     HDiscoveryType& operator=(const HDiscoveryType&);
 
     /*!
-     * Returns the type of the object.
+     * \brief Returns the type of the object.
      *
-     * \return the type of the object. If the resource is not specified the type
+     * \return The type of the object. If the resource is not specified the type
      * returned is HDiscoveryType::Undefined.
      */
     Type type() const;
 
     /*!
-     * Returns the Unique Device Name of the resource.
+     * \brief Returns the Unique Device Name of the resource.
      *
-     * \return the Unique Device Name of the resource if it is set. Note,
+     * \return The Unique Device Name of the resource if it is set. Note,
      * the UDN is never set when the type() is either
      * HDiscoveryType::AllDevices or HDiscoveryType::Undefined.
      *
@@ -327,7 +327,7 @@ public:
     const HUdn& udn() const;
 
     /*!
-     * Sets the UDN of the object.
+     * \brief Sets the UDN of the object.
      *
      * \note Changing the UDN may change the resourceType() and the type().
      * For instance, if the object did not have UDN set before,
@@ -346,9 +346,9 @@ public:
     void setUdn(const HUdn& udn, HValidityCheckLevel checkLevel = StrictChecks);
 
     /*!
-     * Returns the resource type associated with this identifier, if any.
+     * \brief Returns the resource type associated with this identifier, if any.
      *
-     * \return the resource type associated with this identifier if it is set.
+     * \return The resource type associated with this identifier if it is set.
      * Note, the returned object is valid only when the type() is either
      * standard or vendor specified device or service type.
      *
@@ -357,7 +357,7 @@ public:
     const HResourceType& resourceType() const;
 
     /*!
-     * Sets the resource type of the object.
+     * \brief Sets the resource type of the object.
      *
      * \param resourceType specifies the new resource type.
      *
@@ -366,7 +366,7 @@ public:
     void setResourceType(const HResourceType& resourceType);
 
     /*!
-     * Returns a string representation of the object.
+     * \brief Returns a string representation of the object.
      *
      * \return a string representation of the object or an empty string,
      * if the object does not specify a valid resource.
@@ -380,7 +380,7 @@ public:
      *
      * \return an object, which type is set to HDiscoveryType::RootDevices.
      *
-     * \remarks this is only a helper method. A logically equivalent object
+     * \remarks This is only a helper method. A logically equivalent object
      * can be constructed with the string <c>"upnp:rootdevice"</c>.
      */
     static HDiscoveryType createDiscoveryTypeForRootDevices();
@@ -390,7 +390,7 @@ public:
      *
      * \return an object, which type is set to HDiscoveryType::All.
      *
-     * \remarks this is only a helper method. A logically equivalent object
+     * \remarks This is only a helper method. A logically equivalent object
      * can be constructed with the string <c>"ssdp:all"</c>.
      */
     static HDiscoveryType createDiscoveryTypeForAllResources();

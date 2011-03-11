@@ -61,6 +61,11 @@ public:
         const QUrl& deviceLocation, const QUrl& iconUrl, QByteArray*);
 
     bool retrieveDeviceDescription(const QString& path, QString*);
+
+    inline QString lastError() const
+    {
+        return m_lastError;
+    }
 };
 
 }

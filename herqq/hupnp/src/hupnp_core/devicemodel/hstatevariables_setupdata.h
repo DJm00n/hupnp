@@ -38,7 +38,7 @@ namespace Upnp
 {
 
 /*!
- * This class is used to specify information that can be used to validate
+ * \brief This class is used to specify information that can be used to validate
  * UPnP state variables.
  *
  * \headerfile hstatevariables_setupdata.h HStateVariablesSetupData
@@ -53,7 +53,7 @@ class H_UPNP_CORE_EXPORT HStateVariablesSetupData
 public:
 
     /*!
-     * This enumeration specifies the actions the HUPnP device model builder
+     * \brief This enumeration specifies the actions the HUPnP device model builder
      * should take when it encounters an unknown state variable definition in a
      * service description file.
      */
@@ -79,7 +79,7 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \param defIncPol specifies the default inclusion policy for state variables
      * that are \b not contained in this instance.
@@ -89,18 +89,18 @@ public:
     HStateVariablesSetupData(DefaultInclusionPolicy defIncPol = Accept);
 
     /*!
-     * Returns the default inclusion policy.
+     * \brief Returns the default inclusion policy.
      *
      * The default inclusion policy specifies the action to take when a
      * state variable definition in a service description file does not map
      * to any HStateVariableInfo object contained within this instance.
      *
-     * \return the default inclusion policy.
+     * \return The default inclusion policy.
      */
     DefaultInclusionPolicy defaultInclusionPolicy() const;
 
     /*!
-     * Indicates if the instance contains an item that has the
+     * \brief Indicates if the instance contains an item that has the
      * specified name.
      *
      * \param name specifies the name of the item.
@@ -113,11 +113,11 @@ public:
     bool contains(const QString& name) const;
 
     /*!
-     * Retrieves an item.
+     * \brief Retrieves an item.
      *
      * \param name specifies the name of the item to be retrieved.
      *
-     * \return the item with the specified name. Note that the returned item
+     * \return The item with the specified name. Note that the returned item
      * is invalid, i.e. HStateVariableInfo::isValid() returns false in case no item
      * with the specified name was found.
      *
@@ -126,23 +126,23 @@ public:
     HStateVariableInfo get(const QString& name) const;
 
     /*!
-     * Indicates if the object is empty.
+     * \brief Indicates if the object is empty.
      *
      * \return \e true in case the instance has no items.
      */
     bool isEmpty() const;
 
     /*!
-     * Returns the names of the contained items.
+     * \brief Returns the names of the contained items.
      *
-     * \return the names of the contained items.
+     * \return The names of the contained items.
      */
     QSet<QString> names() const;
 
     /*!
-     * Returns the number of contained items.
+     * \brief Returns the number of contained items.
      *
-     * \return the number of contained items.
+     * \return The number of contained items.
      */
     qint32 size() const;
 
@@ -171,7 +171,7 @@ public:
     bool remove(const QString& name);
 
     /*!
-     * Sets the inclusion requirement element of an item.
+     * \brief Sets the inclusion requirement element of an item.
      *
      * \param name specifies the name of the item.
      *

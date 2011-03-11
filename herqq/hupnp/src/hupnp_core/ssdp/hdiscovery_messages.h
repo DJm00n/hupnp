@@ -39,7 +39,7 @@ namespace Upnp
 class HResourceAvailablePrivate;
 
 /*!
- * A class that represents the <em>resource available</em> (ssdp:alive) message.
+ * \brief This is a class that represents the <em>resource available</em> (ssdp:alive) message.
  *
  * According to the UDA, <em>When a device is added to the network,
  * it MUST multicast discovery messages to advertise its root device, any embedded devices,
@@ -130,14 +130,12 @@ public:
         qint32         searchPort = -1);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HResourceAvailable();
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of the other object instance to this.
      */
@@ -146,12 +144,12 @@ public:
     /*!
      * Assigns the contents of the other object instance to this.
      *
-     * \remarks this is not thread-safe.
+     * \remarks This is not thread-safe.
      */
     HResourceAvailable& operator=(const HResourceAvailable&);
 
     /*!
-     * Indicates whether or not the object contains valid announcement information.
+     * \brief Indicates whether or not the object contains valid announcement information.
      *
      * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
@@ -163,9 +161,9 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Returns the server tokens.
+     * \brief Returns the server tokens.
      *
-     * \return the server tokens. The returned object is invalid if this
+     * \return The server tokens. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
@@ -173,9 +171,9 @@ public:
     const HProductTokens& serverTokens() const;
 
     /*!
-     * Returns the location of the announced device.
+     * \brief Returns the location of the announced device.
      *
-     * \return the location of the announced device. This is the URL where
+     * \return The location of the announced device. This is the URL where
      * the <em>device description</em> can be retrieved. The returned object
      * is empty if this object is invalid.
      *
@@ -184,11 +182,11 @@ public:
     QUrl location() const;
 
     /*!
-     * Returns the Unique Service Name.
+     * \brief Returns the Unique Service Name.
      *
      * The Unique Service Name identifies a unique \e device or \e service instance.
      *
-     * \return the Unique Service Name. The returned object is invalid if this
+     * \return The Unique Service Name. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
@@ -196,33 +194,33 @@ public:
     const HDiscoveryType& usn() const;
 
     /*!
-     * Returns the number of seconds the advertisement is valid.
+     * \brief Returns the number of seconds the advertisement is valid.
      *
-     * \return the number of seconds the advertisement is valid. If the object
+     * \return The number of seconds the advertisement is valid. If the object
      * is valid the return value is never smaller than 5.
      */
     qint32 cacheControlMaxAge() const;
 
     /*!
-     * Returns the value of \c BOOTID.UPNP.ORG.
+     * \brief Returns the value of \c BOOTID.UPNP.ORG.
      *
-     * \return the value of \c BOOTID.UPNP.ORG. If the value is not
+     * \return The value of \c BOOTID.UPNP.ORG. If the value is not
      * specified -1 is returned.
      */
     qint32 bootId() const;
 
     /*!
-     * Returns the value of \c CONFIGID.UPNP.ORG.
+     * \brief Returns the value of \c CONFIGID.UPNP.ORG.
      *
-     * \return the value of \c CONFIGID.UPNP.ORG. If the value is not
+     * \return The value of \c CONFIGID.UPNP.ORG. If the value is not
      * specified -1 is returned.
      */
     qint32 configId() const;
 
     /*!
-     * Returns the value of \c SEARCHPORT.UPNP.ORG header field.
+     * \brief Returns the value of \c SEARCHPORT.UPNP.ORG header field.
      *
-     * \return the value of \c SEARCHPORT.UPNP.ORG header field. If the value is not
+     * \return The value of \c SEARCHPORT.UPNP.ORG header field. If the value is not
      * specified -1 is returned.
      */
     qint32 searchPort() const;
@@ -292,7 +290,7 @@ public:
     HResourceUnavailable();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param usn specifies the Unique Service Name. The created object is invalid
      * if the provided USN is invalid.
@@ -311,14 +309,12 @@ public:
         const HDiscoveryType& usn, qint32 bootId = -1, qint32 configId = -1);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HResourceUnavailable();
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of the other to this object.
      */
@@ -332,7 +328,7 @@ public:
     HResourceUnavailable& operator=(const HResourceUnavailable&);
 
     /*!
-     * Indicates whether or not the object contains valid announcement information.
+     * \brief Indicates whether or not the object contains valid announcement information.
      *
      * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
@@ -344,11 +340,11 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Returns the Unique Service Name.
+     * \brief Returns the Unique Service Name.
      *
      * The Unique Service Name identifies a unique \e device or \e service instance.
      *
-     * \return the Unique Service Name. The returned object is invalid if this
+     * \return The Unique Service Name. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
@@ -356,25 +352,25 @@ public:
     const HDiscoveryType& usn() const;
 
     /*!
-     * Returns the value of \c BOOTID.UPNP.ORG.
+     * \brief Returns the value of \c BOOTID.UPNP.ORG.
      *
-     * \return the value of \c BOOTID.UPNP.ORG. If the value is not
+     * \return The value of \c BOOTID.UPNP.ORG. If the value is not
      * specified -1 is returned.
      */
     qint32 bootId() const;
 
     /*!
-     * Returns the value of \c CONFIGID.UPNP.ORG.
+     * \brief Returns the value of \c CONFIGID.UPNP.ORG.
      *
-     * \return the value of \c CONFIGID.UPNP.ORG. If the value is not
+     * \return The value of \c CONFIGID.UPNP.ORG. If the value is not
      * specified -1 is returned.
      */
     qint32 configId() const;
 
     /*!
-     * Returns the IP endpoint of the device that went offline.
+     * \brief Returns the IP endpoint of the device that went offline.
      *
-     * \return the IP endpoint of the device that went offline.
+     * \return The IP endpoint of the device that went offline.
      */
     HEndpoint location() const;
 };
@@ -471,14 +467,12 @@ public:
         qint32 searchPort = -1);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HResourceUpdate();
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of the other to this.
      */
@@ -492,7 +486,7 @@ public:
     HResourceUpdate& operator=(const HResourceUpdate&);
 
     /*!
-     * Indicates whether or not the object contains valid announcement information.
+     * \brief Indicates whether or not the object contains valid announcement information.
      *
      * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
@@ -504,9 +498,9 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Returns the location of the announced device.
+     * \brief Returns the location of the announced device.
      *
-     * \return the location of the announced device. This is the URL where
+     * \return The location of the announced device. This is the URL where
      * the <em>device description</em> can be retrieved. The returned object
      * will be empty if this object is invalid.
      *
@@ -515,24 +509,24 @@ public:
     QUrl location() const;
 
     /*!
-     * Returns the Unique Service Name.
+     * \brief Returns the Unique Service Name.
      *
-     * \return the Unique Service Name.
+     * \return The Unique Service Name.
      */
     const HDiscoveryType& usn() const;
 
     /*!
-     * Returns the value of \c BOOTID.UPNP.ORG.
+     * \brief Returns the value of \c BOOTID.UPNP.ORG.
      *
-     * \return the value of \c BOOTID.UPNP.ORG.
+     * \return The value of \c BOOTID.UPNP.ORG.
      * If the value is not specified -1 is returned.
      */
     qint32 bootId() const;
 
     /*!
-     * Returns the value of \c CONFIGID.UPNP.ORG.
+     * \brief Returns the value of \c CONFIGID.UPNP.ORG.
      *
-     * \return the value of \c CONFIGID.UPNP.ORG.
+     * \return The value of \c CONFIGID.UPNP.ORG.
      * If the value is not specified -1 is returned.
      */
     qint32 configId() const;
@@ -544,9 +538,9 @@ public:
     qint32 nextBootId() const;
 
     /*!
-     * Returns the value of \c SEARCHPORT.UPNP.ORG header field.
+     * \brief Returns the value of \c SEARCHPORT.UPNP.ORG header field.
      *
-     * \return the value of \c SEARCHPORT.UPNP.ORG header field.
+     * \return The value of \c SEARCHPORT.UPNP.ORG header field.
      * If the value is not specified -1 is returned.
      */
     qint32 searchPort() const;
@@ -638,14 +632,12 @@ public:
         const HProductTokens& userAgent);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HDiscoveryRequest();
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of \c other to this.
      */
@@ -659,7 +651,7 @@ public:
     HDiscoveryRequest& operator=(const HDiscoveryRequest&);
 
     /*!
-     * Indicates whether or not the object contains valid announcement information.
+     * \brief Indicates whether or not the object contains valid announcement information.
      *
      * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
@@ -671,26 +663,26 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Returns the Search Target of the request.
+     * \brief Returns the Search Target of the request.
      *
-     * \return the Search Target of the request.
+     * \return The Search Target of the request.
      */
     const HDiscoveryType& searchTarget() const;
 
     /*!
-     * Returns the maximum wait time in seconds.
+     * \brief Returns the maximum wait time in seconds.
      *
      * According to UDA,
      * <em>Device responses SHOULD be delayed a random duration between 0 and
      * this many seconds to balance load for the control point when it
      * processes responses</em>.
      *
-     * \return the maximum wait time in seconds.
+     * \return The maximum wait time in seconds.
      */
     qint32 mx() const;
 
     /*!
-     * Returns information about the maker of the request.
+     * \brief Returns information about the maker of the request.
      *
      * \return information about the maker of the request.
      */
@@ -723,7 +715,7 @@ inline bool operator!=(
 class HDiscoveryResponsePrivate;
 
 /*!
- * A class that represents a response to a HDiscoveryRequest.
+ * \brief This is a class that represents a response to a HDiscoveryRequest.
  *
  * Usually, you create instances of this class to be sent by the Herqq::Upnp::HSsdp,
  * or you receive instances of this class from the Herqq::Upnp::HSsdp.
@@ -815,7 +807,7 @@ public:
         qint32 searchPort = -1);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of \c other to this.
      */
@@ -829,14 +821,12 @@ public:
     HDiscoveryResponse& operator=(const HDiscoveryResponse&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HDiscoveryResponse();
 
    /*!
-     * Indicates whether or not the object contains valid announcement information.
+     * \brief Indicates whether or not the object contains valid announcement information.
      *
      * \param level indicates whether the check should be strictly according
      * to the UDA specification. If set to false some checks are omitted that
@@ -848,25 +838,25 @@ public:
     bool isValid(HValidityCheckLevel level) const;
 
     /*!
-     * Returns the server tokens.
+     * \brief Returns the server tokens.
      *
-     * \return the server tokens.
+     * \return The server tokens.
      */
     const HProductTokens& serverTokens() const;
 
     /*!
-     * Returns the date when the response was generated.
+     * \brief Returns the date when the response was generated.
      *
-     * \return the date when the response was generated.
+     * \return The date when the response was generated.
      */
     QDateTime date() const;
 
     /*!
-     * Returns the Unique Service Name.
+     * \brief Returns the Unique Service Name.
      *
      * The Unique Service Name identifies a unique \e device or \e service instance.
      *
-     * \return the Unique Service Name. The returned object is invalid if this
+     * \return The Unique Service Name. The returned object is invalid if this
      * object is invalid.
      *
      * \sa isValid()
@@ -874,9 +864,9 @@ public:
     const HDiscoveryType& usn() const;
 
     /*!
-     * Returns the location of the announced device.
+     * \brief Returns the location of the announced device.
      *
-     * \return the location of the announced device. This is the URL where
+     * \return The location of the announced device. This is the URL where
      * the <em>device description</em> can be retrieved. The returned object
      * will be empty if this object is invalid.
      *
@@ -885,32 +875,32 @@ public:
     QUrl location() const;
 
     /*!
-     * Returns the number of seconds the advertisement is valid.
+     * \brief Returns the number of seconds the advertisement is valid.
      *
-     * \return the number of seconds the advertisement is valid.
+     * \return The number of seconds the advertisement is valid.
      */
     qint32 cacheControlMaxAge() const;
 
     /*!
-     * Returns the value of \c BOOTID.UPNP.ORG.
+     * \brief Returns the value of \c BOOTID.UPNP.ORG.
      *
-     * \return the value of \c BOOTID.UPNP.ORG.
+     * \return The value of \c BOOTID.UPNP.ORG.
      * If the value is not specified -1 is returned.
      */
     qint32 bootId() const;
 
     /*!
-     * Returns the value of \c CONFIGID.UPNP.ORG.
+     * \brief Returns the value of \c CONFIGID.UPNP.ORG.
      *
-     * \return the value of \c CONFIGID.UPNP.ORG.
+     * \return The value of \c CONFIGID.UPNP.ORG.
      * If the value is not specified -1 is returned.
      */
     qint32 configId() const;
 
     /*!
-     * Returns the value of \c SEARCHPORT.UPNP.ORG header field.
+     * \brief Returns the value of \c SEARCHPORT.UPNP.ORG header field.
      *
-     * \return the value of \c SEARCHPORT.UPNP.ORG header field.
+     * \return The value of \c SEARCHPORT.UPNP.ORG header field.
      * If the value is not specified -1 is returned.
      */
     qint32 searchPort() const;

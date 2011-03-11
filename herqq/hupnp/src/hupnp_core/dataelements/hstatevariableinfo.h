@@ -81,7 +81,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(
 public:
 
     /*!
-     * Specifies different types of eventing.
+     * \brief Specifies different types of eventing.
      *
      * \sa hupnp_devicehosting
      */
@@ -115,14 +115,14 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isValid()
      */
     HStateVariableInfo();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the state variable.
      *
@@ -143,7 +143,7 @@ public:
         QString* err = 0);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the state variable.
      *
@@ -168,7 +168,7 @@ public:
         QString* err = 0);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param name specifies the name of the state variable.
      *
@@ -262,31 +262,29 @@ public:
         QString* err = 0);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a new instance identical to the \c other object.
      */
     HStateVariableInfo(const HStateVariableInfo&);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Assigns the contents of the \c other to this.
      */
     HStateVariableInfo& operator=(const HStateVariableInfo&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HStateVariableInfo();
 
     /*!
-     * Returns the UPnP service version in which the state variable
+     * \brief Returns the UPnP service version in which the state variable
      * was first specified.
      *
-     * \return the UPnP service version in which the state variable
+     * \return The UPnP service version in which the state variable
      * was first specified or \c -1, if the version is not defined.
      *
      * \remarks It is perfectly normal that the version information is not
@@ -297,7 +295,7 @@ public:
     qint32 version() const;
 
     /*!
-     * Specifies the UPnP service version in which the state variable
+     * \brief Specifies the UPnP service version in which the state variable
      * was first specified.
      *
      * \param version specifies the UPnP service version in which the
@@ -310,35 +308,35 @@ public:
     void setVersion(qint32 version);
 
     /*!
-     * Returns the name of the action.
+     * \brief Returns the name of the action.
      *
      * This is the name specified in the corresponding service description file.
      *
-     * \return the name of the action.
+     * \return The name of the action.
      */
     QString name() const;
 
     /*!
-     * Returns the type of the action, i.e. is it required or optional.
+     * \brief Returns the type of the action, i.e. is it required or optional.
      *
      * This is the name specified in the corresponding service description file.
      *
-     * \return the type of the action.
+     * \return The type of the action.
      */
     HInclusionRequirement inclusionRequirement() const;
 
     /*!
-     * Specifies whether the depicted state variable is required or optional.
+     * \brief Specifies whether the depicted state variable is required or optional.
      *
      * \param arg specifies whether the service is required or optional.
      */
     void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
-     * Returns the maximum rate at which an evented state variable may send
+     * \brief Returns the maximum rate at which an evented state variable may send
      * events.
      *
-     * \return the maximum rate at which an evented state variable may send
+     * \return The maximum rate at which an evented state variable may send
      * events. The returned value is -1 if the state variable is not evented or
      * the maximum rate has not been defined.
      *
@@ -347,7 +345,7 @@ public:
     qint32 maxEventRate() const;
 
     /*!
-     * Sets the maximum rate at which an evented state variable may send
+     * \brief Sets the maximum rate at which an evented state variable may send
      * events.
      *
      * \param arg specifies the maximum rate at which an evented state
@@ -359,33 +357,33 @@ public:
     void setMaxEventRate(qint32 arg);
 
     /*!
-     * Returns the data type of the state variable.
+     * \brief Returns the data type of the state variable.
      *
-     * \return the data type of the state variable.
+     * \return The data type of the state variable.
      */
     HUpnpDataTypes::DataType dataType() const;
 
     /*!
-     * Returns the type of eventing the state variable supports, if any.
+     * \brief Returns the type of eventing the state variable supports, if any.
      *
-     * \return the type of eventing the state variable supports, if any.
+     * \return The type of eventing the state variable supports, if any.
      */
     EventingType eventingType() const;
 
     /*!
-     * Sets the type of eventing the state variable supports, if any.
+     * \brief Sets the type of eventing the state variable supports, if any.
      *
      * \param arg specifies the type of eventing the state variable supports, if any.
      */
     void setEventingType(EventingType arg);
 
     /*!
-     * Returns the list of allowed values.
+     * \brief Returns the list of allowed values.
      *
-     * \return the list of allowed values if the contained data type is string
+     * \return The list of allowed values if the contained data type is string
      * or empty list otherwise.
      *
-     * \remarks this is only applicable on state variables, which data type is
+     * \remarks This is only applicable on state variables, which data type is
      * HUpnpDataTypes::string.
      *
      * \sa setAllowedValueList(), dataType()
@@ -393,11 +391,11 @@ public:
     QStringList allowedValueList() const;
 
     /*!
-     * Specifies the values the state variable accepts.
+     * \brief Specifies the values the state variable accepts.
      *
      * \param arg specifies the values the state variable accepts.
      *
-     * \remarks this is only applicable on state variables, which data type is
+     * \remarks This is only applicable on state variables, which data type is
      * HUpnpDataTypes::string.
      *
      * \sa allowedValueList(), dataType()
@@ -405,11 +403,11 @@ public:
     bool setAllowedValueList(const QStringList& arg);
 
     /*!
-     * Returns the minimum value of the specified value range.
+     * \brief Returns the minimum value of the specified value range.
      *
-     * \return the minimum value of the specified value range.
+     * \return The minimum value of the specified value range.
      *
-     * \remarks this is only applicable on state variables, which data type is
+     * \remarks This is only applicable on state variables, which data type is
      * numeric. In addition, it is optional and it may not be defined.
      *
      * \sa dataType()
@@ -417,11 +415,11 @@ public:
     QVariant minimumValue() const;
 
     /*!
-     * Returns the maximum value of the specified value range.
+     * \brief Returns the maximum value of the specified value range.
      *
-     * \return the maximum value of the specified value range.
+     * \return The maximum value of the specified value range.
      *
-     * \remarks this is only applicable on state variables, which data type is
+     * \remarks This is only applicable on state variables, which data type is
      * numeric. In addition, it is optional and it may not be defined.
      *
      * \sa dataType()
@@ -429,11 +427,11 @@ public:
     QVariant maximumValue() const;
 
     /*!
-     * Returns the step value of the specified value range.
+     * \brief Returns the step value of the specified value range.
      *
-     * \return the step value of the specified value range.
+     * \return The step value of the specified value range.
      *
-     * \remarks this is only applicable on state variables, which data type is
+     * \remarks This is only applicable on state variables, which data type is
      * numeric. In addition, it is optional and it may not be defined.
      *
      * \sa dataType()
@@ -441,7 +439,7 @@ public:
     QVariant stepValue() const;
 
     /*!
-     * Sets the allowed value range.
+     * \brief Sets the allowed value range.
      *
      * \param minimumValue specifies the inclusive lower bound of an
      * acceptable value. This cannot be larger than the \c maximumValue.
@@ -456,7 +454,7 @@ public:
      * error description in case the any of the provided values is invalid. This
      * parameter is optional.
      *
-     * \remarks this is only applicable on state variables, which data type is
+     * \remarks This is only applicable on state variables, which data type is
      * numeric. In addition, it is optional and it may not be defined.
      *
      * \return \e true in case the values were successfully set.
@@ -466,15 +464,15 @@ public:
         const QVariant& stepValue, QString* err = 0);
 
     /*!
-     * Returns the default value of the state variable.
+     * \brief Returns the default value of the state variable.
      *
-     * \return the default value of the state variable. If no default has been
+     * \return The default value of the state variable. If no default has been
      * specified, QVariant::Invalid is returned.
      */
     QVariant defaultValue() const;
 
     /*!
-     * Sets the default value.
+     * \brief Sets the default value.
      *
      * \param arg specifies the default value. If the value range has been
      * specified the value has to be within the specified range.
@@ -488,7 +486,7 @@ public:
     bool setDefaultValue(const QVariant& arg, QString* err = 0);
 
     /*!
-     * Indicates if the state variable's value is constrained either by minimum,
+     * \brief Indicates if the state variable's value is constrained either by minimum,
      * maximum or by a list of allowed values.
      *
      * \return true in case the state variable's value is constrained either by minimum,
@@ -499,7 +497,7 @@ public:
     bool isConstrained() const;
 
     /*!
-     * Indicates whether or not the value is valid in terms of this particular
+     * \brief Indicates whether or not the value is valid in terms of this particular
      * state variable.
      *
      * \param value specifies the value to be checked.
@@ -522,7 +520,7 @@ public:
         const QVariant& value, QVariant* convertedValue = 0, QString* err = 0) const;
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * \return \e true in case the object is valid.
      */
@@ -553,7 +551,7 @@ inline bool operator!=(
 }
 
 /*!
- * Returns a value that can be used as a unique key in a hash-map identifying
+ * \brief Returns a value that can be used as a unique key in a hash-map identifying
  * the object.
  *
  * \param key specifies the HStateVariableInfo object from which the hash value

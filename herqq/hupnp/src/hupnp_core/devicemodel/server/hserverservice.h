@@ -131,7 +131,7 @@ protected:
      *
      * \endcode
      *
-     * \return the implementations of the actions this \c %HServerService exposes.
+     * \return The implementations of the actions this \c %HServerService exposes.
      */
     virtual HActionInvokes createActionInvokes();
 
@@ -169,7 +169,7 @@ protected:
     HServerServicePrivate* h_ptr;
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * You have to call init() to fully initialize the instance.
      *
@@ -201,21 +201,19 @@ protected:
 public:
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HServerService() = 0;
 
     /*!
-     * Returns the parent HServerDevice that contains this service instance.
+     * \brief Returns the parent HServerDevice that contains this service instance.
      *
-     * \return the parent HServerDevice that contains this service instance.
+     * \return The parent HServerDevice that contains this service instance.
      */
     HServerDevice* parentDevice() const;
 
     /*!
-    * Returns information about the service.
+    * \brief Returns information about the service.
     *
     * \return information about the service. This information is usually read
     * from a device description document.
@@ -223,16 +221,16 @@ public:
     const HServiceInfo& info() const;
 
     /*!
-     * Returns the full service description.
+     * \brief Returns the full service description.
      *
-     * \return the full service description.
+     * \return The full service description.
      */
     const QString& description() const;
 
     /*!
-     * Returns the actions the service contains.
+     * \brief Returns the actions the service contains.
      *
-     * \return the actions the service contains.
+     * \return The actions the service contains.
      *
      * \remarks The ownership of the returned objects is not transferred.
      * Do \b not delete the returned objects.
@@ -240,9 +238,9 @@ public:
     const HServerActions& actions() const;
 
     /*!
-     * Returns the state variables of the service.
+     * \brief Returns the state variables of the service.
      *
-     * \return the state variables of the service.
+     * \return The state variables of the service.
      *
      * \remarks The ownership of the returned objects is not transferred.
      * Do \b not delete the returned objects.
@@ -250,7 +248,7 @@ public:
     const HServerStateVariables& stateVariables() const;
 
     /*!
-     * Indicates whether or not the service contains state variables that
+     * \brief Indicates whether or not the service contains state variables that
      * are evented.
      *
      * \return \e true in case the service contains one or more state variables
@@ -262,7 +260,7 @@ public:
     bool isEvented() const;
 
     /*!
-     * Returns the value of the specified state variable, if such exists.
+     * \brief Returns the value of the specified state variable, if such exists.
      *
      * This is a convenience method for retrieving a state variable by name and
      * getting its value.
@@ -273,7 +271,7 @@ public:
      * if the specified state variable was found and its value was returned.
      * This is optional.
      *
-     * \return the value of the specified state variable, if such exists.
+     * \return The value of the specified state variable, if such exists.
      * If this service does not contain the specified state variable, an
      * invalid \c QVariant is returned.
      *
@@ -285,7 +283,7 @@ public:
     QVariant value(const QString& stateVarName, bool* ok = 0) const;
 
     /*!
-     * Sets the value of the specified state variable, if such exists.
+     * \brief Sets the value of the specified state variable, if such exists.
      *
      * This is a convenience method for retrieving a state variable by name and
      * setting its value.
@@ -310,7 +308,7 @@ public Q_SLOTS:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted when the state of one or more state variables
+     * \brief This signal is emitted when the state of one or more state variables
      * has changed.
      *
      * \param source specifies the source of the event.

@@ -37,7 +37,7 @@ class HControlPointConfigurationPrivate;
 /*!
  * Class for specifying initialization information to HControlPoint instances.
  *
- * This class is used to pass initialization information for HControlPoint
+ * \brief This class is used to pass initialization information for HControlPoint
  * instances. The use of this is optional and an HControlPoint instance is perfectly
  * functional with the default configuration.
  *
@@ -87,16 +87,14 @@ protected:
 public:
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * Creates a new instance with default values.
      */
     HControlPointConfiguration();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HControlPointConfiguration();
 
@@ -105,7 +103,7 @@ public:
     virtual HControlPointConfiguration* clone() const;
 
     /*!
-     * Indicates whether to automatically subscribe to all events on all services
+     * \brief Indicates whether to automatically subscribe to all events on all services
      * of a device when a new device is added into the control of an HControlPoint.
      *
      * \return \e true in case the HControlPoint instance should subscribe to all
@@ -116,12 +114,12 @@ public:
     bool subscribeToEvents() const;
 
     /*!
-     * Returns the subscription timeout a control point requests when it subscribes
+     * \brief Returns the subscription timeout a control point requests when it subscribes
      * to an evented service.
      *
      * The default value is 30 minutes.
      *
-     * \return the subscription timeout in seconds a control point requests
+     * \return The subscription timeout in seconds a control point requests
      * when it subscribes to an evented service.
      *
      * \sa setDesiredSubscriptionTimeout()
@@ -129,7 +127,7 @@ public:
     qint32 desiredSubscriptionTimeout() const;
 
     /*!
-     * Indicates whether the control point should perform discovery upon
+     * \brief Indicates whether the control point should perform discovery upon
      * initialization.
      *
      * \return \e true in case the the control point should perform discovery upon
@@ -144,10 +142,10 @@ public:
     bool autoDiscovery() const;
 
     /*!
-     * Returns the network addresses a control point should use in its
+     * \brief Returns the network addresses a control point should use in its
      * operations.
      *
-     * \return the network addresses a control point should use in its
+     * \return The network addresses a control point should use in its
      * operations.
      *
      * \sa setNetworkAddressesToUse()
@@ -168,7 +166,7 @@ public:
     void setSubscribeToEvents(bool subscribeAutomatically);
 
     /*!
-     * Sets the subscription timeout a control point requests when it subscribes
+     * \brief Sets the subscription timeout a control point requests when it subscribes
      * to an evented service.
      *
      * Values less than or equal to zero are rejected and instead the default value

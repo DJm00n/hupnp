@@ -54,16 +54,12 @@ H_DISABLE_COPY(HDeviceModelCreator)
 public:
 
     /*!
-     * Creates a new instance.
-     *
-     * Creates a new instance.
+     * \brief Creates a new instance.
      */
     HDeviceModelCreator();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HDeviceModelCreator();
 

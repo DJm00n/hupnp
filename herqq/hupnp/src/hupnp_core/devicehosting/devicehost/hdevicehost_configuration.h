@@ -75,14 +75,12 @@ public:
     /*!
      * Default constructor.
      *
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      */
     HDeviceConfiguration();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HDeviceConfiguration();
 
@@ -91,7 +89,7 @@ public:
     virtual HDeviceConfiguration* clone() const;
 
     /*!
-     * Sets the path to the UPnP device description.
+     * \brief Sets the path to the UPnP device description.
      *
      * \param pathToDeviceDescription specifies the path to the UPnP
      * device description.
@@ -103,14 +101,14 @@ public:
     void setPathToDeviceDescription(const QString& pathToDeviceDescription);
 
     /*!
-     * Returns the path to the device description.
+     * \brief Returns the path to the device description.
      *
-     * \return the path to the device description.
+     * \return The path to the device description.
      */
     QString pathToDeviceDescription() const;
 
     /*!
-     * Sets the maximum age of presence announcements and discovery responses
+     * \brief Sets the maximum age of presence announcements and discovery responses
      * in seconds.
      *
      * \param maxAge specifies the maximum age of presence announcements
@@ -124,19 +122,19 @@ public:
     void setCacheControlMaxAge(qint32 maxAge=1800);
 
     /*!
-     * Returns the maximum age of presence announcements and discovery
+     * \brief Returns the maximum age of presence announcements and discovery
      * responses in seconds.
      *
      * If the cache control max age has not been explicitly set,
      * the return value is 1800.
      *
-     * \return the maximum age of presence announcements and discovery
+     * \return The maximum age of presence announcements and discovery
      * responses in seconds.
      */
     qint32 cacheControlMaxAge() const;
 
     /*!
-     * Indicates whether or not the object contains the necessary details
+     * \brief Indicates whether or not the object contains the necessary details
      * for hosting an HServerDevice class in a HDeviceHost.
      *
      * \retval true in case the object contains the necessary details
@@ -153,7 +151,7 @@ public:
 class HDeviceHostConfigurationPrivate;
 
 /*!
- * This class is used to specify one or more device configurations to an
+ * \brief This class is used to specify one or more device configurations to an
  * HDeviceHost instance and to configure the functionality of the HDeviceHost
  * that affect every hosted HServerDevice.
  *
@@ -216,14 +214,14 @@ public:
     /*!
      * Default constructor.
      *
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isEmpty(), isValid()
      */
     HDeviceHostConfiguration();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * Creates an instance with a single device configuration. This is a convenience
      * method.
@@ -233,9 +231,7 @@ public:
     HDeviceHostConfiguration(const HDeviceConfiguration&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HDeviceHostConfiguration();
 
@@ -265,16 +261,16 @@ public:
     void clear();
 
     /*!
-     * Returns the currently stored device configurations.
+     * \brief Returns the currently stored device configurations.
      *
-     * \return the currently stored device configurations. The returned list
+     * \return The currently stored device configurations. The returned list
      * contains pointers to const device configuration objects this instance
      * owns. The ownership of the objects is \b not transferred.
      */
     QList<const HDeviceConfiguration*> deviceConfigurations() const;
 
     /*!
-     * Indicates how many times the device host sends each individual
+     * \brief Indicates how many times the device host sends each individual
      * advertisement / announcement.
      *
      * The default value is 2.
@@ -287,10 +283,10 @@ public:
     qint32 individualAdvertisementCount() const;
 
     /*!
-     * Returns the network addresses a device host should use in its
+     * \brief Returns the network addresses a device host should use in its
      * operations.
      *
-     * \return the network addresses a device host should use in its
+     * \return The network addresses a device host should use in its
      * operations.
      *
      * \sa setNetworkAddressesToUse()
@@ -298,23 +294,23 @@ public:
     QList<QHostAddress> networkAddressesToUse() const;
 
     /*!
-     * Returns the timeout the device host uses for subscriptions.
+     * \brief Returns the timeout the device host uses for subscriptions.
      *
      * The default value is zero, which means that the device host honors the
      * timeouts requested by control points up to a day. Larger values are
      * set to a day.
      *
-     * \return the timeout in seconds the device host uses for subscriptions.
+     * \return The timeout in seconds the device host uses for subscriptions.
      *
      * \sa setSubscriptionExpirationTimeout()
      */
     qint32 subscriptionExpirationTimeout() const;
 
     /*!
-     * Returns the device model creator the HDeviceHost should use
+     * \brief Returns the device model creator the HDeviceHost should use
      * to create HServerDevice instances.
      *
-     * \return the device model creator the HDeviceHost should use
+     * \return The device model creator the HDeviceHost should use
      * to create HServerDevice instances.
      *
      * \sa setDeviceModelCreator()
@@ -322,16 +318,16 @@ public:
     HDeviceModelCreator* deviceModelCreator() const;
 
     /*!
-     * Returns the device model info provider the HDeviceHost should use to
+     * \brief Returns the device model info provider the HDeviceHost should use to
      * validate device model components.
      *
-     * \return the device model info provider the HDeviceHost should use to
+     * \return The device model info provider the HDeviceHost should use to
      * validate device model components.
      */
     HDeviceModelInfoProvider* deviceModelInfoProvider() const;
 
     /*!
-     * Sets the device model creator the HDeviceHost should use
+     * \brief Sets the device model creator the HDeviceHost should use
      * to create HServerDevice instances.
      *
      * \param creator specifies the device model creator the HDeviceHost should use
@@ -342,7 +338,7 @@ public:
     void setDeviceModelCreator(const HDeviceModelCreator& creator);
 
     /*!
-     * Sets the device model info provider the HDeviceHost should use to
+     * \brief Sets the device model info provider the HDeviceHost should use to
      * validate device model components.
      *
      * \param infoProvider specifies the device model info provider the
@@ -351,7 +347,7 @@ public:
     void setDeviceModelInfoProvider(const HDeviceModelInfoProvider& infoProvider);
 
     /*!
-     * Specifies how many times the device host sends each individual
+     * \brief Specifies how many times the device host sends each individual
      * advertisement / announcement.
      *
      * By default, each advertisement is sent twice.
@@ -365,7 +361,7 @@ public:
     void setIndividualAdvertisementCount(qint32 count);
 
     /*!
-     * Specifies the timeout the device host uses for subscriptions.
+     * \brief Specifies the timeout the device host uses for subscriptions.
      *
      * The default value is zero, which means that the device host honors the
      * timeouts requested by control points.
@@ -397,7 +393,7 @@ public:
     bool setNetworkAddressesToUse(const QList<QHostAddress>& addresses);
 
     /*!
-     * Indicates if the instance contains any device configurations.
+     * \brief Indicates if the instance contains any device configurations.
      *
      * \return \e true in case the instance contains no device configurations.
      * In this case the object cannot be used to initialize an HDeviceHost.
@@ -407,7 +403,7 @@ public:
     bool isEmpty() const;
 
     /*!
-     * Indicates if the object is valid, i.e it can be used to initialize
+     * \brief Indicates if the object is valid, i.e it can be used to initialize
      * an HDeviceHost instance.
      *
      * \return \e true if the object is valid. A valid object is not empty and

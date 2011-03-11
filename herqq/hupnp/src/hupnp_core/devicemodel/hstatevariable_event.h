@@ -36,7 +36,7 @@ namespace Upnp
 class HStateVariableEventPrivate;
 
 /*!
- * A class used to transfer state variable event information.
+ * \brief This is a class used to transfer state variable event information.
  *
  * \headerfile hstatevariable_event.h HStateVariableEvent
  *
@@ -55,7 +55,7 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isEmpty()
      */
@@ -76,16 +76,14 @@ public:
         const QVariant& newValue);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Copies the contents of the \c other to this.
      */
     HStateVariableEvent(const HStateVariableEvent&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HStateVariableEvent();
 
@@ -97,7 +95,7 @@ public:
     HStateVariableEvent& operator=(const HStateVariableEvent&);
 
     /*!
-     * Indicates if the instance is empty.
+     * \brief Indicates if the instance is empty.
      *
      * \return \e true if the instance is empty, which means that none of its
      * attributes contain a valid non-empty value.
@@ -105,16 +103,16 @@ public:
     bool isEmpty() const;
 
     /*!
-     * Returns the previous value of the state variable.
+     * \brief Returns the previous value of the state variable.
      *
-     * \return the previous value of the state variable.
+     * \return The previous value of the state variable.
      */
     QVariant previousValue() const;
 
     /*!
-     * Returns the new, changed value of the state variable.
+     * \brief Returns the new, changed value of the state variable.
      *
-     * \return the new, changed value of the state variable.
+     * \return The new, changed value of the state variable.
      */
     QVariant newValue() const;
 };

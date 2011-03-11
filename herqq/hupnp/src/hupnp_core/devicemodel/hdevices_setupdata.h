@@ -38,7 +38,7 @@ namespace Upnp
 class HDeviceSetupPrivate;
 
 /*!
- * This class is used to specify information that can be used to validate
+ * \brief This class is used to specify information that can be used to validate
  * a UPnP device.
  *
  * \headerfile hdevices_setupdata.h HDeviceSetup
@@ -66,7 +66,7 @@ public:
     HDeviceSetup();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param type specifies the device type.
      *
@@ -81,7 +81,7 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param type specifies the device type.
      *
@@ -98,46 +98,44 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HDeviceSetup();
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a copy of \a other.
      */
     HDeviceSetup& operator=(const HDeviceSetup&);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Copies the contents of \a other to this.
      */
     HDeviceSetup(const HDeviceSetup&);
 
     /*!
-     * Returns the device type.
+     * \brief Returns the device type.
      *
-     * \return the device type.
+     * \return The device type.
      *
      * \sa setDeviceType()
      */
     const HResourceType& deviceType() const;
 
     /*!
-     * Returns the <em>inclusion requirement</em>.
+     * \brief Returns the <em>inclusion requirement</em>.
      *
-     * \return the <em>inclusion requirement</em>.
+     * \return The <em>inclusion requirement</em>.
      *
      * \sa setInclusionRequirement()
      */
     HInclusionRequirement inclusionRequirement() const;
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * \return \e true in case the object is valid, that is, the device type,
      * version and inclusion requirement are properly defined.
@@ -147,10 +145,10 @@ public:
     bool isValid() const;
 
     /*!
-     * Returns the version of the UPnP device, which first specified the
+     * \brief Returns the version of the UPnP device, which first specified the
      * embedded device.
      *
-     * \return the version of the UPnP device, which first specified the
+     * \return The version of the UPnP device, which first specified the
      * embedded device.
      *
      * \sa setVersion()
@@ -158,7 +156,7 @@ public:
     int version() const;
 
     /*!
-     * Sets the the <em>inclusion requirement</em>.
+     * \brief Sets the the <em>inclusion requirement</em>.
      *
      * \param arg specifies the <em>inclusion requirement</em>.
      *
@@ -167,7 +165,7 @@ public:
     void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
-     * Sets the device type.
+     * \brief Sets the device type.
      *
      * \param arg specifies the device type.
      *
@@ -176,7 +174,7 @@ public:
     void setDeviceType(const HResourceType& arg);
 
     /*!
-     * Specifies the version of the UPnP device, which first specified the
+     * \brief Specifies the version of the UPnP device, which first specified the
      * embedded device.
      *
      * \param version specifies the version of the UPnP device,
@@ -188,7 +186,7 @@ public:
 };
 
 /*!
- * This class is used to specify information that can be used to validate
+ * \brief This class is used to specify information that can be used to validate
  * UPnP devices.
  *
  * \headerfile hdevices_setupdata.h HDevicesSetupData
@@ -209,21 +207,19 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isEmpty()
      */
     HDevicesSetupData();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HDevicesSetupData();
 
     /*!
-     * Indicates if the instance contains an item with the
+     * \brief Indicates if the instance contains an item with the
      * specified device type.
      *
      * \param deviceType specifies the device type of the searched item.
@@ -236,18 +232,18 @@ public:
     bool contains(const HResourceType& deviceType) const;
 
     /*!
-     * Returns the device types of the contained items.
+     * \brief Returns the device types of the contained items.
      *
-     * \return the device types of the contained items.
+     * \return The device types of the contained items.
      */
     QSet<HResourceType> deviceTypes() const;
 
     /*!
-     * Retrieves an item.
+     * \brief Retrieves an item.
      *
      * \param type specifies the device type of the item.
      *
-     * \return the item with the specified device type. The returned item is
+     * \return The item with the specified device type. The returned item is
      * invalid in case no item with the specified device type was found.
      *
      * \sa contains()
@@ -255,16 +251,16 @@ public:
     HDeviceSetup get(const HResourceType& type) const;
 
     /*!
-     * Indicates if the object is empty.
+     * \brief Indicates if the object is empty.
      *
      * \return \e true in case the instance has no items.
      */
     bool isEmpty() const;
 
     /*!
-     * Returns the number of contained items.
+     * \brief Returns the number of contained items.
      *
-     * \return the number of contained items.
+     * \return The number of contained items.
      */
     int size() const;
 

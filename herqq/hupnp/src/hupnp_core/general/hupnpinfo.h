@@ -41,7 +41,7 @@ namespace Upnp
  *
  * This value is useful for compile time checks.
  *
- * \sa hupnpCoreVersion()
+ * \sa Herqq::Upnp::hupnpCoreVersion()
  */
 #define HUPNP_CORE_MAJOR_VERSION 0
 
@@ -51,7 +51,7 @@ namespace Upnp
  *
  * This value is useful for compile time checks.
  *
- * \sa hupnpCoreVersion()
+ * \sa Herqq::Upnp::hupnpCoreVersion()
  */
 #define HUPNP_CORE_MINOR_VERSION 9
 
@@ -61,7 +61,7 @@ namespace Upnp
  *
  * This value is useful for compile time checks.
  *
- * \sa hupnpCoreVersion()
+ * \sa Herqq::Upnp::hupnpCoreVersion()
  */
 #define HUPNP_CORE_PATCH_VERSION 1
 
@@ -71,12 +71,12 @@ namespace Upnp
  *
  * This value is useful for compile time checks.
  *
- * \sa hupnpCoreVersion()
+ * \sa Herqq::Upnp::hupnpCoreVersion()
  */
 #define HUPNP_CORE_VERSION STRX(HUPNP_CORE_MAJOR_VERSION.HUPNP_CORE_MINOR_VERSION.HUPNP_CORE_PATCH_VERSION)
 
 /*!
- * Returns the runtime version of the HUPnP Core library as a string.
+ * \brief Returns the runtime version of the HUPnP Core library as a string.
  *
  * You can use this function to query the version of the HUPnP core library
  * at runtime.
@@ -87,7 +87,7 @@ namespace Upnp
  * - HUPNP_CORE_PATCH_VERSION and
  * - HUPNP_CORE_VERSION.
  *
- * \return the runtime version of the HUPnP Core library as a string.
+ * \return The runtime version of the HUPnP Core library as a string.
  * The format is <c>major.minor.patch</c>.
  *
  * \remarks The returned string is statically allocated. You should never

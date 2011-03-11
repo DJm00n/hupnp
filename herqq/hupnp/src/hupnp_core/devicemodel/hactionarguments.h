@@ -44,7 +44,7 @@ namespace Upnp
 class HActionArgumentPrivate;
 
 /*!
- * A class that represents an argument used in a UPnP action invocation.
+ * \brief This is a class that represents an argument used in a UPnP action invocation.
  *
  * A UPnP argument is defined in the UPnP service description within
  * an action. If you picture a UPnP action as a function, then an
@@ -157,23 +157,21 @@ public:
         QString* err = 0);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a copy of \c other.
      */
     HActionArgument(const HActionArgument&);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Copies the contents of \c other to this.
      */
     HActionArgument& operator=(const HActionArgument&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HActionArgument();
 
@@ -187,9 +185,9 @@ public:
     void detach();
 
     /*!
-     * Returns the name of the argument.
+     * \brief Returns the name of the argument.
      *
-     * \return the name of the argument. The return value is an empty string in
+     * \return The name of the argument. The return value is an empty string in
      * case the object is invalid.
      *
      * \sa isValid()
@@ -197,7 +195,7 @@ public:
     QString name() const;
 
     /*!
-     * Returns information about the state variable that is associated
+     * \brief Returns information about the state variable that is associated
      * with this action argument.
      *
      * \return information about the state variable that is associated
@@ -211,7 +209,7 @@ public:
      * Helper method for accessing the data type of the related state variable
      * info object directly.
      *
-     * \return the data type of the state variable. The data type is
+     * \return The data type of the state variable. The data type is
      * HUpnpDataTypes::Undefined in case the object is invalid.
      *
      * \sa isValid()
@@ -219,9 +217,9 @@ public:
     HUpnpDataTypes::DataType dataType() const;
 
     /*!
-     * Returns the value of the argument.
+     * \brief Returns the value of the argument.
      *
-     * \return the value of the argument. The returned \c QVariant has a type of
+     * \return The value of the argument. The returned \c QVariant has a type of
      * \c QVariant::Invalid in case the object is invalid.
      *
      * \sa isValid()
@@ -229,7 +227,7 @@ public:
     QVariant value() const;
 
     /*!
-     * Sets the value of the argument if the object is valid and the new value is
+     * \brief Sets the value of the argument if the object is valid and the new value is
      * of right type.
      *
      * \param value specifies the new value of the argument.
@@ -239,7 +237,7 @@ public:
     bool setValue(const QVariant& value);
 
     /*!
-     * Indicates if the object is constructed with a proper name and a state
+     * \brief Indicates if the object is constructed with a proper name and a state
      * variable.
      *
      * \return \e true in case the object has a proper name and the object refers
@@ -248,7 +246,7 @@ public:
     bool isValid() const;
 
     /*!
-     * Indicates whether or not the object is considered as invalid.
+     * \brief Indicates whether or not the object is considered as invalid.
      *
      * This is the opposite for calling isValid().
      *
@@ -259,7 +257,7 @@ public:
     bool operator!() const;
 
     /*!
-     * Returns a string representation of the object.
+     * \brief Returns a string representation of the object.
      *
      * The format of the return value is \c "name: theValue".
      *
@@ -269,7 +267,7 @@ public:
     QString toString() const;
 
     /*!
-     * Indicates if the provided value can be set into this input argument
+     * \brief Indicates if the provided value can be set into this input argument
      * successfully.
      *
      * A value is considered \e valid, when:
@@ -354,7 +352,7 @@ public:
     friend H_UPNP_CORE_EXPORT void swap(HActionArguments&, HActionArguments&);
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isEmpty()
      */
@@ -371,21 +369,19 @@ public:
     HActionArguments(const QVector<HActionArgument>& args);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a copy of \c other.
      */
     HActionArguments(const HActionArguments&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HActionArguments();
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Copies the contents of \c other to this.
      *
@@ -394,18 +390,18 @@ public:
     HActionArguments& operator=(const HActionArguments&);
 
     /*!
-     * Indicates if the object contains an argument with the specified name.
+     * \brief Indicates if the object contains an argument with the specified name.
      *
      * \param argumentName specifies the name of the action argument.
      *
      * \return \e true in case the object contains an argument with the specified name.
      *
-     * \remarks this is a \e constant-time operation.
+     * \remarks This is a \e constant-time operation.
      */
     bool contains(const QString& argumentName) const;
 
     /*!
-     * Returns an action argument with the specified name.
+     * \brief Returns an action argument with the specified name.
      *
      * \param argumentName specifies the name of the argument to be retrieved.
      *
@@ -413,12 +409,12 @@ public:
      * with the specified name, the returned instance is invalid, i.e.
      * HActionArgument::isValid() returns \e false.
      *
-     * \remarks this is a \e constant-time operation.
+     * \remarks This is a \e constant-time operation.
      */
     HActionArgument get(const QString& argumentName) const;
 
     /*!
-     * Returns an action argument at the specified index.
+     * \brief Returns an action argument at the specified index.
      *
      * \param index specifies the index of the action argument to return. The
      * index has to be valid position in the container, i.e. it must be
@@ -426,19 +422,19 @@ public:
      *
      * \return an action argument at the specified \a index.
      *
-     * \remarks this is a \e constant-time operation.
+     * \remarks This is a \e constant-time operation.
      */
     HActionArgument get(qint32 index) const;
 
     /*!
-     * Returns a const STL-style iterator pointing to the first item.
+     * \brief Returns a const STL-style iterator pointing to the first item.
      *
      * \return a const STL-style iterator pointing to the first item.
      */
     HActionArguments::const_iterator constBegin() const;
 
     /*!
-     * Returns a const STL-style iterator pointing to the
+     * \brief Returns a const STL-style iterator pointing to the
      * imaginary item after the last item.
      *
      * \return a const STL-style iterator pointing to the
@@ -447,7 +443,7 @@ public:
     HActionArguments::const_iterator constEnd() const;
 
     /*!
-     * Returns an STL-style iterator pointing to the first item.
+     * \brief Returns an STL-style iterator pointing to the first item.
      *
      * \return an STL-style iterator pointing to the first item.
      */
@@ -461,7 +457,7 @@ public:
     HActionArguments::const_iterator begin() const;
 
     /*!
-     * Returns an STL-style iterator pointing to the imaginary item
+     * \brief Returns an STL-style iterator pointing to the imaginary item
      * after the last item.
      *
      * \return an STL-style iterator pointing to the imaginary item
@@ -478,14 +474,14 @@ public:
     HActionArguments::const_iterator end() const;
 
     /*!
-     * Returns the number of contained action arguments.
+     * \brief Returns the number of contained action arguments.
      *
-     * \return the number of contained action arguments.
+     * \return The number of contained action arguments.
      */
     qint32 size() const;
 
     /*!
-     * Returns an action argument at the specified index.
+     * \brief Returns an action argument at the specified index.
      *
      * This is the same as calling get() with the specified index. This method is
      * provided for convenience.
@@ -499,7 +495,7 @@ public:
     HActionArgument operator[](qint32 index) const;
 
     /*!
-     * Returns an action argument with the specified name.
+     * \brief Returns an action argument with the specified name.
      *
      * This is the same as calling get() with the specified argument name.
      * This method is provided for convenience.
@@ -510,19 +506,19 @@ public:
      * with the specified name, the returned instance is invalid, i.e.
      * HActionArgument::isValid() returns \e false.
      *
-     * \remarks this is a \e constant-time operation.
+     * \remarks This is a \e constant-time operation.
      */
     HActionArgument operator[](const QString& argName) const;
 
     /*!
-     * Returns the names of all the contained action arguments.
+     * \brief Returns the names of all the contained action arguments.
      *
-     * \return the names of all the contained action arguments.
+     * \return The names of all the contained action arguments.
      */
     QStringList names() const;
 
     /*!
-     * Indicates if the object is empty, i.e. it has no action arguments.
+     * \brief Indicates if the object is empty, i.e. it has no action arguments.
      *
      * \return \e true when the object has no action arguments.
      */
@@ -563,7 +559,7 @@ public:
     bool append(const HActionArgument& arg);
 
     /*!
-     * Returns the value of the specified state variable, if such exists.
+     * \brief Returns the value of the specified state variable, if such exists.
      *
      * This is a convenience method for retrieving the value of the specified
      * state variable. Semantically this call is comparable to
@@ -574,7 +570,7 @@ public:
      * \param ok specifies a pointer to \c bool, which will be \e true if
      * the specified state variable was found. This parameter is optional.
      *
-     * \return the value of the specified state variable, if such exists.
+     * \return The value of the specified state variable, if such exists.
      * Otherwise the returned \c QVariant is invalid.
      */
     QVariant value(const QString& name, bool* ok = 0) const;
@@ -596,7 +592,7 @@ public:
     bool setValue(const QString& name, const QVariant& value);
 
     /*!
-     * Returns a string representation of the object.
+     * \brief Returns a string representation of the object.
      *
      * \return a string representation of the object. The
      * returned string contains all the arguments represented as strings and

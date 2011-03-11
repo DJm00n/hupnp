@@ -145,6 +145,87 @@ void HDeviceHostPrivate::announcementTimedout(
     controller->startStatusNotifier();
 }
 
+bool HDeviceHostPrivate::createRootDevice(const HDeviceConfiguration* deviceconfig)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+
+    QString baseDir = extractBaseUrl(deviceconfig->pathToDeviceDescription());
+
+    DeviceHostDataRetriever dataRetriever(m_loggingIdentifier, baseDir);
+
+    QString deviceDescr;
+    if (!dataRetriever.retrieveDeviceDescription(
+        deviceconfig->pathToDeviceDescription(), &deviceDescr))
+    {
+        m_lastError = HDeviceHost::InvalidConfigurationError;
+        m_lastErrorDescription = dataRetriever.lastError();
+        return false;
+    }
+
+    HServerModelCreationArgs creatorParams(m_config->deviceModelCreator());
+    creatorParams.m_deviceDescription = deviceDescr;
+    creatorParams.m_deviceLocations = m_httpServer->rootUrls();
+    creatorParams.setDeviceDescriptionPostfix(deviceDescriptionPostFix());
+    creatorParams.setInfoProvider(m_config->deviceModelInfoProvider());
+
+    creatorParams.m_serviceDescriptionFetcher = ServiceDescriptionFetcher(
+        &dataRetriever, &DeviceHostDataRetriever::retrieveServiceDescription);
+
+    creatorParams.m_deviceTimeoutInSecs = deviceconfig->cacheControlMaxAge() / 2;
+    // this timeout value instructs the device host to re-announce the
+    // device presence well before the advertised cache-control value
+    // expires.
+
+    creatorParams.m_iconFetcher =
+        IconFetcher(&dataRetriever, &DeviceHostDataRetriever::retrieveIcon);
+
+    creatorParams.m_loggingIdentifier = m_loggingIdentifier;
+
+    HServerModelCreator creator(creatorParams);
+    QScopedPointer<HServerDevice> rootDevice(creator.createRootDevice());
+
+    if (!rootDevice)
+    {
+        m_lastErrorDescription = creator.lastErrorDescription();
+
+        switch (creator.lastError())
+        {
+            case HServerModelCreator::UndefinedTypeError:
+            case HServerModelCreator::InvalidDeviceDescription:
+                m_lastError = HDeviceHost::InvalidDeviceDescriptionError;
+                break;
+            case HServerModelCreator::UnimplementedAction:
+            case HServerModelCreator::InvalidServiceDescription:
+                m_lastError = HDeviceHost::InvalidServiceDescriptionError;
+                break;
+            default:
+                m_lastError = HDeviceHost::UndefinedError;
+                break;
+        }
+
+        return false;
+    }
+
+    Q_ASSERT(rootDevice);
+
+    HServerDeviceController* controller =
+        new HServerDeviceController(
+            rootDevice.data(), creatorParams.m_deviceTimeoutInSecs, this);
+
+    if (!m_deviceStorage.addRootDevice(rootDevice.data(), controller))
+    {
+        delete controller;
+        m_lastError = HDeviceHost::ResourceConflict;
+        m_lastErrorDescription = m_deviceStorage.lastError();
+        return false;
+    }
+
+    rootDevice->setParent(this);
+    connectSelfToServiceSignals(rootDevice.take());
+
+    return true;
+}
+
 bool HDeviceHostPrivate::createRootDevices()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -154,77 +235,10 @@ bool HDeviceHostPrivate::createRootDevices()
 
     foreach(const HDeviceConfiguration* deviceconfig, diParams)
     {
-        QString baseDir =
-            extractBaseUrl(deviceconfig->pathToDeviceDescription());
-
-        DeviceHostDataRetriever dataRetriever(m_loggingIdentifier, baseDir);
-
-        QString deviceDescr;
-        if (!dataRetriever.retrieveDeviceDescription(
-            deviceconfig->pathToDeviceDescription(), &deviceDescr))
+        if (!createRootDevice(deviceconfig))
         {
-            m_lastError = HDeviceHost::InvalidConfigurationError;
             return false;
         }
-
-        HServerModelCreationArgs creatorParams(m_config->deviceModelCreator());
-        creatorParams.m_deviceDescription = deviceDescr;
-        creatorParams.m_deviceLocations = m_httpServer->rootUrls();
-        creatorParams.setDeviceDescriptionPostfix(deviceDescriptionPostFix());
-        creatorParams.setInfoProvider(m_config->deviceModelInfoProvider());
-
-        creatorParams.m_serviceDescriptionFetcher =
-            ServiceDescriptionFetcher(
-                &dataRetriever,
-                &DeviceHostDataRetriever::retrieveServiceDescription);
-
-        creatorParams.m_deviceTimeoutInSecs =
-            deviceconfig->cacheControlMaxAge() / 2;
-        // this timeout value instructs the device host to re-announce the
-        // device presence well before the advertised cache-control value
-        // expires.
-
-        creatorParams.m_iconFetcher =
-            IconFetcher(
-                &dataRetriever, &DeviceHostDataRetriever::retrieveIcon);
-
-        creatorParams.m_loggingIdentifier = m_loggingIdentifier;
-
-        HServerModelCreator creator(creatorParams);
-        QScopedPointer<HServerDevice> rootDevice(creator.createRootDevice());
-
-        if (!rootDevice)
-        {
-            m_lastErrorDescription = creator.lastErrorDescription();
-
-            switch (creator.lastError())
-            {
-                case HServerModelCreator::UndefinedTypeError:
-                case HServerModelCreator::InvalidDeviceDescription:
-                    m_lastError = HDeviceHost::InvalidDeviceDescriptionError;
-                    break;
-                case HServerModelCreator::UnimplementedAction:
-                case HServerModelCreator::InvalidServiceDescription:
-                    m_lastError = HDeviceHost::InvalidServiceDescriptionError;
-                    break;
-                default:
-                    m_lastError = HDeviceHost::UndefinedError;
-                    break;
-            }
-
-            return false;
-        }
-
-        Q_ASSERT(rootDevice);
-
-        HServerDeviceController* controller =
-            new HServerDeviceController(
-                rootDevice.data(), creatorParams.m_deviceTimeoutInSecs, this);
-
-        m_deviceStorage.addRootDevice(rootDevice.data(), controller);
-
-        rootDevice->setParent(this);
-        connectSelfToServiceSignals(rootDevice.take());
     }
 
     return true;
@@ -254,6 +268,20 @@ void HDeviceHostPrivate::connectSelfToServiceSignals(HServerDevice* device)
     }
 }
 
+void HDeviceHostPrivate::startNotifiers(HServerDeviceController* controller)
+{
+    HLOG2(H_AT, H_FUN, m_loggingIdentifier);
+    Q_ASSERT(controller);
+
+    bool ok = connect(
+        controller, SIGNAL(statusTimeout(HServerDeviceController*)),
+        this, SLOT(announcementTimedout(HServerDeviceController*)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    controller->startStatusNotifier();
+}
+
 void HDeviceHostPrivate::startNotifiers()
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
@@ -261,13 +289,7 @@ void HDeviceHostPrivate::startNotifiers()
     QList<HServerDeviceController*> controllers = m_deviceStorage.controllers();
     foreach(HServerDeviceController* controller, controllers)
     {
-        bool ok = connect(
-            controller, SIGNAL(statusTimeout(HServerDeviceController*)),
-            this, SLOT(announcementTimedout(HServerDeviceController*)));
-
-        Q_ASSERT(ok); Q_UNUSED(ok)
-
-        controller->startStatusNotifier();
+        startNotifiers(controller);
     }
 }
 
@@ -482,12 +504,42 @@ void HDeviceHost::quit()
     h_ptr->m_eventNotifier.reset(0);
     h_ptr->m_config.reset(0);
 
+    h_ptr->m_deviceStorage.clear();
+
     HLOG_INFO("Shut down.");
 }
 
 bool HDeviceHost::isStarted() const
 {
     return h_ptr->m_initialized;
+}
+
+bool HDeviceHost::add(const HDeviceConfiguration& configuration)
+{
+    HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
+
+    if (!isStarted())
+    {
+        setError(NotStarted, "The device host is not started");
+        return false;
+    }
+    else if (!configuration.isValid())
+    {
+        setError(InvalidConfigurationError, "The provided configuration is not valid");
+        return false;
+    }
+
+    bool b = h_ptr->createRootDevice(&configuration);
+    if (b)
+    {
+        HServerDeviceController* newController =
+            h_ptr->m_deviceStorage.controllers().last();
+
+        h_ptr->m_config->add(configuration);
+        h_ptr->m_presenceAnnouncer->announce<ResourceAvailableAnnouncement>(newController);
+        h_ptr->startNotifiers(newController);
+    }
+    return b;
 }
 
 HServerDevices HDeviceHost::rootDevices() const

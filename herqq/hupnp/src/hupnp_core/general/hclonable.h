@@ -31,7 +31,7 @@ namespace Upnp
 {
 
 /*!
- * This class defines an interface for cloning instances of polymorphic classes.
+ * \brief This class defines an interface for cloning instances of polymorphic classes.
  *
  * \headerfile hclonable.h HClonable
  *
@@ -48,8 +48,9 @@ protected:
     /*!
      * Clones the contents of this to the \c target object.
      *
-     * Every derived class has to override this method. Further, the implementation
-     * should be something along these lines:
+     * Every derived class that introduces member variables that should be
+     * copied as part of a cloning operation \b should override this method.
+     * The implementation should be something along these lines:
      *
      * \code
      * void MyClonable::doClone(HClonable* target) const
@@ -73,10 +74,11 @@ protected:
     virtual void doClone(HClonable* target) const;
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * This method is used as part of object cloning. Because of that, it is
-     * important that every descendant class overrides this method:
+     * important that every concrete (non-abstract) descendant class overrides
+     * this method regardless of the type location in the inheritance tree:
      *
      * \code
      * MyClonable* MyClonable::newInstance() const
@@ -94,21 +96,17 @@ protected:
 public:
 
     /*!
-     * Creates a new instance.
-     *
-     * Creates a new instance.
+     * \brief Creates a new instance.
      */
     HClonable();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     virtual ~HClonable();
 
     /*!
-     * Returns a deep copy of the instance.
+     * \brief Returns a deep copy of the instance.
      *
      * \return a deep copy of the instance.
      *

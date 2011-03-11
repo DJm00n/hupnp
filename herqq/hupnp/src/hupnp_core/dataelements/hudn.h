@@ -34,7 +34,7 @@ namespace Upnp
 {
 
 /*!
- * A class used to depict a <em>Unique Device Name</em> (UDN), which is a
+ * \brief This is a class used to depict a <em>Unique Device Name</em> (UDN), which is a
  * unique device identifier that has to remain the same over time for a
  * specific device instance.
  *
@@ -95,14 +95,12 @@ public:
     HUdn(const QString& value);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HUdn();
 
     /*!
-     * Indicates if the UDN is defined or not.
+     * \brief Indicates if the UDN is defined or not.
      *
      * \param checkLevel specifies whether the check should be done strictly
      * according to the UDA specifications (1.0 & 1.1). That is, the UDN
@@ -117,9 +115,9 @@ public:
     }
 
     /*!
-     * Returns the UUID component of the UDN.
+     * \brief Returns the UUID component of the UDN.
      *
-     * \return the UUID component of the UDN.
+     * \return The UUID component of the UDN.
      *
      * \remarks if the UDN is not strictly valid, i.e. isValid(true) returns
      * \e false, this method will return a null \c QUuid.
@@ -127,7 +125,7 @@ public:
     QUuid value() const;
 
     /*!
-     * Returns the complete UDN value.
+     * \brief Returns the complete UDN value.
      *
      * \returns the complete UDN value when the UDN is valid.
      * For instance, \c "uuid:5d794fc2-5c5e-4460-a023-f04a51363300" is a valid UDN.
@@ -136,7 +134,7 @@ public:
     QString toString() const;
 
     /*!
-     * Returns the UUID component of the UDN as string.
+     * \brief Returns the UUID component of the UDN as string.
      *
      * \returns the UUID component of the UDN as string when the UDN is valid. For instance,
      * if the complete UDN is \c "uuid:5d794fc2-5c5e-4460-a023-f04a51363300", this method
@@ -168,7 +166,7 @@ inline bool operator!=(const HUdn& obj1, const HUdn& obj2)
 }
 
 /*!
- * Returns a value that can be used as a unique key in a hash-map identifying
+ * \brief Returns a value that can be used as a unique key in a hash-map identifying
  * the UDN object.
  *
  * \param key specifies the \em UDN from which the hash value is created.

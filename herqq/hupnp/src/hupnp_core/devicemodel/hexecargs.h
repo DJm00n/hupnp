@@ -31,14 +31,14 @@ namespace Upnp
 {
 
 /*!
- * This class is used to specify information used to control the execution of
+ * \brief This class is used to specify information used to control the execution of
  * an asynchronous operation and the notification of its completion.
  *
  * \headerfile hexecargs.h HExecArgs
  *
  * \ingroup hupnp_devicemodel
  *
- * \remarks this class is thread-safe.
+ * \remarks This class is thread-safe.
  */
 class H_UPNP_CORE_EXPORT HExecArgs
 {
@@ -47,7 +47,7 @@ friend H_UPNP_CORE_EXPORT bool operator==(const HExecArgs&, const HExecArgs&);
 public:
 
     /*!
-     * This enumeration specifies how the asynchronous operation should be run.
+     * \brief This enumeration specifies how the asynchronous operation should be run.
      */
     enum ExecType
     {
@@ -83,12 +83,12 @@ public:
    /*!
     * \brief Destroys the instance.
     *
-    * Destroys the instance.
+    * \brief Destroys the instance.
     */
    ~HExecArgs();
 
    /*!
-    * Indicates how the operation should be run and its completion or failure
+    * \brief Indicates how the operation should be run and its completion or failure
     * be signaled.
     *
     * \return a value indicating how the operation should be run and its
@@ -99,7 +99,7 @@ public:
    inline ExecType execType() const { return m_execType; }
 
    /*!
-    * Sets the value indicating how the operation should be run and its
+    * \brief Sets the value indicating how the operation should be run and its
     * completion or failure be signaled.
     *
     * \param type specifies the value indicating how the operation should be

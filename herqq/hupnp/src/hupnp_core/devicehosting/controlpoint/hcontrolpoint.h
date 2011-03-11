@@ -40,7 +40,7 @@ class HControlPointPrivate;
 class HControlPointConfiguration;
 
 /*!
- * A class for discovering and interacting with UPnP devices in the network.
+ * \brief This is a class for discovering and interacting with UPnP devices in the network.
  *
  * \headerfile hcontrolpoint.h HControlPoint
  *
@@ -184,7 +184,7 @@ H_DECLARE_PRIVATE(HControlPoint)
 protected:
 
     /*!
-     * This enumeration specifies the actions to take when a device has been
+     * \brief This enumeration specifies the actions to take when a device has been
      * discovered.
      *
      * \sa acceptRootDevice()
@@ -248,7 +248,7 @@ protected:
 public:
 
     /*!
-     * This enumeration specifies error types some of the methods of
+     * \brief This enumeration specifies error types some of the methods of
      * \c %HControlPoint may return.
      */
     enum ControlPointError
@@ -296,7 +296,7 @@ public:
     };
 
     /*!
-     * This enumeration is used to describe the status of an event subscription.
+     * \brief This enumeration is used to describe the status of an event subscription.
      *
      * \sa subscriptionStatus()
      */
@@ -463,9 +463,9 @@ protected:
         const HControlPointConfiguration* config = 0, QObject* parent = 0);
 
     /*!
-     * Returns the configuration used to initialize the control point.
+     * \brief Returns the configuration used to initialize the control point.
      *
-     * \return the configuration used to initialize the control point.
+     * \return The configuration used to initialize the control point.
      *
      * \note If no configuration was provided at the time of object construction
      * the control point creates a default configuration and uses that.
@@ -478,7 +478,7 @@ protected:
     const HControlPointConfiguration* configuration() const;
 
     /*!
-     * Sets the type and description of the last occurred error.
+     * \brief Sets the type and description of the last occurred error.
      *
      * \param error specifies the error type.
      * \param errorDescr specifies a human readable description of the error.
@@ -490,7 +490,7 @@ protected:
 public:
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param parent specifies the parent \c QObject, if any.
      *
@@ -502,7 +502,7 @@ public:
     HControlPoint(QObject* parent = 0);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param configuration specifies information that can be used to modify the
      * default behavior of the control point instance. If you want to use
@@ -549,33 +549,33 @@ public:
     bool init();
 
     /*!
-     * Returns the type of the last error occurred.
-     * \return the type of the last error occurred.
+     * \brief Returns the type of the last error occurred.
+     * \return The type of the last error occurred.
      */
     ControlPointError error() const;
 
     /*!
-     * Returns a human readable description of the last error occurred.
+     * \brief Returns a human readable description of the last error occurred.
      * \return a human readable description of the last error occurred.
      */
     QString errorDescription() const;
 
     /*!
-     * Indicates whether or not the host is successfully started.
+     * \brief Indicates whether or not the host is successfully started.
      *
      * \return true in case the host is successfully started.
      */
     bool isStarted() const;
 
     /*!
-     * Returns a device with the specified Unique Device Name that the
+     * \brief Returns a device with the specified Unique Device Name that the
      * control point is currently managing.
      *
      * \param udn specifies the Unique Device Name of the desired device.
      * \param deviceType specifies whether the search should consider root
      * devices only. The default is to search root devices only.
      *
-     * \return the device with the specified Unique Device Name, or a
+     * \return The device with the specified Unique Device Name, or a
      * null pointer in case no currently managed device has the
      * specified UDN.
      *
@@ -586,7 +586,7 @@ public:
      * device object directly. The ownership of an HClientDevice is \b never
      * transferred.
      *
-     * \remarks this method does not perform a network scan. The search is run
+     * \remarks This method does not perform a network scan. The search is run
      * against the devices that are already in the control of the control point.
      * You can call scan() to perform an explicit network scan.
      */
@@ -595,7 +595,7 @@ public:
         TargetDeviceType deviceType = RootDevices) const;
 
     /*!
-     * Returns a list of UPnP root devices the control point is currently managing.
+     * \brief Returns a list of UPnP root devices the control point is currently managing.
      *
      * The returned list contains pointers to root HClientDevice objects that are currently
      * managed by this instance.
@@ -609,12 +609,12 @@ public:
      * the device objects directly. The ownership of an HClientDevice is \b never
      * transferred.
      *
-     * \remarks this method does not perform a network scan.
+     * \remarks This method does not perform a network scan.
      */
     HClientDevices rootDevices() const;
 
     /*!
-     * Returns a list of UPnP devices the control point is currently managing and
+     * \brief Returns a list of UPnP devices the control point is currently managing and
      * that match the provided search criteria.
      *
      * The returned list contains pointers to HClientDevice objects that are currently
@@ -640,7 +640,7 @@ public:
      * will fail if you pass it an embedded device. Moreover, do not delete the
      * device objects directly. The ownership of an HClientDevice is \b never transferred.
      *
-     * \remarks this method does not perform a network scan. The search is run
+     * \remarks This method does not perform a network scan. The search is run
      * against the devices that are already in the control of the control point.
      * You can call scan() to perform an explicit network scan.
      */
@@ -780,7 +780,7 @@ public:
      * - there were no active subscriptions matching the search criteria
      * to cancel.
      *
-     * \remarks this method returns immediately.
+     * \remarks This method returns immediately.
      *
      * \sa error(), errorDescription()
      */
@@ -804,7 +804,7 @@ public:
      * - the service does not belong to a device held by the control point or
      * - there is no active subscription to the specified service.
      *
-     * \remarks this method returns immediately.
+     * \remarks This method returns immediately.
      *
      * \sa error(), errorDescription()
      */
@@ -888,10 +888,10 @@ public Q_SLOTS:
 Q_SIGNALS:
 
     /*!
-     * This signal is emitted whenever a final server requests authentication
+     * \brief This signal is emitted whenever a final server requests authentication
      * before it delivers the requested contents.
      *
-     * This signal is relayed from the underlying \c QNetworkAccessManager,
+     * \brief This signal is relayed from the underlying \c QNetworkAccessManager,
      * which is used by the \c %HControlPoint to run HTTP messaging.
      * As specified in the reference documentation of QNetworkAccessManager,
      * <em>the slot connected to this signal should fill the credentials
@@ -910,7 +910,7 @@ Q_SIGNALS:
         QNetworkReply* reply, QAuthenticator* authenticator);
 
     /*!
-     * This signal is emitted when the initial subscription to the specified
+     * \brief This signal is emitted when the initial subscription to the specified
      * service succeeded.
      *
      * \param service specifies the target service of the event subscription.
@@ -920,7 +920,7 @@ Q_SIGNALS:
     void subscriptionSucceeded(Herqq::Upnp::HClientService* service);
 
     /*!
-     * This signal is emitted when an event subscription to the specified
+     * \brief This signal is emitted when an event subscription to the specified
      * service failed.
      *
      * \note this signal may be emitted in three different scenarios:
@@ -938,7 +938,7 @@ Q_SIGNALS:
     void subscriptionFailed(Herqq::Upnp::HClientService* service);
 
     /*!
-     * This signal is emitted when an event subscription to the specified
+     * \brief This signal is emitted when an event subscription to the specified
      * service has been canceled.
      *
      * \param service specifies the service, which subscription was canceled.
@@ -946,7 +946,7 @@ Q_SIGNALS:
     void subscriptionCanceled(Herqq::Upnp::HClientService* service);
 
     /*!
-     * This signal is emitted when a device has been discovered.
+     * \brief This signal is emitted when a device has been discovered.
      *
      * \param device is the discovered device.
      *
@@ -959,7 +959,7 @@ Q_SIGNALS:
     void rootDeviceOnline(Herqq::Upnp::HClientDevice* device);
 
     /*!
-     * This signal is sent when a root device has announced that it is going
+     * \brief This signal is sent when a root device has announced that it is going
      * offline or the expiration timeout associated with the device tree has elapsed.
      *
      * After a device has gone offline you may want to remove the device from the
@@ -982,7 +982,7 @@ Q_SIGNALS:
     void rootDeviceOffline(Herqq::Upnp::HClientDevice* device);
 
     /*!
-     * This signal is emitted when a previously discovered device has changed its
+     * \brief This signal is emitted when a previously discovered device has changed its
      * configuration and must be discarded.
      *
      * The UDA v1.1 specifies the configuration of a root device to consist of
@@ -1002,7 +1002,7 @@ Q_SIGNALS:
     void rootDeviceInvalidated(Herqq::Upnp::HClientDevice* device);
 
     /*!
-     * This signal is emitted when a root device has been removed from the control
+     * \brief This signal is emitted when a root device has been removed from the control
      * of this control point and deleted.
      *
      * \param deviceInfo specifies information about the device that was removed
@@ -1013,7 +1013,7 @@ Q_SIGNALS:
     void rootDeviceRemoved(const Herqq::Upnp::HDeviceInfo& deviceInfo);
 
     /*!
-     * This signal is emitted when a run-time error has occurred.
+     * \brief This signal is emitted when a run-time error has occurred.
      *
      * \param err specifies the type of the error that occurred
      * \param errStr specifies a human-readable description of the error that

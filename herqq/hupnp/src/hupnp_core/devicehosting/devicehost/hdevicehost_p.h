@@ -120,7 +120,9 @@ public: // methods
     virtual ~HDeviceHostPrivate();
 
     void stopNotifiers();
+    void startNotifiers(HServerDeviceController*);
     void startNotifiers();
+    bool createRootDevice(const HDeviceConfiguration*);
     bool createRootDevices();
 
     inline static const QString& deviceDescriptionPostFix()

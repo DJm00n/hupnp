@@ -38,7 +38,7 @@ namespace Upnp
 class HServiceSetupPrivate;
 
 /*!
- * This class is used to specify information that can be used to validate
+ * \brief This class is used to specify information that can be used to validate
  * a UPnP service.
  *
  * \headerfile hservices_setupdata.h HServiceSetup
@@ -65,7 +65,7 @@ public:
     HServiceSetup();
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param id specifies the service ID.
      *
@@ -84,7 +84,7 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Creates a new instance.
+     * \brief Creates a new instance.
      *
      * \param id specifies the service ID.
      *
@@ -105,37 +105,35 @@ public:
         HInclusionRequirement incReq = InclusionMandatory);
 
     /*!
-     * Assignment operator.
+     * \brief Assignment operator.
      *
      * Copies the contents of \a other to this.
      */
     HServiceSetup& operator=(const HServiceSetup&);
 
     /*!
-     * Copy constructor.
+     * \brief Copy constructor.
      *
      * Creates a copy of \a other.
      */
     HServiceSetup(const HServiceSetup&);
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HServiceSetup();
 
     /*!
-     * Returns the <em>inclusion requirement</em>.
+     * \brief Returns the <em>inclusion requirement</em>.
      *
-     * \return the <em>inclusion requirement</em>.
+     * \return The <em>inclusion requirement</em>.
      *
      * \sa setInclusionRequirement()
      */
     HInclusionRequirement inclusionRequirement() const;
 
     /*!
-     * Indicates if the object is valid.
+     * \brief Indicates if the object is valid.
      *
      * \param checkLevel specifies whether the validity of the object should be
      * checked strictly according to the UDA specification.
@@ -147,34 +145,34 @@ public:
     bool isValid(HValidityCheckLevel checkLevel) const;
 
     /*!
-     * Returns the service ID.
+     * \brief Returns the service ID.
      *
-     * \return the service ID.
+     * \return The service ID.
      *
      * \sa setServiceId()
      */
     const HServiceId& serviceId() const;
 
     /*!
-     * Returns the service type.
+     * \brief Returns the service type.
      *
-     * \return the service type.
+     * \return The service type.
      *
      * \sa setServiceType()
      */
     const HResourceType& serviceType() const;
 
     /*!
-     * Returns the version of the UPnP device, which first specified the service.
+     * \brief Returns the version of the UPnP device, which first specified the service.
      *
-     * \return the version of the UPnP device, which first specified the service.
+     * \return The version of the UPnP device, which first specified the service.
      *
      * \sa setVersion()
      */
     int version() const;
 
     /*!
-     * Sets the the <em>inclusion requirement</em>.
+     * \brief Sets the the <em>inclusion requirement</em>.
      *
      * \param arg specifies the <em>inclusion requirement</em>.
      *
@@ -183,7 +181,7 @@ public:
     void setInclusionRequirement(HInclusionRequirement arg);
 
     /*!
-     * Sets the service ID.
+     * \brief Sets the service ID.
      *
      * \param arg specifies the service ID.
      *
@@ -192,7 +190,7 @@ public:
     void setServiceId(const HServiceId& arg);
 
     /*!
-     * Sets the service type.
+     * \brief Sets the service type.
      *
      * \param arg specifies the service type.
      *
@@ -201,7 +199,7 @@ public:
     void setServiceType(const HResourceType& arg);
 
     /*!
-     * Sets the version of the UPnP device, which first specified the service.
+     * \brief Sets the version of the UPnP device, which first specified the service.
      *
      * \param version defines the version of the UPnP device,
      * which first specifies the service.
@@ -233,7 +231,7 @@ inline bool operator!=(const HServiceSetup& obj1, const HServiceSetup& obj2)
 }
 
 /*!
- * This class is used to specify information that can be used to validate
+ * \brief This class is used to specify information that can be used to validate
  * UPnP services.
  *
  * \headerfile hservices_setupdata.h HServicesSetupData
@@ -254,25 +252,23 @@ private:
 public:
 
     /*!
-     * Creates a new, empty instance.
+     * \brief Creates a new, empty instance.
      *
      * \sa isEmpty()
      */
     HServicesSetupData();
 
     /*!
-     * Destroys the instance.
-     *
-     * Destroys the instance.
+     * \brief Destroys the instance.
      */
     ~HServicesSetupData();
 
     /*!
-     * Retrieves a service setup object.
+     * \brief Retrieves a service setup object.
      *
      * \param id specifies the service ID of the item.
      *
-     * \return the item with the specified service ID. Note that the returned item
+     * \return The item with the specified service ID. Note that the returned item
      * is invalid, i.e. HServiceSetup::isValid() returns false in case no item
      * with the specified service ID was found.
      *
@@ -281,7 +277,7 @@ public:
     HServiceSetup get(const HServiceId& id) const;
 
     /*!
-     * Indicates if the instance contains a service setup item that has the
+     * \brief Indicates if the instance contains a service setup item that has the
      * specified service ID.
      *
      * \param id specifies the service ID of the item.
@@ -294,23 +290,23 @@ public:
     bool contains(const HServiceId& id) const;
 
     /*!
-     * Indicates if the object is empty.
+     * \brief Indicates if the object is empty.
      *
      * \return \e true in case the instance has no items.
      */
     bool isEmpty() const;
 
     /*!
-     * Returns the number of contained items.
+     * \brief Returns the number of contained items.
      *
-     * \return the number of contained items.
+     * \return The number of contained items.
      */
     int size() const;
 
     /*!
-     * Returns the service IDs of the contained items.
+     * \brief Returns the service IDs of the contained items.
      *
-     * \return the service IDs of the contained items.
+     * \return The service IDs of the contained items.
      */
     QSet<HServiceId> serviceIds() const;
 
