@@ -472,25 +472,30 @@ void HControlPointPrivate::deviceModelBuildDone(const Herqq::Upnp::HUdn& udn)
     DeviceBuildTask* build = m_deviceBuildTasks.get(udn);
     Q_ASSERT(build);
 
-    if (build->completionValue() == 0)
+    if (m_state == Initialized)
     {
-        HLOG_INFO(QString("Device model for [%1] built successfully.").arg(
-            udn.toString()));
-
-        HDefaultClientDevice* device = build->createdDevice();
-        Q_ASSERT(device);
-
-        for (qint32 i = 0; i < build->m_locations.size(); ++i)
+        // The check is done because it is possible that a user has called
+        // HControlPoint::quit() before this event is delivered.
+        if (build->completionValue() == 0)
         {
-            device->addLocation(build->m_locations[i]);
-        }
+            HLOG_INFO(QString("Device model for [%1] built successfully.").arg(
+                udn.toString()));
 
-        processDeviceOnline(device, true);
-    }
-    else
-    {
-        HLOG_WARN(QString("Device model for [%1] could not be built: %2.").arg(
-            udn.toString(), build->errorString()));
+            HDefaultClientDevice* device = build->createdDevice();
+            Q_ASSERT(device);
+
+            for (qint32 i = 0; i < build->m_locations.size(); ++i)
+            {
+                device->addLocation(build->m_locations[i]);
+            }
+
+            processDeviceOnline(device, true);
+        }
+        else
+        {
+            HLOG_WARN(QString("Device model for [%1] could not be built: %2.").arg(
+                udn.toString(), build->errorString()));
+        }
     }
 
     m_deviceBuildTasks.remove(udn);

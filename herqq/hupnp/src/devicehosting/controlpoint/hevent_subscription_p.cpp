@@ -627,7 +627,12 @@ void HEventSubscription::unsubscribe(qint32 msecsToWait)
             m_nextOpType = Op_None;
         }
         return;
+    default:
+        Q_ASSERT(false);
     }
+
+    Q_ASSERT(m_sid.isValid());
+    Q_ASSERT(!m_eventUrl.isEmpty());
 
     m_subscriptionTimer.stop();
 
@@ -646,10 +651,6 @@ void HEventSubscription::unsubscribe(qint32 msecsToWait)
 
     HMessagingInfo* mi = new HMessagingInfo(m_socket, false);
     mi->setHostInfo(m_eventUrl);
-    if (msecsToWait > 0)
-    {
-        mi->setSendWait(msecsToWait);
-    }
 
     HUnsubscribeRequest req(m_eventUrl, m_sid);
     QByteArray data = HHttpMessageCreator::create(req, mi);
