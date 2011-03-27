@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicemodel/server/hserverservice.h"
+#include "../../../src/devicemodel/server/hserverservice.h"

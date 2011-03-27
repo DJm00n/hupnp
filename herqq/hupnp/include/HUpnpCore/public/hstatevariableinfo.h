@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/dataelements/hstatevariableinfo.h"
+#include "../../../src/dataelements/hstatevariableinfo.h"

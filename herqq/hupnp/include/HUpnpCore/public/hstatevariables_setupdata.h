@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicemodel/hstatevariables_setupdata.h"
+#include "../../../src/devicemodel/hstatevariables_setupdata.h"

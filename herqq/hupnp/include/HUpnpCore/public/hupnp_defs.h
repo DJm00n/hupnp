@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/general/hupnp_defs.h"
+#include "../../../src/general/hupnp_defs.h"

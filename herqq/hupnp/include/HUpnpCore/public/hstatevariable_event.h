@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicemodel/hstatevariable_event.h"
+#include "../../../src/devicemodel/hstatevariable_event.h"

@@ -25,7 +25,7 @@
 #include "../general/hupnp_global_p.h"
 #include "../general/hupnp_datatypes_p.h"
 
-#include "../../utils/hmisc_utils_p.h"
+#include "../utils/hmisc_utils_p.h"
 
 namespace Herqq
 {

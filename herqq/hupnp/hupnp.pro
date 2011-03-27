@@ -10,17 +10,17 @@ exists(options.pri) {
     include(options.pri)
 }
 
-INCLUDEPATH += ../../include/
+INCLUDEPATH += ./include/
 
 CONFIG(DISABLE_QTSOAP) {
     INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtSoap
 }
 else {
-    INCLUDEPATH += ../../lib/qtsoap-2.7-opensource/src
+    INCLUDEPATH += ./lib/qtsoap-2.7-opensource/src
 }
 
-LIBS += -L"../../bin/"
-!CONFIG(DISABLE_QTSOAP): LIBS += -L"../../lib/qtsoap-2.7-opensource/lib"
+LIBS += -L"./bin/"
+!CONFIG(DISABLE_QTSOAP): LIBS += -L"./lib/qtsoap-2.7-opensource/lib"
 
 debug:DEFINES += DEBUG
 
@@ -40,29 +40,29 @@ else {
 }
 
 OBJECTS_DIR = obj
-DESTDIR     = ../../bin
+DESTDIR     = ./bin
 MOC_DIR     = obj
 
-SRC_LOC = ../utils
+SRC_LOC = ./src/utils
 
-include (../utils/utils.pri)
+include (./src/utils/utils.pri)
 
-SRC_LOC = .
+SRC_LOC = ./src
 
-include (http/http.pri)
-include (ssdp/ssdp.pri)
-include (socket/socket.pri)
-include (general/general.pri)
-include (devicemodel/devicemodel.pri)
-include (dataelements/dataelements.pri)
-include (devicehosting/devicehosting.pri)
+include (src/http/http.pri)
+include (src/ssdp/ssdp.pri)
+include (src/socket/socket.pri)
+include (src/general/general.pri)
+include (src/devicemodel/devicemodel.pri)
+include (src/dataelements/dataelements.pri)
+include (src/devicehosting/devicehosting.pri)
 
 !CONFIG(DISABLE_QTSOAP) {
     win32 {
-        QMAKE_POST_LINK += copy ..\\..\\lib\\qtsoap-2.7-opensource\\lib\\* ..\\..\\bin /Y
+        QMAKE_POST_LINK += copy lib\\qtsoap-2.7-opensource\\lib\\* bin /Y
     }
     else {
-        QMAKE_POST_LINK += cp -fR ../../lib/qtsoap-2.7-opensource/lib/* ../../bin/
+        QMAKE_POST_LINK += cp -fR ./lib/qtsoap-2.7-opensource/lib/* ./bin/
     }
 }
 
@@ -72,14 +72,14 @@ CONFIG(USE_QT_INSTALL_LOC) {
 }
 else {
     isEmpty(PREFIX) {
-        PREFIX = ../../deploy
+        PREFIX = ./deploy
     }
 
     INSTLOC_INC = $$PREFIX/include/HUpnpCore
     INSTLOC_LIB = $$PREFIX/lib
 }
 
-includes.files += ../../include/HUpnpCore/H*
+includes.files += ./include/HUpnpCore/H*
 includes.path = $$INSTLOC_INC
 
 public_headers.files = $$find(HEADERS, ^((?!_p).)*$)*

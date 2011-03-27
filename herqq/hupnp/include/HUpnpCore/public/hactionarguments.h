@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicemodel/hactionarguments.h"
+#include "../../../src/devicemodel/hactionarguments.h"

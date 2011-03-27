@@ -25,7 +25,7 @@
 #include "../../general/hupnp_global_p.h"
 #include "../../devicemodel/client/hclientdevice.h"
 #include "../../devicemodel/client/hclientservice.h"
-#include "../../../utils/hmisc_utils_p.h"
+#include "../../utils/hmisc_utils_p.h"
 
 namespace Herqq
 {

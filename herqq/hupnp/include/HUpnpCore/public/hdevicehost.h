@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicehosting/devicehost/hdevicehost.h"
+#include "../../../src/devicehosting/devicehost/hdevicehost.h"

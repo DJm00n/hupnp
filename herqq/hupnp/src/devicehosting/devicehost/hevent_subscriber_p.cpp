@@ -28,7 +28,7 @@
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../general/hlogger_p.h"
-#include "../../../utils/hsysutils_p.h"
+#include "../../utils/hsysutils_p.h"
 
 #include <QtNetwork/QTcpSocket>
 

@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/dataelements/hdiscoverytype.h"
+#include "../../../src/dataelements/hdiscoverytype.h"

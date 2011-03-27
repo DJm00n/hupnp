@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../hupnp_core/general/hupnp_defs.h"
+#include "../general/hupnp_defs.h"
 
 #include <QtCore/QList>
 #include <QtCore/QMutex>

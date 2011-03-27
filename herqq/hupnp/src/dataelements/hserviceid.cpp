@@ -22,7 +22,7 @@
 #include "hserviceid.h"
 
 #include "../general/hlogger_p.h"
-#include "../../utils/hmisc_utils_p.h"
+#include "../utils/hmisc_utils_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>

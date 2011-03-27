@@ -44,7 +44,7 @@
 #include "../../http/hhttp_server_p.h"
 #include "../../ssdp/hdiscovery_messages.h"
 
-#include "../../../utils/hthreadpool_p.h"
+#include "../../utils/hthreadpool_p.h"
 
 #include <QtCore/QUuid>
 #include <QtCore/QScopedPointer>

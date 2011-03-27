@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/dataelements/hserviceid.h"
+#include "../../../src/dataelements/hserviceid.h"

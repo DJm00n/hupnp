@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicehosting/controlpoint/hcontrolpoint_configuration.h"
+#include "../../../src/devicehosting/controlpoint/hcontrolpoint_configuration.h"

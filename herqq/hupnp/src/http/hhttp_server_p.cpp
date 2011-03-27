@@ -26,7 +26,7 @@
 #include "hhttp_messagecreator_p.h"
 
 #include "../general/hlogger_p.h"
-#include "../../utils/hmisc_utils_p.h"
+#include "../utils/hmisc_utils_p.h"
 
 #include "../socket/hendpoint.h"
 #include "../general/hupnp_global_p.h"

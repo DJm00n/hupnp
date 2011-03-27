@@ -35,7 +35,7 @@
 #include "../../devicemodel/server/hserverservice.h"
 
 #include "../../general/hlogger_p.h"
-#include "../../../utils/hsysutils_p.h"
+#include "../../utils/hsysutils_p.h"
 
 #include <QtCore/QUuid>
 #include <QtCore/QDateTime>

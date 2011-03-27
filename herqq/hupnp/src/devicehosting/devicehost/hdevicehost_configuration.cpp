@@ -26,7 +26,7 @@
 #include "../../devicemodel/server/hdevicemodelcreator.h"
 
 #include "../../general/hupnp_global_p.h"
-#include "../../../utils/hmisc_utils_p.h"
+#include "../../utils/hmisc_utils_p.h"
 
 namespace Herqq
 {

@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicemodel/hasyncop.h"
+#include "../../../src/devicemodel/hasyncop.h"

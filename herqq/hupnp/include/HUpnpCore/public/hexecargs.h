@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/devicemodel/hexecargs.h"
+#include "../../../src/devicemodel/hexecargs.h"

@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/dataelements/hactioninfo.h"
+#include "../../../src/dataelements/hactioninfo.h"

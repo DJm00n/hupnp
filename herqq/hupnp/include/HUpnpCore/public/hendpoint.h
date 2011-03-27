@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/socket/hendpoint.h"
+#include "../../../src/socket/hendpoint.h"

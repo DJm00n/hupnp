@@ -17,16 +17,18 @@ win32 {
     }
 
     LIBS += -lws2_32
-    
+
     DESCRIPTIONS = $$PWD\\descriptions
     DESCRIPTIONS = $${replace(DESCRIPTIONS, /, \\)}
-    QMAKE_POST_LINK += xcopy $$DESCRIPTIONS ..\\..\\hupnp\\bin\\descriptions /E /Y /C /I 
+    QMAKE_POST_LINK += xcopy $$DESCRIPTIONS bin\\descriptions /E /Y /C /I &
+    QMAKE_POST_LINK += copy ..\\..\\hupnp\\bin\\* bin /Y
 }
 else {
     LIBS += -lQtSolutions_SOAP-2.7
     !macx:QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN
-    
-    QMAKE_POST_LINK += cp -Rf $$PWD/descriptions ../../hupnp/bin
+
+    QMAKE_POST_LINK += cp -Rf $$PWD/descriptions bin &
+    QMAKE_POST_LINK += cp -Rf ../../hupnp/bin/* bin
 }
 
 macx {
@@ -37,7 +39,7 @@ macx {
 OBJECTS_DIR = obj
 MOC_DIR = obj
 
-DESTDIR = ../../hupnp/bin
+DESTDIR = ./bin
 
 HEADERS += \
     mainwindow.h \

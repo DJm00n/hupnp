@@ -1,1 +1,1 @@
-#include "../../../src/hupnp_core/dataelements/hresourcetype.h"
+#include "../../../src/dataelements/hresourcetype.h"
