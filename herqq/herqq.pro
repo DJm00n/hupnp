@@ -17,6 +17,5 @@ CONFIG(USE_QT_INSTALL_LOC) {
     system(echo "CONFIG += USE_QT_INSTALL_LOC" >> hupnp/options.pri)
 }
 
-!CONFIG(DISABLE_QTSOAP) : SUBDIRS += hupnp/lib/qtsoap-2.7-opensource/buildlib
 !CONFIG(DISABLE_CORE) : SUBDIRS += hupnp
 !CONFIG(DISABLE_TESTAPP) : SUBDIRS += apps/simple_test-app
