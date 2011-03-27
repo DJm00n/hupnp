@@ -86,9 +86,9 @@ HServiceEventSubscriber::HServiceEventSubscriber(
     const QByteArray& loggingIdentifier, HServerService* service,
     const QUrl location, const HTimeout& timeout, QObject* parent) :
         QObject(parent),
-            m_service(service), 
+            m_service(service),
             m_location(location),
-            m_sid    (QUuid::createUuid()), 
+            m_sid(QUuid::createUuid()),
             m_seq(0),
             m_timeout(timeout),
             m_timer(this),
@@ -163,6 +163,8 @@ void HServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
+    operation->deleteLater();
+
     if (operation->state() == HHttpAsyncOperation::Failed)
     {
         HLOG_WARN(QString(
@@ -185,8 +187,6 @@ void HServiceEventSubscriber::msgIoComplete(HHttpAsyncOperation* operation)
             "Notification [seq: %1] successfully sent to subscriber [%2] @ [%3]").arg(
                 QString::number(m_seq-1), m_sid.toString(), m_location.toString()));
     }
-
-    operation->deleteLater();
 
     if (!m_messagesToSend.isEmpty())
     {
