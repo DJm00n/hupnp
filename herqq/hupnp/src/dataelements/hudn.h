@@ -142,6 +142,13 @@ public:
      * empty string is returned.
      */
     QString toSimpleUuid() const;
+
+    /*!
+     * Creates a new strictly valid UDN.
+     *
+     * \return a new strictly valid UDN.
+     */
+    static HUdn createUdn();
 };
 
 /*!

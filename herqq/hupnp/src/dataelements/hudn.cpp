@@ -85,6 +85,11 @@ QString HUdn::toSimpleUuid() const
     return m_value;
 }
 
+HUdn HUdn::createUdn()
+{
+    return HUdn(QUuid::createUuid());
+}
+
 bool operator==(const HUdn& udn1, const HUdn& udn2)
 {
     return udn1.toString() == udn2.toString();
