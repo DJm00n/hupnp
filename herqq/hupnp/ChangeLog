@@ -1,5 +1,29 @@
 # HUPnP Changelog
 
+HUPnP 1.0.0 [Mar. 28, 2011]
+--------------------------------------------------------------------------------
+- Added support for adding a new root device into HDeviceHost instance after 
+the instance is initialized.
+
+- Fixed a possible crash bug in device host.
+
+- Fixed a possible crash bug relating to HControlPoint::quit().
+
+- Fixed HDeviceHost::quit() to clear the state appropriately.
+ 
+- Reorganized parts of the project structure and restructured some of the project files.
+    
+- Modified the build to check if the qmake's CONFIG variable contains 
+USE_QT_INSTALL_LOC flag and if so, install HUPnP headers to QT_INSTALL_HEADERS 
+and binaries to QT_INSTALL_LIBS.
+    
+- Did some small improvements and modifications not worth mentioning individually.
+  
+- Updated documentation.
+
+Special thanks to Maximilian Lang <Lang@kellendonk.de> and Jaroslav Reznik 
+<jreznik@redhat.com> for reporting their ideas and findings to me. Much appreciated.
+
 HUPnP 0.9.1 [Feb. 23, 2011]
 --------------------------------------------------------------------------------
 - Modified the main project file to check if the qmake's CONFIG parameter contains:

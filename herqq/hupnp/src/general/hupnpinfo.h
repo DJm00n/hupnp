@@ -43,7 +43,7 @@ namespace Upnp
  *
  * \sa Herqq::Upnp::hupnpCoreVersion()
  */
-#define HUPNP_CORE_MAJOR_VERSION 0
+#define HUPNP_CORE_MAJOR_VERSION 1
 
 /*!
  * This is the minor version of the HUPnP Core library with which this header
@@ -53,7 +53,7 @@ namespace Upnp
  *
  * \sa Herqq::Upnp::hupnpCoreVersion()
  */
-#define HUPNP_CORE_MINOR_VERSION 9
+#define HUPNP_CORE_MINOR_VERSION 0
 
 /*!
  * This is the patch version of the HUPnP Core library with which this header
@@ -63,7 +63,7 @@ namespace Upnp
  *
  * \sa Herqq::Upnp::hupnpCoreVersion()
  */
-#define HUPNP_CORE_PATCH_VERSION 1
+#define HUPNP_CORE_PATCH_VERSION 0
 
 /*!
  * This is the version of the HUPnP Core library with which this header

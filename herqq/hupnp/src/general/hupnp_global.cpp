@@ -52,7 +52,7 @@ namespace Herqq
 namespace Upnp
 {
 
-/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 0.9
+/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 1.0
  *
  * \section introduction Introduction
  *
