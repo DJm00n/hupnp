@@ -20,7 +20,7 @@ win32 {
 
     DESCRIPTIONS = $$PWD\\descriptions
     DESCRIPTIONS = $${replace(DESCRIPTIONS, /, \\)}
-    QMAKE_POST_LINK += xcopy $$DESCRIPTIONS bin\\descriptions /E /Y /C /I $$escape_expand(\n\t)
+    QMAKE_POST_LINK += xcopy $$DESCRIPTIONS bin\\descriptions /E /Y /C /I $$escape_expand(\\n\\t)
     QMAKE_POST_LINK += copy ..\\..\\hupnp\\bin\\* bin /Y
 }
 else {
