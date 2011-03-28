@@ -89,7 +89,7 @@ public:
         {
             HLOG_WARN_NONSTD(QString("Invalid service identifier [%1]").arg(arg));
             warned = true;
-            // at least some Intel software fails to specify this right
+            // some UPnP software fails to specify this right
         }
 
         if (tmp[3].isEmpty())
@@ -208,57 +208,20 @@ QString HServiceId::toString() const
 
 bool operator==(const HServiceId& sid1, const HServiceId& sid2)
 {
-    // This check is made first, since most often it is the suffix that is
-    // different, if anything.
-    if (sid1.h_ptr->m_suffix != sid2.h_ptr->m_suffix)
-    {
-        return false;
-    }
-
-    // The rest of the checks are lengthy because the
-    // "serviceId" component has to be ignored and the "domain" part cannot be
-    // strictly compared...
-    // The operator is supposed to test for logical equivalence and since
-    // some notable UPnP software fails to specify both the serviceId and
-    // the domain components right, they have to be ignored.
-
-    QStringList elems1 = sid1.h_ptr->m_elements;
-    QStringList elems2 = sid2.h_ptr->m_elements;
-    if (elems1.size() != elems2.size())
-    {
-        return false;
-    }
-
-    for(qint32 i = 0; i < elems1.size() - 1; ++i)
-    {
-        if (i != 1 && i != 2)
-        {
-            if (elems1.at(i) != elems2.at(i))
-            {
-                return false;
-            }
-        }
-    }
-
-    return true;
+    // See the comments in qHash().
+    return sid1.h_ptr->m_suffix == sid2.h_ptr->m_suffix;
 }
 
 quint32 qHash(const HServiceId& key)
 {
-    // See the comments within == operator. The serviceId component is not
-    // part of the hash for the same reason.
-
-    QString tmp;
-    QStringList elems = key.h_ptr->m_elements;
-    for(qint32 i = 0; i < elems.size() - 1; ++i)
-    {
-        if (i != 1 && i != 2)
-        {
-            tmp.append(elems.at(i));
-        }
-    }
-
-    QByteArray data = tmp.toLocal8Bit();
+    // Either the service key is invalid, in which case the suffix is always empty
+    // and the hash is created from QString().
+    // Or the key is valid, which means that the first element is always "urn" and
+    // second and third elements have to be ignored, because some notable UPnP
+    // software fails to specify both the serviceId and the domain components right.
+    // Everything after the third element is part of the "suffix" and thus
+    // it is the perfect candidate for differentiating service IDs.
+    QByteArray data = key.h_ptr->m_suffix.toLocal8Bit();
     return hash(data.constData(), data.size());
 }
 
