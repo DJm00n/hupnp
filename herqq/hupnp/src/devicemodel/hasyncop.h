@@ -114,7 +114,7 @@ protected:
     HAsyncOp();
 
     /*!
-     * Creates a new, invalid instance.
+     * Creates a new invalid instance.
      *
      * \param returnCode specifies the return code.
      *
