@@ -20,6 +20,7 @@
  */
 
 #include "hclientstatevariable.h"
+#include "hdefault_clientservice_p.h"
 #include "hdefault_clientstatevariable_p.h"
 
 #include "../hstatevariable_p.h"
@@ -89,7 +90,7 @@ bool HClientStateVariable::setValue(const QVariant& newValue)
  * HDefaultClientStateVariable
  *******************************************************************************/
 HDefaultClientStateVariable::HDefaultClientStateVariable(
-    const HStateVariableInfo& info, HClientService* parent) :
+    const HStateVariableInfo& info, HDefaultClientService* parent) :
         HClientStateVariable(info, parent)
 {
 }

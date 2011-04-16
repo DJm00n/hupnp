@@ -61,7 +61,7 @@ private:
         {
             if (err)
             {
-                *err = "Minimum value cannot be larger than the maximum.";
+                *err = "Minimum value cannot be larger than the maximum";
             }
             return false;
         }
@@ -70,7 +70,7 @@ private:
         {
             if (err)
             {
-                *err = "Step value cannot be larger than the entire range.";
+                *err = "Step value cannot be larger than the entire range";
             }
             return false;
         }

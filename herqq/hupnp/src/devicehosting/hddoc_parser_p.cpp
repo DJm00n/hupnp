@@ -158,7 +158,7 @@ HStateVariableInfo HDocParser::parseStateVariableInfo_numeric(
 
     return HStateVariableInfo(
         name, dataTypeEnumValue, defValue, minimumStr, maximumStr, stepStr,
-        evType, incReq);
+        evType, incReq, &m_lastErrorDescription);
 }
 
 bool HDocParser::parseActionArguments(

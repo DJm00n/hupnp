@@ -50,10 +50,7 @@ namespace Herqq
 namespace Upnp
 {
 
-class HMessagingInfo;
-class HEventSubscription;
 class HHttpAsyncOperation;
-class HControlPointPrivate;
 
 //
 // This class represents and maintains a subscription to a service instantiated on the
@@ -64,14 +61,12 @@ class HEventSubscription :
 {
 Q_OBJECT
 H_DISABLE_COPY(HEventSubscription)
-friend class RenewSubscription;
-friend class Unsubscribe;
 
 private:
 
-    QByteArray m_loggingIdentifier;
+    const QByteArray m_loggingIdentifier;
 
-    QUuid m_randomIdentifier;
+    const QUuid m_randomIdentifier;
     // identifies the service subscription. used in the callback url
 
     QList<QUrl> m_deviceLocations;

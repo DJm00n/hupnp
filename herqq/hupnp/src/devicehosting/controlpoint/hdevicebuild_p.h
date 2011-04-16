@@ -32,7 +32,6 @@
 
 #include "../../general/hupnp_defs.h"
 #include "../../dataelements/hudn.h"
-
 #include "../../utils/hthreadpool_p.h"
 
 #include <QtCore/QList>

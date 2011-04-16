@@ -137,7 +137,15 @@ enum UpnpErrorCode
      * \remarks
      * This value is defined and used by HUPnP in-process only.
      */
-    UpnpUndefinedFailure = 0x0ff00000
+    UpnpUndefinedFailure = 0x0ff00000,
+
+    /*!
+     * The action invocation was aborted by user.
+     *
+     * \remarks
+     * This value is defined and used by HUPnP in-process only.
+     */
+    UpnpInvocationAborted = 0x00f00001,
 };
 
 /*!

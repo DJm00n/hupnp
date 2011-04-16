@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HHTTP_SERVER_H_
-#define HHTTP_SERVER_H_
+#ifndef HHTTP_SERVER_P_H_
+#define HHTTP_SERVER_P_H_
 
 //
 // !! Warning !!
@@ -30,10 +30,9 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hupnp_defs.h"
-
-#include "hhttp_asynchandler_p.h"
-#include "hhttp_messaginginfo_p.h"
+#include <HUpnpCore/HUpnp>
+#include <HUpnpCore/private/hhttp_asynchandler_p.h>
+#include <HUpnpCore/private/hhttp_messaginginfo_p.h>
 
 #include <QtNetwork/QTcpServer>
 
@@ -47,15 +46,10 @@ namespace Herqq
 namespace Upnp
 {
 
-class HEndpoint;
 class HNotifyRequest;
 class HSubscribeRequest;
 class HUnsubscribeRequest;
 class HInvokeActionRequest;
-
-class HHttpHeader;
-class HHttpRequestHeader;
-class HHttpResponseHeader;
 
 //
 // Private class for handling HTTP server duties needed in UPnP messaging
@@ -97,6 +91,7 @@ protected:
     const QByteArray m_loggingIdentifier;
     HHttpAsyncHandler* m_httpHandler;
     HChunkedInfo m_chunkedInfo;
+    qint32 m_maxBytesToLoad;
 
 private:
 
@@ -154,9 +149,7 @@ protected:
 
 public:
 
-    HHttpServer(
-        const QByteArray& loggingIdentifier, QObject* parent = 0);
-
+    HHttpServer(const QByteArray& loggingIdentifier, QObject* parent = 0);
     virtual ~HHttpServer();
 
     QList<QUrl> rootUrls() const;
@@ -169,9 +162,11 @@ public:
     bool init(const QList<HEndpoint>&);
     bool isInitialized() const;
     void close();
+
+    qint32 maxBytesToLoad() const;
 };
 
 }
 }
 
-#endif /* HHTTP_SERVER_H_ */
+#endif /* HHTTP_SERVER_P_H_ */

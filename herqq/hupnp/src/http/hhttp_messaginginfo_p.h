@@ -22,7 +22,7 @@
 #ifndef HHTTP_MESSAGINGINFO_P_H_
 #define HHTTP_MESSAGINGINFO_P_H_
 
-#include "../general/hupnp_defs.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QPair>
 #include <QtCore/QString>

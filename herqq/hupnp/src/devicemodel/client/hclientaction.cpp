@@ -21,10 +21,11 @@
 
 #include "hclientaction.h"
 #include "hclientaction_p.h"
+#include "hclientactionop_p.h"
 
-#include "hclientdevice.h"
-#include "hclientservice.h"
+#include "hdefault_clientdevice_p.h"
 #include "hdefault_clientaction_p.h"
+#include "hdefault_clientservice_p.h"
 
 #include "../../general/hlogger_p.h"
 
@@ -51,24 +52,52 @@ namespace Upnp
  * HActionProxy
  ******************************************************************************/
 HActionProxy::HActionProxy(
-    QNetworkAccessManager& nam, HClientActionPrivate* owner) :
-        QObject(owner->q_ptr),
+    QNetworkAccessManager& nam, HDefaultClientAction* owner) :
+        QObject(owner),
             m_locations(),
+            m_lastUsedLocation(),
             m_iNextLocationToTry(0),
             m_nam(nam),
             m_reply(0),
             m_owner(owner)
 {
     Q_ASSERT(m_owner);
+    bool ok = connect(
+        owner->parentService()->parentDevice()->rootDevice(),
+        SIGNAL(locationsChanged()),
+        this,
+        SLOT(locationsChanged()));
+    Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
 HActionProxy::~HActionProxy()
 {
 }
 
+void HActionProxy::invocationDone(qint32 rc, const HActionArguments* outArgs)
+{
+    deleteReply();
+    m_owner->invokeCompleted(rc, outArgs);
+}
+
+void HActionProxy::deleteReply()
+{
+    if (m_reply)
+    {
+        m_reply->deleteLater();
+        m_reply = 0;
+    }
+}
+
+void HActionProxy::locationsChanged()
+{
+    m_locations = m_owner->parentService()->parentDevice()->locations(BaseUrl);
+    m_iNextLocationToTry = 0;
+}
+
 void HActionProxy::error(QNetworkReply::NetworkError err)
 {
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_owner->loggingIdentifier());
 
     if (!m_reply)
     {
@@ -83,8 +112,8 @@ void HActionProxy::error(QNetworkReply::NetworkError err)
              err == QNetworkReply::HostNotFoundError)
     {
         HLOG_WARN(QString("Couldn't connect to the device [%1] @ [%2].").arg(
-            m_owner->q_ptr->parentService()->parentDevice()->info().udn().toSimpleUuid(),
-            m_locations[m_iNextLocationToTry].toString()));
+            m_owner->parentService()->parentDevice()->info().udn().toSimpleUuid(),
+            m_lastUsedLocation.toString()));
 
         if (m_iNextLocationToTry < m_locations.size() - 1)
         {
@@ -110,7 +139,7 @@ void HActionProxy::error(QNetworkReply::NetworkError err)
 
 void HActionProxy::finished()
 {
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_owner->loggingIdentifier());
 
     if (!m_reply)
     {
@@ -160,7 +189,7 @@ void HActionProxy::finished()
         return;
     }
 
-    if (m_owner->m_info->outputArguments().size() == 0)
+    if (m_owner->info().outputArguments().size() == 0)
     {
         // since there are not supposed to be any out arguments, this is a
         // valid scenario
@@ -179,7 +208,7 @@ void HActionProxy::finished()
         return;
     }
 
-    HActionArguments outArgs = m_owner->m_info->outputArguments();
+    HActionArguments outArgs = m_owner->info().outputArguments();
     HActionArguments::const_iterator ci = outArgs.constBegin();
     for(; ci != outArgs.constEnd(); ++ci)
     {
@@ -202,29 +231,32 @@ void HActionProxy::finished()
     invocationDone(UpnpSuccess, &outArgs);
 }
 
-void HActionProxy::send()
+bool HActionProxy::send()
 {
-    HLOG2(H_AT, H_FUN, m_owner->m_loggingIdentifier);
+    HLOG2(H_AT, H_FUN, m_owner->loggingIdentifier());
 
     Q_ASSERT(!invocationInProgress());
 
     if (m_locations.isEmpty())
     {
-        // store the device locations only upon action invocation, and only
-        // if they haven't been stored yet.
-        m_locations = m_owner->q_ptr->parentService()->parentDevice()->locations(BaseUrl);
-        Q_ASSERT(!m_locations.isEmpty());
+        m_locations = m_owner->parentService()->parentDevice()->locations(BaseUrl);
         m_iNextLocationToTry = 0;
+        if (m_locations.isEmpty())
+        {
+            return false;
+        }
     }
 
+    Q_ASSERT(m_iNextLocationToTry < m_locations.size());
+
     QtSoapNamespaces::instance().registerNamespace(
-        "u", m_owner->q_ptr->parentService()->info().serviceType().toString());
+        "u", m_owner->parentService()->info().serviceType().toString());
 
     QtSoapMessage soapMsg;
     soapMsg.setMethod(
         QtSoapQName(
-            m_owner->m_info->name(),
-            m_owner->q_ptr->parentService()->info().serviceType().toString()));
+            m_owner->info().name(),
+            m_owner->parentService()->info().serviceType().toString()));
 
     HActionArguments::const_iterator ci = m_inArgs.constBegin();
     for(; ci != m_inArgs.constEnd(); ++ci)
@@ -233,7 +265,7 @@ void HActionProxy::send()
         if (!m_inArgs.contains(iarg.name()))
         {
             invocationDone(UpnpInvalidArgs);
-            return;
+            return false;
         }
 
         QtSoapType* soapArg =
@@ -250,14 +282,15 @@ void HActionProxy::send()
 
     QString soapActionHdrField("\"");
     soapActionHdrField.append(
-        m_owner->q_ptr->parentService()->info().serviceType().toString());
+        m_owner->parentService()->info().serviceType().toString());
 
-    soapActionHdrField.append("#").append(m_owner->m_info->name()).append("\"");
+    soapActionHdrField.append("#").append(m_owner->info().name()).append("\"");
     req.setRawHeader("SOAPAction", soapActionHdrField.toUtf8());
 
+    m_lastUsedLocation = m_locations[m_iNextLocationToTry];
+
     QUrl url = resolveUri(
-        m_locations[m_iNextLocationToTry],
-        m_owner->q_ptr->parentService()->info().controlUrl());
+        m_lastUsedLocation, m_owner->parentService()->info().controlUrl());
 
     req.setUrl(url);
 
@@ -270,14 +303,21 @@ void HActionProxy::send()
 
     ok = connect(m_reply, SIGNAL(finished()), this, SLOT(finished()));
     Q_ASSERT(ok);
+
+    return true;
+}
+
+void HActionProxy::abort()
+{
+    deleteReply();
+    m_owner->invokeCompleted(UpnpInvocationAborted, 0);
 }
 
 /*******************************************************************************
  * HClientActionPrivate
  ******************************************************************************/
 HClientActionPrivate::HClientActionPrivate() :
-    m_loggingIdentifier(), q_ptr(0), m_info(),
-    m_proxy(0), m_invocations()
+    m_loggingIdentifier(), q_ptr(0), m_info(), m_proxy(0), m_invocations()
 {
 }
 
@@ -285,8 +325,7 @@ HClientActionPrivate::~HClientActionPrivate()
 {
 }
 
-void HClientActionPrivate::invokeCompleted(
-    int rc, const HActionArguments* outArgs)
+void HClientActionPrivate::invokeCompleted(int rc, const HActionArguments* outArgs)
 {
     Q_ASSERT(!m_invocations.isEmpty());
 
@@ -298,13 +337,17 @@ void HClientActionPrivate::invokeCompleted(
     if (inv.execArgs.execType() != HExecArgs::FireAndForget)
     {
         bool sendEvent = true;
-        if (inv.callback)
+        if (inv.callback && rc != UpnpInvocationAborted)
         {
+            // If invocation was aborted there's no guarantees that the
+            // callback object is valid at this point. With Qt's signals / slots
+            // there's no such limitation.
             sendEvent = inv.callback(q_ptr, inv.m_invokeId);
         }
 
         if (sendEvent)
         {
+            // This is safe even if the invocation was aborted.
             emit q_ptr->invokeComplete(q_ptr, inv.m_invokeId);
         }
     }
@@ -326,6 +369,47 @@ bool HClientActionPrivate::setInfo(const HActionInfo& info)
 
     m_info.reset(new HActionInfo(info));
     return true;
+}
+
+void HClientActionPrivate::abort(unsigned int id)
+{
+    if (!m_invocations.isEmpty())
+    {
+        if (m_invocations.head().m_invokeId.id() == id)
+        {
+            m_proxy->abort();
+        }
+        else
+        {
+            QQueue<HInvocationInfo>::iterator it = m_invocations.begin();
+            for(; it != m_invocations.end(); ++it)
+            {
+                if (it->m_invokeId.id() == id)
+                {
+                    m_invocations.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/*******************************************************************************
+ * HClientActionOp_
+ ******************************************************************************/
+HClientActionOp_::HClientActionOp_()
+{
+}
+
+HClientActionOp_::HClientActionOp_(const HActionArguments& inArgs) :
+    HClientActionOp(inArgs)
+{
+}
+
+void HClientActionOp_::setRunner(HClientActionPrivate* runner)
+{
+    H_D(HClientActionOp);
+    h->m_runner = runner;
 }
 
 /*******************************************************************************
@@ -364,17 +448,20 @@ HClientActionOp HClientAction::beginInvoke(
 }
 
 HClientActionOp HClientAction::beginInvoke(
-    const HActionArguments& inArgs,
-    const HActionInvokeCallback& cb,
+    const HActionArguments& inArgs, const HActionInvokeCallback& cb,
     HExecArgs* execArgs)
 {
     HInvocationInfo inv(inArgs, cb, execArgs ? *execArgs : HExecArgs());
+    inv.m_invokeId.setRunner(h_ptr);
     h_ptr->m_invocations.enqueue(inv);
 
     if (!h_ptr->m_proxy->invocationInProgress())
     {
         h_ptr->m_proxy->setInputArgs(inArgs);
-        h_ptr->m_proxy->send();
+        if (!h_ptr->m_proxy->send())
+        {
+            return HClientActionOp(UpnpActionFailed, "Failed to dispatch action invocation");
+        }
     }
 
     inv.m_invokeId.setReturnValue(UpnpInvocationInProgress);
@@ -385,10 +472,25 @@ HClientActionOp HClientAction::beginInvoke(
  * HDefaultClientAction
  ******************************************************************************/
 HDefaultClientAction::HDefaultClientAction(
-    const HActionInfo& info, HClientService* parent, QNetworkAccessManager& nam) :
+    const HActionInfo& info, HDefaultClientService* parent, QNetworkAccessManager& nam) :
         HClientAction(info, parent)
 {
-    h_ptr->m_proxy = new HActionProxy(nam, h_ptr);
+    h_ptr->m_proxy = new HActionProxy(nam, this);
+}
+
+const QByteArray& HDefaultClientAction::loggingIdentifier() const
+{
+    return h_ptr->m_loggingIdentifier;
+}
+
+void HDefaultClientAction::invokeCompleted(int rc, const HActionArguments* outArgs)
+{
+    h_ptr->invokeCompleted(rc, outArgs);
+}
+
+HDefaultClientService* HDefaultClientAction::parentService() const
+{
+    return static_cast<HDefaultClientService*>(HClientAction::parentService());
 }
 
 }

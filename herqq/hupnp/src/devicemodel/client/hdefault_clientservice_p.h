@@ -32,12 +32,15 @@
 
 #include <HUpnpCore/HClientService>
 
+#include <QtCore/QPair>
+
 namespace Herqq
 {
 
 namespace Upnp
 {
 
+class HDefaultClientDevice;
 class HDefaultClientStateVariable;
 
 //
@@ -50,7 +53,7 @@ H_DISABLE_COPY(HDefaultClientService)
 
 public:
 
-    HDefaultClientService(const HServiceInfo&, HClientDevice* parentDevice);
+    HDefaultClientService(const HServiceInfo&, HDefaultClientDevice* parentDevice);
     void addAction(HClientAction*);
     void addStateVariable(HDefaultClientStateVariable*);
     void setDescription(const QString& description);
@@ -58,6 +61,7 @@ public:
     bool updateVariables(
         const QList<QPair<QString, QString> >& variables, bool sendEvent);
 
+    HDefaultClientDevice* parentDevice() const;
 };
 
 }

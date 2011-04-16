@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HHTTP_HEADER_H
-#define HHTTP_HEADER_H
+#ifndef HHTTP_HEADER_P_H
+#define HHTTP_HEADER_P_H
 
 //
 // !! Warning !!
@@ -30,7 +30,7 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hupnp_defs.h"
+#include <HUpnpCore/HUpnp>
 
 #include <QtCore/QList>
 #include <QtCore/QPair>
@@ -213,4 +213,4 @@ public:
 }
 }
 
-#endif // HHTTP_HEADER_H
+#endif // HHTTP_HEADER_P_H

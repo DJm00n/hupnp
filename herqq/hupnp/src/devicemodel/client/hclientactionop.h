@@ -67,7 +67,17 @@ public:
     HClientActionOp();
 
     /*!
-     * Creates a new instance based on the provided values.
+     * Creates a new invalid instance.
+     *
+     * \param returnCode specifies the return code.
+     *
+     * \param errorDescription specifies a human-readable description of the error
+     * that occurred.
+     */
+    HClientActionOp(qint32 returnCode, const QString& errorDescription);
+
+    /*!
+     * \brief Creates a new instance based on the provided values.
      *
      * \param inArgs specifies the input arguments of the action invocation.
      */
@@ -85,8 +95,11 @@ public:
      */
     virtual ~HClientActionOp();
 
+    // Documented in HAsyncOp
+    virtual void abort();
+
     /*!
-     * Assigns the contents of the other object to this.
+     * \brief Assigns the contents of the other object to this.
      *
      * \return reference to this object.
      */

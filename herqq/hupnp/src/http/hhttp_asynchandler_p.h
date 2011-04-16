@@ -30,12 +30,11 @@
 // change or the file may be removed without of notice.
 //
 
-#include "../general/hupnp_defs.h"
+#include <HUpnpCore/HUpnp>
 
 #include "hhttp_p.h"
 #include "hhttp_header_p.h"
 #include "hhttp_messaginginfo_p.h"
-#include "../devicehosting/messages/hevent_messages_p.h"
 
 #include <QtCore/QHash>
 #include <QtCore/QObject>

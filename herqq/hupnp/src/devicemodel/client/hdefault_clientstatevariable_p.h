@@ -30,6 +30,8 @@ namespace Herqq
 namespace Upnp
 {
 
+class HDefaultClientService;
+
 //
 // Default implementation of HClientStateVariable
 //
@@ -40,7 +42,7 @@ H_DISABLE_COPY(HDefaultClientStateVariable)
 
 public:
     HDefaultClientStateVariable(
-        const HStateVariableInfo&, HClientService* parent);
+        const HStateVariableInfo&, HDefaultClientService* parent);
 
     using HClientStateVariable::setValue;
 };

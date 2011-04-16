@@ -24,6 +24,7 @@
 #include "hhttp_header_p.h"
 #include "hhttp_utils_p.h"
 
+#include "../devicehosting/messages/hevent_messages_p.h"
 #include "../dataelements/hactioninfo.h"
 #include "../general/hlogger_p.h"
 
@@ -36,135 +37,6 @@ namespace Herqq
 
 namespace Upnp
 {
-
-HHttpMessageCreator::HHttpMessageCreator()
-{
-}
-
-HHttpMessageCreator::~HHttpMessageCreator()
-{
-}
-
-QByteArray HHttpMessageCreator::setupData(
-    HHttpHeader& hdr, const HMessagingInfo& mi)
-{
-    return setupData(hdr, QByteArray(), mi);
-}
-
-QByteArray HHttpMessageCreator::setupData(
-    HHttpHeader& reqHdr, const QByteArray& body, const HMessagingInfo& mi,
-    ContentType ct)
-{
-    HLOG(H_AT, H_FUN);
-    Q_ASSERT(reqHdr.isValid());
-
-    reqHdr.setValue(
-        "DATE",
-        QDateTime::currentDateTime().toString(HHttpUtils::rfc1123DateFormat()));
-
-    switch(ct)
-    {
-    case TextXml:
-        reqHdr.setContentType("text/xml; charset=\"utf-8\"");
-        break;
-    case OctetStream:
-        reqHdr.setContentType("application/octet-stream");
-        break;
-    default:
-        ;
-    }
-
-    if (!mi.keepAlive() && reqHdr.minorVersion() == 1)
-    {
-        reqHdr.setValue("Connection", "close");
-    }
-
-    reqHdr.setValue("HOST", mi.hostInfo());
-
-    bool chunked = false;
-
-    if (mi.chunkedInfo().max() > 0 &&
-        body.size() > mi.chunkedInfo().max())
-    {
-        chunked = true;
-        reqHdr.setValue("Transfer-Encoding", "chunked");
-    }
-    else
-    {
-        reqHdr.setContentLength(body.size());
-    }
-
-    QByteArray msg(reqHdr.toString().toUtf8());
-    msg.append(body);
-
-    return msg;
-}
-
-QByteArray HHttpMessageCreator::createResponse(
-    StatusCode sc, const HMessagingInfo& mi, const QByteArray& body, ContentType ct)
-{
-    qint32 statusCode = 0;
-    QString reasonPhrase = "";
-
-    switch(sc)
-    {
-    case Ok:
-        statusCode = 200;
-        reasonPhrase = "OK";
-        break;
-
-    case BadRequest:
-        statusCode = 400;
-        reasonPhrase = "Bad Request";
-        break;
-
-    case IncompatibleHeaderFields:
-        statusCode = 400;
-        reasonPhrase = "Incompatible header fields";
-        break;
-
-    case Unauthorized:
-        statusCode = 401;
-        reasonPhrase = "Unauthorized";
-        break;
-
-    case Forbidden:
-        statusCode = 403;
-        reasonPhrase = "Forbidden";
-        break;
-
-    case NotFound:
-        statusCode = 404;
-        reasonPhrase = "Not Found";
-        break;
-
-    case MethotNotAllowed:
-        statusCode = 405;
-        reasonPhrase = "Method Not Allowed";
-        break;
-
-    case PreconditionFailed:
-        statusCode = 412;
-        reasonPhrase = "Precondition Failed";
-        break;
-
-    case InternalServerError:
-        statusCode = 500;
-        reasonPhrase = "Internal Server Error";
-        break;
-
-    case ServiceUnavailable:
-        statusCode = 503;
-        reasonPhrase = "Service Unavailable";
-        break;
-
-    default:
-        Q_ASSERT(false);
-    }
-
-    HHttpResponseHeader responseHdr(statusCode, reasonPhrase);
-    return setupData(responseHdr, body, mi, ct);
-}
 
 namespace
 {
@@ -233,6 +105,175 @@ void checkForActionError(
         *soapFault        = QtSoapMessage::Client;
     }
 }
+
+QString contentTypeToString(ContentType ct)
+{
+    QString retVal;
+    switch(ct)
+    {
+    case TextXml:
+        retVal = "text/xml; charset=\"utf-8\"";
+        break;
+    case OctetStream:
+        retVal = "application/octet-stream";
+        break;
+    default:
+        ;
+    }
+    return retVal;
+}
+
+void getStatusInfo(StatusCode sc, qint32* statusCode, QString* reasonPhrase)
+{
+    switch(sc)
+    {
+    case Ok:
+        *statusCode = 200;
+        *reasonPhrase = "OK";
+        break;
+
+    case BadRequest:
+        *statusCode = 400;
+        *reasonPhrase = "Bad Request";
+        break;
+
+    case IncompatibleHeaderFields:
+        *statusCode = 400;
+        *reasonPhrase = "Incompatible header fields";
+        break;
+
+    case Unauthorized:
+        *statusCode = 401;
+        *reasonPhrase = "Unauthorized";
+        break;
+
+    case Forbidden:
+        *statusCode = 403;
+        *reasonPhrase = "Forbidden";
+        break;
+
+    case NotFound:
+        *statusCode = 404;
+        *reasonPhrase = "Not Found";
+        break;
+
+    case MethotNotAllowed:
+        *statusCode = 405;
+        *reasonPhrase = "Method Not Allowed";
+        break;
+
+    case PreconditionFailed:
+        *statusCode = 412;
+        *reasonPhrase = "Precondition Failed";
+        break;
+
+    case InternalServerError:
+        *statusCode = 500;
+        *reasonPhrase = "Internal Server Error";
+        break;
+
+    case ServiceUnavailable:
+        *statusCode = 503;
+        *reasonPhrase = "Service Unavailable";
+        break;
+
+    default:
+        Q_ASSERT(false);
+    }
+}
+
+}
+
+HHttpMessageCreator::HHttpMessageCreator()
+{
+}
+
+HHttpMessageCreator::~HHttpMessageCreator()
+{
+}
+
+QByteArray HHttpMessageCreator::setupData(
+    HHttpHeader& hdr, const HMessagingInfo& mi)
+{
+    return setupData(hdr, QByteArray(), mi);
+}
+
+QByteArray HHttpMessageCreator::setupData(
+    HHttpHeader& reqHdr, qint64 bodySizeInBytes, const HMessagingInfo& mi,
+    ContentType ct)
+{
+    HLOG(H_AT, H_FUN);
+    Q_ASSERT(reqHdr.isValid());
+
+    reqHdr.setValue(
+        "DATE",
+        QDateTime::currentDateTime().toString(HHttpUtils::rfc1123DateFormat()));
+
+    reqHdr.setContentType(contentTypeToString(ct));
+
+    if (!mi.keepAlive() && reqHdr.minorVersion() == 1)
+    {
+        reqHdr.setValue("Connection", "close");
+    }
+
+    reqHdr.setValue("HOST", mi.hostInfo());
+
+    if (mi.chunkedInfo().max() > 0 &&
+        bodySizeInBytes > mi.chunkedInfo().max())
+    {
+        reqHdr.setValue("Transfer-Encoding", "chunked");
+    }
+    else
+    {
+        reqHdr.setContentLength(bodySizeInBytes);
+    }
+
+    QByteArray msg(reqHdr.toString().toUtf8());
+    return msg;
+}
+
+QByteArray HHttpMessageCreator::setupData(
+    HHttpHeader& reqHdr, const QByteArray& body, const HMessagingInfo& mi,
+    ContentType ct)
+{
+    HLOG(H_AT, H_FUN);
+    Q_ASSERT(reqHdr.isValid());
+
+    QByteArray msg = setupData(reqHdr, body.size(), mi, ct);
+    msg.append(body);
+
+    return msg;
+}
+
+QByteArray HHttpMessageCreator::createResponse(
+    StatusCode sc, const HMessagingInfo& mi)
+{
+    return createResponse(sc, mi, QByteArray());
+}
+
+QByteArray HHttpMessageCreator::createHeaderData(
+    StatusCode sc, const HMessagingInfo& mi, qint64 bodySizeInBytes,
+    ContentType ct)
+{
+    qint32 statusCode = 0;
+    QString reasonPhrase = "";
+
+    getStatusInfo(sc, &statusCode, &reasonPhrase);
+
+    HHttpResponseHeader responseHdr(statusCode, reasonPhrase);
+    return setupData(responseHdr, bodySizeInBytes, mi, ct);
+}
+
+QByteArray HHttpMessageCreator::createResponse(
+    StatusCode sc, const HMessagingInfo& mi, const QByteArray& body, ContentType ct)
+{
+    qint32 statusCode = 0;
+    QString reasonPhrase;
+
+    getStatusInfo(sc, &statusCode, &reasonPhrase);
+
+    HHttpResponseHeader responseHdr(statusCode, reasonPhrase);
+    return setupData(responseHdr, body, mi, ct);
 }
 
 QByteArray HHttpMessageCreator::setupData(
@@ -246,8 +287,9 @@ QByteArray HHttpMessageCreator::setupData(
 QByteArray HHttpMessageCreator::createResponse(
     const HMessagingInfo& mi, qint32 actionErrCode, const QString& description)
 {
-    QtSoapMessage::FaultCode soapFault;
-    qint32 httpStatusCode; QString httpReasonPhrase;
+    QtSoapMessage::FaultCode soapFault = QtSoapMessage::Other;
+    qint32 httpStatusCode = 0;
+    QString httpReasonPhrase;
 
     checkForActionError(
         actionErrCode, &soapFault, &httpStatusCode, &httpReasonPhrase);
@@ -291,9 +333,7 @@ QByteArray HHttpMessageCreator::create(
 {
     Q_ASSERT(req.isValid(false));
 
-    HHttpRequestHeader requestHdr(
-        "SUBSCRIBE", extractRequestPart(req.eventUrl()));
-
+    HHttpRequestHeader requestHdr("SUBSCRIBE", extractRequestPart(req.eventUrl()));
     requestHdr.setValue("TIMEOUT", req.timeout().toString());
 
     if (!req.isRenewal())
@@ -343,7 +383,7 @@ QByteArray HHttpMessageCreator::create(
     return setupData(responseHdr, mi);
 }
 
-HNotifyRequest::RetVal HHttpMessageCreator::create(
+int HHttpMessageCreator::create(
     const HHttpRequestHeader& reqHdr, const QByteArray& body, HNotifyRequest& req)
 {
     HLOG(H_AT, H_FUN);
@@ -388,9 +428,8 @@ HNotifyRequest::RetVal HHttpMessageCreator::create(
     return retVal;
 }
 
-HSubscribeRequest::RetVal
-    HHttpMessageCreator::create(
-        const HHttpRequestHeader& reqHdr, HSubscribeRequest& req)
+int HHttpMessageCreator::create(
+    const HHttpRequestHeader& reqHdr, HSubscribeRequest& req)
 {
     HLOG(H_AT, H_FUN);
 
@@ -432,7 +471,7 @@ HSubscribeRequest::RetVal
     return retVal;
 }
 
-HUnsubscribeRequest::RetVal HHttpMessageCreator::create(
+int HHttpMessageCreator::create(
     const HHttpRequestHeader& reqHdr, HUnsubscribeRequest& req)
 {
     HLOG(H_AT, H_FUN);

@@ -169,7 +169,7 @@ StatusCode HEventNotifier::addSubscriber(
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     Q_ASSERT(sid);
-    Q_ASSERT(service->isEvented());
+
     // The UDA v1.1 does not specify what to do when a subscription is received
     // to a service that is not evented. A "safe" route was taken here and
     // all subscriptions are accepted rather than returning some error. However,
@@ -197,8 +197,19 @@ StatusCode HEventNotifier::addSubscriber(
     HLOG_INFO(QString("adding subscriber from [%1]").arg(
         sreq.callbacks().at(0).toString()));
 
-    HTimeout timeout = service->isEvented() ?
-        getSubscriptionTimeout(sreq) : HTimeout(60*60*24);
+    HTimeout timeout;
+    if (service->isEvented())
+    {
+        timeout = getSubscriptionTimeout(sreq);
+    }
+    else
+    {
+        HLOG_WARN(QString(
+            "Received subscription request to a service [%1] that has no evented state variables. "
+            "No events will be sent to this subscriber.").arg(
+                service->info().serviceType().toString()));
+        timeout = HTimeout(60*60*24);
+    }
 
     HServiceEventSubscriber* rc =
         new HServiceEventSubscriber(

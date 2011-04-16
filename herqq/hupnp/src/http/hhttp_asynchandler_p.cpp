@@ -24,6 +24,7 @@
 #include "hhttp_utils_p.h"
 
 #include "../general/hupnp_global_p.h"
+#include "../devicehosting/messages/hevent_messages_p.h"
 
 #include <QtNetwork/QTcpSocket>
 
@@ -414,7 +415,6 @@ bool HHttpAsyncOperation::run()
 {
     if (m_dataToSend.isEmpty())
     {
-        m_mi->setLastErrorDescription("no data to send");
         m_state = Internal_ReadingHeader;
         return true;
     }
@@ -609,7 +609,8 @@ void HHttpAsyncOperation::error(QAbstractSocket::SocketError err)
     {
         if (m_dataRead.size() <= 0)
         {
-            m_mi->setLastErrorDescription("failed to read HTTP header");
+            m_mi->setLastErrorDescription(
+                QString("failed to read HTTP header: %1").arg(m_mi->socket().errorString()));
             done_(Internal_Failed);
             return;
         }

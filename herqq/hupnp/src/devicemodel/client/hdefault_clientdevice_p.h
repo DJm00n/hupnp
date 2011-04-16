@@ -99,11 +99,14 @@ public:
 
     bool addLocation(const QUrl& location);
     void addLocations(const QList<QUrl>& locations);
+    void clearLocations();
+    HDefaultClientDevice* rootDevice() const;
     bool isTimedout(SearchCriteria searchCriteria) const;
 
 Q_SIGNALS:
 
     void statusTimeout(HDefaultClientDevice* source);
+    void locationsChanged();
 
 };
 

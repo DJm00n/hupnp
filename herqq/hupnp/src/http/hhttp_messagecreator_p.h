@@ -31,9 +31,11 @@
 //
 
 #include "hhttp_p.h"
-#include "../devicehosting/messages/hevent_messages_p.h"
 
-class QString;
+#include <HUpnpCore/HUpnp>
+
+#include <QtCore/QString>
+
 class QByteArray;
 
 namespace Herqq
@@ -41,6 +43,11 @@ namespace Herqq
 
 namespace Upnp
 {
+
+class HNotifyRequest;
+class HSubscribeRequest;
+class HUnsubscribeRequest;
+class HSubscribeResponse;
 
 class HHttpHeader;
 class HMessagingInfo;
@@ -61,6 +68,10 @@ private:
         const QString& reasonPhrase, const QString& body,
         ContentType ct = Undefined);
 
+    static QByteArray setupData(
+        HHttpHeader& reqHdr, qint64 bodySizeBytesInBytes, const HMessagingInfo& mi,
+        ContentType ct = Undefined);
+
 public:
 
     static QByteArray setupData(HHttpHeader& hdr, const HMessagingInfo&);
@@ -69,32 +80,32 @@ public:
         HHttpHeader& hdr, const QByteArray& body, const HMessagingInfo&,
         ContentType = Undefined);
 
-    inline static QByteArray createResponse(
-        StatusCode sc, const HMessagingInfo& mi)
-    {
-        return createResponse(sc, mi, QByteArray());
-    }
+    static QByteArray createResponse(
+        StatusCode sc, const HMessagingInfo& mi);
+
+    static QByteArray createHeaderData(
+        StatusCode, const HMessagingInfo&, qint64 bodySizeInBytes, ContentType = Undefined);
 
     static QByteArray createResponse(
         StatusCode, const HMessagingInfo&, const QByteArray& body,
         ContentType = Undefined);
 
     static QByteArray createResponse(
-        const HMessagingInfo&, qint32 actionErrCode, const QString& msg="");
+        const HMessagingInfo&, qint32 actionErrCode, const QString& msg=QString());
 
     static QByteArray create(const HNotifyRequest&     , HMessagingInfo*);
     static QByteArray create(const HSubscribeRequest&  , const HMessagingInfo&);
     static QByteArray create(const HUnsubscribeRequest&, HMessagingInfo*);
     static QByteArray create(const HSubscribeResponse& , const HMessagingInfo&);
 
-    static HNotifyRequest::RetVal create(
+    static int create(
         const HHttpRequestHeader& reqHdr, const QByteArray& body,
         HNotifyRequest& req);
 
-    static HSubscribeRequest::RetVal create(
+    static int create(
         const HHttpRequestHeader& reqHdr, HSubscribeRequest& req);
 
-    static HUnsubscribeRequest::RetVal create(
+    static int create(
         const HHttpRequestHeader& reqHdr, HUnsubscribeRequest& req);
 
     static bool create(

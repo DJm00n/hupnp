@@ -188,7 +188,7 @@ bool HClientModelCreator::parseServiceDescription(HDefaultClientService* service
 }
 
 bool HClientModelCreator::parseServiceList(
-    const QDomElement& serviceListElement, HClientDevice* device,
+    const QDomElement& serviceListElement, HDefaultClientDevice* device,
     QList<HDefaultClientService*>* retVal)
 {
     HLOG2(H_AT, H_FUN, m_creationParameters->m_loggingIdentifier);
@@ -196,9 +196,7 @@ bool HClientModelCreator::parseServiceList(
     Q_ASSERT(device);
     Q_ASSERT(!serviceListElement.isNull());
 
-    QDomElement serviceElement =
-        serviceListElement.firstChildElement("service");
-
+    QDomElement serviceElement = serviceListElement.firstChildElement("service");
     while(!serviceElement.isNull())
     {
         HServiceInfo info;

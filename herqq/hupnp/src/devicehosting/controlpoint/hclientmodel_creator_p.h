@@ -108,7 +108,7 @@ private:
     bool parseServiceDescription(HDefaultClientService*);
 
     bool parseServiceList(
-        const QDomElement& serviceListElement, HClientDevice*,
+        const QDomElement& serviceListElement, HDefaultClientDevice*,
         QList<HDefaultClientService*>* retVal);
 
     HDefaultClientDevice* parseDevice(

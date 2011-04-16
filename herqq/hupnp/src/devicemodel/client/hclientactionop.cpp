@@ -20,9 +20,10 @@
  */
 
 #include "hclientactionop.h"
+#include "hclientactionop_p.h"
+#include "hclientaction_p.h"
 
 #include "../hasyncop.h"
-#include "../hasyncop_p.h"
 #include "../hactionarguments.h"
 
 namespace Herqq
@@ -34,29 +35,27 @@ namespace Upnp
 /*******************************************************************************
  * HClientActionOpPrivate
  *******************************************************************************/
-class HClientActionOpPrivate :
-    public HAsyncOpPrivate
+HClientActionOpPrivate::HClientActionOpPrivate() :
+    HAsyncOpPrivate(HAsyncOpPrivate::genId()),
+        m_inArgs(), m_outArgs(), m_runner(0)
 {
-public:
+}
 
-    HActionArguments m_inArgs, m_outArgs;
-
-public:
-
-    inline HClientActionOpPrivate() :
-        HAsyncOpPrivate(HAsyncOpPrivate::genId()),
-            m_inArgs(), m_outArgs()
-    {
-    }
-
-    virtual ~HClientActionOpPrivate() {}
-};
+HClientActionOpPrivate::~HClientActionOpPrivate()
+{
+}
 
 /*******************************************************************************
  * HClientActionOp
  *******************************************************************************/
 HClientActionOp::HClientActionOp() :
     HAsyncOp(*new HClientActionOpPrivate())
+{
+}
+
+HClientActionOp::HClientActionOp(
+    qint32 returnCode, const QString& errorDescription) :
+        HAsyncOp(returnCode, errorDescription, *new HClientActionOpPrivate())
 {
 }
 
@@ -74,6 +73,15 @@ HClientActionOp::HClientActionOp(const HClientActionOp& other) :
 
 HClientActionOp::~HClientActionOp()
 {
+}
+
+void HClientActionOp::abort()
+{
+    H_D(HClientActionOp);
+    if (h->m_runner)
+    {
+        h->m_runner->abort(id());
+    }
 }
 
 HClientActionOp& HClientActionOp::operator=(const HClientActionOp& other)

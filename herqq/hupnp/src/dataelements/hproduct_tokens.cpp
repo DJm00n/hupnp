@@ -50,8 +50,8 @@ HProductToken::HProductToken(const QString& token, const QString& productVersion
     if (tokenTmp.isEmpty() || productVersionTmp.isEmpty())
     {
         HLOG_WARN(QString(
-            "Invalid product token. Token: %1, Product Version: %2").arg(
-                token, productVersion));
+            "Invalid product token. Token: [%1], Product Version: [%2]").arg(
+                tokenTmp, productVersionTmp));
 
         return;
     }
@@ -318,7 +318,7 @@ public:
             else
             {
                 HLOG_WARN_NONSTD(QString(
-                    "Missing the mandatory UPnP token [%1]: ").arg(
+                    "Missing the mandatory UPnP token: [%1]").arg(
                         m_originalTokenString));
             }
         }

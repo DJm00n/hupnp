@@ -279,6 +279,7 @@ bool HDefaultClientDevice::addLocation(const QUrl& location)
     if (shouldAdd(this, location))
     {
         h_ptr->m_locations.push_back(location);
+        emit locationsChanged();
         return true;
     }
 
@@ -292,6 +293,18 @@ void HDefaultClientDevice::addLocations(const QList<QUrl>& locations)
     {
         addLocation(*ci);
     }
+}
+
+void HDefaultClientDevice::clearLocations()
+{
+    Q_ASSERT(!parentDevice());
+    h_ptr->m_locations.clear();
+    emit locationsChanged();
+}
+
+HDefaultClientDevice* HDefaultClientDevice::rootDevice() const
+{
+    return static_cast<HDefaultClientDevice*>(HClientDevice::rootDevice());
 }
 
 }

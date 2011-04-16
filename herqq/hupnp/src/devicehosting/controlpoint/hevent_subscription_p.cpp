@@ -26,11 +26,10 @@
 
 #include "../../dataelements/hserviceinfo.h"
 
-#include "../../general/hupnp_global_p.h"
-
 #include "../../http/hhttp_messagecreator_p.h"
 
 #include "../../general/hlogger_p.h"
+#include "../../general/hupnp_global_p.h"
 
 namespace Herqq
 {
@@ -50,6 +49,7 @@ HEventSubscription::HEventSubscription(
             m_deviceLocations(),
             m_nextLocationToTry(0),
             m_eventUrl(),
+            m_connectErrorCount(0),
             m_sid(),
             m_seq(0),
             m_desiredTimeout(desiredTimeout),

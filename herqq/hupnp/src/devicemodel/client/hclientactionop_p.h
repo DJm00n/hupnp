@@ -19,8 +19,8 @@
  *  along with Herqq UPnP. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HDEFAULTCLIENTACTION_P_H_
-#define HDEFAULTCLIENTACTION_P_H_
+#ifndef HCLIENTACTIONOP_P_H_
+#define HCLIENTACTIONOP_P_H_
 
 //
 // !! Warning !!
@@ -30,9 +30,10 @@
 // change or the file may be removed without of notice.
 //
 
-#include <HUpnpCore/HClientAction>
+#include <HUpnpCore/private/hasyncop_p.h>
+#include <HUpnpCore/HActionArguments>
 
-class QNetworkAccessManager;
+#include <QtCore/QPointer>
 
 namespace Herqq
 {
@@ -40,29 +41,23 @@ namespace Herqq
 namespace Upnp
 {
 
-class HDefaultClientService;
+class HClientActionPrivate;
 
-//
-// Default implementation of the HClientAction
-//
-class HDefaultClientAction :
-    public HClientAction
+class HClientActionOpPrivate :
+    public HAsyncOpPrivate
 {
-H_DISABLE_COPY(HDefaultClientAction)
+public:
+
+    HActionArguments m_inArgs, m_outArgs;
+    QPointer<HClientActionPrivate> m_runner;
 
 public:
 
-    HDefaultClientAction(
-        const HActionInfo&, HDefaultClientService* parent, QNetworkAccessManager&);
-
-    const QByteArray& loggingIdentifier() const;
-
-    void invokeCompleted(int rc, const HActionArguments* outArgs = 0);
-
-    HDefaultClientService* parentService() const;
+    HClientActionOpPrivate();
+    virtual ~HClientActionOpPrivate();
 };
 
 }
 }
 
-#endif /* HDEFAULTCLIENTACTION_P_H_ */
+#endif /* HCLIENTACTIONOP_P_H_ */

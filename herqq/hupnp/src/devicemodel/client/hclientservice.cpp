@@ -21,9 +21,10 @@
 
 #include "hclientservice.h"
 #include "hclientservice_p.h"
-#include "hdefault_clientservice_p.h"
 
 #include "hclientaction.h"
+#include "hdefault_clientdevice_p.h"
+#include "hdefault_clientservice_p.h"
 #include "hdefault_clientstatevariable_p.h"
 
 #include "../../dataelements/hactioninfo.h"
@@ -137,7 +138,7 @@ QVariant HClientService::value(const QString& stateVarName, bool* ok) const
  * HDefaultClientService
  ******************************************************************************/
 HDefaultClientService::HDefaultClientService(
-    const HServiceInfo& info, HClientDevice* parentDevice) :
+    const HServiceInfo& info, HDefaultClientDevice* parentDevice) :
         HClientService(info, parentDevice)
 {
 }
@@ -163,6 +164,11 @@ bool HDefaultClientService::updateVariables(
     const QList<QPair<QString, QString> >& variables, bool sendEvent)
 {
     return h_ptr->updateVariables(variables, sendEvent) != HClientServicePrivate::Failed;
+}
+
+HDefaultClientDevice* HDefaultClientService::parentDevice() const
+{
+    return static_cast<HDefaultClientDevice*>(HClientService::parentDevice());
 }
 
 }

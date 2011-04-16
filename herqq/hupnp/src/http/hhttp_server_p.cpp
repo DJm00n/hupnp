@@ -22,6 +22,7 @@
 #include "hhttp_server_p.h"
 #include "hhttp_utils_p.h"
 #include "hhttp_header_p.h"
+#include "hhttp_asynchandler_p.h"
 #include "hhttp_messaginginfo_p.h"
 #include "hhttp_messagecreator_p.h"
 
@@ -66,7 +67,8 @@ HHttpServer::HHttpServer(const QByteArray& loggingIdentifier, QObject* parent) :
         m_servers(),
         m_loggingIdentifier(loggingIdentifier),
         m_httpHandler(new HHttpAsyncHandler(m_loggingIdentifier, this)),
-        m_chunkedInfo()
+        m_chunkedInfo(),
+        m_maxBytesToLoad(1024*1024*5) // TODO make this configurable
 {
     bool ok = connect(
         m_httpHandler, SIGNAL(msgIoComplete(HHttpAsyncOperation*)),
@@ -229,7 +231,9 @@ void HHttpServer::processNotifyMessage(
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     HNotifyRequest nreq;
-    HNotifyRequest::RetVal retVal = HHttpMessageCreator::create(hdr, body, nreq);
+    HNotifyRequest::RetVal retVal =
+        static_cast<HNotifyRequest::RetVal>(
+            HHttpMessageCreator::create(hdr, body, nreq));
 
     switch(retVal)
     {
@@ -323,7 +327,9 @@ void HHttpServer::processSubscription(
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     HSubscribeRequest sreq;
-    HSubscribeRequest::RetVal retVal = HHttpMessageCreator::create(hdr, sreq);
+    HSubscribeRequest::RetVal retVal =
+        static_cast<HSubscribeRequest::RetVal>(
+            HHttpMessageCreator::create(hdr, sreq));
 
     switch(retVal)
     {
@@ -362,7 +368,9 @@ void HHttpServer::processUnsubscription(
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
 
     HUnsubscribeRequest usreq;
-    HUnsubscribeRequest::RetVal retVal = HHttpMessageCreator::create(hdr, usreq);
+    HUnsubscribeRequest::RetVal retVal =
+        static_cast<HUnsubscribeRequest::RetVal>(
+            HHttpMessageCreator::create(hdr, usreq));
 
     switch(retVal)
     {
@@ -616,6 +624,11 @@ void HHttpServer::close()
             server->close();
         }
     }
+}
+
+qint32 HHttpServer::maxBytesToLoad() const
+{
+    return m_maxBytesToLoad;
 }
 
 }

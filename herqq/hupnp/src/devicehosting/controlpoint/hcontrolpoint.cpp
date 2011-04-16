@@ -299,23 +299,30 @@ bool HControlPointPrivate::processDeviceOffline(
         return true;
     }
 
-    HLOG_INFO(QString("Resource [%1] is unavailable.").arg(
-        msg.usn().resourceType().toString()));
+    if (device->deviceStatus()->online())
+    {
 
-    // according to the UDA v1.1 specification, if a bye bye message of any kind
-    // is received, the control point can assume that nothing in that
-    // device tree is available anymore
+        HLOG_INFO(QString("Resource [%1] is unavailable.").arg(
+            msg.usn().resourceType().toString()));
 
-    HDefaultClientDevice* root =
-        static_cast<HDefaultClientDevice*>(device->rootDevice());
+        // according to the UDA v1.1 specification, if a bye bye message of any kind
+        // is received, the control point can assume that nothing in that
+        // device tree is available anymore
 
-    Q_ASSERT(root);
+        HDefaultClientDevice* root =
+            static_cast<HDefaultClientDevice*>(device->rootDevice());
 
-    root->deviceStatus()->setOnline(false);
+        Q_ASSERT(root);
 
-    m_eventSubscriber->cancel(root, VisitThisRecursively, false);
+        root->deviceStatus()->setOnline(false);
 
-    emit q_ptr->rootDeviceOffline(root);
+        m_eventSubscriber->remove(root, true);
+
+        root->clearLocations();
+        root->stopStatusNotifier(HDefaultClientDevice::All);
+
+        emit q_ptr->rootDeviceOffline(root);
+    }
 
     return true;
 }

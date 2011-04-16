@@ -40,6 +40,7 @@
 #include <QtCore/QUrl>
 #include <QtCore/QQueue>
 #include <QtCore/QString>
+#include <QtCore/QPointer>
 #include <QtCore/QScopedPointer>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkAccessManager>
@@ -50,14 +51,69 @@ namespace Herqq
 namespace Upnp
 {
 
-class HActionProxy;
 class HInvocationInfo;
+class HDefaultClientAction;
+
+//
+// Class for relaying action invocations across the network to the real
+// HClientAction objects instantiated by control points
+//
+class HActionProxy :
+    public QObject
+{
+Q_OBJECT
+H_DISABLE_COPY(HActionProxy)
+
+private:
+
+    QList<QUrl> m_locations;
+    QUrl m_lastUsedLocation;
+
+    qint32 m_iNextLocationToTry;
+    // the device locations and the index the next connection attempt should try
+    // these are the places to which the action invocation requests are sent
+
+    QNetworkAccessManager& m_nam;
+    QPointer<QNetworkReply> m_reply;
+
+    HDefaultClientAction* m_owner;
+
+    HActionArguments m_inArgs;
+
+private:
+
+    void invocationDone(qint32 rc, const HActionArguments* outArgs = 0);
+    void deleteReply();
+
+private slots:
+
+    void locationsChanged();
+    void error(QNetworkReply::NetworkError);
+    void finished();
+
+public:
+
+    HActionProxy(QNetworkAccessManager&, HDefaultClientAction* owner);
+    virtual ~HActionProxy();
+
+    bool send();
+    void abort();
+
+    inline void setInputArgs(const HActionArguments& inArgs)
+    {
+        m_inArgs = inArgs;
+    }
+
+    inline bool invocationInProgress() const { return m_reply; }
+};
 
 //
 // Implementation details of HClientAction
 //
-class HClientActionPrivate
+class HClientActionPrivate :
+    public QObject
 {
+Q_OBJECT
 H_DECLARE_PUBLIC(HClientAction)
 H_DISABLE_COPY(HClientActionPrivate)
 
@@ -81,6 +137,20 @@ public:
     ~HClientActionPrivate();
 
     bool setInfo(const HActionInfo&);
+    void abort(unsigned int id);
+};
+
+//
+//
+//
+class HClientActionOp_ :
+    public HClientActionOp
+{
+H_DECLARE_PRIVATE(HClientActionOp);
+public:
+    HClientActionOp_();
+    HClientActionOp_(const HActionArguments& inArgs);
+    void setRunner(HClientActionPrivate* runner);
 };
 
 //
@@ -95,7 +165,7 @@ public:
     HExecArgs execArgs;
 
     HActionArguments m_inArgs;
-    HClientActionOp m_invokeId;
+    HClientActionOp_ m_invokeId;
 
     inline HInvocationInfo() : callback(), execArgs(), m_inArgs(), m_invokeId() { }
     inline ~HInvocationInfo() { }
@@ -110,63 +180,6 @@ public:
             m_invokeId(inArgs)
     {
     }
-};
-
-//
-// Class for relaying action invocations across the network to the real
-// HClientAction objects instantiated by device hosts
-//
-class HActionProxy :
-    public QObject
-{
-Q_OBJECT
-H_DISABLE_COPY(HActionProxy)
-
-private:
-
-    QList<QUrl> m_locations;
-    qint32 m_iNextLocationToTry;
-    // the device locations and the index the next connection attempt should try
-    // these are the places to which the action invocation requests are sent
-
-    QNetworkAccessManager& m_nam;
-    QNetworkReply* m_reply;
-
-    HClientActionPrivate* m_owner;
-
-    HActionArguments m_inArgs;
-
-private:
-
-    inline void invocationDone(qint32 rc, const HActionArguments* outArgs = 0)
-    {
-        deleteReply();
-        m_owner->invokeCompleted(rc, outArgs);
-    }
-
-    inline void deleteReply()
-    {
-        if (m_reply) { m_reply->deleteLater(); m_reply = 0; }
-    }
-
-private slots:
-
-    void error(QNetworkReply::NetworkError);
-    void finished();
-
-public:
-
-    HActionProxy(QNetworkAccessManager&, HClientActionPrivate* owner);
-    virtual ~HActionProxy();
-
-    void send();
-
-    inline void setInputArgs(const HActionArguments& inArgs)
-    {
-        m_inArgs = inArgs;
-    }
-
-    inline bool invocationInProgress() const { return m_reply; }
 };
 
 }

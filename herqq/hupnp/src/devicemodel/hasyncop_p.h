@@ -32,6 +32,8 @@ namespace Herqq
 namespace Upnp
 {
 
+
+
 //
 // Implementation details of HAsyncOp
 //
