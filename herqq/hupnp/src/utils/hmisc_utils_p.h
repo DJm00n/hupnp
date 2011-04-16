@@ -22,7 +22,7 @@
 #ifndef HMISC_UTILS_P_H_
 #define HMISC_UTILS_P_H_
 
-#include "hglobal.h"
+#include <HUpnpCore/HUpnp>
 
 class QHostAddress;
 
@@ -42,11 +42,11 @@ namespace Herqq
  * This algorithm was first reported by Dan Bernstein
  * many years ago in comp.lang.c
  */
-unsigned long hash(const char* str, int n);
+H_UPNP_CORE_EXPORT unsigned long hash(const char* str, int n);
 
-QHostAddress findBindableHostAddress();
+H_UPNP_CORE_EXPORT QHostAddress findBindableHostAddress();
 
-bool toBool(const QString&, bool* ok);
+H_UPNP_CORE_EXPORT bool toBool(const QString&, bool* ok);
 
 }
 

@@ -122,7 +122,7 @@ protected:
 
 public:
 
-    explicit DeviceWindow(QWidget *parent = 0);
+    explicit DeviceWindow(QWidget* parent = 0);
     virtual ~DeviceWindow();
 
 private slots:

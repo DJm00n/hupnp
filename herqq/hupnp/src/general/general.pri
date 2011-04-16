@@ -16,3 +16,6 @@ SOURCES += \
     $$SRC_LOC/general/hlogger_p.cpp \
     $$SRC_LOC/general/hupnpinfo.cpp \
     $$SRC_LOC/general/hupnp_datatypes.cpp
+
+EXPORTED_PRIVATE_HEADERS += \
+    $$SRC_LOC/general/hlogger_p.h
