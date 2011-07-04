@@ -123,7 +123,7 @@ HDeviceHostPrivate::HDeviceHostPrivate() :
         m_nam(0)
 {
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
-    srand(time(0));
+    qsrand(time(0));
 }
 
 HDeviceHostPrivate::~HDeviceHostPrivate()

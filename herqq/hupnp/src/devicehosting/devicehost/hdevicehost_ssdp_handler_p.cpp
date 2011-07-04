@@ -492,7 +492,7 @@ bool HDeviceHostSsdpHandler::incomingDiscoveryRequest(
         {
             HDelayedWriter* writer =
                 new HDelayedWriter(
-                    *this, responses, source, (rand() % msg.mx()) * 1000);
+                    *this, responses, source, (qrand() % msg.mx()) * 1000);
 
             bool ok =
                 connect(writer, SIGNAL(sent()), writer, SLOT(deleteLater()));
