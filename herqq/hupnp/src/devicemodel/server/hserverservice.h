@@ -120,7 +120,7 @@ protected:
      *
      * \code
      *
-     * void HServerService::HActionInvokes MyServiceType::createActionInvokes()
+     * HServerService::HActionInvokes MyServiceType::createActionInvokes()
      * {
      *     HActionInvokes retVal = SuperClass::createActionInvokes();
      *
