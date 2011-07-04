@@ -250,7 +250,7 @@ bool HStateVariableInfoPrivate::setAllowedValueList(
     }
 
     m_allowedValueList = allowedValueList;
-    if (!allowedValueList.contains(m_defaultValue.toString()))
+    if (!allowedValueList.empty() && !allowedValueList.contains(m_defaultValue.toString()))
     {
         m_defaultValue = QVariant(QVariant::String);
     }
