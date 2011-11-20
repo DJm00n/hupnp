@@ -528,7 +528,7 @@ namespace Upnp
  * {
  * }
  *
- * HServerServer::HActionInvokes MySwitchPowerService::createActionInvokes()
+ * HServerService::HActionInvokes MySwitchPowerService::createActionInvokes()
  * {
  *     HActionInvokes retVal;
  *     return retVal;

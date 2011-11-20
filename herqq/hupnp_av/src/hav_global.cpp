@@ -275,7 +275,7 @@ namespace Av
  *     // See Herqq::Upnp::Av::HAbstractCdsDataSource for more information.
  *
  *     HContentDirectoryServiceConfiguration cdsConf;
- *     cdsConf.setDataSource(dataSource.data(), true);
+ *     cdsConf.setDataSource(dataSource, true);
  *     // This associates the created data source with a ContentDirectory, and it
  *     // specifies that the ContentDirectory implementation should take the
  *     // ownership of the data source.
