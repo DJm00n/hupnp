@@ -420,6 +420,11 @@ void HMediaBrowserPrivate::reset()
     {
         delete m_contentDirectory;
     }
+    else
+    {
+        bool ok = disconnect(m_contentDirectory, 0, this, 0);
+        Q_ASSERT(ok); Q_UNUSED(ok)
+    }
     m_currentUserOp.reset(0);
     m_currentAutoOp.reset(0);
     qDeleteAll(m_autoOpQueue);
