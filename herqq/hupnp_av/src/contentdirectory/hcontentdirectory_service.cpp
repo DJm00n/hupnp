@@ -239,7 +239,9 @@ qint32 HContentDirectoryServicePrivate::browseDirectChildren(
         }
     }
 
-    quint32 numberReturned = qMin(requestedCount, childCount - startingIndex);
+    quint32 numberReturned = requestedCount > 0 ?
+        qMin(requestedCount, childCount - startingIndex) :
+        childCount - startingIndex;
 
     objects = objects.mid(startingIndex, requestedCount ? requestedCount : -1);
 
