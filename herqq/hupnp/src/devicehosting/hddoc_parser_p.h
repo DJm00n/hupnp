@@ -254,13 +254,13 @@ public:
                     m_lastError = InvalidDeviceDescriptionError;
                     m_lastErrorDescription = QString(
                         "ControlUrl [%1] encountered more than once. "
-                        "ControlUrls MUST be unique within a device tree.").arg(eventUrl);
+                        "ControlUrls MUST be unique within a device tree.").arg(controlUrl);
 
                     return false;
                 }
                 else
                 {
-                    controlUrls.insert(eventUrl);
+                    controlUrls.insert(controlUrl);
                 }
 
                 return true;

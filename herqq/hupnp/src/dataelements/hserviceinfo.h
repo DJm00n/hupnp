@@ -43,7 +43,6 @@ class HServiceInfoPrivate;
  *
  * A device description defines a UPnP device and among other things,
  * the definition includes the declarations of the services the device contains.
- * \brief This class contains the service declaration information.
  *
  * \headerfile hserviceinfo.h HServiceInfo
  *

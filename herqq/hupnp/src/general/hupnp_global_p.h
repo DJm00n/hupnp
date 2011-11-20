@@ -66,10 +66,9 @@ private:
     static QMutex s_initMutex;
 
     QScopedPointer<HProductTokens> m_productTokens;
-    QList<QPair<quint32, quint32> > m_localNetworks;
 
     void createProductTokens();
-    void createLocalNetworks();
+    static QList<QPair<quint32, quint32> > createLocalNetworks();
 
 public:
 
@@ -77,9 +76,6 @@ public:
 
     static HSysInfo& instance();
 
-    //
-    //
-    //
     inline const HProductTokens& herqqProductTokens()
     {
         return *m_productTokens;

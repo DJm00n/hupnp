@@ -537,8 +537,7 @@ public: // instance methods
         return true;
     }
 
-    QUrl seekIcon(
-        Device* device, const QString& iconUrl)
+    QUrl seekIcon(Device* device, const QString& iconUrl)
     {
         Q_ASSERT(device);
 

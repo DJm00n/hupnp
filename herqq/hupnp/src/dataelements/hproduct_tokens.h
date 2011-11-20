@@ -93,6 +93,23 @@ public:
      * for strict validity. Only an object that is strictly valid
      * contains information as defined in the UDA. In other words,
      * a strictly valid product token takes the form
+     * <c>token/majorVersion.minorVersion</c>.
+     *
+     * \return true in case both the \e token and <em>product version</em>
+     * are appropriately specified.
+     *
+     * \sa token(), productVersion()
+     */
+    bool isValid(HValidityCheckLevel checkLevel) const;
+
+    /*!
+     * \brief Indicates if the object is valid, i.e both the token and the product
+     * version are defined.
+     *
+     * \param checkLevel specifies whether the contents of the object are checked
+     * for strict validity. Only an object that is strictly valid
+     * contains information as defined in the UDA. In other words,
+     * a strictly valid product token takes the form
      * <c>UPnP/majorVersion.minorVersion</c>, where currently major version is
      * always 1 and minor version is either 0 or 1.
      *
@@ -101,7 +118,7 @@ public:
      *
      * \sa token(), productVersion()
      */
-    bool isValid(HValidityCheckLevel checkLevel) const;
+    bool isValidUpnpToken() const;
 
     /*!
      * \brief Returns the \e token part.
@@ -149,6 +166,7 @@ public:
      * can be represented as an integer.
      */
     qint32 minorVersion();
+    // TODO for v2, should be const
 
     /*!
      * Attempts to parse the \e version part of a product token to a major and
@@ -166,6 +184,7 @@ public:
      * can be represented as an integer.
      */
     qint32 majorVersion();
+    // TODO for v2, should be const
 };
 
 /*!

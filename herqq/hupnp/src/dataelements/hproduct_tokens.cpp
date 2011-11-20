@@ -77,14 +77,35 @@ bool HProductToken::isValid(HValidityCheckLevel checkLevel) const
         return true;
     }
 
-    if (token().compare("UPnP", Qt::CaseInsensitive) != 0)
+    bool ok = false;
+    qint32 separatorIndex = m_productVersion.indexOf('.');
+    if (separatorIndex < 0)
+    {
+        m_productVersion.toInt(&ok);
+        return ok;
+    }
+
+    m_productVersion.left(separatorIndex).toInt(&ok);
+    if (ok)
+    {
+        m_productVersion.mid(
+            separatorIndex+1, m_productVersion.indexOf('.', separatorIndex+1)).toInt(&ok);
+    }
+
+    return ok;
+}
+
+bool HProductToken::isValidUpnpToken() const
+{
+    if (!isValid(StrictChecks))
     {
         return false;
     }
 
     QString vrs = version();
 
-    return (vrs.size() == 3    &&
+    return (m_token.compare("upnp", Qt::CaseInsensitive) == 0) &&
+           (vrs.size() == 3    &&
            (vrs[0]     == '1') &&
             vrs[1]     == '.'  &&
            (vrs[2] == '0' || vrs[2] == '1'));
@@ -176,7 +197,7 @@ private:
 
         QVector<HProductToken> productTokens;
 
-        QString token, version, buf;
+        QString token, buf;
 
         qint32 i = tokens.indexOf('/'), j = 0, lastDelim = 0;
         if (i < 0)
@@ -210,7 +231,7 @@ private:
                 }
 
                 token = buf.mid(lastDelim+1);
-                version.clear(); buf.clear(); j = -1;
+                buf.clear(); j = -1;
 
                 continue;
             }
@@ -237,7 +258,7 @@ private:
         // contained the UPnP token + we should inform the user if
         // non-std input was given.
 
-        if (productTokens.size() < 3 || !productTokens[1].isValid(StrictChecks))
+        if (productTokens.size() < 3 || !productTokens[1].isValidUpnpToken())
         {
             HLOG_WARN_NONSTD(QString(
                 "The specified token string [%1] is not formed according "
@@ -310,9 +331,15 @@ public:
                     m_originalTokenString.mid(slash,
                         nextDelim < 0 ? -1 : nextDelim-slash));
 
-                if (token.isValid(StrictChecks))
+                if (token.isValidUpnpToken())
                 {
                     m_productTokens.push_back(token);
+                }
+                else
+                {
+                    HLOG_WARN_NONSTD(QString(
+                        "Missing the mandatory UPnP token: [%1]").arg(
+                            m_originalTokenString));
                 }
             }
             else

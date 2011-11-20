@@ -348,8 +348,10 @@ void HDeviceHostHttpServer::incomingControlRequest(
         soapResponse.addMethodArgument(soapArg);
     }
 
+    QString xml = soapResponse.toXmlString();
+
     m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-        Ok, *mi, soapResponse.toXmlString().toUtf8()));
+        Ok, *mi, xml.toUtf8()));
 
     HLOG_DBG("Control message successfully handled.");
 }

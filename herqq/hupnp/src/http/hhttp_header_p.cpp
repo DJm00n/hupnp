@@ -359,7 +359,7 @@ bool HHttpRequestHeader::setRequest(
         return false;
     }
 
-    m_method = method;
+    m_method = method.simplified();
     m_path = path;
     m_majorVersion = majorVer;
     m_minorVersion = minorVer;

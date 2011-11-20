@@ -204,8 +204,7 @@ bool HDocParser::parseActionArguments(
                     m_lastError = InvalidServiceDescriptionError;
                     m_lastErrorDescription = QString(
                         "Invalid action argument ordering: "
-                        "[retval] MUST be the first [out] argument.").arg(
-                            relatedSvStr);
+                        "[retval] MUST be the first [out] argument.");
 
                     return false;
                 }

@@ -52,7 +52,7 @@ namespace Herqq
 namespace Upnp
 {
 
-/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 1.0
+/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 1.1
  *
  * \section introduction Introduction
  *
@@ -1568,8 +1568,9 @@ void HSysInfo::createProductTokens()
             server, STRX(HUPNP_CORE_MAJOR_VERSION), STRX(HUPNP_CORE_MINOR_VERSION))));
 }
 
-void HSysInfo::createLocalNetworks()
+QList<QPair<quint32, quint32> > HSysInfo::createLocalNetworks()
 {
+    QList<QPair<quint32, quint32> > retVal;
     foreach(const QNetworkInterface& iface, QNetworkInterface::allInterfaces())
     {
         QList<QNetworkAddressEntry> entries = iface.addressEntries();
@@ -1582,17 +1583,20 @@ void HSysInfo::createLocalNetworks()
             }
 
             quint32 nm = entry.netmask().toIPv4Address();
-            m_localNetworks.append(qMakePair(ha.toIPv4Address() & nm, nm));
+            retVal.append(qMakePair(ha.toIPv4Address() & nm, nm));
         }
     }
+    return retVal;
 }
 
 bool HSysInfo::localNetwork(const QHostAddress& ha, quint32* retVal) const
 {
     Q_ASSERT(retVal);
 
+    QList<QPair<quint32, quint32> > localNetworks = createLocalNetworks();
+
     QList<QPair<quint32, quint32> >::const_iterator ci;
-    for(ci = m_localNetworks.begin(); ci != m_localNetworks.end(); ++ci)
+    for(ci = localNetworks.begin(); ci != localNetworks.end(); ++ci)
     {
         if ((ha.toIPv4Address() & ci->second) == ci->first)
         {

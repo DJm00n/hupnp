@@ -72,7 +72,7 @@ bool HDeviceInfoPrivate::setFriendlyName(const QString& friendlyName)
     if (friendlyName.size() > 64)
     {
         HLOG_WARN(QString(
-            "friendlyName longer than 64 characters").arg(friendlyName));
+            "friendlyName [%1] longer than 64 characters").arg(friendlyName));
     }
 
     m_friendlyName = friendlyName;
@@ -91,7 +91,7 @@ bool HDeviceInfoPrivate::setManufacturer(const QString& manufacturer)
     if (manufacturer.size() > 64)
     {
         HLOG_WARN(QString(
-            "manufacturer longer than 64 characters").arg(manufacturer));
+            "manufacturer [%1] longer than 64 characters").arg(manufacturer));
     }
 
     m_manufacturer = manufacturer;
@@ -105,7 +105,7 @@ bool HDeviceInfoPrivate::setModelDescription(const QString& modelDescription)
     if (modelDescription.size() > 128)
     {
         HLOG_WARN(QString(
-            "modelDescription longer than 64 characters").arg(modelDescription));
+            "modelDescription [%1] longer than 64 characters").arg(modelDescription));
     }
 
     m_modelDescription = modelDescription;
@@ -124,7 +124,7 @@ bool HDeviceInfoPrivate::setModelName(const QString& modelName)
     if (modelName.size() > 32)
     {
         HLOG_WARN(QString(
-            "modelName longer than 32 characters: [%1]").arg(modelName));
+            "modelName [%1] longer than 32 characters: [%1]").arg(modelName));
     }
 
     m_modelName = modelName;
@@ -138,7 +138,7 @@ bool HDeviceInfoPrivate::setModelNumber(const QString& modelNumber)
     if (modelNumber.size() > 32)
     {
         HLOG_WARN(QString(
-            "modelNumber longer than 32 characters: [%1]").arg(modelNumber));
+            "modelNumber [%1] longer than 32 characters: [%1]").arg(modelNumber));
     }
 
     m_modelNumber = modelNumber;
@@ -152,7 +152,7 @@ bool HDeviceInfoPrivate::setSerialNumber(const QString& serialNumber)
     if (serialNumber.size() > 64)
     {
         HLOG_WARN(QString(
-            "serialNumber longer than 64 characters: [%1]").arg(serialNumber));
+            "serialNumber [%1] longer than 64 characters: [%1]").arg(serialNumber));
     }
 
     m_serialNumber = serialNumber;

@@ -620,7 +620,7 @@ bool HControlPoint::init()
 
     bool ok = true;
     const QList<QHostAddress> addrs =
-        h_ptr->m_configuration->networkAddressesToUse();;
+        h_ptr->m_configuration->networkAddressesToUse();
 
     h_ptr->m_state = HControlPointPrivate::Initializing;
 

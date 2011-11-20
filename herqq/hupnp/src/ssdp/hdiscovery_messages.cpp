@@ -252,8 +252,7 @@ HResourceUnavailable::HResourceUnavailable() :
 }
 
 HResourceUnavailable::HResourceUnavailable(
-    const HDiscoveryType& usn,
-    qint32 bootId, qint32 configId) :
+    const HDiscoveryType& usn, qint32 bootId, qint32 configId) :
         h_ptr(new HResourceUnavailablePrivate())
 {
     HLOG(H_AT, H_FUN);
