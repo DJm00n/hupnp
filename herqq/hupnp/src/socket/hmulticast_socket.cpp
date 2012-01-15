@@ -25,6 +25,9 @@
 #ifdef Q_OS_WIN
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#elif Q_OS_SYMBIAN
+#include <netinet/in.h>
+#include <sys/socket.h>
 #else
 #include <arpa/inet.h>
 #endif
