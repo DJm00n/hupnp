@@ -140,7 +140,7 @@ void ControlPointNavigator::connectionDestroyed(QObject* conn)
         for (int j = 0; j < rendererItem->childCount(); ++j)
         {
             ConnectionItem* conItem =
-                static_cast<ConnectionItem*>(rendererItem->child(i));
+                static_cast<ConnectionItem*>(rendererItem->child(j));
 
             if (!conItem->connection() || conItem->connection() == conn)
             {
