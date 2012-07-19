@@ -22,6 +22,7 @@
 
 #include "rendererconnections.h"
 
+#include <HUpnpAv/HDuration>
 #include <HUpnpAv/HSeekInfo>
 #include <HUpnpAv/HMediaInfo>
 #include <HUpnpAv/HTransportState>
@@ -30,6 +31,7 @@
 #include <phonon/AudioOutput>
 
 #include <QtCore/QUrl>
+#include <QtCore/QTime>
 #include <QtCore/QtDebug>
 #include <QtCore/QBuffer>
 
@@ -229,6 +231,24 @@ DefaultRendererConnection::DefaultRendererConnection(ContentType ct, QWidget* pa
 
     Q_ASSERT(ok); Q_UNUSED(ok)
 
+    ok = connect(
+        &m_mediaObject,
+        SIGNAL(tick(qint64)),
+        this,
+        SLOT(tick(qint64)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    ok = connect(
+        &m_mediaObject,
+        SIGNAL(totalTimeChanged(qint64)),
+        this,
+        SLOT(totalTimeChanged(qint64)));
+
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
+    m_mediaObject.setTickInterval(1000);
+
     if (ct == AudioVideo)
     {
         setupVideo();
@@ -256,6 +276,22 @@ void DefaultRendererConnection::setupVideo()
     parentWidget->layout()->addWidget(m_videoWidget);
 }
 
+void DefaultRendererConnection::tick(qint64 time)
+{
+    QTime tmp;
+    tmp = tmp.addMSecs(time);
+    HDuration position(tmp);
+    writableInfo()->setRelativeTimePosition(position);
+}
+
+void DefaultRendererConnection::totalTimeChanged(qint64 time)
+{
+    QTime tmp;
+    tmp = tmp.addMSecs(time);
+    HDuration duration(tmp);
+    writableInfo()->setCurrentTrackDuration(duration);
+}
+
 void DefaultRendererConnection::stateChanged(
     Phonon::State newstate, Phonon::State oldstate)
 {
@@ -268,18 +304,50 @@ void DefaultRendererConnection::stateChanged(
             qDebug() << descr;
         }
         break;
+
     case Phonon::PlayingState:
+        if (m_mediaObject.currentTime() == m_mediaObject.totalTime())
+        {
+            if (m_mediaObject.isSeekable())
+            {
+                m_mediaObject.seek(0);
+            }
+            m_mediaObject.play();
+        }
         writableInfo()->setTransportState(HTransportState::Playing);
         break;
+
     case Phonon::StoppedState:
+        if (m_mediaObject.isSeekable())
+        {
+            m_mediaObject.seek(0);
+        }
         writableInfo()->setTransportState(HTransportState::Stopped);
         break;
+
     case Phonon::PausedState:
+        if (oldstate == Phonon::PlayingState &&
+            m_mediaObject.currentTime() == m_mediaObject.totalTime())
+        {
+            if (m_mediaObject.isSeekable())
+            {
+                m_mediaObject.seek(0);
+            }
+        }
+
         writableInfo()->setTransportState(HTransportState::PausedPlayback);
         break;
+
     case Phonon::LoadingState:
+        writableInfo()->setTransportState(HTransportState::Transitioning);
         break;
+
     case Phonon::BufferingState:
+        writableInfo()->setTransportState(HTransportState::Transitioning);
+        break;
+
+    default:
+        m_mediaObject.play();
         break;
     }
 }
@@ -287,13 +355,40 @@ void DefaultRendererConnection::stateChanged(
 qint32 DefaultRendererConnection::doPlay(const QString& arg)
 {
     Q_UNUSED(arg)
-    m_mediaObject.play();
-    return UpnpSuccess;
+
+    qint32 retVal = UpnpSuccess;
+
+    switch(writableInfo()->transportState().type())
+    {
+    case HTransportState::PausedPlayback:
+    case HTransportState::Stopped:
+        if (m_mediaObject.currentTime() == m_mediaObject.totalTime())
+        {
+            if (m_mediaObject.isSeekable())
+            {
+                m_mediaObject.seek(0);
+            }
+        }
+        m_mediaObject.play();
+        break;
+
+    default:
+        retVal = HAvTransportInfo::TransitionNotAvailable;
+    }
+
+    return retVal;
 }
 
 qint32 DefaultRendererConnection::doStop()
 {
     m_mediaObject.stop();
+    writableInfo()->setRelativeTimePosition(HDuration());
+    return UpnpSuccess;
+}
+
+qint32 DefaultRendererConnection::doPause()
+{
+    m_mediaObject.pause();
     return UpnpSuccess;
 }
 
@@ -342,6 +437,8 @@ qint32 DefaultRendererConnection::doSetResource(
             Q_ASSERT(ok); Q_UNUSED(ok)
         }
     }
+
+    writableInfo()->setRelativeTimePosition(HDuration());
 
     return UpnpSuccess;
 }

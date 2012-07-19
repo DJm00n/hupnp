@@ -57,6 +57,8 @@ private slots:
     void on_addContentButton_clicked();
     void addContenDlgtFinished();
 
+    void on_addItemButton_clicked();
+
 protected:
 
     virtual void changeEvent(QEvent*);

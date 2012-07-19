@@ -27,7 +27,9 @@
 #include <HUpnpCore/HDeviceInfo>
 #include <HUpnpCore/HDeviceHostConfiguration>
 
+#include <HUpnpAv/HItem>
 #include <HUpnpAv/HRootDir>
+#include <HUpnpAv/HContainer>
 #include <HUpnpAv/HAvDeviceModelCreator>
 #include <HUpnpAv/HMediaServerDeviceConfiguration>
 
@@ -123,8 +125,8 @@ void MediaServerWindow::on_addContentButton_clicked()
         HRootDir rd(dirName, smode);
         if (m_datasource->add(rd) >= 0)
         {
-            int rc = m_ui->rootDirectoriesTable->rowCount();
-            m_ui->rootDirectoriesTable->insertRow(rc);
+            int rc = m_ui->sharedItemsTable->rowCount();
+            m_ui->sharedItemsTable->insertRow(rc);
 
             QTableWidgetItem* newItemScanType =
                 new QTableWidgetItem(
@@ -132,19 +134,18 @@ void MediaServerWindow::on_addContentButton_clicked()
 
             newItemScanType->setFlags(Qt::ItemIsEnabled);
 
-            m_ui->rootDirectoriesTable->setItem(rc, 0, newItemScanType);
+            m_ui->sharedItemsTable->setItem(rc, 0, newItemScanType);
 
             QTableWidgetItem* newItemWatchType = new QTableWidgetItem("No");
             newItemWatchType->setFlags(Qt::ItemIsEnabled);
 
-            m_ui->rootDirectoriesTable->setItem(rc, 1, newItemWatchType);
+            m_ui->sharedItemsTable->setItem(rc, 1, newItemWatchType);
 
             QTableWidgetItem* newItem =
                 new QTableWidgetItem(rd.dir().absolutePath());
 
             newItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-            m_ui->rootDirectoriesTable->setItem(rc, 2, newItem);
-
+            m_ui->sharedItemsTable->setItem(rc, 2, newItem);
         }
     }
 }
@@ -152,4 +153,61 @@ void MediaServerWindow::on_addContentButton_clicked()
 void MediaServerWindow::addContenDlgtFinished()
 {
     m_ui->addContentButton->setEnabled(true);
+}
+
+void MediaServerWindow::on_addItemButton_clicked()
+{
+    QStringList fullPaths = QFileDialog::getOpenFileNames(this, "Open File(s)");
+    if (!fullPaths.isEmpty())
+    {
+        foreach(const QString& fullPath, fullPaths)
+        {
+            QStringList parts = fullPath.split(QDir::separator(), QString::SkipEmptyParts);
+
+            if (parts.isEmpty())
+            {
+                HItem* newCdsItem = new HItem(fullPath, "0");
+                m_datasource->add(newCdsItem, fullPath);
+            }
+            else
+            {
+                QString lastParentContainerId = "0";
+                for(int i = 0; i < parts.count() - 1; ++i)
+                {
+                    HContainer* container =
+                        m_datasource->findContainerWithTitle(parts[i]);
+
+                    if (!container)
+                    {
+                        container = new HContainer(parts[i], lastParentContainerId);
+                        m_datasource->add(container);
+                    }
+
+                    lastParentContainerId = container->id();
+                }
+
+                HItem* newCdsItem = new HItem(parts.last(), lastParentContainerId);
+                m_datasource->add(newCdsItem, fullPath);
+            }
+
+            int rc = m_ui->sharedItemsTable->rowCount();
+            m_ui->sharedItemsTable->insertRow(rc);
+
+            QTableWidgetItem* newItemScanType = new QTableWidgetItem("No");
+
+            newItemScanType->setFlags(Qt::ItemIsEnabled);
+
+            m_ui->sharedItemsTable->setItem(rc, 0, newItemScanType);
+
+            QTableWidgetItem* newItemWatchType = new QTableWidgetItem("No");
+            newItemWatchType->setFlags(Qt::ItemIsEnabled);
+
+            m_ui->sharedItemsTable->setItem(rc, 1, newItemWatchType);
+
+            QTableWidgetItem* newItem = new QTableWidgetItem(fullPath);
+
+            newItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+            m_ui->sharedItemsTable->setItem(rc, 2, newItem);
+        }
+    }
 }

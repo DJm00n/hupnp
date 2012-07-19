@@ -157,11 +157,14 @@ private Q_SLOTS:
 
     void hasVideoChanged(bool);
     void stateChanged(Phonon::State newstate, Phonon::State oldstate);
+    void tick(qint64 time);
+    void totalTimeChanged(qint64 time);
 
 protected:
 
     virtual qint32 doPlay(const QString& arg);
     virtual qint32 doStop();
+    virtual qint32 doPause();
 
     virtual qint32 doSeek(const Herqq::Upnp::Av::HSeekInfo& seekInfo);
     virtual qint32 doNext();
