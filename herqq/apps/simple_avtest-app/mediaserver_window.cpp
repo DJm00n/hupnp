@@ -166,8 +166,7 @@ void MediaServerWindow::on_addItemButton_clicked()
 
             if (parts.isEmpty())
             {
-                HItem* newCdsItem = new HItem(fullPath, "0");
-                m_datasource->add(newCdsItem, fullPath);
+                m_datasource->add(fullPath, "0");
             }
             else
             {
@@ -186,8 +185,7 @@ void MediaServerWindow::on_addItemButton_clicked()
                     lastParentContainerId = container->id();
                 }
 
-                HItem* newCdsItem = new HItem(parts.last(), lastParentContainerId);
-                m_datasource->add(newCdsItem, fullPath);
+                m_datasource->add(parts.last(), lastParentContainerId);
             }
 
             int rc = m_ui->sharedItemsTable->rowCount();

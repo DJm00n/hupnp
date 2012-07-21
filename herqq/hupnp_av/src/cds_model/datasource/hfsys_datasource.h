@@ -119,6 +119,28 @@ public:
     bool add(HContainer* cdsContainer, AddFlag addFlag=AddNewOnly);
 
     /*!
+     * Creates and adds a new CDS item to the data source.
+     *
+     * The function attempts to create the correct HItem* derivative based on
+     * the provided file path. For example, if the path is "photo.png" the
+     * function returns an instance of HPhoto.
+     *
+     * \param path specifies the absolute path to the file in the local
+     * file system that contains the data the new item is supposed to represent.
+     *
+     * \param parentId specifies the ID of the CDS container that should be the
+     * logical parent of the new item.
+     *
+     * \param addFlag specifies the addition mode.
+     *
+     * \return the item that was created and added into the data source,
+     * or null if either the creation or addition failed.
+     *
+     * \remarks The data source takes the ownership of the returned HItem.
+     */
+    HItem* add(const QString& path, const QString& parentId, AddFlag addFlag=AddNewOnly);
+
+    /*!
      * Adds a new CDS object to the data source.
      *
      * \param cdsItem specifies the item to be added.

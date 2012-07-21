@@ -271,6 +271,20 @@ QString HCdsFileSystemReader::deduceMimeType(const QString& filename)
     return creator.first;
 }
 
+HItem* HCdsFileSystemReader::createItem(
+    const QString& filename, const QString& parentId)
+{
+    QString fileSuffix = filename.mid(filename.lastIndexOf('.')+1).toLower();
+
+    MimeAndItemCreator creator = creatorFunctions[fileSuffix];
+    if (!creator.second)
+    {
+        return 0;
+    }
+
+    return creator.second(QFileInfo(filename), parentId);
+}
+
 }
 }
 }

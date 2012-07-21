@@ -226,6 +226,28 @@ bool HFileSystemDataSource::add(HContainer* cdsContainer, AddFlag addFlag)
     return true;
 }
 
+HItem* HFileSystemDataSource::add(
+    const QString& path, const QString& parentId, AddFlag addFlag)
+{
+    if (!isInitialized())
+    {
+        return 0;
+    }
+
+    HItem* newItem = HCdsFileSystemReader::createItem(path, parentId);
+    if (newItem)
+    {
+        H_D(HFileSystemDataSource);
+        HCdsObjectData odata(reinterpret_cast<HObject*>(newItem), path);
+        if (!h->add(&odata, addFlag))
+        {
+            return 0;
+        }
+    }
+
+    return newItem;
+}
+
 bool HFileSystemDataSource::add(HItem* item, const QString& path, AddFlag addFlag)
 {
     if (!isInitialized())

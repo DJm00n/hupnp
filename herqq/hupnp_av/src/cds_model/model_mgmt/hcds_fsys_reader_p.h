@@ -65,6 +65,8 @@ public:
     bool scan(const HRootDir&, const QString& parentId, QList<HCdsObjectData*>* result);
 
     static QString deduceMimeType(const QString& filename);
+
+    static HItem* createItem(const QString& filename, const QString& parentId);
 };
 
 }
