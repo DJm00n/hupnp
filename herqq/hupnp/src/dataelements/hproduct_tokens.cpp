@@ -52,12 +52,12 @@ HProductToken::HProductToken(const QString& token, const QString& productVersion
         HLOG_WARN(QString(
             "Invalid product token. Token: [%1], Product Version: [%2]").arg(
                 tokenTmp, productVersionTmp));
-
-        return;
     }
-
-    m_token = tokenTmp;
-    m_productVersion = productVersionTmp;
+    else
+    {
+        m_token = tokenTmp;
+        m_productVersion = productVersionTmp;
+    }
 }
 
 HProductToken::~HProductToken()
@@ -97,11 +97,6 @@ bool HProductToken::isValid(HValidityCheckLevel checkLevel) const
 
 bool HProductToken::isValidUpnpToken() const
 {
-    if (!isValid(StrictChecks))
-    {
-        return false;
-    }
-
     QString vrs = version();
 
     return (m_token.compare("upnp", Qt::CaseInsensitive) == 0) &&
@@ -109,6 +104,29 @@ bool HProductToken::isValidUpnpToken() const
            (vrs[0]     == '1') &&
             vrs[1]     == '.'  &&
            (vrs[2] == '0' || vrs[2] == '1'));
+}
+
+bool HProductToken::isValidDlnaDocToken() const
+{
+    QString vrs = version();
+
+    bool b = m_token.compare("DLNADOC", Qt::CaseInsensitive) == 0 &&
+             vrs.size() >= 3 &&
+             vrs[0] == '1' &&
+             vrs[1] == '.';
+    if (b)
+    {
+        for(int i = 2; i < vrs.count(); ++i)
+        {
+            if (!vrs[i].isDigit())
+            {
+                b = false;
+                break;
+            }
+        }
+    }
+
+    return b;
 }
 
 QString HProductToken::toString() const
@@ -243,10 +261,10 @@ private:
             buf.append(tokens[i]);
         }
 
-        HProductToken newToken(token, buf);
-        if (newToken.isValid(LooseChecks))
+        HProductToken lastToken(token, buf);
+        if (lastToken.isValid(LooseChecks))
         {
-            productTokens.append(newToken);
+            productTokens.append(lastToken);
         }
         else
         {
@@ -255,34 +273,48 @@ private:
 
         // at this point the provided token string is parsed into
         // valid token/version pairs, but it is not known if the tokens string
-        // contained the UPnP token + we should inform the user if
-        // non-std input was given.
+        // contained the UPnP token.
 
-        if (productTokens.size() < 3 || !productTokens[1].isValidUpnpToken())
+        int upnpTokenIndex = -1, dlnadocTokenIndex = -1;
+        for(i = 0; i < productTokens.count(); ++i)
         {
-            HLOG_WARN_NONSTD(QString(
-                "The specified token string [%1] is not formed according "
-                "to the UDA specification").arg(tokens));
-            return false;
+            if (productTokens[i].isValidUpnpToken())
+            {
+                upnpTokenIndex = i;
+            }
+            else if (productTokens[i].isValidDlnaDocToken())
+            {
+                dlnadocTokenIndex = i;
+            }
         }
 
-        m_productTokens = productTokens;
-        return true;
+        if (upnpTokenIndex >= 0)
+        {
+            m_upnpTokenIndex = upnpTokenIndex;
+            m_productTokens = productTokens;
+        }
+
+        m_dlnaTokenIndex = dlnadocTokenIndex;
+
+        return upnpTokenIndex >= 0;
     }
 
 public:
 
+    int m_upnpTokenIndex, m_dlnaTokenIndex;
     QString m_originalTokenString;
     QVector<HProductToken> m_productTokens;
 
 public:
 
     HProductTokensPrivate() :
+        m_upnpTokenIndex(-1), m_dlnaTokenIndex(-1),
         m_originalTokenString(), m_productTokens()
     {
     }
 
     HProductTokensPrivate(const QString& tokens) :
+        m_upnpTokenIndex(-1), m_dlnaTokenIndex(-1),
         m_originalTokenString(tokens.simplified()), m_productTokens()
     {
         HLOG(H_AT, H_FUN);
@@ -290,7 +322,6 @@ public:
         bool ok = parse(m_originalTokenString);
         if (ok)
         {
-            // the string followed the UDA closely (rare, unfortunately)
             return;
         }
 
@@ -300,7 +331,7 @@ public:
             // technically, comma could be part of the "version" part of the token,
             // but in practice, it if is present it is used as the delimiter.
 
-            ok = parse(QString(m_originalTokenString).remove(','));
+            ok = parse(QString(m_originalTokenString).replace(',', ' '));
             if (ok)
             {
                 HLOG_WARN_NONSTD(QString(
@@ -333,6 +364,7 @@ public:
 
                 if (token.isValidUpnpToken())
                 {
+                    m_upnpTokenIndex = 0;
                     m_productTokens.push_back(token);
                 }
                 else
@@ -383,9 +415,14 @@ HProductTokens::~HProductTokens()
 {
 }
 
-bool HProductTokens::isValid() const
+bool HProductTokens::hasUpnpToken() const
 {
-    return h_ptr->m_productTokens.size() > 0;
+    return h_ptr->m_upnpTokenIndex >= 0;
+}
+
+bool HProductTokens::hasDlnaDocToken() const
+{
+    return h_ptr->m_dlnaTokenIndex >= 0;
 }
 
 bool HProductTokens::isEmpty() const
@@ -393,50 +430,16 @@ bool HProductTokens::isEmpty() const
     return h_ptr->m_originalTokenString.isEmpty();
 }
 
-HProductToken HProductTokens::osToken() const
-{
-    if (h_ptr->m_productTokens.size() < 3)
-    {
-        return HProductToken();
-    }
-
-    return h_ptr->m_productTokens[0];
-}
-
 HProductToken HProductTokens::upnpToken() const
 {
-    qint32 size = h_ptr->m_productTokens.size();
-    if (size <= 0)
-    {
-        return HProductToken();
-    }
-    else if (size == 1)
-    {
-        return h_ptr->m_productTokens[0];
-    }
-
-    return h_ptr->m_productTokens[1];
+    return h_ptr->m_upnpTokenIndex >= 0 ?
+               h_ptr->m_productTokens[h_ptr->m_upnpTokenIndex] : HProductToken();
 }
 
-HProductToken HProductTokens::productToken() const
+HProductToken HProductTokens::dlnaDocToken() const
 {
-    if (h_ptr->m_productTokens.size() < 3)
-    {
-        return HProductToken();
-    }
-
-    return h_ptr->m_productTokens[2];
-}
-
-QVector<HProductToken> HProductTokens::extraTokens() const
-{
-    return h_ptr->m_productTokens.size() > 3 ?
-        h_ptr->m_productTokens.mid(3) : QVector<HProductToken>();
-}
-
-bool HProductTokens::hasExtraTokens() const
-{
-    return h_ptr->m_productTokens.size() > 3;
+    return h_ptr->m_dlnaTokenIndex >= 0 ?
+               h_ptr->m_productTokens[h_ptr->m_dlnaTokenIndex] : HProductToken();
 }
 
 QVector<HProductToken> HProductTokens::tokens() const

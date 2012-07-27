@@ -23,6 +23,7 @@
 #define HHTTP_MESSAGINGINFO_P_H_
 
 #include <HUpnpCore/HUpnp>
+#include <HUpnpCore/HProductTokens>
 
 #include <QtCore/QPair>
 #include <QtCore/QString>
@@ -101,6 +102,8 @@ private:
     QString m_lastErrorDescription;
 
     qint32 m_msecsToWaitOnSend;
+
+    HProductTokens m_serverTokens;
 
 public:
 
@@ -194,6 +197,16 @@ public:
     }
 
     QString lastErrorDescription() const;
+
+    inline void setServerInfo(const HProductTokens& serverTokens)
+    {
+        m_serverTokens = serverTokens;
+    }
+
+    inline HProductTokens serverInfo() const
+    {
+        return m_serverTokens;
+    }
 };
 
 

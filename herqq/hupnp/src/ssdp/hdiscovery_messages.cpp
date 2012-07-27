@@ -96,7 +96,7 @@ HResourceAvailable::HResourceAvailable(
     }
     else if (cacheControlMaxAge > 60 * 60 * 24)
     {
-        cacheControlMaxAge = 60* 60 * 24;
+        cacheControlMaxAge = 60 * 60 * 24;
     }
 
     if (usn.type() == HDiscoveryType::Undefined)
@@ -111,7 +111,7 @@ HResourceAvailable::HResourceAvailable(
         return;
     }
 
-    if (!serverTokens.isValid())
+    if (!serverTokens.hasUpnpToken())
     {
         HLOG_WARN_NONSTD(QString("Server tokens are not defined"));
         // although mandatory according to UDA, some UPnP software
@@ -164,7 +164,7 @@ HResourceAvailable::~HResourceAvailable()
 bool HResourceAvailable::isValid(HValidityCheckLevel level) const
 {
     return (h_ptr->m_usn.type() != HDiscoveryType::Undefined) &&
-           (level == StrictChecks ? h_ptr->m_serverTokens.isValid() : true);
+           (level == StrictChecks ? h_ptr->m_serverTokens.hasUpnpToken() : true);
 }
 
 const HProductTokens& HResourceAvailable::serverTokens() const
@@ -508,7 +508,7 @@ public: // methods
         }
 
         bool treatAsUpnp1_0 = true;
-        if (!userAgent.isValid())
+        if (!userAgent.hasUpnpToken())
         {
             HLOG_WARN_NONSTD(QString("Invalid user agent: [%1]").arg(
                 userAgent.toString()));
@@ -593,7 +593,7 @@ HDiscoveryRequest::~HDiscoveryRequest()
 bool HDiscoveryRequest::isValid(HValidityCheckLevel level) const
 {
     return (h_ptr->m_st.type() != HDiscoveryType::Undefined) &&
-           (level == StrictChecks ? h_ptr->m_userAgent.isValid() : true);
+           (level == StrictChecks ? h_ptr->m_userAgent.hasUpnpToken() : true);
 }
 
 const HDiscoveryType& HDiscoveryRequest::searchTarget() const
@@ -691,12 +691,6 @@ HDiscoveryResponse::HDiscoveryResponse(
         return;
     }
 
-    if (!serverTokens.isValid())
-    {
-        HLOG_WARN_NONSTD(QString("Invalid server tokens: %1").arg(
-            serverTokens.toString()));
-    }
-
     if (serverTokens.upnpToken().minorVersion() > 0)
     {
         if (bootId < 0 || configId < 0)
@@ -736,7 +730,7 @@ HDiscoveryResponse::~HDiscoveryResponse()
 bool HDiscoveryResponse::isValid(HValidityCheckLevel level) const
 {
     return (h_ptr->m_usn.type() != HDiscoveryType::Undefined) &&
-           (level == StrictChecks ? h_ptr->m_serverTokens.isValid() : true);
+           (level == StrictChecks ? h_ptr->m_serverTokens.hasUpnpToken() : true);
 }
 
 const HProductTokens& HDiscoveryResponse::serverTokens() const

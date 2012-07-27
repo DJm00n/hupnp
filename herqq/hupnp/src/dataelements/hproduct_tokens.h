@@ -103,22 +103,26 @@ public:
     bool isValid(HValidityCheckLevel checkLevel) const;
 
     /*!
-     * \brief Indicates if the object is valid, i.e both the token and the product
-     * version are defined.
-     *
-     * \param checkLevel specifies whether the contents of the object are checked
-     * for strict validity. Only an object that is strictly valid
-     * contains information as defined in the UDA. In other words,
-     * a strictly valid product token takes the form
-     * <c>UPnP/majorVersion.minorVersion</c>, where currently major version is
-     * always 1 and minor version is either 0 or 1.
+     * \brief Indicates if the object is a valid UPnP token, i.e both the token
+     * and the product version are defined.
      *
      * \return true in case both the \e token and <em>product version</em>
-     * are appropriately specified.
+     * are defined according to the UDA v1.1.
      *
      * \sa token(), productVersion()
      */
     bool isValidUpnpToken() const;
+
+    /*!
+     * \brief Indicates if the object is a valid DLNADOC token, i.e both the token
+     * and the product version are defined.
+     *
+     * \return true in case both the \e token and <em>product version</em>
+     * are defined according to the DLNA Guideline.
+     *
+     * \sa token(), productVersion()
+     */
+    bool isValidDlnaDocToken() const;
 
     /*!
      * \brief Returns the \e token part.
@@ -293,13 +297,25 @@ public:
      * \return \e true in case the object contains at least the UPnP version
      * token defined in the UDA.
      *
-     * \remarks an invalid object is not necessarily empty; an object may contain
-     * data that could not be parsed into HProductToken objects. In this case
+     * \remarks A strictly valid instance should always have a UPnP token. However,
+     * if an instance is missing the UPnP token, it is not necessarily empty. Furthermore,
+     * an object may contain data that could not be parsed into ProductToken objects. In this case
      * you can call toString() to retrieve the full product tokens string.
      *
      * \sa isEmpty()
      */
-    bool isValid() const;
+    bool hasUpnpToken() const;
+
+    /*!
+     * \brief Indicates whether the object contains the DLNADOC version token
+     * defined in the DLNA Guideline.
+     *
+     * \return \e true in case the object contains the DLNADOC version
+     * token defined in the DLNA Guideline.
+     *
+     * \sa isEmpty()
+     */
+    bool hasDlnaDocToken() const;
 
     /*!
      * \brief Indicates whether the object contains any information at all.
@@ -307,21 +323,8 @@ public:
      * \return true in case the object does not contain any information.
      *
      * \remarks an empty object is also invalid.
-     *
-     * \sa isValid()
      */
     bool isEmpty() const;
-
-    /*!
-     * \brief Returns the product token that defines information of an operating system.
-     *
-     * \return The product token that defines information of an operating system.
-     *
-     * \remarks This is not necessarily defined in a non-empty object.
-     *
-     * \sa isValid()
-     */
-    HProductToken osToken() const;
 
     /*!
      * \brief Returns the product token that defines UPnP version.
@@ -334,46 +337,20 @@ public:
      *
      * \remarks This is always defined in a valid object.
      *
-     * \sa isValid()
+     * \sa hasUpnpToken()
      */
     HProductToken upnpToken() const;
 
     /*!
-     * \brief Returns the product token that defines the actual product in the form
-     * product name/product version.
+     * \brief Returns the product token that defines DLNADOC version.
      *
-     * \return The product token that defines the actual product in the form
-     * product name/product version.
+     * \return The product token that defines DLNADOC version. This token always
+     * follows the format "DLNADOC"/majorVersion.minorVersion, where \e majorVersion
+     * and \e minorVersion are positive integers.
      *
-     * \remarks This is not necessarily defined in a non-empty object.
-     *
-     * \sa isValid()
+     * \sa hasUpnpToken()
      */
-    HProductToken productToken() const;
-
-    /*!
-     * \brief Returns the extra tokens.
-     *
-     * A valid \c %HProductTokens object contains at least the
-     * upnpToken(). A strictly valid \c %HProductTokens object contains at least
-     * the osToken(), upnpToken() and producToken(). However, a \c %HProductTokens
-     * instance may contain more than these three tokens, which are called extra
-     * tokens in this context.
-     *
-     * \return The extra tokens, if such are defined and the object is valid.
-     *
-     * \sa hasExtraTokens(), isValid(), tokens()
-     */
-    QVector<HProductToken> extraTokens() const;
-
-    /*!
-     * \brief Indicates if the object contains extra tokens in addition to
-     * osToken(), upnpToken() and producToken().
-     *
-     * \return true in case the object contains extra tokens in addition to
-     * osToken(), upnpToken() and producToken().
-     */
-    bool hasExtraTokens() const;
+    HProductToken dlnaDocToken() const;
 
     /*!
      * \brief Returns all product tokens the instance contains.

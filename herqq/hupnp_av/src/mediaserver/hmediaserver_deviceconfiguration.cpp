@@ -23,6 +23,7 @@
 #include "hmediaserver_deviceconfiguration_p.h"
 
 #include "../contentdirectory/hcontentdirectory_serviceconfiguration.h"
+#include "../connectionmanager/hconnectionmanager_serviceconfiguration.h"
 
 namespace Herqq
 {
@@ -37,7 +38,7 @@ namespace Av
  * HMediaServerDeviceConfigurationPrivate
  ******************************************************************************/
 HMediaServerDeviceConfigurationPrivate::HMediaServerDeviceConfigurationPrivate() :
-    m_cdsConf(0)
+    m_cdsConf(0), m_cmConf(new HConnectionManagerServiceConfiguration())
 {
 }
 
@@ -68,7 +69,15 @@ void HMediaServerDeviceConfiguration::doClone(HClonable* target) const
         return;
     }
 
-    conf->h_ptr->m_cdsConf.reset(contentDirectoryServiceConfiguration()->clone());
+    if (contentDirectoryConfiguration())
+    {
+        conf->h_ptr->m_cdsConf.reset(contentDirectoryConfiguration()->clone());
+    }
+
+    if (connectionManagerConfiguration())
+    {
+        conf->h_ptr->m_cmConf.reset(connectionManagerConfiguration()->clone());
+    }
 }
 
 HMediaServerDeviceConfiguration* HMediaServerDeviceConfiguration::newInstance() const
@@ -86,14 +95,29 @@ void HMediaServerDeviceConfiguration::setContentDirectoryConfiguration(
 }
 
 const HContentDirectoryServiceConfiguration*
-    HMediaServerDeviceConfiguration::contentDirectoryServiceConfiguration() const
+    HMediaServerDeviceConfiguration::contentDirectoryConfiguration() const
 {
     return h_ptr->m_cdsConf.data();
 }
 
+void HMediaServerDeviceConfiguration::setConnectionManagerConfiguration(
+    const HConnectionManagerServiceConfiguration& arg)
+{
+    if (arg.isValid())
+    {
+        h_ptr->m_cmConf.reset(arg.clone());
+    }
+}
+
+const HConnectionManagerServiceConfiguration*
+    HMediaServerDeviceConfiguration::connectionManagerConfiguration() const
+{
+    return h_ptr->m_cmConf.data();
+}
+
 bool HMediaServerDeviceConfiguration::isValid() const
 {
-    return contentDirectoryServiceConfiguration();
+    return contentDirectoryConfiguration() && connectionManagerConfiguration();
 }
 
 HMediaServerDeviceConfiguration* HMediaServerDeviceConfiguration::clone() const

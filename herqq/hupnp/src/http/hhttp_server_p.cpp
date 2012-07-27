@@ -218,6 +218,7 @@ void HHttpServer::processRequest(qint32 socketDescriptor)
 
     HMessagingInfo* mi = new HMessagingInfo(qMakePair(client, true));
     mi->setChunkedInfo(m_chunkedInfo);
+    mi->setServerInfo(HSysInfo::instance().herqqProductTokens());
     if (!m_httpHandler->receive(mi, true))
     {
         HLOG_WARN(QString(

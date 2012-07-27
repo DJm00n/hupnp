@@ -153,13 +153,20 @@ void HConnectionManagerHttpServer::incomingUnknownGetRequest(
         {
             QByteArray data = dev->readAll();
             mi->setKeepAlive(true);
-            m_httpHandler->send(mi, HHttpMessageCreator::createResponse(Ok, *mi, data));
+            m_httpHandler->send(
+                mi,
+                HHttpMessageCreator::createResponse(
+                    Ok, *mi, data, ContentType_Undefined)); // TODO content type
         }
         else
         {
             HHttpStreamer* streamer =
-                new HHttpStreamer(mi, HHttpMessageCreator::createHeaderData(
-                    Ok, *mi, dev->size()), dev.take(), this);
+                new HHttpStreamer(
+                    mi,
+                    HHttpMessageCreator::createHeaderData(
+                        Ok, *mi, dev->size(), ContentType_Undefined), // TODO content type
+                    dev.take(),
+                    this);
 
             streamer->send();
         }
@@ -193,8 +200,15 @@ HConnectionManagerSourceService::~HConnectionManagerSourceService()
 
 bool HConnectionManagerSourceService::finalizeInit(QString* /*errDescription*/)
 {
-    setSourceProtocolInfo(HProtocolInfo("http-get:*:*:*"));
-    createDefaultConnection(sourceProtocolInfo().at(0));
+    if (sourceProtocolInfo().isEmpty())
+    {
+        setSourceProtocolInfo(HProtocolInfo("http-get:*:*:*"));
+    }
+
+    if (connectionIds().isEmpty())
+    {
+        createDefaultConnection(sourceProtocolInfo().at(0));
+    }
 
     bool ok = connect(
         m_dataSource, SIGNAL(objectModified(Herqq::Upnp::Av::HObject*, Herqq::Upnp::Av::HObjectEventInfo)),

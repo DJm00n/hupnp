@@ -66,11 +66,11 @@ private:
     static QByteArray setupData(
         const HMessagingInfo&, qint32 statusCode,
         const QString& reasonPhrase, const QString& body,
-        ContentType ct = Undefined);
+        ContentType);
 
     static QByteArray setupData(
         HHttpHeader& reqHdr, qint64 bodySizeBytesInBytes, const HMessagingInfo& mi,
-        ContentType ct = Undefined);
+        ContentType);
 
 public:
 
@@ -78,17 +78,17 @@ public:
 
     static QByteArray setupData(
         HHttpHeader& hdr, const QByteArray& body, const HMessagingInfo&,
-        ContentType = Undefined);
+        ContentType);
 
     static QByteArray createResponse(
         StatusCode sc, const HMessagingInfo& mi);
 
     static QByteArray createHeaderData(
-        StatusCode, const HMessagingInfo&, qint64 bodySizeInBytes, ContentType = Undefined);
+        StatusCode, const HMessagingInfo&, qint64 bodySizeInBytes, ContentType);
 
     static QByteArray createResponse(
         StatusCode, const HMessagingInfo&, const QByteArray& body,
-        ContentType = Undefined);
+        ContentType);
 
     static QByteArray createResponse(
         const HMessagingInfo&, qint32 actionErrCode, const QString& msg=QString());

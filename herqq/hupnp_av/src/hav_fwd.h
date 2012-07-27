@@ -205,6 +205,7 @@ class HTransportInstance;
 ///////// Connection Manager
 class HConnectionManagerAdapter;
 class HAbstractConnectionManagerService;
+class HConnectionManagerServiceConfiguration;
 
 class HProtocolInfoResult;
 ////////

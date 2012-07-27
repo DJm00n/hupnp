@@ -351,7 +351,7 @@ void HDeviceHostHttpServer::incomingControlRequest(
     QString xml = soapResponse.toXmlString();
 
     m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-        Ok, *mi, xml.toUtf8()));
+        Ok, *mi, xml.toUtf8(), ContentType_TextXml));
 
     HLOG_DBG("Control message successfully handled.");
 }
@@ -384,7 +384,7 @@ void HDeviceHostHttpServer::incomingUnknownGetRequest(
                 "Sending service description to [%1] as requested.").arg(peer));
 
             m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-                Ok, *mi, service->description().toUtf8()));
+                Ok, *mi, service->description().toUtf8(), ContentType_TextXml));
 
             return;
         }
@@ -414,7 +414,7 @@ void HDeviceHostHttpServer::incomingUnknownGetRequest(
             "Sending device description to [%1] as requested.").arg(peer));
 
         m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-            Ok, *mi, device->description().toUtf8()));
+            Ok, *mi, device->description().toUtf8(), ContentType_TextXml));
 
         return;
     }
@@ -430,7 +430,7 @@ void HDeviceHostHttpServer::incomingUnknownGetRequest(
             "Sending service description to [%1] as requested.").arg(peer));
 
         m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-            Ok, *mi, service->description().toUtf8()));
+            Ok, *mi, service->description().toUtf8(), ContentType_TextXml));
 
         return;
     }
@@ -450,7 +450,7 @@ void HDeviceHostHttpServer::incomingUnknownGetRequest(
         HLOG_DBG(QString("Sending icon to [%1] as requested.").arg(peer));
 
         m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
-            Ok, *mi, iconFile.readAll()));
+            Ok, *mi, iconFile.readAll(), ContentType_TextXml));
 
         return;
     }

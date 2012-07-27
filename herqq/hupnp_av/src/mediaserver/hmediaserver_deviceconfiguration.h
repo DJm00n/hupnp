@@ -93,7 +93,26 @@ public:
 
      * \sa setContentDirectoryConfiguration()
      */
-    const HContentDirectoryServiceConfiguration* contentDirectoryServiceConfiguration() const;
+    const HContentDirectoryServiceConfiguration* contentDirectoryConfiguration() const;
+
+    /*!
+     * \brief Specifies the configuration information of a ConnectionManager implementation.
+     *
+     * \param arg specifies the configuration information of a ConnectionManager implementation.
+     *
+     * \sa connectionManagerConfiguration()
+     */
+    void setConnectionManagerConfiguration(
+        const HConnectionManagerServiceConfiguration& arg);
+
+    /*!
+     * \brief Returns the configuration information of a ConnectionManager implementation.
+     *
+     * \return The configuration information of a ConnectionManager implementation.
+
+     * \sa setConnectionManagerConfiguration()
+     */
+    const HConnectionManagerServiceConfiguration* connectionManagerConfiguration() const;
 
     /*!
      * \brief Indicates if the object is valid.

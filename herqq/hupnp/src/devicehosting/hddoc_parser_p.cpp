@@ -428,7 +428,7 @@ bool HDocParser::parseDeviceInfo(
         }
         else
         {
-            HLOG_WARN(QString("Error in device description: %1").arg(err));
+            HLOG_WARN(QString("Non-critical error in a device description: %1").arg(err));
         }
     }
 

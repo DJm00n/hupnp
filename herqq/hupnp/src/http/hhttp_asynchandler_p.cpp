@@ -729,7 +729,7 @@ HHttpAsyncOperation* HHttpAsyncHandler::msgIo(
 {
     QByteArray dataToSend =
         HHttpMessageCreator::setupData(
-            reqHdr, soapMsg.toXmlString().toUtf8(), *mi, TextXml);
+            reqHdr, soapMsg.toXmlString().toUtf8(), *mi, ContentType_TextXml);
 
     return msgIo(mi, dataToSend);
 }

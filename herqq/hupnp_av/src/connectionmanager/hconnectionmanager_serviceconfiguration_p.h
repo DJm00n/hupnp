@@ -19,8 +19,8 @@
  *  along with Herqq UPnP Av. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HMEDIASERVER_DEVICECONFIGURATION_P_H_
-#define HMEDIASERVER_DEVICECONFIGURATION_P_H_
+#ifndef HCONNECTIONMANAGER_SERVICECONFIGURATION_P_H_
+#define HCONNECTIONMANAGER_SERVICECONFIGURATION_P_H_
 
 //
 // !! Warning !!
@@ -31,7 +31,8 @@
 //
 
 #include <HUpnpAv/HUpnpAv>
-#include <QtCore/QScopedPointer>
+#include <HUpnpAv/HProtocolInfo>
+#include <QtCore/QPointer>
 
 namespace Herqq
 {
@@ -45,21 +46,31 @@ namespace Av
 //
 //
 //
-class H_UPNP_AV_EXPORT HMediaServerDeviceConfigurationPrivate
+class H_UPNP_AV_EXPORT HConnectionManagerServiceConfigurationPrivate
 {
-H_DISABLE_COPY(HMediaServerDeviceConfigurationPrivate)
+H_DISABLE_COPY(HConnectionManagerServiceConfigurationPrivate)
 
-public:
+private:
 
-    QScopedPointer<HContentDirectoryServiceConfiguration> m_cdsConf;
-    QScopedPointer<HConnectionManagerServiceConfiguration> m_cmConf;
+    static void addDefaultImageProtocolInfos(HProtocolInfos*);
+    static void addDefaultAudioProtocolInfos(HProtocolInfos*);
+    static void addDefaultVideoProtocolInfos(HProtocolInfos*);
+    static void addGenericProtocolInfos(HProtocolInfos*);
 
-    HMediaServerDeviceConfigurationPrivate();
-    virtual ~HMediaServerDeviceConfigurationPrivate();
+public: // attributes
+
+    HProtocolInfos m_supportedProtocolInfos;
+
+public: // methods
+
+    HConnectionManagerServiceConfigurationPrivate();
+    virtual ~HConnectionManagerServiceConfigurationPrivate();
+
+    static HProtocolInfos getDefaultProtocolInfo();
 };
 
 }
 }
 }
 
-#endif /* HMEDIASERVER_DEVICECONFIGURATION_P_H_ */
+#endif /* HCONNECTIONMANAGER_SERVICECONFIGURATION_P_H_ */

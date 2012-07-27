@@ -38,11 +38,10 @@ namespace Upnp
 
 enum ContentType
 {
-    Undefined,
-    // "text/xml; charset=\"utf-8\""
-    TextXml,
-    // "application/octet-stream"
-    OctetStream
+    ContentType_Undefined,
+    ContentType_TextPlain,   // text/plain
+    ContentType_TextXml,     // "text/xml; charset=\"utf-8\""
+    ContentType_OctetStream  // "application/octet-stream"
 };
 
 enum StatusCode

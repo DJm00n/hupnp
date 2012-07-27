@@ -111,10 +111,10 @@ QString contentTypeToString(ContentType ct)
     QString retVal;
     switch(ct)
     {
-    case TextXml:
+    case ContentType_TextXml:
         retVal = "text/xml; charset=\"utf-8\"";
         break;
-    case OctetStream:
+    case ContentType_OctetStream:
         retVal = "application/octet-stream";
         break;
     default:
@@ -195,7 +195,7 @@ HHttpMessageCreator::~HHttpMessageCreator()
 QByteArray HHttpMessageCreator::setupData(
     HHttpHeader& hdr, const HMessagingInfo& mi)
 {
-    return setupData(hdr, QByteArray(), mi);
+    return setupData(hdr, QByteArray(), mi, ContentType_Undefined);
 }
 
 QByteArray HHttpMessageCreator::setupData(
@@ -209,7 +209,17 @@ QByteArray HHttpMessageCreator::setupData(
         "DATE",
         QDateTime::currentDateTime().toString(HHttpUtils::rfc1123DateFormat()));
 
-    reqHdr.setContentType(contentTypeToString(ct));
+    QString contentType = contentTypeToString(ct);
+    if (!contentType.isEmpty())
+    {
+        reqHdr.setContentType(contentType);
+    }
+
+    HProductTokens serverTokens = mi.serverInfo();
+    if (!serverTokens.isEmpty())
+    {
+        reqHdr.setValue("Server", serverTokens.toString());
+    }
 
     if (!mi.keepAlive() && reqHdr.minorVersion() == 1)
     {
@@ -248,7 +258,7 @@ QByteArray HHttpMessageCreator::setupData(
 QByteArray HHttpMessageCreator::createResponse(
     StatusCode sc, const HMessagingInfo& mi)
 {
-    return createResponse(sc, mi, QByteArray());
+    return createResponse(sc, mi, QByteArray(), ContentType_Undefined);
 }
 
 QByteArray HHttpMessageCreator::createHeaderData(
@@ -304,7 +314,11 @@ QByteArray HHttpMessageCreator::createResponse(
     soapFaultResponse.addFaultDetail(detail);
 
     return setupData(
-        mi, httpStatusCode, httpReasonPhrase, soapFaultResponse.toXmlString());
+        mi,
+        httpStatusCode,
+        httpReasonPhrase,
+        soapFaultResponse.toXmlString(),
+        ContentType_TextXml);
 }
 
 QByteArray HHttpMessageCreator::create(
@@ -325,7 +339,7 @@ QByteArray HHttpMessageCreator::create(
     reqHdr.setValue("NT" , "upnp:event");
     reqHdr.setValue("NTS", "upnp:propchange");
 
-    return setupData(reqHdr, req.data(), *mi);
+    return setupData(reqHdr, req.data(), *mi, ContentType_TextXml);
 }
 
 QByteArray HHttpMessageCreator::create(

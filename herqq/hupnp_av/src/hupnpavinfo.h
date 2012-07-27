@@ -66,7 +66,7 @@ namespace Av
  *
  * \sa Herqq::Upnp::Av::hupnpAvVersion()
  */
-#define HUPNP_AV_PATCH_VERSION 1
+#define HUPNP_AV_PATCH_VERSION 2
 
 /*!
  * This is the version of the HUPnPAv library with which this header

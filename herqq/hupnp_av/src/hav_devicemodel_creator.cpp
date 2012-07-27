@@ -28,6 +28,7 @@
 #include "contentdirectory/hcontentdirectory_serviceconfiguration.h"
 
 #include "connectionmanager/hconnectionmanager_info.h"
+#include "connectionmanager/hconnectionmanager_serviceconfiguration.h"
 
 #include "renderingcontrol/hrenderingcontrol_info.h"
 #include "renderingcontrol/hrenderingcontrol_service_p.h"
@@ -167,7 +168,7 @@ HServerService* HAvDeviceModelCreator::createService(
         if (h_ptr->m_mediaServerConf && h_ptr->m_mediaServerConf->isValid())
         {
             return new HContentDirectoryService(
-                h_ptr->m_mediaServerConf->contentDirectoryServiceConfiguration()->dataSource());
+                h_ptr->m_mediaServerConf->contentDirectoryConfiguration()->dataSource());
         }
     }
     else if (serviceInfo.serviceType().compare(
@@ -184,7 +185,7 @@ HServerService* HAvDeviceModelCreator::createService(
             if (h_ptr->m_mediaServerConf && h_ptr->m_mediaServerConf->isValid())
             {
                 return new HConnectionManagerSourceService(
-                    h_ptr->m_mediaServerConf->contentDirectoryServiceConfiguration()->dataSource());
+                    h_ptr->m_mediaServerConf->contentDirectoryConfiguration()->dataSource());
             }
         }
         else if (deviceInfo.deviceType().compare(

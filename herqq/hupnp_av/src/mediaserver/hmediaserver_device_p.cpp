@@ -24,6 +24,7 @@
 
 #include "../cds_model/datasource/hcds_datasource.h"
 #include "../contentdirectory/hcontentdirectory_serviceconfiguration.h"
+#include "../connectionmanager/hconnectionmanager_serviceconfiguration.h"
 
 #include <QtCore/QEvent>
 
@@ -56,7 +57,7 @@ bool HMediaServerDevice::event(QEvent* e)
 {
     if (e->type() == QEvent::ThreadChange)
     {
-        Q_ASSERT_X(m_configuration->contentDirectoryServiceConfiguration()->hasOwnershipOfDataSource(),
+        Q_ASSERT_X(m_configuration->contentDirectoryConfiguration()->hasOwnershipOfDataSource(),
                    "",
                    "Cannot move this instance to different thread, since this instance does "
                    "not have the ownership of the configured Data Source.");
@@ -68,7 +69,7 @@ bool HMediaServerDevice::event(QEvent* e)
 bool HMediaServerDevice::finalizeInit(QString* errDescr)
 {
     HAbstractCdsDataSource* dataSource =
-        m_configuration->contentDirectoryServiceConfiguration()->dataSource();
+        m_configuration->contentDirectoryConfiguration()->dataSource();
 
     Q_ASSERT_X(dataSource->thread() == thread(), "",
                "Data source has to live in the same thread with the media server");
@@ -80,6 +81,9 @@ bool HMediaServerDevice::finalizeInit(QString* errDescr)
 
     HConnectionManagerSourceService* cm =
         qobject_cast<HConnectionManagerSourceService*>(connectionManager());
+
+    cm->setSourceProtocolInfo(
+        m_configuration->connectionManagerConfiguration()->supportedContentInfo());
 
     if (!cm || !cm->init())
     {
@@ -114,9 +118,9 @@ bool HMediaServerDevice::finalizeInit(QString* errDescr)
         return false;
     }
 
-    if (m_configuration->contentDirectoryServiceConfiguration()->hasOwnershipOfDataSource())
+    if (m_configuration->contentDirectoryConfiguration()->hasOwnershipOfDataSource())
     {
-        m_configuration->contentDirectoryServiceConfiguration()->dataSource()->setParent(this);
+        m_configuration->contentDirectoryConfiguration()->dataSource()->setParent(this);
     }
 
     return true;

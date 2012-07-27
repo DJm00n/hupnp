@@ -124,6 +124,12 @@ qint32 HContentDirectoryServicePrivate::sort(
     HLOG2(H_AT, H_FUN, m_loggingIdentifier);
     H_Q(HContentDirectoryService);
 
+    QStringList sortExtensions;
+    q->getSortExtensionCapabilities(&sortExtensions);
+
+    QStringList sortCapabilities;
+    q->getSortCapabilities(&sortCapabilities);
+
     QList<HSortInfo> sortInfoObjects;
     for (qint32 i = 0; i < sortCriteria.size(); ++i)
     {
@@ -154,9 +160,6 @@ qint32 HContentDirectoryServicePrivate::sort(
 
         bool ascending = ch == '+';
 
-        QStringList sortExtensions;
-        q->getSortExtensionCapabilities(&sortExtensions);
-
         if (!sortExtension.isEmpty() && !sortExtension.contains(
             sortExtension, Qt::CaseInsensitive))
         {
@@ -169,9 +172,6 @@ qint32 HContentDirectoryServicePrivate::sort(
             ch = tmp[j];
             sortProperty.append(ch);
         }
-
-        QStringList sortCapabilities;
-        q->getSortCapabilities(&sortCapabilities);
 
         if (!sortCapabilities.contains(sortProperty, Qt::CaseInsensitive) &&
             !sortCapabilities.contains("*"))
@@ -533,7 +533,7 @@ qint32 HContentDirectoryService::getSortCapabilities(QStringList* oarg) const
     HLOG2(H_AT, H_FUN, h_ptr->m_loggingIdentifier);
     Q_ASSERT_X(oarg, H_AT, "Out argument(s) cannot be null");
 
-    *oarg = QString("dc:title,dc:creator,dc:date,res@size").split(',');
+    *oarg = QString("dc:title,dc:creator,dc:date,res@size,upnp:class,upnp:album,upnp:originalTrackNumber").split(',');
     return UpnpSuccess;
 }
 

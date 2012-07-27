@@ -143,7 +143,7 @@ public:
 
     inline bool hasUserAgent() const
     {
-        return m_userAgent.isValid();
+        return !m_userAgent.isEmpty();
     }
 };
 
