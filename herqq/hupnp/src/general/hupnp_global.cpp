@@ -52,7 +52,7 @@ namespace Herqq
 namespace Upnp
 {
 
-/*! \mainpage %Herqq UPnP (HUPnP) Reference Documentation for Version 1.1
+/*! \mainpage Reference Documentation of the development versions of HUPnP and HUPnPAv
  *
  * \section introduction Introduction
  *
@@ -1564,7 +1564,7 @@ void HSysInfo::createProductTokens()
 #endif
 
     m_productTokens.reset(
-        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/%2.%3").arg(
+        new HProductTokens(QString("%1 UPnP/1.1 HUPnP/%2.%3 DLNADOC/1.50").arg(
             server, STRX(HUPNP_CORE_MAJOR_VERSION), STRX(HUPNP_CORE_MINOR_VERSION))));
 }
 
