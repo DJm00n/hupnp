@@ -273,6 +273,7 @@ public:
                     return false;
                 }
 
+                serviceIds.clear();
                 QList<Service*> services = device->services();
                 for(qint32 i = 0; i < services.size(); ++i)
                 {
