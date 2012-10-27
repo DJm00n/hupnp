@@ -51,9 +51,9 @@ HMediaRendererDevice::HMediaRendererDevice(
     m_timer.setInterval(200);
     bool ok = connect(
         m_configuration->rendererConnectionManager(),
-        SIGNAL(connectionRemoved(qint32)),
+        SIGNAL(connectionRemoved(Herqq::Upnp::Av::HAbstractConnectionManagerService*,qint32)),
         this,
-        SLOT(rendererConnectionRemoved(qint32)));
+        SLOT(rendererConnectionRemoved(Herqq::Upnp::Av::HAbstractConnectionManagerService*,qint32)));
     Q_ASSERT(ok); Q_UNUSED(ok)
 
     ok = connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
@@ -213,7 +213,8 @@ void HMediaRendererDevice::propertyChanged(
         qMakePair(eventInfo.newValue(), eventInfo.channel().toString()));
 }
 
-void HMediaRendererDevice::rendererConnectionRemoved(qint32 cid)
+void HMediaRendererDevice::rendererConnectionRemoved(
+    HAbstractConnectionManagerService*, qint32 cid)
 {
     connectionManager()->removeConnection(cid);
 }
@@ -243,7 +244,7 @@ bool HMediaRendererDevice::finalizeInit(QString* errDescription)
     {
         if (errDescription)
         {
-            *errDescription = "Media Manager was not set";
+            *errDescription = "Renderer Connection Manager was not set";
         }
         return false;
     }
@@ -296,7 +297,7 @@ bool HMediaRendererDevice::finalizeInit(QString* errDescription)
         // ID zero. This connection handles whatever the Renderer is supposed to handle,
         // and this is why we have to create the default RendererConnection here:
 
-        HRendererConnection* mediaConnection = createMediaConnection("*", 0);
+        HRendererConnection* mediaConnection = createRendererConnection("*", 0);
         if (!mediaConnection)
         {
             if (errDescription)
@@ -327,10 +328,10 @@ qint32 HMediaRendererDevice::prepareForConnection(
     Q_ASSERT(rcsId);
     Q_ASSERT(avTransportId);
 
-    HRendererConnection* mm =
-        createMediaConnection(contentFormat, connectionId);
+    HRendererConnection* rendererConnection =
+        createRendererConnection(contentFormat, connectionId);
 
-    if (!mm)
+    if (!rendererConnection)
     {
         return HConnectionManagerInfo::LocalRestrictions;
     }
@@ -343,24 +344,29 @@ qint32 HMediaRendererDevice::prepareForConnection(
 
 qint32 HMediaRendererDevice::connectionComplete(qint32 connectionId)
 {
-    return m_configuration->rendererConnectionManager()->connectionComplete(connectionId) ?
-            (qint32) UpnpSuccess : (qint32) HConnectionManagerInfo::InvalidConnectionReference;
+    return m_configuration->rendererConnectionManager()->connectionComplete(
+            connectionManager(), connectionId) ? (qint32) UpnpSuccess :
+                                  (qint32) HConnectionManagerInfo::InvalidConnectionReference;
 }
 
-HRendererConnection* HMediaRendererDevice::createMediaConnection(
+HRendererConnection* HMediaRendererDevice::createRendererConnection(
     const QString& contentFormat, qint32 connectionId)
 {
     Q_ASSERT(connectionId >= 0);
 
     HRendererConnection* connection =
-        m_configuration->rendererConnectionManager()->create(contentFormat, connectionId);
+        m_configuration->rendererConnectionManager()->create(
+            connectionManager(), contentFormat, connectionId);
 
-    bool ok = connect(
-        connection->info(),
-        SIGNAL(propertyChanged(Herqq::Upnp::Av::HRendererConnectionInfo*, Herqq::Upnp::Av::HRendererConnectionEventInfo)),
-        this,
-        SLOT(propertyChanged(Herqq::Upnp::Av::HRendererConnectionInfo*, Herqq::Upnp::Av::HRendererConnectionEventInfo)));
-    Q_ASSERT(ok); Q_UNUSED(ok)
+    if (connection)
+    {
+        bool ok = connect(
+            connection->rendererConnectionInfo(),
+            SIGNAL(propertyChanged(Herqq::Upnp::Av::HRendererConnectionInfo*, Herqq::Upnp::Av::HRendererConnectionEventInfo)),
+            this,
+            SLOT(propertyChanged(Herqq::Upnp::Av::HRendererConnectionInfo*, Herqq::Upnp::Av::HRendererConnectionEventInfo)));
+        Q_ASSERT(ok); Q_UNUSED(ok)
+    }
 
     return connection;
 }
@@ -380,7 +386,9 @@ HRendererConnection* HMediaRendererDevice::findConnectionByAvTransportId(qint32 
         if (info.avTransportId() == id)
         {
             HRendererConnection* connection =
-                m_configuration->rendererConnectionManager()->connection(cid);
+                m_configuration->rendererConnectionManager()->connection(
+                    connectionManager(), cid);
+
             return connection;
         }
     }
@@ -403,8 +411,10 @@ HRendererConnection* HMediaRendererDevice::findConnectionByRcsId(qint32 id) cons
         if (info.rcsId() == id)
         {
             HRendererConnection* connection =
-                m_configuration->rendererConnectionManager()->connection(cid);
+                m_configuration->rendererConnectionManager()->connection(
+                    connectionManager(), cid);
             Q_ASSERT(connection);
+
             return connection;
         }
     }

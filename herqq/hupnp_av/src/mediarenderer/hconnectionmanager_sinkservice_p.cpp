@@ -52,7 +52,12 @@ HConnectionManagerSinkService::~HConnectionManagerSinkService()
 bool HConnectionManagerSinkService::finalizeInit(QString* errDescription)
 {
     Q_UNUSED(errDescription)
-    setSinkProtocolInfo(HProtocolInfo("http-get:*:*:*"));
+
+    if (sinkProtocolInfo().isEmpty())
+    {
+        setSinkProtocolInfo(HProtocolInfo("http-get:*:*:*"));
+    }
+
     return true;
 }
 

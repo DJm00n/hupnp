@@ -348,7 +348,7 @@ void HDeviceHostHttpServer::incomingControlRequest(
         soapResponse.addMethodArgument(soapArg);
     }
 
-    QString xml = soapResponse.toXmlString();
+    QString xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n" + soapResponse.toXmlString();
 
     m_httpHandler->send(mi, HHttpMessageCreator::createResponse(
         Ok, *mi, xml.toUtf8(), ContentType_TextXml));

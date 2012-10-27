@@ -82,7 +82,7 @@ qint32 HRenderingControlService::listPresets(
     }
 
     *currentPresetNameList =
-        mediaConnection->info()->presets().toList();
+        mediaConnection->rendererConnectionInfo()->presets().toList();
 
     return UpnpSuccess;
 }
@@ -117,7 +117,7 @@ qint32 HRenderingControlService::getBrightness(
     }
 
     *currentBrightness =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::Brightness);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::Brightness);
 
     return UpnpSuccess;
 }
@@ -153,7 +153,7 @@ qint32 HRenderingControlService::getContrast(
     }
 
     *currentContrast =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::Contrast);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::Contrast);
 
     return UpnpSuccess;
 }
@@ -189,7 +189,7 @@ qint32 HRenderingControlService::getSharpness(
     }
 
     *currentSharpness =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::Sharpness);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::Sharpness);
 
     return UpnpSuccess;
 }
@@ -225,7 +225,7 @@ qint32 HRenderingControlService::getRedVideoGain(
     }
 
     *currentRedVideoGain =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::RedVideoGain);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::RedVideoGain);
 
     return UpnpSuccess;
 }
@@ -261,7 +261,7 @@ qint32 HRenderingControlService::getGreenVideoGain(
     }
 
     *currentGreenVideoGain =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::GreenVideoGain);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::GreenVideoGain);
 
     return UpnpSuccess;
 }
@@ -297,7 +297,7 @@ qint32 HRenderingControlService::getBlueVideoGain(
     }
 
     *currentBlueVideoGain =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::BlueVideoGain);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::BlueVideoGain);
 
     return UpnpSuccess;
 }
@@ -333,7 +333,7 @@ qint32 HRenderingControlService::getRedVideoBlackLevel(
     }
 
     *currentRedVideoBlackLevel =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::RedVideoBlackLevel);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::RedVideoBlackLevel);
 
     return UpnpSuccess;
 }
@@ -369,7 +369,7 @@ qint32 HRenderingControlService::getGreenVideoBlackLevel(
     }
 
     *currentGreenVideoBlackLevel =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::GreenVideoBlackLevel);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::GreenVideoBlackLevel);
 
     return UpnpSuccess;
 }
@@ -405,7 +405,7 @@ qint32 HRenderingControlService::getBlueVideoBlackLevel(
     }
 
     *currentBlueVideoBlackLevel =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::BlueVideoBlackLevel);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::BlueVideoBlackLevel);
 
     return UpnpSuccess;
 }
@@ -441,7 +441,7 @@ qint32 HRenderingControlService::getColorTemperature(
     }
 
     *currentColorTemperature =
-        mediaConnection->info()->rcsValue(HRendererConnectionInfo::ColorTemperature);
+        mediaConnection->rendererConnectionInfo()->rcsValue(HRendererConnectionInfo::ColorTemperature);
 
     return UpnpSuccess;
 }
@@ -477,7 +477,7 @@ qint32 HRenderingControlService::getHorizontalKeystone(
     }
 
     *currentHorizontalKeyStone =
-        mediaConnection->info()->horizontalKeystone();
+        mediaConnection->rendererConnectionInfo()->horizontalKeystone();
 
     return UpnpSuccess;
 }
@@ -512,7 +512,7 @@ qint32 HRenderingControlService::getVerticalKeystone(
     }
 
     *currentVerticalKeyStone =
-        mediaConnection->info()->verticalKeystone();
+        mediaConnection->rendererConnectionInfo()->verticalKeystone();
 
     return UpnpSuccess;
 }
@@ -548,7 +548,7 @@ qint32 HRenderingControlService::getMute(
 
     bool ok = false;
     *currentlyMuted =
-        mediaConnection->info()->muted(channel, &ok);
+        mediaConnection->rendererConnectionInfo()->muted(channel, &ok);
 
     if (!ok)
     {
@@ -590,7 +590,7 @@ qint32 HRenderingControlService::getVolume(
     bool ok = false;
 
     *currentVolume =
-        mediaConnection->info()->volume(channel, &ok);
+        mediaConnection->rendererConnectionInfo()->volume(channel, &ok);
 
     if (!ok)
     {
@@ -632,7 +632,7 @@ qint32 HRenderingControlService::getVolumeDB(
     bool ok = false;
 
     *currentVolumeDb =
-        mediaConnection->info()->volumeDb(channel, &ok);
+        mediaConnection->rendererConnectionInfo()->volumeDb(channel, &ok);
 
     if (!ok)
     {
@@ -672,7 +672,7 @@ qint32 HRenderingControlService::getVolumeDBRange(
     }
 
     bool ok = false;
-    *result = mediaConnection->info()->volumeDbRange(channel, &ok);
+    *result = mediaConnection->rendererConnectionInfo()->volumeDbRange(channel, &ok);
 
     if (!ok)
     {
@@ -698,7 +698,7 @@ qint32 HRenderingControlService::getLoudness(
     bool ok = false;
 
     *loudnessOn =
-        mediaConnection->info()->loudnessEnabled(channel, &ok);
+        mediaConnection->rendererConnectionInfo()->loudnessEnabled(channel, &ok);
 
     if (!ok)
     {

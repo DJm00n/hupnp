@@ -99,7 +99,8 @@ private Q_SLOTS:
         Herqq::Upnp::Av::HRendererConnectionInfo* source,
         const Herqq::Upnp::Av::HRendererConnectionEventInfo& eventInfo);
 
-    void rendererConnectionRemoved(qint32);
+    void rendererConnectionRemoved(
+        Herqq::Upnp::Av::HAbstractConnectionManagerService*, qint32);
 
 protected:
 
@@ -121,7 +122,7 @@ public:
 
     qint32 connectionComplete(qint32 connectionId);
 
-    HRendererConnection* createMediaConnection(
+    HRendererConnection* createRendererConnection(
         const QString& contentFormat, qint32 connectionId);
 
     HRendererConnection* findConnectionByAvTransportId(qint32 id) const;

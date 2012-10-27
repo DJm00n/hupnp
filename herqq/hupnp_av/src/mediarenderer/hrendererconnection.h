@@ -72,6 +72,8 @@ private:
     void init(qint32 connectionId);
     void dispose();
 
+    void setService(HAbstractConnectionManagerService*);
+
 protected:
 
     /*!
@@ -80,6 +82,13 @@ protected:
      * \param parent specifies the parent \c QObject.
      */
     HRendererConnection(QObject* parent = 0);
+
+    /*!
+     * Returns the Connection Manager Service to which this connection belongs.
+     *
+     * \return the Connection Manager Service to which this connection belongs.
+     */
+    HAbstractConnectionManagerService* service() const;
 
     /*!
      * Provides the implementation for play().
@@ -326,15 +335,24 @@ protected:
     virtual qint32 doSetLoudness(const HChannel& channel, bool enabled);
 
     /*!
-     * \brief Returns an object capable of retrieving and setting
+     * \brief Returns an object for getting and setting
      * information about the capabilities and runtime status of the
-     * media manager instance.
+     * renderer connection instance.
      *
-     * \return an object capable of retrieving and setting
+     * \return an object for getting and setting
      * information about the capabilities and runtime status of the
-     * media manager instance.
+     * renderer connection instance.
      */
-    HRendererConnectionInfo* writableInfo();
+    HRendererConnectionInfo* writableRendererConnectionInfo();
+
+    /*!
+     * \brief Returns an object for setting and getting information about the
+     * connection managed by the UPnP A/V ConnectionManager.
+     *
+     * \return an object for setting and getting information about the
+     * connection managed by the UPnP A/V ConnectionManager.
+     */
+    HConnectionInfo* writableConnectionInfo();
 
 public:
 
@@ -353,15 +371,24 @@ public:
     qint32 connectionId() const;
 
     /*!
-     * \brief Returns an object capable of retrieving
+     * \brief Returns an object for retrieving
      * information about the capabilities and runtime status of the
      * media manager instance.
      *
-     * \return an object capable of retrieving and setting
+     * \return an object for retrieving
      * information about the capabilities and runtime status of the
      * media manager instance.
      */
-    const HRendererConnectionInfo* info() const;
+    const HRendererConnectionInfo* rendererConnectionInfo() const;
+
+    /*!
+     * \brief Returns an object for getting information about the
+     * connection managed by the UPnP A/V ConnectionManager.
+     *
+     * \return an object for getting information about the
+     * connection managed by the UPnP A/V ConnectionManager.
+     */
+    const HConnectionInfo* connectionInfo() const;
 
     /*!
      * \brief Begins the playback of the current resource.

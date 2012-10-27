@@ -39,6 +39,8 @@
 #include "../renderingcontrol/hchannel.h"
 #include "../renderingcontrol/hrenderingcontrol_info.h"
 
+#include "../connectionmanager/habstractconnectionmanager_service.h"
+
 #include "../common/hstoragemedium.h"
 #include "../cds_model/cds_objects/hobject.h"
 #include "../cds_model/model_mgmt/hcds_dlite_serializer.h"
@@ -63,7 +65,7 @@ namespace Av
  * HRendererConnectionPrivate
  ******************************************************************************/
 HRendererConnectionPrivate::HRendererConnectionPrivate() :
-    m_info(0), q_ptr(0), m_connectionId(-1), m_valueSetters()
+    m_info(0), m_connectionInfo(), m_service(0), q_ptr(0), m_connectionId(-1), m_valueSetters()
 {
     m_valueSetters.insert("Brightness", ValueSetter(this, &HRendererConnectionPrivate::setBrightness));
     m_valueSetters.insert("Contrast", ValueSetter(this, &HRendererConnectionPrivate::setContrast));
@@ -226,6 +228,18 @@ void HRendererConnection::dispose()
     emit disposed(this);
 }
 
+void HRendererConnection::setService(HAbstractConnectionManagerService* service)
+{
+    h_ptr->m_service = service;
+
+    service->getCurrentConnectionInfo(connectionId(), &h_ptr->m_connectionInfo);
+}
+
+HAbstractConnectionManagerService* HRendererConnection::service() const
+{
+    return h_ptr->m_service;
+}
+
 qint32 HRendererConnection::connectionId() const
 {
     return h_ptr->m_connectionId;
@@ -310,14 +324,24 @@ qint32 HRendererConnection::doSetLoudness(const HChannel& channel, bool enabled)
     return UpnpOptionalActionNotImplemented;
 }
 
-HRendererConnectionInfo* HRendererConnection::writableInfo()
+HRendererConnectionInfo* HRendererConnection::writableRendererConnectionInfo()
 {
     return h_ptr->m_info;
 }
 
-const HRendererConnectionInfo* HRendererConnection::info() const
+HConnectionInfo* HRendererConnection::writableConnectionInfo()
+{
+    return &h_ptr->m_connectionInfo;
+}
+
+const HRendererConnectionInfo* HRendererConnection::rendererConnectionInfo() const
 {
     return h_ptr->m_info;
+}
+
+const HConnectionInfo* HRendererConnection::connectionInfo() const
+{
+    return &h_ptr->m_connectionInfo;
 }
 
 qint32 HRendererConnection::play(const QString& speed)

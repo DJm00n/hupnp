@@ -88,6 +88,7 @@ protected:
      * yourself and you can delete the renderer connection at will.
      */
     virtual HRendererConnection* doCreate(
+        HAbstractConnectionManagerService* cmService,
         const QString& contentFormat, qint32 connectionId) = 0;
 
 public:
@@ -113,7 +114,9 @@ public:
      * \return a new HRendererConnection instance or a null pointer if no
      * instance could be created.
      */
-    HRendererConnection* create(const QString& contentFormat, qint32 connectionId);
+    HRendererConnection* create(
+        HAbstractConnectionManagerService* cmService,
+        const QString& contentFormat, qint32 connectionId);
 
     /*!
      * Returns an HRendererConnection instance managed by this manager that
@@ -124,7 +127,8 @@ public:
      * \return an HRendererConnection instance managed by this manager that
      * has the specified connectionId.
      */
-    HRendererConnection* connection(qint32 cid) const;
+    HRendererConnection* connection(
+        HAbstractConnectionManagerService* cmService, qint32 cid) const;
 
     /*!
      * Instructs the instance to "dispose" a particular renderer connection and
@@ -139,7 +143,8 @@ public:
      *
      * \sa HRendererConnection::disposed()
      */
-    bool connectionComplete(qint32 connectionId);
+    bool connectionComplete(
+        HAbstractConnectionManagerService* cmService, qint32 connectionId);
 
 Q_SIGNALS:
 
@@ -152,7 +157,8 @@ Q_SIGNALS:
      *
      * \sa connectionRemoved()
      */
-    void connectionAdded(qint32 connectionId);
+    void connectionAdded(
+        Herqq::Upnp::Av::HAbstractConnectionManagerService* cmService, qint32 connectionId);
 
     /*!
      * This signal is emitted when a HRendererConnection has been removed
@@ -163,7 +169,8 @@ Q_SIGNALS:
      *
      * \sa connectionAdded()
      */
-    void connectionRemoved(qint32 connectionId);
+    void connectionRemoved(
+        Herqq::Upnp::Av::HAbstractConnectionManagerService* cmService, qint32 connectionId);
 
 };
 

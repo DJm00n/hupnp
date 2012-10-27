@@ -31,6 +31,7 @@
 
 #include <QtCore/QUrl>
 #include <QtCore/QStringList>
+#include <QtCore/QMetaType>
 
 namespace Herqq
 {
@@ -40,6 +41,14 @@ namespace Upnp
 
 namespace Av
 {
+
+static bool registerMetaTypes()
+{
+    qRegisterMetaType<Herqq::Upnp::Av::HRendererConnectionEventInfo>("Herqq::Upnp::Av::HRendererConnectionEventInfo");
+    return true;
+}
+
+static bool regMetaT = registerMetaTypes();
 
 /*******************************************************************************
  * HChannelInformation

@@ -44,11 +44,11 @@ namespace Upnp
 namespace Av
 {
 
-typedef QPair<qint32, HRendererConnection*> Connection;
+typedef QPair<QPair<HAbstractConnectionManagerService*, qint32>, HRendererConnection*> Connection;
 typedef QList<Connection> Connections;
 
 //
-// Implementation details of HMediaManager
+// Implementation details of HRendererConnectionManager
 //
 class HRendererConnectionManagerPrivate
 {

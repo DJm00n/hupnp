@@ -91,7 +91,7 @@ qint32 HTransportSinkService::setAVTransportURI(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    const HRendererConnectionInfo* info = mediaConnection->info();
+    const HRendererConnectionInfo* info = mediaConnection->rendererConnectionInfo();
     if (info->mediaInfo().currentUri() == currentUri)
     {
         return HAvTransportInfo::ContentBusy;
@@ -126,7 +126,7 @@ qint32 HTransportSinkService::setNextAVTransportURI(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    const HRendererConnectionInfo* info = mediaConnection->info();
+    const HRendererConnectionInfo* info = mediaConnection->rendererConnectionInfo();
     if (info->mediaInfo().currentUri() == nextUri)
     {
         return HAvTransportInfo::ContentBusy;
@@ -161,7 +161,7 @@ qint32 HTransportSinkService::getMediaInfo(quint32 instanceId, HMediaInfo* retVa
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->mediaInfo();
+    *retVal = mediaConnection->rendererConnectionInfo()->mediaInfo();
     return UpnpSuccess;
 }
 
@@ -182,7 +182,7 @@ qint32 HTransportSinkService::getTransportInfo(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->transportInfo();
+    *retVal = mediaConnection->rendererConnectionInfo()->transportInfo();
     return UpnpSuccess;
 }
 
@@ -197,7 +197,7 @@ qint32 HTransportSinkService::getPositionInfo(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->positionInfo();
+    *retVal = mediaConnection->rendererConnectionInfo()->positionInfo();
     return UpnpSuccess;
 }
 
@@ -212,7 +212,7 @@ qint32 HTransportSinkService::getDeviceCapabilities(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->deviceCapabilities();
+    *retVal = mediaConnection->rendererConnectionInfo()->deviceCapabilities();
     return UpnpSuccess;
 }
 
@@ -347,7 +347,7 @@ qint32 HTransportSinkService::getTransportSettings(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->transportSettings();
+    *retVal = mediaConnection->rendererConnectionInfo()->transportSettings();
     return UpnpSuccess;
 }
 
@@ -362,7 +362,7 @@ qint32 HTransportSinkService::getCurrentTransportActions(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->currentTransportActions();
+    *retVal = mediaConnection->rendererConnectionInfo()->currentTransportActions();
     return UpnpSuccess;
 }
 
@@ -377,7 +377,7 @@ qint32 HTransportSinkService::getDrmState(
         return HAvTransportInfo::InvalidInstanceId;
     }
 
-    *retVal = mediaConnection->info()->drmState();
+    *retVal = mediaConnection->rendererConnectionInfo()->drmState();
     return UpnpSuccess;
 }
 
@@ -456,7 +456,7 @@ qint32 HTransportSinkService::getStateVariables(
         }
 
         bool ok = false;
-        QString value = mediaConnection->info()->value(svName, &ok);
+        QString value = mediaConnection->rendererConnectionInfo()->value(svName, &ok);
         if (ok)
         {
             writer.writeStartElement("stateVariable");

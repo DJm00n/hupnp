@@ -31,6 +31,7 @@
 //
 
 #include "hrendererconnection_info.h"
+#include "../connectionmanager/hconnectioninfo.h"
 
 #include <HUpnpCore/HFunctor>
 
@@ -79,6 +80,8 @@ public:
 public:
 
     HRendererConnectionInfo* m_info;
+    HConnectionInfo m_connectionInfo;
+    HAbstractConnectionManagerService* m_service;
     HRendererConnection* q_ptr;
     qint32 m_connectionId;
     QHash<QString, ValueSetter> m_valueSetters;

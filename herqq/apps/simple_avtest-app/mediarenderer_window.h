@@ -49,6 +49,7 @@ private:
 protected:
 
     virtual Herqq::Upnp::Av::HRendererConnection* doCreate(
+        Herqq::Upnp::Av::HAbstractConnectionManagerService* service,
         const QString& contentFormat, qint32 connectionId);
 
 public:

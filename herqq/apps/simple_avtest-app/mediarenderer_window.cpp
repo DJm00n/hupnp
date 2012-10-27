@@ -45,8 +45,11 @@ using namespace Herqq::Upnp::Av;
  * RendererConnectionManager
  *******************************************************************************/
 HRendererConnection* RendererConnectionManager::doCreate(
+    HAbstractConnectionManagerService* service,
     const QString& contentFormat, qint32 connectionId)
 {
+    Q_UNUSED(service)
+
     MediaRendererConnectionWindow* mmWindow =
         new MediaRendererConnectionWindow(contentFormat, *m_owner->m_nam, 0);
 
@@ -142,8 +145,11 @@ void MediaRendererWindow::changeEvent(QEvent *e)
 }
 
 void MediaRendererWindow::currentConnectionIDsChanged(
-    HServerStateVariable*, const HStateVariableEvent& event)
+    HServerStateVariable* sv, const HStateVariableEvent& event)
 {
+    HAbstractConnectionManagerService* service =
+        qobject_cast<HAbstractConnectionManagerService*>(sv->parentService());
+
     QStringList connections = event.newValue().toString().split(",");
 
     m_ui->connectionsInfoTable->setRowCount(0);
@@ -159,10 +165,10 @@ void MediaRendererWindow::currentConnectionIDsChanged(
             connectionId->setFlags(Qt::ItemIsEnabled);
             m_ui->connectionsInfoTable->setItem(i, 0, connectionId);
 
-            HRendererConnection* connection = m_mm->connection(cid.toInt());
+            HRendererConnection* connection = m_mm->connection(service, cid.toInt());
             Q_ASSERT(connection);
 
-            const HRendererConnectionInfo* connectionInfo = connection->info();
+            const HRendererConnectionInfo* connectionInfo = connection->rendererConnectionInfo();
 
             bool ok = connect(
                 connectionInfo,

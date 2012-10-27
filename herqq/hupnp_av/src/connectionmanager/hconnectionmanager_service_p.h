@@ -38,6 +38,7 @@
 #include <HUpnpCore/private/hserverservice_p.h>
 
 #include <QtCore/QHash>
+#include <QtCore/QSharedPointer>
 
 namespace Herqq
 {
@@ -61,7 +62,7 @@ private:
 
     HProtocolInfos m_sinkProtocolInfo;
     HProtocolInfos m_sourceProtocolInfo;
-    QHash<quint32, HConnectionInfo> m_currentConnectionIDs;
+    QHash<quint32, QSharedPointer<HConnectionInfo> > m_currentConnectionIDs;
 
     int m_lastConnectionId;
 
@@ -83,7 +84,7 @@ public:
     void removeConnection(qint32 connectionId);
     void addConnection(const HConnectionInfo&);
 
-    void createDefaultConnection(const HProtocolInfo&);
+    QSharedPointer<HConnectionInfo> createDefaultConnection(const HProtocolInfo&);
 
     void setSourceProtocolInfo(const HProtocolInfo&);
     void setSinkProtocolInfo(const HProtocolInfo&);
@@ -103,7 +104,7 @@ public:
         return m_sourceProtocolInfo;
     }
 
-    inline const QHash<quint32, HConnectionInfo>& connectionIds() const
+    inline const QHash<quint32, QSharedPointer<HConnectionInfo> >& connectionIds() const
     {
         return m_currentConnectionIDs;
     }

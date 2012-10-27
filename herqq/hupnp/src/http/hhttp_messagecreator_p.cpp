@@ -215,6 +215,8 @@ QByteArray HHttpMessageCreator::setupData(
         reqHdr.setContentType(contentType);
     }
 
+    reqHdr.setValue("EXT", "");
+
     HProductTokens serverTokens = mi.serverInfo();
     if (!serverTokens.isEmpty())
     {

@@ -90,7 +90,7 @@ qint32 HConnectionManagerService::getCurrentConnectionInfo(
 
     if (m_currentConnectionIDs.contains(connectionId))
     {
-        *oarg = m_currentConnectionIDs.value(connectionId);
+        *oarg = *m_currentConnectionIDs.value(connectionId);
         return UpnpSuccess;
     }
 
@@ -108,21 +108,26 @@ void HConnectionManagerService::addConnection(const HConnectionInfo& connection)
     Q_ASSERT(connection.isValid());
     if (!m_currentConnectionIDs.contains(connection.connectionId()))
     {
-        m_currentConnectionIDs.insert(connection.connectionId(), connection);
+        m_currentConnectionIDs.insert(
+            connection.connectionId(),
+            QSharedPointer<HConnectionInfo>(new HConnectionInfo(connection)));
     }
     updateConnectionsList();
 }
 
-void HConnectionManagerService::createDefaultConnection(
+QSharedPointer<HConnectionInfo> HConnectionManagerService::createDefaultConnection(
     const HProtocolInfo& pinfo)
 {
     Q_ASSERT(m_currentConnectionIDs.size() == 0);
 
-    HConnectionInfo connectionInfo(0, pinfo);
-    connectionInfo.setDirection(HConnectionManagerInfo::DirectionOutput);
-    connectionInfo.setStatus(HConnectionManagerInfo::StatusOk);
+    QSharedPointer<HConnectionInfo> connectionInfo =
+        QSharedPointer<HConnectionInfo>(new HConnectionInfo(0, pinfo));
+
+    connectionInfo->setDirection(HConnectionManagerInfo::DirectionOutput);
+    connectionInfo->setStatus(HConnectionManagerInfo::StatusOk);
 
     m_currentConnectionIDs.insert(0, connectionInfo);
+    return connectionInfo;
 }
 
 void HConnectionManagerService::setSourceProtocolInfo(const HProtocolInfo& arg)

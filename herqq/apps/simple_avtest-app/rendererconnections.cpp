@@ -281,7 +281,7 @@ void DefaultRendererConnection::tick(qint64 time)
     QTime tmp;
     tmp = tmp.addMSecs(time);
     HDuration position(tmp);
-    writableInfo()->setRelativeTimePosition(position);
+    writableRendererConnectionInfo()->setRelativeTimePosition(position);
 }
 
 void DefaultRendererConnection::totalTimeChanged(qint64 time)
@@ -289,7 +289,7 @@ void DefaultRendererConnection::totalTimeChanged(qint64 time)
     QTime tmp;
     tmp = tmp.addMSecs(time);
     HDuration duration(tmp);
-    writableInfo()->setCurrentTrackDuration(duration);
+    writableRendererConnectionInfo()->setCurrentTrackDuration(duration);
 }
 
 void DefaultRendererConnection::stateChanged(
@@ -314,7 +314,7 @@ void DefaultRendererConnection::stateChanged(
             }
             m_mediaObject.play();
         }
-        writableInfo()->setTransportState(HTransportState::Playing);
+        writableRendererConnectionInfo()->setTransportState(HTransportState::Playing);
         break;
 
     case Phonon::StoppedState:
@@ -322,7 +322,7 @@ void DefaultRendererConnection::stateChanged(
         {
             m_mediaObject.seek(0);
         }
-        writableInfo()->setTransportState(HTransportState::Stopped);
+        writableRendererConnectionInfo()->setTransportState(HTransportState::Stopped);
         break;
 
     case Phonon::PausedState:
@@ -335,15 +335,15 @@ void DefaultRendererConnection::stateChanged(
             }
         }
 
-        writableInfo()->setTransportState(HTransportState::PausedPlayback);
+        writableRendererConnectionInfo()->setTransportState(HTransportState::PausedPlayback);
         break;
 
     case Phonon::LoadingState:
-        writableInfo()->setTransportState(HTransportState::Transitioning);
+        writableRendererConnectionInfo()->setTransportState(HTransportState::Transitioning);
         break;
 
     case Phonon::BufferingState:
-        writableInfo()->setTransportState(HTransportState::Transitioning);
+        writableRendererConnectionInfo()->setTransportState(HTransportState::Transitioning);
         break;
 
     default:
@@ -358,7 +358,7 @@ qint32 DefaultRendererConnection::doPlay(const QString& arg)
 
     qint32 retVal = UpnpSuccess;
 
-    switch(writableInfo()->transportState().type())
+    switch(writableRendererConnectionInfo()->transportState().type())
     {
     case HTransportState::PausedPlayback:
     case HTransportState::Stopped:
@@ -382,7 +382,7 @@ qint32 DefaultRendererConnection::doPlay(const QString& arg)
 qint32 DefaultRendererConnection::doStop()
 {
     m_mediaObject.stop();
-    writableInfo()->setRelativeTimePosition(HDuration());
+    writableRendererConnectionInfo()->setRelativeTimePosition(HDuration());
     return UpnpSuccess;
 }
 
@@ -438,7 +438,7 @@ qint32 DefaultRendererConnection::doSetResource(
         }
     }
 
-    writableInfo()->setRelativeTimePosition(HDuration());
+    writableRendererConnectionInfo()->setRelativeTimePosition(HDuration());
 
     return UpnpSuccess;
 }
