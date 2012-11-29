@@ -76,6 +76,12 @@ public:
 
     virtual qint32 connectionComplete(qint32 connectionId);
 
+    virtual qint32 getProtocolInfo(HProtocolInfoResult*);
+
+    virtual qint32 getCurrentConnectionIDs(QList<quint32>* retVal);
+    virtual qint32 getCurrentConnectionInfo(
+        qint32 connectionId, HConnectionInfo* retVal);
+
     qint32 nextId();
 };
 

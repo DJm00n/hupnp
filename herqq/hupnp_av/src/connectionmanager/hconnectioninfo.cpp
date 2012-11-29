@@ -210,6 +210,11 @@ void HConnectionInfo::setStatus(HConnectionManagerInfo::ConnectionStatus arg)
     h_ptr->m_status = arg;
 }
 
+void HConnectionInfo::setProtocolInfo(const HProtocolInfo& protocolInfo)
+{
+    h_ptr->m_protocolInfo = protocolInfo;
+}
+
 bool operator==(const HConnectionInfo& obj1, const HConnectionInfo& obj2)
 {
     return obj1.avTransportId() == obj2.avTransportId() &&

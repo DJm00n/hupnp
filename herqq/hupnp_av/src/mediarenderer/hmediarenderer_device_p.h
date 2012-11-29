@@ -112,18 +112,17 @@ public:
     HMediaRendererDevice(const HMediaRendererDeviceConfiguration& configuration);
     virtual ~HMediaRendererDevice();
 
+    HMediaRendererDeviceConfiguration* configuration() const;
+
     virtual HRenderingControlService* renderingControl() const;
     virtual HConnectionManagerSinkService* connectionManager() const;
     virtual HTransportSinkService* avTransport() const;
 
-    qint32 prepareForConnection(
-        const QString& contentFormat, qint32 connectionId,
-        qint32* avTransportId, qint32* rcsId);
+    qint32 prepareForConnection(HConnectionInfo*);
 
     qint32 connectionComplete(qint32 connectionId);
 
-    HRendererConnection* createRendererConnection(
-        const QString& contentFormat, qint32 connectionId);
+    HRendererConnection* createRendererConnection(const HConnectionInfo&);
 
     HRendererConnection* findConnectionByAvTransportId(qint32 id) const;
     HRendererConnection* findConnectionByRcsId(qint32 id) const;

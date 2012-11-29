@@ -80,10 +80,9 @@ public:
 public:
 
     HRendererConnectionInfo* m_info;
-    HConnectionInfo m_connectionInfo;
+    HConnectionInfo* m_connectionInfo;
     HAbstractConnectionManagerService* m_service;
     HRendererConnection* q_ptr;
-    qint32 m_connectionId;
     QHash<QString, ValueSetter> m_valueSetters;
 
     HRendererConnectionPrivate();

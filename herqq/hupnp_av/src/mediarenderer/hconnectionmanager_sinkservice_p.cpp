@@ -27,6 +27,7 @@
 
 #include "../connectionmanager/hconnectioninfo.h"
 #include "../connectionmanager/hprepareforconnection_result.h"
+#include "../connectionmanager/hprotocolinforesult.h"
 
 namespace Herqq
 {
@@ -100,28 +101,27 @@ qint32 HConnectionManagerSinkService::prepareForConnection(
     }
 
     qint32 connectionId = nextId();
-    qint32 avTransportId, rcsId;
-    qint32 errCode = m_owner->prepareForConnection(
-        remoteProtocolInfo.contentFormat(), connectionId, &avTransportId, &rcsId);
-
-    if (errCode != UpnpSuccess)
-    {
-        return errCode;
-    }
 
     HConnectionInfo connectionInfo(
-        connectionId, avTransportId, rcsId,
-        remoteProtocolInfo, peerConnectionManager, peerConnectionId,
+        connectionId,
+        0,
+        0,
+        remoteProtocolInfo,
+        peerConnectionManager,
+        peerConnectionId,
         HConnectionManagerInfo::DirectionInput,
         HConnectionManagerInfo::StatusOk);
 
-    result->setAvTransportId(avTransportId);
-    result->setConnectionId(connectionId);
-    result->setRcsId(rcsId);
+    qint32 errCode = m_owner->prepareForConnection(&connectionInfo);
 
-    addConnection(connectionInfo);
+    if (errCode == UpnpSuccess)
+    {
+        result->setAvTransportId(connectionInfo.avTransportId());
+        result->setConnectionId(connectionInfo.connectionId());
+        result->setRcsId(connectionInfo.rcsId());
+    }
 
-    return UpnpSuccess;
+    return errCode;
 }
 
 qint32 HConnectionManagerSinkService::connectionComplete(qint32 connectionId)
@@ -137,9 +137,72 @@ qint32 HConnectionManagerSinkService::connectionComplete(qint32 connectionId)
     }
 
     m_owner->connectionComplete(connectionId);
-    removeConnection(connectionId);
 
-    return UpnpSuccess;
+    HRendererConnectionManager* manager =
+        m_owner->configuration()->rendererConnectionManager();
+
+    if (manager->removeConnection(this, connectionId))
+    {
+        return UpnpSuccess;
+    }
+
+    return UpnpInvalidArgs;
+}
+
+qint32 HConnectionManagerSinkService::getProtocolInfo(
+    HProtocolInfoResult* retVal)
+{
+    if (retVal)
+    {
+        retVal->setSource(sourceProtocolInfo());
+        retVal->setSink(sinkProtocolInfo());
+        return UpnpSuccess;
+    }
+
+    return UpnpInvalidArgs;
+}
+
+qint32 HConnectionManagerSinkService::getCurrentConnectionIDs(
+    QList<quint32>* retVal)
+{
+    if (retVal)
+    {
+        HRendererConnectionManager* manager =
+            m_owner->configuration()->rendererConnectionManager();
+
+        QList<HRendererConnection*> connections = manager->connections(this);
+
+        retVal->clear();
+
+        foreach(HRendererConnection* connection, connections)
+        {
+            retVal->append(connection->connectionInfo()->connectionId());
+        }
+
+        return UpnpSuccess;
+    }
+
+    return UpnpInvalidArgs;
+}
+
+qint32 HConnectionManagerSinkService::getCurrentConnectionInfo(
+    qint32 connectionId, HConnectionInfo* retVal)
+{
+    if (retVal)
+    {
+        HRendererConnectionManager* manager =
+            m_owner->configuration()->rendererConnectionManager();
+
+        HRendererConnection* connection = manager->connection(this, connectionId);
+
+        if (connection)
+        {
+            *retVal = *connection->connectionInfo();
+            return UpnpSuccess;
+        }
+    }
+
+    return UpnpInvalidArgs;
 }
 
 qint32 HConnectionManagerSinkService::nextId()

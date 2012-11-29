@@ -30,6 +30,8 @@
 #include <HUpnpCore/HServerStateVariable>
 #include <HUpnpCore/HDeviceHostConfiguration>
 
+#include <HUpnpAv/HConnectionInfo>
+#include <HUpnpAv/HProtocolInfo>
 #include <HUpnpAv/HTransportState>
 #include <HUpnpAv/HAvDeviceModelCreator>
 #include <HUpnpAv/HAbstractMediaRendererDevice>
@@ -46,12 +48,15 @@ using namespace Herqq::Upnp::Av;
  *******************************************************************************/
 HRendererConnection* RendererConnectionManager::doCreate(
     HAbstractConnectionManagerService* service,
-    const QString& contentFormat, qint32 connectionId)
+    HConnectionInfo* connectionInfo)
 {
     Q_UNUSED(service)
 
+    QString contentFormat = connectionInfo->protocolInfo().contentFormat();
+
     MediaRendererConnectionWindow* mmWindow =
-        new MediaRendererConnectionWindow(contentFormat, *m_owner->m_nam, 0);
+        new MediaRendererConnectionWindow(
+            contentFormat, *m_owner->m_nam, 0);
 
     QString cf =
         contentFormat == "*" || contentFormat.isEmpty() ?
@@ -64,7 +69,7 @@ HRendererConnection* RendererConnectionManager::doCreate(
 
     mmWindow->setWindowTitle(QString(
         "Media Renderer Connection #%1, content format: [%2]").arg(
-            QString::number(connectionId), cf));
+            QString::number(connectionInfo->connectionId()), cf));
 
     mmWindow->show();
 
@@ -198,7 +203,7 @@ void MediaRendererWindow::propertyChanged(
     for(int i = 0; i < m_ui->connectionsInfoTable->rowCount(); ++i)
     {
         QTableWidgetItem* cid = m_ui->connectionsInfoTable->item(i, 0);
-        if (cid->data(Qt::DisplayRole).toInt() == source->connection()->connectionId())
+        if (cid->data(Qt::DisplayRole).toInt() == source->connection()->connectionInfo()->connectionId())
         {
             QTableWidgetItem* transportStatus = m_ui->connectionsInfoTable->item(i, 1);
             transportStatus->setText(eventInfo.newValue());

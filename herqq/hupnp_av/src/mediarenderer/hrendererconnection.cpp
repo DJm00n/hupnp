@@ -39,6 +39,8 @@
 #include "../renderingcontrol/hchannel.h"
 #include "../renderingcontrol/hrenderingcontrol_info.h"
 
+#include "../common/hprotocolinfo.h"
+#include "../connectionmanager/hconnectioninfo.h"
 #include "../connectionmanager/habstractconnectionmanager_service.h"
 
 #include "../common/hstoragemedium.h"
@@ -65,7 +67,7 @@ namespace Av
  * HRendererConnectionPrivate
  ******************************************************************************/
 HRendererConnectionPrivate::HRendererConnectionPrivate() :
-    m_info(0), m_connectionInfo(), m_service(0), q_ptr(0), m_connectionId(-1), m_valueSetters()
+    m_info(0), m_connectionInfo(0), m_service(0), q_ptr(0), m_valueSetters()
 {
     m_valueSetters.insert("Brightness", ValueSetter(this, &HRendererConnectionPrivate::setBrightness));
     m_valueSetters.insert("Contrast", ValueSetter(this, &HRendererConnectionPrivate::setContrast));
@@ -217,10 +219,18 @@ HRendererConnection::~HRendererConnection()
     delete h_ptr;
 }
 
-void HRendererConnection::init(qint32 connectionId)
+void HRendererConnection::init(
+    HAbstractConnectionManagerService* service,
+    HConnectionInfo* connectionInfo)
 {
-    Q_ASSERT(h_ptr->m_connectionId == -1);
-    h_ptr->m_connectionId = connectionId;
+    Q_ASSERT(!h_ptr->m_service);
+    Q_ASSERT(!h_ptr->m_connectionInfo);
+
+    Q_ASSERT(service);
+    Q_ASSERT(connectionInfo);
+
+    h_ptr->m_service = service;
+    h_ptr->m_connectionInfo = connectionInfo;
 }
 
 void HRendererConnection::dispose()
@@ -228,21 +238,9 @@ void HRendererConnection::dispose()
     emit disposed(this);
 }
 
-void HRendererConnection::setService(HAbstractConnectionManagerService* service)
-{
-    h_ptr->m_service = service;
-
-    service->getCurrentConnectionInfo(connectionId(), &h_ptr->m_connectionInfo);
-}
-
 HAbstractConnectionManagerService* HRendererConnection::service() const
 {
     return h_ptr->m_service;
-}
-
-qint32 HRendererConnection::connectionId() const
-{
-    return h_ptr->m_connectionId;
 }
 
 qint32 HRendererConnection::doPause()
@@ -329,9 +327,28 @@ HRendererConnectionInfo* HRendererConnection::writableRendererConnectionInfo()
     return h_ptr->m_info;
 }
 
-HConnectionInfo* HRendererConnection::writableConnectionInfo()
+void HRendererConnection::setContentFormat(const QString& contentFormats)
 {
-    return &h_ptr->m_connectionInfo;
+    HProtocolInfo pi = h_ptr->m_connectionInfo->protocolInfo();
+    pi.setContentFormat(contentFormats);
+    h_ptr->m_connectionInfo->setProtocolInfo(pi);
+}
+
+void HRendererConnection::setAdditionalInfo(const QString& additionalInfo)
+{
+    HProtocolInfo pi = h_ptr->m_connectionInfo->protocolInfo();
+    pi.setAdditionalInfo(additionalInfo);
+    h_ptr->m_connectionInfo->setProtocolInfo(pi);
+}
+
+void HRendererConnection::setConnectionStatus(
+    HConnectionManagerInfo::ConnectionStatus connectionStatus)
+{
+    h_ptr->m_connectionInfo->setStatus(connectionStatus);
+}
+
+void HRendererConnection::finalizeInit()
+{
 }
 
 const HRendererConnectionInfo* HRendererConnection::rendererConnectionInfo() const
@@ -341,7 +358,7 @@ const HRendererConnectionInfo* HRendererConnection::rendererConnectionInfo() con
 
 const HConnectionInfo* HRendererConnection::connectionInfo() const
 {
-    return &h_ptr->m_connectionInfo;
+    return h_ptr->m_connectionInfo;
 }
 
 qint32 HRendererConnection::play(const QString& speed)

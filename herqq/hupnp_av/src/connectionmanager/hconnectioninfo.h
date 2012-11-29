@@ -174,6 +174,8 @@ public:
      *
      * \return The protocol-related information, which
      * describes the capabilities of the connection.
+     *
+     * \sa setProtocolInfo()
      */
     HProtocolInfo protocolInfo() const;
 
@@ -275,6 +277,17 @@ public:
      * \sa status()
      */
     void setStatus(HConnectionManagerInfo::ConnectionStatus arg);
+
+    /*!
+     * \brief Specifies the protocol-related information, which
+     * describes the capabilities of the connection.
+     *
+     * \param protocolInfo specifies the protocol-related information, which
+     * describes the capabilities of the connection.
+     *
+     * \sa protocolInfo()
+     */
+    void setProtocolInfo(const HProtocolInfo& protocolInfo);
 };
 
 /*!

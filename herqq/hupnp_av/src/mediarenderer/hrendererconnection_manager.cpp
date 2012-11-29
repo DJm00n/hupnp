@@ -24,6 +24,8 @@
 
 #include "hrendererconnection.h"
 
+#include "../connectionmanager/hconnectioninfo.h"
+
 namespace Herqq
 {
 
@@ -70,23 +72,24 @@ void HRendererConnectionManager::destroyed_(QObject* obj)
     }
 }
 
-HRendererConnection* HRendererConnectionManager::create(
+HRendererConnection* HRendererConnectionManager::createAndAdd(
     HAbstractConnectionManagerService* cmService,
-    const QString& contentFormat, qint32 connectionId)
+    const HConnectionInfo& connectionInfo)
 {
-    if (connection(cmService, connectionId))
+    if (connection(cmService, connectionInfo.connectionId()))
     {
         return 0;
     }
 
-    HRendererConnection* connection = doCreate(cmService, contentFormat, connectionId);
+    HConnectionInfo* copy = new HConnectionInfo(connectionInfo);
+    HRendererConnection* connection = doCreate(cmService, copy);
     if (!connection)
     {
         return 0;
     }
     else
     {
-        connection->setService(cmService);
+        connection->init(cmService, copy);
         if (!connection->parent())
         {
             connection->setParent(this);
@@ -96,13 +99,31 @@ HRendererConnection* HRendererConnectionManager::create(
     bool ok = connect(connection, SIGNAL(destroyed(QObject*)), this, SLOT(destroyed_(QObject*)));
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    connection->init(connectionId);
-    h_ptr->m_connections.append(
-        qMakePair(qMakePair(cmService, connectionId), connection));
+    connection->finalizeInit();
 
-    emit connectionAdded(cmService, connection->connectionId());
+    h_ptr->m_connections.append(
+        qMakePair(qMakePair(cmService, connectionInfo.connectionId()), connection));
+
+    emit connectionAdded(cmService, connectionInfo.connectionId());
 
     return connection;
+}
+
+bool HRendererConnectionManager::removeConnection(
+    const HAbstractConnectionManagerService* cmService, qint32 cid)
+{
+    Connections::iterator it;
+    for(it = h_ptr->m_connections.begin(); it != h_ptr->m_connections.end(); ++it)
+    {
+        Connection connection = *it;
+        if (connection.first.first == cmService && connection.first.second == cid)
+        {
+            h_ptr->m_connections.erase(it);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 HRendererConnection* HRendererConnectionManager::connection(
@@ -116,6 +137,22 @@ HRendererConnection* HRendererConnectionManager::connection(
         }
     }
     return 0;
+}
+
+QList<HRendererConnection*> HRendererConnectionManager::connections(
+    HAbstractConnectionManagerService* cmService) const
+{
+    QList<HRendererConnection*> retVal;
+
+    foreach(Connection connection, h_ptr->m_connections)
+    {
+        if (connection.first.first == cmService)
+        {
+            retVal.append(connection.second);
+        }
+    }
+
+    return retVal;
 }
 
 bool HRendererConnectionManager::connectionComplete(

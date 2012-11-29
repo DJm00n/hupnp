@@ -71,12 +71,11 @@ protected:
     /*!
      * Creates a new HRendererConnection instance.
      *
-     * \param contentFormat specifies the MIME type(s) the connection is supposed
-     * to handle. This should be either a valid MIME type or "*" when the
-     * connection is supposed to handle any type of data.
+     * \param cmService specifies the Connection Manager to which
+     * the connection is to be created.
      *
-     * \param connectionId specifies the connection ID usually issued by a
-     * ConnectionManager to which this instance is associated.
+     * \param connectionInfo specifies information of the connection
+     * to be created.
      *
      * \return a new HRendererConnection instance or a null pointer if no
      * instance could be created.
@@ -89,7 +88,7 @@ protected:
      */
     virtual HRendererConnection* doCreate(
         HAbstractConnectionManagerService* cmService,
-        const QString& contentFormat, qint32 connectionId) = 0;
+        HConnectionInfo* connectionInfo) = 0;
 
 public:
 
@@ -104,19 +103,29 @@ public:
     /*!
      * Creates a new HRendererConnection instance.
      *
-     * \param contentFormat specifies the MIME type(s) the connection is supposed
-     * to handle. This should be either a valid MIME type or "*" when the
-     * connection is supposed to handle any type of data.
+     * \param cmService specifies the Connection Manager to which
+     * the connection is to be created.
      *
-     * \param connectionId specifies the connection ID usually issued by a
-     * ConnectionManager to which this instance is associated.
+     * \param connectionInfo specifies information of the connection
+     * to be created.
      *
      * \return a new HRendererConnection instance or a null pointer if no
      * instance could be created.
      */
-    HRendererConnection* create(
+    HRendererConnection* createAndAdd(
         HAbstractConnectionManagerService* cmService,
-        const QString& contentFormat, qint32 connectionId);
+        const HConnectionInfo& connectionInfo);
+
+    /*!
+     * Attempts to remove the specified connection from the manager instance.
+     *
+     * \param cmService specifies the Connection Manager which owns the connection.
+     *
+     * \param id specifies the connection ID to be removed.
+     *
+     */
+    bool removeConnection(
+        const HAbstractConnectionManagerService* cmService, qint32 id);
 
     /*!
      * Returns an HRendererConnection instance managed by this manager that
@@ -129,6 +138,13 @@ public:
      */
     HRendererConnection* connection(
         HAbstractConnectionManagerService* cmService, qint32 cid) const;
+
+    /*!
+     * Returns the connections owned by the specified Connection Manager.
+     *
+     * \return the connections owned by the specified Connection Manager.
+     */
+    QList<HRendererConnection*> connections(HAbstractConnectionManagerService* cmService) const;
 
     /*!
      * Instructs the instance to "dispose" a particular renderer connection and

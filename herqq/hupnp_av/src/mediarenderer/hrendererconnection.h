@@ -24,6 +24,7 @@
 
 #include <HUpnpAv/HUpnpAv>
 #include <HUpnpAv/HRendererConnectionInfo>
+#include <HUpnpAv/HConnectionManagerInfo>
 
 #include <QtCore/QObject>
 
@@ -69,10 +70,9 @@ private:
 
     HRendererConnectionPrivate* h_ptr;
 
-    void init(qint32 connectionId);
-    void dispose();
+    void init(HAbstractConnectionManagerService*, HConnectionInfo*);
 
-    void setService(HAbstractConnectionManagerService*);
+    void dispose();
 
 protected:
 
@@ -346,13 +346,32 @@ protected:
     HRendererConnectionInfo* writableRendererConnectionInfo();
 
     /*!
-     * \brief Returns an object for setting and getting information about the
-     * connection managed by the UPnP A/V ConnectionManager.
+     * \brief Sets the content formats the connection supports.
      *
-     * \return an object for setting and getting information about the
-     * connection managed by the UPnP A/V ConnectionManager.
+     * \param contentFormats specifies the content formats the connection supports.
      */
-    HConnectionInfo* writableConnectionInfo();
+    void setContentFormat(const QString& contentFormats);
+
+    /*!
+     * Sets the additional information element of the protocol info.
+     *
+     * \param additionalInfo specifies the additional information element of the
+     * protocol info.
+     */
+    void setAdditionalInfo(const QString& additionalInfo);
+
+    /*!
+     * \brief Specifies the status of the connection.
+     *
+     * \param arg specifies the status of the connection.
+     */
+    void setConnectionStatus(HConnectionManagerInfo::ConnectionStatus connectionStatus);
+
+    /*!
+     * Provides an opportunity to do post-construction initialization routines
+     * in derived classes.
+     */
+    virtual void finalizeInit();
 
 public:
 
@@ -360,15 +379,6 @@ public:
      * \brief Destroys the instance.
      */
     virtual ~HRendererConnection() = 0;
-
-    /*!
-     * Returns the ID of the ConnectionManager connection with which this
-     * instance is associated.
-     *
-     * \return the ID of the ConnectionManager connection with which this
-     * instance is associated.
-     */
-    qint32 connectionId() const;
 
     /*!
      * \brief Returns an object for retrieving

@@ -23,6 +23,7 @@
 #include "hrendererconnection_manager.h"
 
 #include "../renderingcontrol/hchannel.h"
+#include "../connectionmanager/hconnectionmanager_id.h"
 
 #include <HUpnpCore/HStateVariablesSetupData>
 
@@ -185,7 +186,7 @@ void HMediaRendererDevice::propertyChanged(
 {
     HConnectionInfo info;
     qint32 retVal = connectionManager()->getCurrentConnectionInfo(
-        source->connection()->connectionId(), &info);
+        source->connection()->connectionInfo()->connectionId(), &info);
 
     Q_ASSERT(retVal == UpnpSuccess); Q_UNUSED(retVal)
 
@@ -297,7 +298,15 @@ bool HMediaRendererDevice::finalizeInit(QString* errDescription)
         // ID zero. This connection handles whatever the Renderer is supposed to handle,
         // and this is why we have to create the default RendererConnection here:
 
-        HRendererConnection* mediaConnection = createRendererConnection("*", 0);
+        HProtocolInfo pinfo("http-get:*:*:*");
+
+        HConnectionInfo connectionInfo(0, pinfo);
+        connectionInfo.setAvTransportId(0);
+        connectionInfo.setRcsId(0);
+
+        HRendererConnection* mediaConnection =
+            createRendererConnection(connectionInfo);
+
         if (!mediaConnection)
         {
             if (errDescription)
@@ -306,14 +315,6 @@ bool HMediaRendererDevice::finalizeInit(QString* errDescription)
             }
             return false;
         }
-
-        HProtocolInfo pinfo("http-get:*:*:*");
-
-        HConnectionInfo connectionInfo(0, pinfo);
-        connectionInfo.setAvTransportId(0);
-        connectionInfo.setRcsId(0);
-
-        connectionManager()->addConnection(connectionInfo);
     }
 
     m_timer.start();
@@ -321,23 +322,20 @@ bool HMediaRendererDevice::finalizeInit(QString* errDescription)
     return true;
 }
 
-qint32 HMediaRendererDevice::prepareForConnection(
-    const QString& contentFormat, qint32 connectionId, qint32* avTransportId,
-    qint32* rcsId)
+qint32 HMediaRendererDevice::prepareForConnection(HConnectionInfo* connectionInfo)
 {
-    Q_ASSERT(rcsId);
-    Q_ASSERT(avTransportId);
+    Q_ASSERT(connectionInfo);
+
+    connectionInfo->setAvTransportId(avTransport()->nextId());
+    connectionInfo->setRcsId(renderingControl()->nextId());
 
     HRendererConnection* rendererConnection =
-        createRendererConnection(contentFormat, connectionId);
+        createRendererConnection(*connectionInfo);
 
     if (!rendererConnection)
     {
         return HConnectionManagerInfo::LocalRestrictions;
     }
-
-    *avTransportId = avTransport()->nextId();
-    *rcsId = renderingControl()->nextId();
 
     return UpnpSuccess;
 }
@@ -350,13 +348,13 @@ qint32 HMediaRendererDevice::connectionComplete(qint32 connectionId)
 }
 
 HRendererConnection* HMediaRendererDevice::createRendererConnection(
-    const QString& contentFormat, qint32 connectionId)
+    const HConnectionInfo& connectionInfo)
 {
-    Q_ASSERT(connectionId >= 0);
+    Q_ASSERT(connectionInfo.isValid());
 
     HRendererConnection* connection =
-        m_configuration->rendererConnectionManager()->create(
-            connectionManager(), contentFormat, connectionId);
+        m_configuration->rendererConnectionManager()->createAndAdd(
+            connectionManager(), connectionInfo);
 
     if (connection)
     {
@@ -420,6 +418,11 @@ HRendererConnection* HMediaRendererDevice::findConnectionByRcsId(qint32 id) cons
     }
 
     return 0;
+}
+
+HMediaRendererDeviceConfiguration* HMediaRendererDevice::configuration() const
+{
+    return m_configuration;
 }
 
 HRenderingControlService* HMediaRendererDevice::renderingControl() const
