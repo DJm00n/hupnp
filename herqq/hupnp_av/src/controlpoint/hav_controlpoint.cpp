@@ -87,19 +87,7 @@ HAvControlPointPrivate::~HAvControlPointPrivate()
 bool HAvControlPointPrivate::acceptResource(
     const HDiscoveryType& usn, const HEndpoint& /*source*/)
 {
-    HResourceType resourceType = usn.resourceType();
-    if ((m_configuration->interestingDeviceTypes() & HAvControlPointConfiguration::MediaServer) &&
-        resourceType.compare(HMediaServerInfo::supportedDeviceType(), HResourceType::Inclusive))
-    {
-        return true;
-    }
-    else if ((m_configuration->interestingDeviceTypes() & HAvControlPointConfiguration::MediaRenderer) &&
-             resourceType.compare(HMediaRendererInfo::supportedDeviceType(), HResourceType::Inclusive))
-    {
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 void HAvControlPointPrivate::rootDeviceOnline_(HClientDevice* device)

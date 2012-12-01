@@ -56,6 +56,12 @@ private:
 
     HMediaRendererDevice* m_owner;
 
+private slots:
+
+    void connectionAdded(
+        Herqq::Upnp::Av::HAbstractConnectionManagerService* cmService,
+        const Herqq::Upnp::Av::HConnectionInfo& connectionInfo);
+
 protected:
 
     virtual bool finalizeInit(QString* errDescription);

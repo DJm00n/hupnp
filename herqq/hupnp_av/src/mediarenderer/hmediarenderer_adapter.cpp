@@ -154,8 +154,6 @@ void HMediaRendererAdapterPrivate::connectSignals()
 HMediaRendererAdapter::HMediaRendererAdapter(QObject* parent) :
     HClientDeviceAdapter(*new HMediaRendererAdapterPrivate(), parent)
 {
-    HAvDeviceModelInfoProvider infoProvider;
-    setDeviceModelInfoProvider(infoProvider);
 }
 
 HMediaRendererAdapter::~HMediaRendererAdapter()

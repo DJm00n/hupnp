@@ -68,9 +68,7 @@ friend class RendererConnectionManager;
 
 private Q_SLOTS:
 
-    void currentConnectionIDsChanged(
-        Herqq::Upnp::HServerStateVariable*,
-        const Herqq::Upnp::HStateVariableEvent&);
+    void currentConnectionIDsChanged(Herqq::Upnp::HServerStateVariable*);
 
     void propertyChanged(
         Herqq::Upnp::Av::HRendererConnectionInfo*,

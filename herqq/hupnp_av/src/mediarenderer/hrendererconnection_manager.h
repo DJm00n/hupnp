@@ -23,6 +23,7 @@
 #define HRENDERERCONNECTION_MANAGER_H_
 
 #include <HUpnpAv/HUpnpAv>
+#include <HUpnpAv/HConnectionInfo>
 
 #include <QtCore/QObject>
 
@@ -168,13 +169,14 @@ Q_SIGNALS:
      * This signal is emitted when a new HRendererConnection has been added
      * into the control of this instance.
      *
-     * \param connectionId specifies the connection ID of the new HRendererConnection
+     * \param connectionInfo specifies information of the new HRendererConnection
      * instance.
      *
      * \sa connectionRemoved()
      */
     void connectionAdded(
-        Herqq::Upnp::Av::HAbstractConnectionManagerService* cmService, qint32 connectionId);
+        Herqq::Upnp::Av::HAbstractConnectionManagerService* cmService,
+        Herqq::Upnp::Av::HConnectionInfo connectionInfo);
 
     /*!
      * This signal is emitted when a HRendererConnection has been removed

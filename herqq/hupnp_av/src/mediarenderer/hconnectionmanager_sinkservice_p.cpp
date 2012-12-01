@@ -59,7 +59,28 @@ bool HConnectionManagerSinkService::finalizeInit(QString* errDescription)
         setSinkProtocolInfo(HProtocolInfo("http-get:*:*:*"));
     }
 
+    HMediaRendererDevice* parentDev = qobject_cast<HMediaRendererDevice*>(parent());
+
+    HRendererConnectionManager* manager =
+        parentDev->configuration()->rendererConnectionManager();
+
+    bool ok = connect(manager,
+                      SIGNAL(connectionAdded(Herqq::Upnp::Av::HAbstractConnectionManagerService*, Herqq::Upnp::Av::HConnectionInfo)),
+                      this,
+                      SLOT(connectionAdded(Herqq::Upnp::Av::HAbstractConnectionManagerService*, Herqq::Upnp::Av::HConnectionInfo)));
+    Q_ASSERT(ok); Q_UNUSED(ok)
+
     return true;
+}
+
+void HConnectionManagerSinkService::connectionAdded(
+    HAbstractConnectionManagerService* cmService,
+    const Herqq::Upnp::Av::HConnectionInfo& connectionInfo)
+{
+    if (cmService == this)
+    {
+        addConnection(connectionInfo);
+    }
 }
 
 bool HConnectionManagerSinkService::init(HMediaRendererDevice* owner)

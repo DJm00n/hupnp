@@ -282,7 +282,7 @@ void ControlPointNavigator::objectsBrowsed(
             CdsContainerItem* rootItem =
                 static_cast<CdsContainerItem*>(cdsItem->child(0));
 
-            if (hasContainerItem(rootItem, container))
+            if (!rootItem || hasContainerItem(rootItem, container))
             {
                 continue;
             }

@@ -24,6 +24,7 @@
 #include "ui_mediarenderer_connectionwindow.h"
 
 #include <QtCore/QUrl>
+#include <QtGui/QCloseEvent>
 #include <QtNetwork/QNetworkAccessManager>
 
 using namespace Herqq::Upnp::Av;
@@ -54,7 +55,7 @@ bool isText(const QString& contentFormat)
 MediaRendererConnectionWindow::MediaRendererConnectionWindow(
     const QString& contentFormat, QNetworkAccessManager& nam, QWidget* parent) :
         QWidget(parent),
-            ui(new Ui::MediaRendererConnectionWindow()), m_mm(0),
+            ui(new Ui::MediaRendererConnectionWindow()), m_rendererConnection(0),
             m_nam(nam)
 {
     ui->setupUi(this);
@@ -62,28 +63,28 @@ MediaRendererConnectionWindow::MediaRendererConnectionWindow(
 
     if (isAudio(contentFormat))
     {
-        m_mm = new DefaultRendererConnection(
+        m_rendererConnection = new DefaultRendererConnection(
             DefaultRendererConnection::AudioOnly, ui->scrollAreaWidgetContents);
     }
     else if (isVideo(contentFormat))
     {
-        m_mm = new DefaultRendererConnection(
+        m_rendererConnection = new DefaultRendererConnection(
             DefaultRendererConnection::AudioVideo, ui->scrollAreaWidgetContents);
     }
     else if (isImage(contentFormat))
     {
-        m_mm = new RendererConnectionForImagesAndText(
+        m_rendererConnection = new RendererConnectionForImagesAndText(
             RendererConnectionForImagesAndText::Images, m_nam, ui->scrollAreaWidgetContents);
     }
     else if (isText(contentFormat))
     {
-        m_mm = new RendererConnectionForImagesAndText(
+        m_rendererConnection = new RendererConnectionForImagesAndText(
             RendererConnectionForImagesAndText::Text, m_nam, ui->scrollAreaWidgetContents);
     }
     else if (contentFormat == "*" || contentFormat.isEmpty() ||
              contentFormat == "application/octet-stream")
     {
-        m_mm = new DefaultRendererConnection(
+        m_rendererConnection = new DefaultRendererConnection(
             DefaultRendererConnection::Unknown, ui->scrollAreaWidgetContents);
     }
     else
@@ -93,23 +94,23 @@ MediaRendererConnectionWindow::MediaRendererConnectionWindow(
     }
 
     bool ok = connect(
-        m_mm, SIGNAL(disposed(Herqq::Upnp::Av::HRendererConnection*)),
+        m_rendererConnection, SIGNAL(disposed(Herqq::Upnp::Av::HRendererConnection*)),
         this, SLOT(disposed(Herqq::Upnp::Av::HRendererConnection*)));
     Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
 MediaRendererConnectionWindow::~MediaRendererConnectionWindow()
 {
-    if (m_mm)
+    if (m_rendererConnection)
     {
-        m_mm->deleteLater();
+        m_rendererConnection->deleteLater();
     }
     delete ui;
 }
 
-HRendererConnection* MediaRendererConnectionWindow::rendererConnectionManager() const
+HRendererConnection* MediaRendererConnectionWindow::rendererConnection() const
 {
-    return m_mm;
+    return m_rendererConnection;
 }
 
 void MediaRendererConnectionWindow::disposed(Herqq::Upnp::Av::HRendererConnection*)
@@ -117,12 +118,13 @@ void MediaRendererConnectionWindow::disposed(Herqq::Upnp::Av::HRendererConnectio
     deleteLater();
 }
 
-void MediaRendererConnectionWindow::closeEvent(QCloseEvent*)
+void MediaRendererConnectionWindow::closeEvent(QCloseEvent* e)
 {
-    deleteLater();
+    e->ignore();
+    //deleteLater();
 }
 
 void MediaRendererConnectionWindow::resizeEvent(QResizeEvent* e)
 {
-    m_mm->resizeEventOccurred(*e);
+    m_rendererConnection->resizeEventOccurred(*e);
 }

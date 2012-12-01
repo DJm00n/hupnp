@@ -362,6 +362,7 @@ qint32 DefaultRendererConnection::doPlay(const QString& arg)
     {
     case HTransportState::PausedPlayback:
     case HTransportState::Stopped:
+    case HTransportState::Transitioning:
         if (m_mediaObject.currentTime() == m_mediaObject.totalTime())
         {
             if (m_mediaObject.isSeekable())

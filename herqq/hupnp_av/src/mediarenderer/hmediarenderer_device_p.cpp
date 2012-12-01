@@ -343,8 +343,9 @@ qint32 HMediaRendererDevice::prepareForConnection(HConnectionInfo* connectionInf
 qint32 HMediaRendererDevice::connectionComplete(qint32 connectionId)
 {
     return m_configuration->rendererConnectionManager()->connectionComplete(
-            connectionManager(), connectionId) ? (qint32) UpnpSuccess :
-                                  (qint32) HConnectionManagerInfo::InvalidConnectionReference;
+            connectionManager(), connectionId) ?
+                (qint32) UpnpSuccess :
+                (qint32) HConnectionManagerInfo::InvalidConnectionReference;
 }
 
 HRendererConnection* HMediaRendererDevice::createRendererConnection(

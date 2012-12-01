@@ -45,7 +45,7 @@ private:
 
     Ui::MediaRendererConnectionWindow *ui;
 
-    QPointer<CustomRendererConnection> m_mm;
+    QPointer<CustomRendererConnection> m_rendererConnection;
     QNetworkAccessManager& m_nam;
 
 private Q_SLOTS:
@@ -65,7 +65,7 @@ public:
 
     virtual ~MediaRendererConnectionWindow();
 
-    Herqq::Upnp::Av::HRendererConnection* rendererConnectionManager() const;
+    Herqq::Upnp::Av::HRendererConnection* rendererConnection() const;
 };
 
 #endif // MEDIARENDERER_CONNECTIONWINDOW_H

@@ -469,8 +469,6 @@ HRenderingControlAdapter::HRenderingControlAdapter(
 {
     H_D(HRenderingControlAdapter);
     h->m_instanceId = instanceId;
-    HAvDeviceModelInfoProvider infoProvider;
-    setDeviceModelInfoProvider(infoProvider);
 }
 
 HRenderingControlAdapter::~HRenderingControlAdapter()

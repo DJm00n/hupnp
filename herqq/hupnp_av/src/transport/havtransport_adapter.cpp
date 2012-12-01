@@ -400,8 +400,6 @@ HAvTransportAdapter::HAvTransportAdapter(
 {
     H_D(HAvTransportAdapter);
     h->m_instanceId = instanceId;
-    HAvDeviceModelInfoProvider infoProvider;
-    setDeviceModelInfoProvider(infoProvider);
 }
 
 HAvTransportAdapter::~HAvTransportAdapter()

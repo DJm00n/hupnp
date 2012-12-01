@@ -62,7 +62,7 @@ HRendererConnection* RendererConnectionManager::doCreate(
         contentFormat == "*" || contentFormat.isEmpty() ?
             "UNKNOWN" : contentFormat;
 
-    if (!mmWindow->rendererConnectionManager())
+    if (!mmWindow->rendererConnection())
     {
         return 0;
     }
@@ -76,7 +76,7 @@ HRendererConnection* RendererConnectionManager::doCreate(
     bool ok = QObject::connect(m_owner, SIGNAL(destroyed()), mmWindow, SLOT(deleteLater()));
     Q_ASSERT(ok); Q_UNUSED(ok)
 
-    return mmWindow->rendererConnectionManager();
+    return mmWindow->rendererConnection();
 }
 
 RendererConnectionManager::RendererConnectionManager(MediaRendererWindow* owner) :
@@ -124,11 +124,13 @@ MediaRendererWindow::MediaRendererWindow(QWidget* parent) :
     HServerStateVariable* currentConnectionIDs =
         m_mediaRenderer->connectionManager()->stateVariables().value("CurrentConnectionIDs");
 
+    currentConnectionIDsChanged(currentConnectionIDs);
+
     bool ok = connect(
         currentConnectionIDs,
         SIGNAL(valueChanged(Herqq::Upnp::HServerStateVariable*,Herqq::Upnp::HStateVariableEvent)),
         this,
-        SLOT(currentConnectionIDsChanged(Herqq::Upnp::HServerStateVariable*,Herqq::Upnp::HStateVariableEvent)));
+        SLOT(currentConnectionIDsChanged(Herqq::Upnp::HServerStateVariable*)));
     Q_ASSERT(ok); Q_UNUSED(ok)
 }
 
@@ -149,13 +151,12 @@ void MediaRendererWindow::changeEvent(QEvent *e)
     }
 }
 
-void MediaRendererWindow::currentConnectionIDsChanged(
-    HServerStateVariable* sv, const HStateVariableEvent& event)
+void MediaRendererWindow::currentConnectionIDsChanged(HServerStateVariable* sv)
 {
     HAbstractConnectionManagerService* service =
         qobject_cast<HAbstractConnectionManagerService*>(sv->parentService());
 
-    QStringList connections = event.newValue().toString().split(",");
+    QStringList connections = sv->value().toString().split(",");
 
     m_ui->connectionsInfoTable->setRowCount(0);
 

@@ -62,8 +62,6 @@ HMediaServerAdapterPrivate::~HMediaServerAdapterPrivate()
 HMediaServerAdapter::HMediaServerAdapter(QObject* parent) :
     HClientDeviceAdapter(*new HMediaServerAdapterPrivate(), parent)
 {
-    HAvDeviceModelInfoProvider infoProvider;
-    setDeviceModelInfoProvider(infoProvider);
 }
 
 HMediaServerAdapter::~HMediaServerAdapter()

@@ -24,7 +24,10 @@
 
 #include "hrendererconnection.h"
 
+#include <HUpnpCore/HServerStateVariable>
+
 #include "../connectionmanager/hconnectioninfo.h"
+#include "../connectionmanager/habstractconnectionmanager_service.h"
 
 namespace Herqq
 {
@@ -104,7 +107,7 @@ HRendererConnection* HRendererConnectionManager::createAndAdd(
     h_ptr->m_connections.append(
         qMakePair(qMakePair(cmService, connectionInfo.connectionId()), connection));
 
-    emit connectionAdded(cmService, connectionInfo.connectionId());
+    emit connectionAdded(cmService, connectionInfo);
 
     return connection;
 }
