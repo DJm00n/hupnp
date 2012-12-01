@@ -219,8 +219,6 @@ bool HConnectionManagerAdapterPrivate::getCurrentConnectionInfo(
 HConnectionManagerAdapter::HConnectionManagerAdapter(QObject* parent) :
     HClientServiceAdapter(*new HConnectionManagerAdapterPrivate(), parent)
 {
-    HAvDeviceModelInfoProvider infoProvider;
-    setDeviceModelInfoProvider(infoProvider);
 }
 
 HConnectionManagerAdapter::~HConnectionManagerAdapter()
