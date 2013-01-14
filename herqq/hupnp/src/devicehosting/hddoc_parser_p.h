@@ -161,40 +161,12 @@ public:
             QSet<QString> eventUrls;
             QSet<QString> controlUrls;
             QSet<QString> scpdUrls;
-            QSet<QString> iconUrls;
             QSet<HServiceId> serviceIds;
 
         public:
 
             QString m_lastErrorDescription;
             DocumentErrorTypes m_lastError;
-
-            bool validateIcons(Device* device)
-            {
-                QList<QUrl> icons = device->info().icons();
-
-                for (qint32 i = 0; i < icons.size(); ++i)
-                {
-                    QString iconUrl = icons.at(i).toString();
-
-                    if (iconUrls.contains(iconUrl))
-                    {
-                        m_lastError = InvalidDeviceDescriptionError;
-                        m_lastErrorDescription = QString(
-                            "Multiple icons have the same URL [%1] within a device tree. "
-                            "Icon URLs MUST be unique within a device tree.").arg(
-                                iconUrl);
-
-                        return false;
-                    }
-                    else
-                    {
-                        iconUrls.insert(iconUrl);
-                    }
-                }
-
-                return true;
-            }
 
             bool validateService(Service* service)
             {
@@ -268,11 +240,6 @@ public:
 
             bool validateDevice(Device* device)
             {
-                if (!validateIcons(device))
-                {
-                    return false;
-                }
-
                 serviceIds.clear();
                 QList<Service*> services = device->services();
                 for(qint32 i = 0; i < services.size(); ++i)
